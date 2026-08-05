@@ -17,7 +17,7 @@ app told the shower to do, and we found out the hard way that it needed to.
 
 I need to build passive observability for a Kohler DTV+ shower system so we can
 root-cause a "shower randomly stops mid-use" fault. Please start by reading
-`CLAUDE.md`, `AGENT.md`, `research/SHUTOFF-INVESTIGATION.md`,
+`CLAUDE.md`, `AGENT.md`, `INVESTIGATIONS.md` (investigation I1),
 `research/FIELD-NOTES.md` and `DESIGN.md` — they carry the context and the hard
 constraints. Don't re-derive what's already in them.
 
@@ -32,7 +32,7 @@ pattern found yet.
 
 The decisive evidence is a video I recorded on 2026-07-14 (transcript at
 `E:\proj-med\build-661-diag-kohler-shower\2026-07-14-DTV-shower-unexpectedly-stops.txt`,
-technical content already extracted into `research/SHUTOFF-INVESTIGATION.md`):
+technical content already extracted into `INVESTIGATIONS.md` I1):
 **after the water stops, the controller still reports the shower as running** and
 keeps doing so for about a minute before timing out to the clock screen. So
 nothing commanded it off — the valve stops and the controller finds out late.
@@ -354,7 +354,7 @@ I'd like that established rather than assumed.
 
 ## What the trace needs to distinguish
 
-`research/SHUTOFF-INVESTIGATION.md` has the signature table. In short:
+`INVESTIGATIONS.md` I1 has the signature table. In short:
 
 | Hypothesis | Signature |
 | --- | --- |

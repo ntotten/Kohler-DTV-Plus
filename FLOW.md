@@ -160,4 +160,4 @@ sequenceDiagram
   `stop_shower.cgi`, not to `quick_shower.cgi` with an empty list.
 - **18 endpoints are reachable** through the gate, 5 reads and 13 commands.
   `cerror_logs.cgi` and `kerror_logs.cgi` were added as reads for the shutoff
-  investigation — see [research/SHUTOFF-INVESTIGATION.md](research/SHUTOFF-INVESTIGATION.md).
+  investigation — see [INVESTIGATIONS.md](INVESTIGATIONS.md#i1--the-shower-stops-mid-use).

@@ -20,7 +20,7 @@ may be read by Kohler engineers and by a general audience.**
 | [PROTOCOL.md](PROTOCOL.md) | Anything touching the controller API. |
 | [DESIGN.md](DESIGN.md) | Anything touching the app's architecture. |
 | [research/FIELD-NOTES.md](research/FIELD-NOTES.md) | Before changing polling, command, or state-handling behaviour. Other people's failures are recorded there for a reason. |
-| [research/SHUTOFF-INVESTIGATION.md](research/SHUTOFF-INVESTIGATION.md) | Any diagnostic or observability work. |
+| [INVESTIGATIONS.md](INVESTIGATIONS.md) | Any diagnostic or observability work. Open questions and the experiments queued to answer them. **Add findings here; add what happened to the story log.** |
 | [research/SOURCES.md](research/SOURCES.md) | Before searching the web from scratch. |
 
 ## Hard rules

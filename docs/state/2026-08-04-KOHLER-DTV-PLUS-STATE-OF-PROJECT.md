@@ -487,6 +487,12 @@ asset and has been swept exactly once.
 
 ## 8. Reading list + authority chains
 
+> **Path note, added after this snapshot was taken.** `research/SHUTOFF-INVESTIGATION.md`
+> was folded into a new top-level [INVESTIGATIONS.md](../../INVESTIGATIONS.md) as
+> investigation **I1**, and the old file was deleted. Citations to it below are
+> left as they were — this is a dated snapshot and its references were accurate
+> on 2026-08-04 — but read them against I1.
+
 For a fresh agent, in order:
 
 1. `DISCLAIMER.md` — always, first. Safety policy and the risk scale.

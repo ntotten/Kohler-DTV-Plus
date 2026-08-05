@@ -46,7 +46,7 @@ applies to humans as well as agents.
 
 Documentation, field reports, and diagnostic captures from other DTV+ owners are
 as valuable as code — arguably more so, given the open
-[shutoff investigation](research/SHUTOFF-INVESTIGATION.md).
+[shutoff investigation](INVESTIGATIONS.md#i1--the-shower-stops-mid-use).
 
 ## Conduct
 

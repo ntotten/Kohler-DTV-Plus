@@ -25,6 +25,12 @@ the shower stops mid-use — documented publicly for YouTube and for Kohler supp
 > tree. The others are the operator's footage (`E:\proj-med\build-661-diag-kohler-shower\raw`)
 > and the hardware. A repo-only sweep will always report this project as less finished than it is.
 
+> **Path note, added after this sweep.** `research/SHUTOFF-INVESTIGATION.md` was folded into a
+> new top-level [INVESTIGATIONS.md](../../INVESTIGATIONS.md) as investigation **I1**, and the old
+> file deleted. `file:line` citations to it below were accurate when written; read them against
+> I1. W1's experiments now live in I1's *Next to try* queue as **E1** and **E2**, and W10's as
+> **E8**/**E9** under **I3** — that queue, not this ledger, is where they are tracked from here.
+
 ## The ledger
 
 | # | Title | Shape | Age | Route | Cost of delay |
@@ -64,9 +70,9 @@ Goal:    A measured high-flow duration recorded beside the low-flow one, and a r
 ```
 
 The high-flow experiment is named as the cheapest next step by four documents —
-[SHUTOFF-INVESTIGATION.md:12-14](../SHUTOFF-INVESTIGATION.md#L12-L14) in bold, again at
-[:229-240](../SHUTOFF-INVESTIGATION.md#L229-L240) and
-[:386-389](../SHUTOFF-INVESTIGATION.md#L386-L389), and once more in the observability prompt.
+[SHUTOFF-INVESTIGATION.md:12-14](../../INVESTIGATIONS.md#i1--the-shower-stops-mid-use) in bold, again at
+[:229-240](../../INVESTIGATIONS.md#i1--the-shower-stops-mid-use) and
+[:386-389](../../INVESTIGATIONS.md#i1--the-shower-stops-mid-use), and once more in the observability prompt.
 [STORY-LOG.md](../../STORY-LOG.md) records no such run.
 
 **The second shower is newly possible and nobody has noticed.** The shutoffs predate the
@@ -127,7 +133,7 @@ premise explicitly ("the very next read is normal again"), and the guard at
 user, it produces the exact outcome FIELD-NOTES §6 says the guard exists to prevent — "a disabled
 start button for 30 seconds, potentially with someone already standing in the shower." Toward the
 investigation, it fabricates evidence: "controller has lost the valve" is *precisely* the
-signature being hunted, and [SHUTOFF-INVESTIGATION.md:164-175](../SHUTOFF-INVESTIGATION.md#L164-L175)
+signature being hunted, and [SHUTOFF-INVESTIGATION.md:164-175](../../INVESTIGATIONS.md#i1--the-shower-stops-mid-use)
 already promoted one such sample to evidentiary status. Telemetry built on the current logic
 would generate that finding on schedule.
 
@@ -276,7 +282,7 @@ Goal:    The repo states what was asked of Kohler on 2026-07-27 and what came ba
 ```
 
 **Corrected from the first draft, which asked whether step 1 had been skipped.** It was not.
-[SHUTOFF-INVESTIGATION.md:367-375](../SHUTOFF-INVESTIGATION.md#L367-L375) required contacting
+[SHUTOFF-INVESTIGATION.md:367-375](../../INVESTIGATIONS.md#i1--the-shower-stops-mid-use) required contacting
 Kohler first; that happened 2026-07-27, the answer was a ~$2013 replacement and no supported
 reconnection route, and the cut proceeded the next day. **The process was followed correctly and
 not written down** — evidence:
