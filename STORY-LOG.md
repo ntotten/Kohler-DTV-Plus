@@ -12,6 +12,117 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ## 2026-08-04
 
+### 23:10 — The egress log's first capture caught a controller hang, and explained the `values.cgi` blip
+
+The egress trace went in tonight — a line for every request this app sends to
+the controller and every answer it gets back, correlated by a short id. Within
+twenty minutes of running it, it caught the thing the investigation has been
+guessing about since 07-26.
+
+```
+06:05:18.112Z  REQ   8fn5  values.cgi
+06:05:26.117Z  ERR   8fn5  values.cgi        timeout after 8000ms attempt=1/3
+06:05:58.636Z  ERR   8fn5  values.cgi        timeout after 8000ms attempt=2/3
+06:06:10.072Z  RES   8fn7  values.cgi        ok 27434ms q=24249ms keys=299
+06:06:10.231Z  RES   8fn8  system_info.cgi   ok 19464ms q=19426ms keys=36
+06:06:25.307Z  CACHE ----  values.cgi        hit age=15s keys=299
+```
+
+(Timestamps are UTC in the log itself; this is 23:05-23:06 local.)
+
+**The degraded `values.cgi` payload is not a random partial response. It is what
+the controller's web server returns while recovering from a hang.** The short
+payload — 299 keys against a healthy 304, with a connected valve reported
+`installed: false` / `con_string: "dis"` — arrived only after the server had
+stopped answering for roughly twenty seconds and two 8 s timeouts had already
+elapsed. `system_info.cgi` came back short in the same window too, 36 keys
+against 39, which nobody had noticed before because nothing was counting.
+
+The last line is the failure [FIELD-NOTES.md](research/FIELD-NOTES.md) §6 warns
+about, recorded happening: the 299-key payload went into the proxy's 30 s cache
+and was served from it. The guard that exists to prevent exactly this did not
+fire, because the middleware process had just restarted and had no `lastGood` to
+compare against — **the guard is disarmed on the first read after every restart.**
+
+**Why it matters:** the 2026-07-26 "transient valve dropout, caught once" was
+promoted to evidence on the strength of looking like the shutoff signature. It
+almost certainly was not a valve dropout at all. More importantly for what comes
+next: any telemetry that logs `con_string` without logging latency and key count
+will manufacture valve-dropout findings out of web-server hiccups.
+
+**For Kohler:** when the DTV+ controller's embedded HTTP server recovers from a
+session-limit hang, it serves a structurally valid but incomplete JSON body in
+which connected devices are reported as absent. There is no error status — the
+reply parses cleanly and looks authoritative. A client cannot distinguish it from
+a genuine device dropout except by counting keys or noticing that the response
+took twenty seconds.
+
+### 23:05 — We caused both hangs, and it is worth saying how
+
+Neither hang tonight was spontaneous. The first followed a deliberate burst of
+stacked reads while probing whether the short payload correlated with request
+spacing; the second followed editing `server/*.mjs` while `npm run dev` was
+running, which makes Vite restart the middleware — and a restarting middleware
+does not inherit the old process's in-flight requests or its serialisation queue.
+Six different pids appear in the trace over seven minutes.
+
+So the app's careful one-request-at-a-time queue is **per process**, and during a
+dev-server reload there are briefly two processes talking to a controller that
+tolerates two sessions total.
+
+The controller recovered on its own both times, in under thirty seconds, and six
+spaced reads afterwards were clean at ~175 ms.
+
+**Why it matters:** it is a live hazard while developing against this hardware,
+and it means the trace's own timestamps around a code change are suspect. It also
+supports the reading that the community's lockups are about **concurrency**
+rather than interval — Kohler's own web page polls `system_info.cgi` at 5 s, the
+same rate as our active cadence, without trouble.
+
+### 22:55 — There is no measured water temperature anywhere in the CGI API
+
+Checked because hypothesis 0 (tankless minimum-flow cutout) predicts outlet
+temperature falling before the shutoff, and it would be a great deal cheaper to
+read that from the controller than to instrument the plumbing.
+
+It is not there. `valve1_temp_string` and `valve1Setpoint` both read 96 with a
+setpoint of 96; nothing in `values.cgi`'s 304 keys or `system_info.cgi`'s 39
+carries an actual thermistor reading. The controller does have the number — it
+reads it from the valve over Saturn and pushes `DT_W_Temperature` to the
+touchscreen over Amulet — but no CGI endpoint surfaces it.
+
+xagon0's [values-cgi-guide](research/xagon0/docs/web-interface/values-cgi-guide.md)
+documents a `values.cgi?type=word` form returning a raw datatable array, with
+"word index 0 = valve 1 current temp". **That does not exist on firmware
+0.0.3.89.** Measured: `?type=byte`, `?type=word`, `?type=string` and
+`?page=control` all return the identical 304-key object as the bare call. The
+parameters are ignored. Kohler's own `control.js` and `settings.js` never pass
+them either.
+
+**Why it matters:** the leading hypothesis's primary signature is invisible to
+controller telemetry. Confirming it needs a temperature sensor on the outlet, not
+a better poller.
+
+### 22:45 — The wall interface is not an HTTP client, so it costs nothing from the two-session budget
+
+The observability brief assumed the reconnected K-99693 was a second HTTP client
+and that the concurrency budget had tightened. It is not, and it has not.
+
+The K-99693 is a device on the RS-485 bus: discovered over the DTV+ protocol as
+device ID `0x30`, then synchronised over Amulet CRC at 115200 baud on a 50 ms
+tick. User input comes back as `INVOKE_RPC` frames on that bus. It never opens a
+TCP connection. The confusion is understandable — the thing polling
+`system_info.cgi` every 5 s and `values.cgi` every 10 s is the controller's *web
+page*, `control.js`, which is a different client entirely.
+
+Confirmed against the live unit: `num_interface = 1`, `ui1_con_string = conn`,
+`valve_1_con_string = conn` fw 0.12, controller fw 0.0.3.89.
+
+**Why it matters:** the telemetry build has the same two-session budget it always
+had. It does **not** mean the interface is invisible — it can command the shower
+over the bus, and those commands never pass through our proxy and never appear in
+the egress log. "No REQ line" still means "we didn't send it", never "nobody did".
+
 ### 22:10 — Our own app was sending every outlet tap twice
 
 Measured, not inferred: in `npm run dev` — the documented way to run this app,

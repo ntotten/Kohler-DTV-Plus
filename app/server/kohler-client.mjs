@@ -1,4 +1,5 @@
 import net from 'node:net';
+import { traceId, traceRequest, traceResponse, traceError } from './trace.mjs';
 
 export const DEFAULT_HOST = process.env.KOHLER_HOST || '192.168.0.115';
 const PORT = Number(process.env.KOHLER_PORT || 80);
@@ -73,11 +74,17 @@ let chain = Promise.resolve();
 let lastAt = 0;
 
 function enqueue(task) {
+  const queuedAt = Date.now();
   const run = chain.then(async () => {
     const wait = MIN_GAP_MS - (Date.now() - lastAt);
     if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+    // How long this call sat behind others. A rising queue wait is the first
+    // visible sign that the controller is slowing down, well before anything
+    // times out — so it is worth handing back to the caller for the trace.
+    const startedAt = Date.now();
     try {
-      return await task();
+      const value = await task();
+      return { value, queuedMs: startedAt - queuedAt };
     } finally {
       lastAt = Date.now();
     }
@@ -101,10 +108,17 @@ export async function kohlerGet(endpoint, params = {}, opts = {}) {
   ).toString();
   const path = `/${endpoint.replace(/^\//, '')}${qs ? `?${qs}` : ''}`;
 
+  // One id spans every attempt for this logical call, so a retried request reads
+  // as one story in the trace rather than three unrelated ones.
+  const id = traceId();
+  const attempts = retries + 1;
+
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
+    const sentAt = Date.now();
+    traceRequest(id, endpoint, params, attempt, attempts);
     try {
-      const res = await enqueue(() => rawRequest(path, { host, timeout }));
+      const { value: res, queuedMs } = await enqueue(() => rawRequest(path, { host, timeout }));
       let json = null;
       const trimmed = res.body.trim();
       if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
@@ -125,9 +139,17 @@ export async function kohlerGet(endpoint, params = {}, opts = {}) {
           }
         }
       }
-      return { ...res, json, path };
+      traceResponse(id, endpoint, {
+        ms: Date.now() - sentAt,
+        queuedMs,
+        status: res.status,
+        body: res.body,
+        json,
+      });
+      return { ...res, json, path, traceId: id };
     } catch (err) {
       lastErr = err;
+      traceError(id, endpoint, err, attempt, attempts);
       if (attempt < retries) await new Promise((r) => setTimeout(r, 250 * (attempt + 1)));
     }
   }

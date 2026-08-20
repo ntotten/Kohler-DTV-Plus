@@ -160,7 +160,34 @@ observation below predates the repair.
   - **Method:** any logging thermometer at an outlet. This is deliberately
     outside the DTV+, because the chain H0 describes is mostly invisible to
     controller polling.
+  - **Confirmed necessary, 2026-08-04.** There is **no measured water temperature
+    anywhere in the CGI API** — checked, not assumed. `valve1_temp_string` and
+    `valve1Setpoint` both carry the setpoint; none of `values.cgi`'s 304 keys or
+    `system_info.cgi`'s 39 carries a thermistor reading. The controller *has* the
+    number — it reads it from the valve over Saturn and pushes
+    `DT_W_Temperature` to the touchscreen — but no endpoint surfaces it. xagon0's
+    documented `values.cgi?type=word` datatable form, which would have given
+    "word index 0 = valve 1 current temp", **does not exist on firmware
+    0.0.3.89**: `?type=byte`, `?type=word`, `?type=string` and `?page=control`
+    all return the identical 304-key object as the bare call, and Kohler's own
+    `control.js` never passes them either. So this experiment cannot be replaced
+    by a better poller.
+  - *Open: whether `valve1_temp_string` starts tracking actual temperature while
+    water is running. Only ever sampled idle, where setpoint and actual coincide.
+    Worth one glance during the first captured shower before buying a sensor.*
   - **⚠️ Consent:** requires a shower to be running.
+
+- [ ] **E10 · Measure the handshower's flow rate with a bucket.**
+  - **Discriminates:** H0, before any shutoff has to happen — and it is cheaper
+    than E1, which is why it goes above it in practice.
+  - **Method:** run the handshower alone into a bucket of known volume, time it,
+    convert to GPM. Compare against the tankless unit's rated minimum activation
+    flow from E3.
+  - **Handshower flow is comfortably above the minimum:** H0's premise fails and
+    the hypothesis is dead without ever reproducing the fault.
+  - **It is at or below the minimum:** H0 goes from plausible to near-confirmed,
+    and E1 becomes a formality.
+  - **⚠️ Consent:** moves water, briefly, at whatever temperature is set.
 
 - [ ] **E6 · Telemetry capture spanning a shutoff.**
   - **Discriminates:** H2 and H3 cleanly; H0 and H4 only if
@@ -416,9 +443,31 @@ shutoffs that predate the browser being connected — the operator notes "web
 browser is not normally connected" — but any future trace should record whether
 other clients were active.
 
-**New since 2026-07-29:** the reconnected wall interface is itself an HTTP client,
-polling `system_info.cgi` every 5 s and `values.cgi` every 10 s. It now consumes
-part of the two-session budget. Record its presence in any trace.
+~~**New since 2026-07-29:** the reconnected wall interface is itself an HTTP
+client, polling `system_info.cgi` every 5 s and `values.cgi` every 10 s. It now
+consumes part of the two-session budget.~~ **Wrong — corrected 2026-08-04.**
+
+The K-99693 is **not an HTTP client and consumes none of the two-session budget.**
+It is a device on the RS-485 bus: discovered over the DTV+ protocol as device ID
+`0x30`, then synchronised over Amulet CRC at 115200 baud on a 50 ms tick
+([touchscreen-ui.md](research/xagon0/docs/devices/touchscreen-ui.md),
+[system-overview.md](research/xagon0/docs/system-overview.md)). Its detach on
+07-25 was logged as code 100 with the UI device byte, alongside the valve and
+amplifier — bus peers, not web clients. The thing that polls `system_info.cgi`
+every 5 s and `values.cgi` every 10 s is the controller's own **web page**,
+`control.js`, which is a different client entirely.
+
+**What still needs recording, and matters more:** the interface *can command the
+shower* over the bus, as `INVOKE_RPC` frames. Those commands never pass through
+our proxy and never appear in the egress log. So an absent `REQ` line means "we
+did not send it" — never "nobody sent it".
+
+**Two clients that do count:** any browser tab open on the controller's own web
+page, and — found the hard way on 2026-08-04 — **a second copy of our own proxy**.
+The serialisation queue is per process, so while `npm run dev` restarts the
+middleware after a file change there are briefly two processes talking to a
+controller that tolerates two sessions. Both hangs observed that night followed
+exactly that, or a deliberate burst.
 
 ---
 
@@ -481,8 +530,10 @@ Verified 2026-08-04: `num_interface = 1`, `ui1_con_string = conn`.
 
 ## I3 — `values.cgi` intermittently drops a healthy valve
 
-**Status: open.** Leading hypothesis: **a truncated response, not a real
-dropout** — the degraded payload is short.
+**Status: mechanism identified 2026-08-04, rate not yet measured.** The degraded
+payload is **what the controller's web server returns while recovering from a
+hang** — short, slow, and preceded by timeouts. It is an HTTP-layer artefact and
+says nothing about the valve.
 
 ### Symptom
 
@@ -501,24 +552,50 @@ First seen 2026-07-26. See [FIELD-NOTES.md](research/FIELD-NOTES.md) §6.
 
 ### Next to try
 
-- [ ] **E8 · Measure the rate and the length.**
-  - **Discriminates:** truncation from a real intermittent dropout, and
-    establishes whether 300-vs-304 keys is a reliable discriminator or a
-    coincidence of one sample.
-  - **Method:** log key count and valve fields on every read over a long idle
-    period. Read-only, at the existing poll rate — no added load.
-  - **Every degraded read is short:** truncation confirmed; key count becomes a
-    safe first-sample discriminator and the proxy's guard can be rewritten.
-  - **Some degraded reads are full-length:** those are real dropouts, and they
-    belong in [I1](#i1--the-shower-stops-mid-use) as evidence for H2/H3.
-  - Read-only. No consent needed.
+- [x] **E8 · Measure the rate and the length.** — *first pass run 2026-08-04,
+  read-only. Answered the mechanism; did not yet measure the rate.*
+  - **Result: every degraded read observed with timing attached was both short
+    and slow.** Three degraded reads across two events, each arriving only after
+    the server had stopped answering — two 8 s timeouts elapsed first, and the
+    read that finally returned took 27 s. Raw capture:
+    [2026-08-04-egress-trace-first-capture.log](research/diagnostics/2026-08-04-egress-trace-first-capture.log)
+    lines 62-85.
+  - **20 spaced reads (10 s apart, 3.5 min) were all clean** — 304 keys, ~175 ms,
+    no variation. The blip does not occur under an unloaded read pattern.
+  - **`system_info.cgi` degrades the same way**, 36 keys against 39, in the same
+    window. Nobody had noticed because nothing had been counting it.
+  - **The key count is not a fixed number.** Short reads have now been seen at
+    299 and 300; healthy was 303 before the interface was reconnected and is 304
+    after. Any threshold hard-coded from one observation would be wrong within a
+    week — compare against the largest payload seen in the session instead.
+  - **Still open:** the natural rate. Everything degraded tonight followed load
+    we generated, so this is a mechanism finding, not a frequency one. E11.
 
-- [ ] **E9 · Fix the guard once E8 reports.**
+- [ ] **E9 · Fix the guard.** — *unblocked by E8, deliberately not done in the
+  same change as the egress log.*
   - The current guard requires a loss to be reported **twice** before believing
-    it. On 2026-08-04 the degraded payload arrived twice consecutively, which
-    defeats it — the bad payload is then accepted and cached.
-  - Blocked on E8: do not hard-code a key-count threshold from a single
-    observation.
+    it, and on 2026-08-04 the degraded payload arrived twice consecutively. It is
+    also **disarmed on the first read after every process restart**, because
+    `lastGood` starts null and a payload cannot "lose" a valve it never had —
+    which is how a 299-key payload reached the 30 s cache and was served from it
+    that night, recorded as a `CACHE ... keys=299` line in the capture.
+  - **Better rule, now that the mechanism is known:** distrust a valve-loss
+    payload when it is *short relative to the session maximum* **or** *slow
+    relative to the endpoint's normal ~175 ms*, rather than counting repetitions.
+    Both are properties of the single sample, so it works on the first read and
+    after a restart.
+
+- [ ] **E11 · Measure the natural rate.**
+  - **Discriminates:** whether the degraded payload happens on its own at all, or
+    only ever after something has stressed the web server.
+  - **Method:** now that every read is logged with key count and duration, just
+    let it run. `grep SHORT` over a week of ordinary use.
+  - **Never short without a preceding slow read or timeout:** the "one bad read
+    in 30-50" figure in [FIELD-NOTES.md](research/FIELD-NOTES.md) §6 needs
+    rewriting, and so does its explanation.
+  - **Short reads with normal latency appear:** the hang mechanism is only part
+    of the story and truncation is real and separate.
+  - Read-only, zero added load — it is a side effect of the trace already running.
 
 ### What we know
 
@@ -541,8 +618,33 @@ follow-up  1..6   installed=true   con=conn   304 keys   fw 0.12, over 18 s
 and a genuine disconnection do not look the same on the wire, and the proxy
 currently reads only the content, never the completeness.
 
-**Honest bound:** n=1 for the repetition, and the 300/304 signal rests on a single
-observed pair. Neither is a measured distribution — hence E8.
+**2026-08-04, later that night** — the egress trace caught it twice with timing
+attached, and the timing is the whole story:
+
+```
+06:05:18.112Z  REQ   8fn5  values.cgi
+06:05:26.117Z  ERR   8fn5  values.cgi        timeout after 8000ms attempt=1/3
+06:05:58.636Z  ERR   8fn5  values.cgi        timeout after 8000ms attempt=2/3
+06:06:10.072Z  RES   8fn7  values.cgi        ok 27434ms q=24249ms keys=299
+06:06:10.231Z  RES   8fn8  system_info.cgi   ok 19464ms q=19426ms keys=36
+06:06:25.307Z  CACHE ----  values.cgi        hit age=15s keys=299
+```
+
+The short payload never arrives on a healthy connection. It arrives when the web
+server has stopped answering and is coming back — **it is a recovery signature,
+not a truncation in transit and not a dropout.** The last line is this
+investigation's stated user-facing failure, recorded happening: the 299-key
+payload entered the 30 s cache and was served from it.
+
+**What caused the hang was us**, both times: a deliberate burst of stacked reads,
+and editing `server/*.mjs` while `npm run dev` was running, which restarts the
+middleware without inheriting the old process's in-flight requests. That does not
+weaken the mechanism finding — it strengthens it, because the trigger was
+concurrency and the response was reproducible.
+
+**Honest bound:** the mechanism rests on three degraded reads across two events,
+both induced. Whether it ever happens unprovoked is E11, and the "one bad read in
+30-50" figure has never been measured under controlled conditions.
 
 ### Why it matters more than it looks
 
@@ -559,10 +661,25 @@ It fails in two directions:
 
 ### Open questions
 
-- Does it cluster — around time, load, or the wall interface's own polling?
-- Is 304 the invariant full length, or does it vary with configuration?
+- ~~Does it cluster around load?~~ **Answered: yes, and load appears to be the
+  whole mechanism.** Every instance seen with timing attached followed a stall.
+  Whether it *ever* happens without one is E11.
+- ~~Does it cluster around the wall interface's own polling?~~ **Moot** — the
+  interface is not an HTTP client at all. See I1's confounders.
+- ~~Is 304 the invariant full length?~~ **No.** 303 before the interface was
+  reconnected, 304 after; short reads at 299 and 300. Compare against the
+  session maximum, never a constant.
+- Does the controller log anything when its web server hangs? **Observed: no.**
+  `cerror_logs.cgi` gained no entry across either hang — the log still holds only
+  the two UI detach events. This widens what "the error log is empty" is
+  compatible with, which matters for [I1](#i1--the-shower-stops-mid-use).
 - **For Kohler:** `values.cgi` intermittently returns a short, partially-populated
   response in which a healthy connected valve reads `installed: false` / `dis`
   while its firmware version is still present. It can occur on consecutive
   requests. Any client treating a single such read as a state change will report
-  a dropout that did not happen.
+  a dropout that did not happen. **Added 2026-08-04:** it is specifically what the
+  server returns while recovering from a session-limit hang — the reply parses
+  cleanly, carries no error status, and is indistinguishable from a real dropout
+  except by counting keys or noticing the response took twenty seconds.
+  `system_info.cgi` does the same thing, 36 keys against 39. Nothing is written to
+  the controller's error log when this happens.

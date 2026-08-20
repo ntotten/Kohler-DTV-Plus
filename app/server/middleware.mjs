@@ -1,5 +1,6 @@
 import { kohlerGet, DEFAULT_HOST } from './kohler-client.mjs';
 import { checkAccess, exposedEndpoints, MAX_RISK } from './cgi-safety.mjs';
+import { traceNote, traceLine } from './trace.mjs';
 
 function send(res, status, payload) {
   const body = JSON.stringify(payload);
@@ -66,8 +67,23 @@ export function createKohlerMiddleware({ host = DEFAULT_HOST } = {}) {
   let lastGood = null;
   let suspectCount = 0;
 
+  // Stamp the start of every process, so a trace is self-describing about which
+  // controller it came from and what the cache was doing to the reads in it.
+  traceNote(`proxy start host=${host} valuesTtl=${VALUES_TTL_MS}ms pid=${process.pid}`);
+
   async function readValues() {
     if (valuesCache && Date.now() - valuesCache.at < VALUES_TTL_MS) {
+      // A cache hit sends nothing, so it produces no REQ/RES pair. Say so
+      // explicitly: a reader must never mistake thirty silent seconds for
+      // thirty seconds of confirmation that the valve was still there.
+      traceLine(
+        'CACHE',
+        '----',
+        'values.cgi',
+        `hit age=${Math.round((Date.now() - valuesCache.at) / 1000)}s keys=${
+          Object.keys(valuesCache.json || {}).length
+        }`,
+      );
       return { json: valuesCache.json, cached: true };
     }
     const r = await kohlerGet('values.cgi', {}, { host, timeout: 8000 });
@@ -76,7 +92,26 @@ export function createKohlerMiddleware({ host = DEFAULT_HOST } = {}) {
     if (losesAValve(r.json, lastGood) && suspectCount < 1) {
       suspectCount++;
       // Do not cache it, so the next poll re-reads rather than waiting out the TTL.
+      traceLine(
+        'GUARD',
+        r.traceId ?? '----',
+        'values.cgi',
+        `suspect payload loses a valve (keys=${Object.keys(r.json).length}) — serving last good, not cached`,
+      );
       return { json: lastGood, cached: true, suspect: true };
+    }
+    if (losesAValve(r.json, lastGood)) {
+      // The guard has been defeated: two suspect payloads in a row. Recorded
+      // loudly because the accepted payload now says a healthy valve is absent,
+      // which is exactly the signature the shutoff investigation is hunting.
+      traceLine(
+        'GUARD',
+        r.traceId ?? '----',
+        'values.cgi',
+        `ACCEPTED valve-loss after ${suspectCount + 1} consecutive suspect reads (keys=${
+          Object.keys(r.json).length
+        })`,
+      );
     }
 
     suspectCount = 0;

@@ -1,0 +1,199 @@
+2026-08-05T06:03:17.614Z  REQ   nx5n  values.cgi        
+2026-08-05T06:03:17.614Z  REQ   nx5o  system_info.cgi   
+2026-08-05T06:03:17.615Z  REQ   nx5p  values.cgi        
+2026-08-05T06:03:17.615Z  REQ   nx5q  system_info.cgi   
+2026-08-05T06:03:24.948Z  REQ   wkfw  values.cgi        
+2026-08-05T06:03:24.948Z  REQ   wkfx  system_info.cgi   
+2026-08-05T06:03:24.949Z  REQ   wkfy  values.cgi        
+2026-08-05T06:03:24.949Z  REQ   wkfz  system_info.cgi   
+2026-08-05T06:03:25.125Z  RES   wkfw  values.cgi        ok 177ms keys=304
+2026-08-05T06:03:25.300Z  RES   wkfx  system_info.cgi   ok 352ms q=312ms keys=39
+2026-08-05T06:03:25.605Z  RES   wkfy  values.cgi        ok 656ms q=481ms keys=304
+2026-08-05T06:03:25.780Z  RES   wkfz  system_info.cgi   ok 831ms q=789ms keys=39
+2026-08-05T06:03:33.586Z  REQ   pqxx  values.cgi        
+2026-08-05T06:03:33.586Z  REQ   pqxy  system_info.cgi   
+2026-08-05T06:03:33.587Z  REQ   pqxz  values.cgi        
+2026-08-05T06:03:33.587Z  REQ   pqy0  system_info.cgi   
+2026-08-05T06:03:33.761Z  RES   pqxx  values.cgi        ok 176ms keys=304
+2026-08-05T06:03:33.930Z  RES   pqxy  system_info.cgi   ok 344ms q=305ms keys=39
+2026-08-05T06:03:34.235Z  RES   pqxz  values.cgi        ok 648ms q=474ms keys=304
+2026-08-05T06:03:34.410Z  RES   pqy0  system_info.cgi   ok 823ms q=783ms keys=39
+2026-08-05T06:03:41.014Z  NOTE  ----  -                 proxy start host=192.168.0.115 valuesTtl=30000ms pid=42232
+2026-08-05T06:03:41.424Z  REQ   0pxy  values.cgi        
+2026-08-05T06:03:41.424Z  REQ   0pxz  system_info.cgi   
+2026-08-05T06:03:41.425Z  REQ   0py0  values.cgi        
+2026-08-05T06:03:41.425Z  REQ   0py1  system_info.cgi   
+2026-08-05T06:03:41.601Z  RES   0pxy  values.cgi        ok 177ms keys=304
+2026-08-05T06:03:41.766Z  RES   0pxz  system_info.cgi   ok 342ms q=299ms keys=39
+2026-08-05T06:03:42.066Z  RES   0py0  values.cgi        ok 641ms q=468ms keys=304
+2026-08-05T06:03:42.226Z  RES   0py1  system_info.cgi   ok 801ms q=761ms keys=39
+2026-08-05T06:03:57.304Z  REQ   0py2  system_info.cgi   
+2026-08-05T06:03:57.347Z  RES   0py2  system_info.cgi   ok 43ms keys=39
+2026-08-05T06:04:11.029Z  NOTE  ----  -                 proxy start host=192.168.0.115 valuesTtl=30000ms pid=42232
+2026-08-05T06:04:11.435Z  REQ   iwqu  values.cgi        
+2026-08-05T06:04:11.435Z  REQ   iwqv  system_info.cgi   
+2026-08-05T06:04:11.436Z  REQ   iwqw  values.cgi        
+2026-08-05T06:04:11.436Z  REQ   iwqx  system_info.cgi   
+2026-08-05T06:04:11.608Z  RES   iwqu  values.cgi        ok 172ms keys=304
+2026-08-05T06:04:11.772Z  RES   iwqv  system_info.cgi   ok 337ms q=297ms keys=39
+2026-08-05T06:04:12.077Z  RES   iwqw  values.cgi        ok 641ms q=465ms keys=304
+2026-08-05T06:04:12.257Z  RES   iwqx  system_info.cgi   ok 821ms q=773ms keys=39
+2026-08-05T06:04:15.896Z  NOTE  ----  -                 proxy start host=192.168.0.115 valuesTtl=30000ms pid=42232
+2026-08-05T06:04:16.293Z  REQ   eiov  values.cgi        
+2026-08-05T06:04:16.293Z  REQ   eiow  system_info.cgi   
+2026-08-05T06:04:16.294Z  REQ   eiox  values.cgi        
+2026-08-05T06:04:16.294Z  REQ   eioy  system_info.cgi   
+2026-08-05T06:04:16.468Z  RES   eiov  values.cgi        ok 175ms keys=304
+2026-08-05T06:04:16.632Z  RES   eiow  system_info.cgi   ok 339ms q=300ms keys=39
+2026-08-05T06:04:16.937Z  RES   eiox  values.cgi        ok 643ms q=469ms keys=304
+2026-08-05T06:04:17.112Z  RES   eioy  system_info.cgi   ok 818ms q=777ms keys=39
+2026-08-05T06:04:32.307Z  CACHE  ----  values.cgi        hit age=15s keys=304
+2026-08-05T06:04:32.307Z  REQ   eioz  system_info.cgi   
+2026-08-05T06:04:32.348Z  RES   eioz  system_info.cgi   ok 41ms keys=39
+2026-08-05T06:04:48.310Z  REQ   eip0  values.cgi        
+2026-08-05T06:04:48.310Z  REQ   eip1  system_info.cgi   
+2026-08-05T06:04:48.484Z  RES   eip0  values.cgi        ok 174ms keys=304
+2026-08-05T06:04:48.659Z  RES   eip1  system_info.cgi   ok 349ms q=307ms keys=39
+2026-08-05T06:04:54.012Z  NOTE  ----  -                 proxy start host=192.168.0.115 valuesTtl=30000ms pid=18752
+2026-08-05T06:05:04.298Z  CACHE  ----  values.cgi        hit age=16s keys=304
+2026-08-05T06:05:04.298Z  REQ   eip2  system_info.cgi   
+2026-08-05T06:05:04.340Z  RES   eip2  system_info.cgi   ok 42ms keys=39
+2026-08-05T06:05:17.705Z  NOTE  ----  -                 proxy start host=192.168.0.115 valuesTtl=30000ms pid=42232
+2026-08-05T06:05:18.112Z  REQ   8fn5  values.cgi        
+2026-08-05T06:05:18.112Z  REQ   8fn6  system_info.cgi   
+2026-08-05T06:05:18.113Z  REQ   8fn7  values.cgi        
+2026-08-05T06:05:18.113Z  REQ   8fn8  system_info.cgi   
+2026-08-05T06:05:26.117Z  ERR   8fn5  values.cgi        timeout after 8000ms attempt=1/3
+2026-08-05T06:05:26.380Z  REQ   8fn5  values.cgi        retry=2/3
+2026-08-05T06:05:34.241Z  ERR   8fn6  system_info.cgi   timeout after 8000ms attempt=1/3
+2026-08-05T06:05:34.503Z  REQ   8fn6  system_info.cgi   retry=2/3
+2026-08-05T06:05:42.376Z  ERR   8fn7  values.cgi        timeout after 8000ms attempt=1/3
+2026-08-05T06:05:42.638Z  REQ   8fn7  values.cgi        retry=2/3
+2026-08-05T06:05:50.504Z  ERR   8fn8  system_info.cgi   timeout after 8000ms attempt=1/3
+2026-08-05T06:05:50.767Z  REQ   8fn8  system_info.cgi   retry=2/3
+2026-08-05T06:05:58.636Z  ERR   8fn5  values.cgi        timeout after 8000ms attempt=2/3
+2026-08-05T06:05:59.146Z  REQ   8fn5  values.cgi        retry=3/3
+2026-08-05T06:06:06.764Z  ERR   8fn6  system_info.cgi   timeout after 8000ms attempt=2/3
+2026-08-05T06:06:07.274Z  REQ   8fn6  system_info.cgi   retry=3/3
+2026-08-05T06:06:10.072Z  RES   8fn7  values.cgi        ok 27434ms q=24249ms keys=299
+2026-08-05T06:06:10.231Z  RES   8fn8  system_info.cgi   ok 19464ms q=19426ms keys=36
+2026-08-05T06:06:10.536Z  RES   8fn5  values.cgi        ok 11390ms q=11218ms keys=299
+2026-08-05T06:06:10.701Z  NOTE  8fn6  system_info.cgi   key baseline raised 36->39
+2026-08-05T06:06:10.701Z  RES   8fn6  system_info.cgi   ok 3427ms q=3383ms keys=39
+2026-08-05T06:06:25.307Z  CACHE  ----  values.cgi        hit age=15s keys=299
+2026-08-05T06:06:25.307Z  REQ   8fn9  system_info.cgi   
+2026-08-05T06:06:25.348Z  RES   8fn9  system_info.cgi   ok 41ms keys=39
+2026-08-05T06:06:37.659Z  NOTE  ----  -                 proxy start host=192.168.0.115 valuesTtl=30000ms pid=3084
+2026-08-05T06:06:41.297Z  REQ   8fna  values.cgi        
+2026-08-05T06:06:41.297Z  REQ   8fnb  system_info.cgi   
+2026-08-05T06:06:41.474Z  NOTE  8fna  values.cgi        key baseline raised 299->304
+2026-08-05T06:06:41.474Z  RES   8fna  values.cgi        ok 177ms keys=304
+2026-08-05T06:06:41.644Z  RES   8fnb  system_info.cgi   ok 347ms q=307ms keys=39
+2026-08-05T06:06:53.017Z  NOTE  ----  -                 proxy start host=192.168.0.115 valuesTtl=30000ms pid=42232
+2026-08-05T06:06:53.419Z  REQ   jga6  values.cgi        
+2026-08-05T06:06:53.419Z  REQ   jga7  system_info.cgi   
+2026-08-05T06:06:53.420Z  REQ   jga8  values.cgi        
+2026-08-05T06:06:53.420Z  REQ   jga9  system_info.cgi   
+2026-08-05T06:06:53.594Z  RES   jga6  values.cgi        ok 175ms keys=304
+2026-08-05T06:06:53.759Z  RES   jga7  system_info.cgi   ok 340ms q=298ms keys=39
+2026-08-05T06:06:54.059Z  RES   jga8  values.cgi        ok 639ms q=466ms keys=304
+2026-08-05T06:06:54.219Z  RES   jga9  system_info.cgi   ok 799ms q=760ms keys=39
+2026-08-05T06:07:04.838Z  NOTE  ----  -                 proxy start host=192.168.0.115 valuesTtl=30000ms pid=42232
+2026-08-05T06:07:05.240Z  REQ   67fa  values.cgi        
+2026-08-05T06:07:05.240Z  REQ   67fb  system_info.cgi   
+2026-08-05T06:07:05.241Z  REQ   67fc  values.cgi        
+2026-08-05T06:07:05.241Z  REQ   67fd  system_info.cgi   
+2026-08-05T06:07:05.415Z  RES   67fa  values.cgi        ok 175ms keys=304
+2026-08-05T06:07:05.590Z  RES   67fb  system_info.cgi   ok 350ms q=307ms keys=39
+2026-08-05T06:07:05.890Z  RES   67fc  values.cgi        ok 649ms q=476ms keys=304
+2026-08-05T06:07:06.065Z  RES   67fd  system_info.cgi   ok 824ms q=784ms keys=39
+2026-08-05T06:07:09.705Z  NOTE  ----  -                 proxy start host=192.168.0.115 valuesTtl=30000ms pid=14508
+2026-08-05T06:07:21.305Z  CACHE  ----  values.cgi        hit age=15s keys=304
+2026-08-05T06:07:21.305Z  REQ   67fe  system_info.cgi   
+2026-08-05T06:07:21.351Z  RES   67fe  system_info.cgi   ok 46ms keys=39
+2026-08-05T06:07:32.721Z  NOTE  ----  -                 proxy start host=192.168.0.115 valuesTtl=30000ms pid=64576
+2026-08-05T06:07:34.673Z  NOTE  ----  -                 proxy start host=192.168.0.115 valuesTtl=30000ms pid=40980
+2026-08-05T06:07:37.303Z  REQ   67ff  values.cgi        
+2026-08-05T06:07:37.303Z  REQ   67fg  system_info.cgi   
+2026-08-05T06:07:37.482Z  RES   67ff  values.cgi        ok 179ms keys=304
+2026-08-05T06:07:37.651Z  RES   67fg  system_info.cgi   ok 348ms q=307ms keys=39
+2026-08-05T06:07:52.735Z  CACHE  ----  values.cgi        hit age=15s keys=304
+2026-08-05T06:07:52.735Z  REQ   67fh  system_info.cgi   
+2026-08-05T06:07:52.777Z  RES   67fh  system_info.cgi   ok 42ms keys=39
+2026-08-05T06:07:53.295Z  CACHE  ----  values.cgi        hit age=16s keys=304
+2026-08-05T06:07:53.295Z  REQ   67fi  system_info.cgi   
+2026-08-05T06:07:53.337Z  RES   67fi  system_info.cgi   ok 42ms keys=39
+2026-08-05T06:08:07.787Z  REQ   67fj  values.cgi        
+2026-08-05T06:08:07.787Z  REQ   67fk  system_info.cgi   
+2026-08-05T06:08:07.963Z  RES   67fj  values.cgi        ok 176ms keys=304
+2026-08-05T06:08:08.143Z  RES   67fk  system_info.cgi   ok 356ms q=308ms keys=39
+2026-08-05T06:08:09.302Z  CACHE  ----  values.cgi        hit age=1s keys=304
+2026-08-05T06:08:09.302Z  REQ   67fl  system_info.cgi   
+2026-08-05T06:08:09.343Z  RES   67fl  system_info.cgi   ok 41ms keys=39
+2026-08-05T06:08:23.157Z  CACHE  ----  values.cgi        hit age=15s keys=304
+2026-08-05T06:08:23.157Z  REQ   67fm  system_info.cgi   
+2026-08-05T06:08:23.199Z  RES   67fm  system_info.cgi   ok 42ms keys=39
+2026-08-05T06:08:25.307Z  CACHE  ----  values.cgi        hit age=17s keys=304
+2026-08-05T06:08:25.307Z  REQ   67fn  system_info.cgi   
+2026-08-05T06:08:25.349Z  RES   67fn  system_info.cgi   ok 42ms keys=39
+2026-08-05T06:08:38.204Z  REQ   67fo  values.cgi        
+2026-08-05T06:08:38.204Z  REQ   67fp  system_info.cgi   
+2026-08-05T06:08:38.380Z  RES   67fo  values.cgi        ok 176ms keys=304
+2026-08-05T06:08:38.550Z  RES   67fp  system_info.cgi   ok 346ms q=307ms keys=39
+2026-08-05T06:08:41.296Z  CACHE  ----  values.cgi        hit age=3s keys=304
+2026-08-05T06:08:41.296Z  REQ   67fq  system_info.cgi   
+2026-08-05T06:08:41.335Z  RES   67fq  system_info.cgi   ok 39ms keys=39
+2026-08-05T06:08:53.567Z  CACHE  ----  values.cgi        hit age=15s keys=304
+2026-08-05T06:08:53.568Z  REQ   67fr  system_info.cgi   
+2026-08-05T06:08:53.611Z  RES   67fr  system_info.cgi   ok 43ms keys=39
+2026-08-05T06:08:53.614Z  REQ   67fs  cerror_logs.cgi   
+2026-08-05T06:08:53.756Z  RES   67fs  cerror_logs.cgi   ok 142ms q=121ms 209B
+2026-08-05T06:08:57.305Z  CACHE  ----  values.cgi        hit age=19s keys=304
+2026-08-05T06:08:57.305Z  REQ   67ft  system_info.cgi   
+2026-08-05T06:08:57.346Z  RES   67ft  system_info.cgi   ok 41ms keys=39
+2026-08-05T06:09:08.771Z  REQ   67fu  values.cgi        
+2026-08-05T06:09:08.771Z  REQ   67fv  system_info.cgi   
+2026-08-05T06:09:08.947Z  RES   67fu  values.cgi        ok 176ms keys=304
+2026-08-05T06:09:09.122Z  RES   67fv  system_info.cgi   ok 351ms q=308ms keys=39
+2026-08-05T06:09:13.296Z  CACHE  ----  values.cgi        hit age=4s keys=304
+2026-08-05T06:09:13.296Z  REQ   67fw  system_info.cgi   
+2026-08-05T06:09:13.337Z  RES   67fw  system_info.cgi   ok 41ms keys=39
+2026-08-05T06:09:24.130Z  CACHE  ----  values.cgi        hit age=15s keys=304
+2026-08-05T06:09:24.130Z  REQ   67fx  system_info.cgi   
+2026-08-05T06:09:24.172Z  RES   67fx  system_info.cgi   ok 42ms keys=39
+2026-08-05T06:09:29.304Z  CACHE  ----  values.cgi        hit age=20s keys=304
+2026-08-05T06:09:29.304Z  REQ   67fy  system_info.cgi   
+2026-08-05T06:09:29.343Z  RES   67fy  system_info.cgi   ok 39ms keys=39
+2026-08-05T06:09:39.183Z  REQ   67fz  values.cgi        
+2026-08-05T06:09:39.183Z  REQ   67g0  system_info.cgi   
+2026-08-05T06:09:39.358Z  RES   67fz  values.cgi        ok 175ms keys=304
+2026-08-05T06:09:39.533Z  RES   67g0  system_info.cgi   ok 350ms q=307ms keys=39
+2026-08-05T06:09:45.302Z  CACHE  ----  values.cgi        hit age=6s keys=304
+2026-08-05T06:09:45.302Z  REQ   67g1  system_info.cgi   
+2026-08-05T06:09:45.343Z  RES   67g1  system_info.cgi   ok 41ms keys=39
+2026-08-05T06:09:54.545Z  CACHE  ----  values.cgi        hit age=15s keys=304
+2026-08-05T06:09:54.545Z  REQ   67g2  system_info.cgi   
+2026-08-05T06:09:54.584Z  RES   67g2  system_info.cgi   ok 39ms keys=39
+2026-08-05T06:10:01.309Z  CACHE  ----  values.cgi        hit age=22s keys=304
+2026-08-05T06:10:01.309Z  REQ   67g3  system_info.cgi   
+2026-08-05T06:10:01.349Z  RES   67g3  system_info.cgi   ok 40ms keys=39
+2026-08-05T06:10:17.298Z  REQ   67g4  values.cgi        
+2026-08-05T06:10:17.298Z  REQ   67g5  system_info.cgi   
+2026-08-05T06:10:17.475Z  RES   67g4  values.cgi        ok 177ms keys=304
+2026-08-05T06:10:17.645Z  RES   67g5  system_info.cgi   ok 347ms q=308ms keys=39
+2026-08-05T06:10:33.302Z  CACHE  ----  values.cgi        hit age=16s keys=304
+2026-08-05T06:10:33.302Z  REQ   67g6  system_info.cgi   
+2026-08-05T06:10:33.346Z  RES   67g6  system_info.cgi   ok 44ms keys=39
+2026-08-05T06:10:43.756Z  NOTE   ----  -                 proxy start host=192.168.0.115 valuesTtl=30000ms pid=42232
+2026-08-05T06:10:44.224Z  REQ    edon  values.cgi        
+2026-08-05T06:10:44.224Z  REQ    edoo  system_info.cgi   
+2026-08-05T06:10:44.225Z  REQ    edop  values.cgi        
+2026-08-05T06:10:44.225Z  REQ    edoq  system_info.cgi   
+2026-08-05T06:10:44.402Z  RES    edon  values.cgi        ok 178ms keys=304
+2026-08-05T06:10:44.572Z  RES    edoo  system_info.cgi   ok 348ms q=306ms keys=39
+2026-08-05T06:10:44.877Z  RES    edop  values.cgi        ok 652ms q=476ms keys=304
+2026-08-05T06:10:45.052Z  RES    edoq  system_info.cgi   ok 827ms q=786ms keys=39
+2026-08-05T06:10:57.327Z  NOTE   ----  -                 proxy start host=192.168.0.115 valuesTtl=30000ms pid=51788
+2026-08-05T06:11:00.301Z  CACHE  ----  values.cgi        hit age=15s keys=304
+2026-08-05T06:11:00.301Z  REQ    edor  system_info.cgi   
+2026-08-05T06:11:00.342Z  RES    edor  system_info.cgi   ok 41ms keys=39

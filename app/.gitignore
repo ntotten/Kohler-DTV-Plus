@@ -7,3 +7,7 @@ dist/
 .env
 .env.local
 *.local
+
+# Rolling egress trace. Captures worth keeping get downloaded and committed to
+# research/diagnostics/ with a date in the filename, per AGENT.md.
+.trace/
