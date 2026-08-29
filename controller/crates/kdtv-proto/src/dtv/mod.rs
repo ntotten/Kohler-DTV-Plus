@@ -114,6 +114,18 @@ pub use timing::{DtvTimings, TimingError};
 
 #[cfg(test)]
 mod tests {
+
+    /// Stands in for `kdtv-safety`'s grant, which is the only shipping
+    /// implementation. `kdtv_units::OpenAuthority` is deliberately unsealed so
+    /// that a test can supply one; `cargo xtask audit-graph` asserts no second
+    /// implementation reaches the daemon.
+    #[derive(Debug)]
+    struct TestAuthority(ZoneId);
+    impl kdtv_units::OpenAuthority for TestAuthority {
+        fn authorised_zone(&self) -> ZoneId {
+            self.0
+        }
+    }
     use super::*;
     use crate::saturn::{
         self, DiscoveryToken, LinkPhase, MasterAddr, OutletMapping, OutletTable, PrimaryFlags,
@@ -282,6 +294,7 @@ mod tests {
                     &SaturnOp::SetTemperature(ValveSetpoint::try_new(Cx2::from_raw(c)).unwrap()),
                     LinkPhase::Running,
                     None,
+                    None,
                 )
                 .unwrap();
             // Saturn: SYNC1 SYNC2 ADDR CTRL LEN DATA... CHK.
@@ -321,6 +334,7 @@ mod tests {
                 &SaturnOp::AddressClear,
                 LinkPhase::Discovery,
                 Some(&steam_token),
+                None,
             )
             .unwrap_err();
         assert!(matches!(
@@ -340,6 +354,7 @@ mod tests {
                 },
                 LinkPhase::Running,
                 None,
+                Some(&TestAuthority(ZoneId::Zone2)),
             )
             .unwrap();
         assert_eq!(open.op(), crate::saturn::SaturnOpKind::SetOutlets);
@@ -362,6 +377,7 @@ mod tests {
                 ValveAddr::new(0x03).unwrap(),
                 &SaturnOp::ReadFaults,
                 LinkPhase::Running,
+                None,
                 None,
             )
             .unwrap();

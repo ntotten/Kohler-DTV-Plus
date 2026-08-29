@@ -30,9 +30,9 @@ struct Fixture {
 #[derive(Deserialize)]
 #[serde(rename_all = "snake_case")]
 enum Provenance {
-    /// Tier [A]: measured on this installation's hardware during a capture.
+    /// Tier `[A]`: measured on this installation's hardware during a capture.
     Captured(IgnoredPayload),
-    /// Tier [C]: third-party reverse engineering, unverified here.
+    /// Tier `[C]`: third-party reverse engineering, unverified here.
     Documented(IgnoredPayload),
 }
 
@@ -68,14 +68,14 @@ pub(crate) fn run() -> Result<()> {
         let (documented, captured) = scan(path)?;
         counted += documented + captured.len();
         println!(
-            "  {}: {} documented [C], {} captured [A]",
+            "  {}: {} documented `[C]`, {} captured `[A]`",
             path.file_name().unwrap_or_default().to_string_lossy(),
             documented,
             captured.len()
         );
         for id in captured {
             failures.push(format!(
-                "{id} claims tier [A] provenance. Phase 1 capture has not happened; \
+                "{id} claims tier `[A]` provenance. Phase 1 capture has not happened; \
                  see docs/replacement-controller/CONTROLLER-DESIGN.md"
             ));
         }

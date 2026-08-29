@@ -236,6 +236,36 @@ pub struct CommandId(pub u64);
 #[serde(transparent)]
 pub struct SessionId(pub u64);
 
+/// Permission to open water on a zone.
+///
+/// This trait exists to solve a layering problem without giving up the property
+/// it protects. The right to open water is minted by the safety kernel in
+/// `kdtv-safety`, but the frame that opens an outlet is built in `kdtv-proto`,
+/// and neither crate may depend on the other: a wire codec that depends on the
+/// safety kernel has the layering upside down, and a safety kernel that depends
+/// on a codec would let a change to a wire format reach the thing that decides
+/// whether water may move.
+///
+/// So the capability is named here, in the crate they both already depend on.
+/// `kdtv-proto` requires one to encode an outlet-opening frame; `kdtv-safety`
+/// implements it for the grant its kernel mints.
+///
+/// # It is deliberately not sealed, and that is a real limitation
+///
+/// A sealed trait could only be implemented in this crate, which would defeat
+/// the point — `kdtv-safety` has to implement it. So in principle another crate
+/// could write its own implementation and forge authority.
+///
+/// What that buys is still worth having. Forgetting a check is invisible;
+/// writing `impl OpenAuthority for MyThing` is a deliberate, greppable,
+/// reviewable act. The audit in `cargo xtask audit-graph` asserts there is
+/// exactly one implementation in the workspace and that it lives in
+/// `kdtv-safety`, so a second one fails the build rather than passing review.
+pub trait OpenAuthority {
+    /// The zone this authority permits, and only this zone.
+    fn authorised_zone(&self) -> ZoneId;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

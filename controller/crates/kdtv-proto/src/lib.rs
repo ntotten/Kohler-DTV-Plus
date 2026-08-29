@@ -202,6 +202,8 @@ mod tests {
                 &saturn::SaturnOp::AllOff,
                 LinkPhase::ReadyOff,
                 None,
+                // AllOff closes outlets. Only opening them needs an authority.
+                None,
             )
             .unwrap();
         assert_eq!(frame.op(), saturn::SaturnOpKind::AllOff);

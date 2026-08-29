@@ -40,7 +40,7 @@ use crate::saturn::frame::{
 use crate::saturn::outlets::{OutletBitmap, OutletError, OutletTable, PrimaryFlags, ValveType};
 use core::fmt;
 use core::marker::PhantomData;
-use kdtv_units::{LinkKind, Slot, SlotSet, ValveSetpoint};
+use kdtv_units::{LinkKind, OpenAuthority, Slot, SlotSet, ValveSetpoint};
 
 /// Where a link is in its lifecycle. Gates which operations may be encoded.
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
@@ -117,12 +117,16 @@ pub enum SaturnOp {
     /// [`OutletTable`], which is the only thing that knows this valve family's
     /// numbering. An unconfigured slot is refused, not skipped. `CLAMP-05`.
     ///
-    /// **Operator consent is not represented here.** `ARCHITECTURE.md` § 3.3
-    /// puts an `&OpenGrant` argument on this encode path, but `OpenGrant` is
-    /// defined in `kdtv-safety`, which depends on `kdtv-proto` — taking it here
-    /// would be a dependency cycle. The consent gate therefore sits one layer
-    /// up, at the `kdtv-engine` boundary that mints the grant, and this crate
-    /// records the constraint rather than enforcing it. `AGENT.md` hard rule 2.
+    /// **This is the only operation that can open water, and it cannot be
+    /// encoded without permission.** [`Encoder::encode`] requires an
+    /// [`OpenAuthority`] for it, which `kdtv-safety`'s grant implements and
+    /// nothing else does.
+    ///
+    /// The authority is named in `kdtv-units` rather than taken as
+    /// `kdtv-safety`'s concrete grant, because a wire codec that depends on the
+    /// safety kernel has the layering upside down. Naming the capability in the
+    /// crate both already depend on keeps the requirement in the type system
+    /// without inverting the graph. `AGENT.md` hard rule 2.
     SetOutlets {
         slots: SlotSet,
         flags: PrimaryFlags,
@@ -420,6 +424,19 @@ pub enum EncodeDenied {
     #[error("configuration slot {0} is not configured on this valve")]
     UnconfiguredOutlet(Slot),
 
+    /// An outlet-opening frame was requested with no permission to open water.
+    /// The only operation this can happen to is `SetOutlets`.
+    #[error("{op:?} opens water and no open authority was supplied")]
+    NoOpenAuthority { op: SaturnOpKind },
+
+    /// Permission was supplied, but for a different zone. An authority names
+    /// one zone and authorises only that zone.
+    #[error("the authority is for {authorised}, this encoder drives {encoder}")]
+    AuthorityForAnotherZone {
+        authorised: kdtv_units::ZoneId,
+        encoder: kdtv_units::ZoneId,
+    },
+
     /// The outlet table rejected the lookup for a reason
     /// [`OutletTable::new`] should already have caught. Unreachable for a table
     /// built through that constructor, and carried rather than swallowed so a
@@ -535,6 +552,7 @@ impl Encoder {
         op: &SaturnOp,
         phase: LinkPhase,
         disco: Option<&DiscoveryToken>,
+        authority: Option<&dyn OpenAuthority>,
     ) -> Result<SaturnFrame, EncodeDenied> {
         let kind = op.kind();
 
@@ -564,6 +582,27 @@ impl Encoder {
             && matches!(phase, LinkPhase::Booting | LinkPhase::Discovery)
         {
             return Err(EncodeDenied::WriteOutsideOperationalPhase { op: kind, phase });
+        }
+
+        // The one operation that opens water needs permission to do it, and the
+        // permission has to name this zone. An authority for the other zone is
+        // not authority here.
+        if kind.can_open_water() {
+            let Some(auth) = authority else {
+                return Err(EncodeDenied::NoOpenAuthority { op: kind });
+            };
+            // The encoder drives one link. A steam link has no zone at all, so
+            // an authority can never match it — which is one more reason the
+            // steam path cannot reach a valve outlet.
+            let Some(zone) = self.link.zone() else {
+                return Err(EncodeDenied::NoOpenAuthority { op: kind });
+            };
+            if auth.authorised_zone() != zone {
+                return Err(EncodeDenied::AuthorityForAnotherZone {
+                    authorised: auth.authorised_zone(),
+                    encoder: zone,
+                });
+            }
         }
 
         let (dest, data) = self.payload(target, op)?;
@@ -713,6 +752,24 @@ fn push(
 
 #[cfg(test)]
 mod tests {
+
+    /// Stands in for `kdtv-safety`'s grant, which is the only shipping
+    /// implementation. `kdtv_units::OpenAuthority` is deliberately unsealed so a
+    /// test can supply one; `cargo xtask audit-graph` asserts no second
+    /// implementation reaches the daemon.
+    ///
+    /// Built from the encoder under test rather than pinned to a zone, so the
+    /// "an authority names one zone and authorises only that zone" check is
+    /// exercised by the tests that deliberately mismatch it, not worked around
+    /// by every test that does not.
+    #[derive(Debug)]
+    struct TestAuthority(ZoneId);
+    impl kdtv_units::OpenAuthority for TestAuthority {
+        fn authorised_zone(&self) -> ZoneId {
+            self.0
+        }
+    }
+
     use super::*;
     use crate::fixtures::FixtureSet;
     use crate::saturn::control::denied_control_bytes;
@@ -795,6 +852,7 @@ mod tests {
                 },
                 LinkPhase::ReadyOff,
                 None,
+                Some(&TestAuthority(ZoneId::Zone2)),
             )
             .unwrap();
         assert_eq!(f.bytes(), &[0xAA, 0x55, 0x03, 0x87, 0x02, 0x04, 0x00, 0x70]);
@@ -809,6 +867,7 @@ mod tests {
                 addr(0x03),
                 &SaturnOp::ReadFirmwareType,
                 LinkPhase::ReadyOff,
+                None,
                 None,
             )
             .unwrap();
@@ -827,6 +886,7 @@ mod tests {
                 &SaturnOp::AddressClear,
                 LinkPhase::Discovery,
                 Some(&t),
+                None,
             )
             .unwrap();
         assert_eq!(f.bytes(), &[0xAA, 0x55, 0x0F, 0x3A, 0x01, 0x03, 0xB3]);
@@ -852,7 +912,7 @@ mod tests {
             ),
         ] {
             let f = e
-                .encode(addr(0x03), &op, LinkPhase::ReadyOff, None)
+                .encode(addr(0x03), &op, LinkPhase::ReadyOff, None, None)
                 .unwrap();
             assert_eq!(f.bytes(), expected, "{op:?}");
         }
@@ -878,6 +938,7 @@ mod tests {
                 &SaturnOp::AddressEnquiry,
                 LinkPhase::Discovery,
                 Some(&t),
+                None,
             )
             .unwrap();
         assert_eq!(enquiry.bytes(), &[0xAA, 0x55, 0x0F, 0x3A, 0x01, 0x01, 0xB5]);
@@ -888,6 +949,7 @@ mod tests {
                 &SaturnOp::AddressAllocate(addr(0x03)),
                 LinkPhase::Discovery,
                 Some(&t),
+                None,
             )
             .unwrap();
         // DATA_LEN 0x02, not the diagram's 0x01: with DATA_LEN 1 the frame is
@@ -923,7 +985,7 @@ mod tests {
                     LinkPhase::Paused,
                     LinkPhase::Faulted,
                 ] {
-                    let Ok(f) = e.encode(addr(0x03), &op, phase, Some(&t)) else {
+                    let Ok(f) = e.encode(addr(0x03), &op, phase, Some(&t), None) else {
                         continue;
                     };
                     let b = f.bytes();
@@ -1077,7 +1139,21 @@ mod tests {
                     LinkPhase::Faulted,
                 ] {
                     for a in ValveAddr::ALL {
-                        let Ok(f) = e.encode(a, &op, phase, Some(&t)) else {
+                        // The scan covers SetOutlets too, so it needs an
+                        // authority. Without one those frames are refused and
+                        // silently skipped, which is what the frame-count
+                        // assertion below caught when this argument was added.
+                        let Ok(f) = e.encode(
+                            a,
+                            &op,
+                            phase,
+                            Some(&t),
+                            e.link()
+                                .zone()
+                                .map(TestAuthority)
+                                .as_ref()
+                                .map(|x| -> &dyn kdtv_units::OpenAuthority { x }),
+                        ) else {
                             continue;
                         };
                         frames += 1;
@@ -1140,7 +1216,7 @@ mod tests {
                 SaturnOp::AddressEnquiry,
                 SaturnOp::AddressAllocate(addr(0x03)),
             ] {
-                let err = e.encode(addr(0x03), &op, phase, None).unwrap_err();
+                let err = e.encode(addr(0x03), &op, phase, None, None).unwrap_err();
                 assert!(matches!(
                     err,
                     EncodeDenied::AddressOpOutsideDiscovery { .. }
@@ -1156,6 +1232,7 @@ mod tests {
                 &SaturnOp::AddressClear,
                 LinkPhase::Running,
                 Some(&t),
+                None,
             )
             .unwrap_err();
         assert!(matches!(
@@ -1175,6 +1252,7 @@ mod tests {
                 &SaturnOp::AddressClear,
                 LinkPhase::Discovery,
                 Some(&other),
+                None,
             )
             .unwrap_err();
         assert_eq!(
@@ -1200,7 +1278,7 @@ mod tests {
             LinkPhase::Faulted,
         ] {
             let f = e
-                .encode(addr(0x03), &SaturnOp::AllOff, phase, None)
+                .encode(addr(0x03), &SaturnOp::AllOff, phase, None, None)
                 .unwrap();
             // DATA_LEN 2, empty bitmap, no flags.
             assert_eq!(f.bytes().get(4..7), Some(&[0x02, 0x00, 0x00][..]));
@@ -1220,7 +1298,7 @@ mod tests {
                 SaturnOp::Pause,
                 SaturnOp::Resume,
             ] {
-                let err = e.encode(addr(0x03), &op, phase, None).unwrap_err();
+                let err = e.encode(addr(0x03), &op, phase, None, None).unwrap_err();
                 assert!(matches!(
                     err,
                     EncodeDenied::WriteOutsideOperationalPhase { .. }
@@ -1246,7 +1324,7 @@ mod tests {
                 SaturnOp::ReadConfiguration,
                 SaturnOp::ReadTemperature,
             ] {
-                assert!(e.encode(addr(0x03), &op, phase, None).is_ok());
+                assert!(e.encode(addr(0x03), &op, phase, None, None).is_ok());
             }
         }
     }
@@ -1266,6 +1344,7 @@ mod tests {
                 },
                 LinkPhase::ReadyOff,
                 None,
+                Some(&TestAuthority(ZoneId::Zone1)),
             )
             .unwrap_err();
         assert_eq!(err, EncodeDenied::UnconfiguredOutlet(slot(6)));
@@ -1280,6 +1359,7 @@ mod tests {
                 },
                 LinkPhase::ReadyOff,
                 None,
+                Some(&TestAuthority(ZoneId::Zone1)),
             )
             .unwrap_err();
         assert_eq!(err, EncodeDenied::UnconfiguredOutlet(slot(6)));
@@ -1297,6 +1377,7 @@ mod tests {
                 },
                 LinkPhase::ReadyOff,
                 None,
+                Some(&TestAuthority(ZoneId::Zone1)),
             )
             .unwrap();
         let two = zone2()
@@ -1308,6 +1389,7 @@ mod tests {
                 },
                 LinkPhase::ReadyOff,
                 None,
+                Some(&TestAuthority(ZoneId::Zone2)),
             )
             .unwrap();
         assert_eq!(one.bytes().get(5), Some(&0x01));
@@ -1329,6 +1411,7 @@ mod tests {
                     addr(0x03),
                     &SaturnOp::SetTemperature(sp),
                     LinkPhase::Running,
+                    None,
                     None,
                 )
                 .unwrap();
@@ -1365,6 +1448,7 @@ mod tests {
                 },
                 LinkPhase::ReadyOff,
                 None,
+                Some(&TestAuthority(ZoneId::Zone1)),
             )
             .unwrap_err();
         assert_eq!(err, EncodeDenied::UndefinedFlagBits(0x08));
@@ -1425,7 +1509,7 @@ mod tests {
         let t = token(e.link());
         for op in every_op(&[1, 2, 3, 4, 5]) {
             for phase in [LinkPhase::Discovery, LinkPhase::Running] {
-                if let Ok(f) = e.encode(addr(0x03), &op, phase, Some(&t)) {
+                if let Ok(f) = e.encode(addr(0x03), &op, phase, Some(&t), None) {
                     assert_eq!(f.bytes().get(3), Some(&op.kind().control_byte()));
                     assert_eq!(f.op(), op.kind());
                 }

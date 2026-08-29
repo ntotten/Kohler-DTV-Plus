@@ -92,6 +92,15 @@ pub use timing::{BAUD, DATA_BITS, STOP_BITS, Timings};
 
 #[cfg(test)]
 mod tests {
+
+    /// Stands in for `kdtv-safety`'s grant; built from the encoder under test.
+    #[derive(Debug)]
+    struct RoundTripAuthority(kdtv_units::ZoneId);
+    impl kdtv_units::OpenAuthority for RoundTripAuthority {
+        fn authorised_zone(&self) -> kdtv_units::ZoneId {
+            self.0
+        }
+    }
     use super::*;
     use crate::fixtures::FixtureSet;
     use crate::gate::TransmitAuthority;
@@ -143,7 +152,17 @@ mod tests {
                 LinkPhase::Running
             };
             let f = e
-                .encode(ValveAddr::new(0x03).unwrap(), &op, phase, Some(&t))
+                .encode(
+                    ValveAddr::new(0x03).unwrap(),
+                    &op,
+                    phase,
+                    Some(&t),
+                    e.link()
+                        .zone()
+                        .map(RoundTripAuthority)
+                        .as_ref()
+                        .map(|a| -> &dyn kdtv_units::OpenAuthority { a }),
+                )
                 .unwrap();
 
             let mut rx = RxBuffer::new();

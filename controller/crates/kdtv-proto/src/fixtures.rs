@@ -699,6 +699,19 @@ pub fn required_transmit_ids() -> impl Iterator<Item = &'static str> {
 
 #[cfg(test)]
 mod tests {
+
+    /// Lets the fixture builder encode an outlet write.
+    ///
+    /// Built from the encoder's own link rather than pinned to a zone: an
+    /// authority names one zone and authorises only that zone, and the fixture
+    /// set covers both.
+    #[derive(Debug)]
+    struct FixtureAuthority(kdtv_units::ZoneId);
+    impl kdtv_units::OpenAuthority for FixtureAuthority {
+        fn authorised_zone(&self) -> kdtv_units::ZoneId {
+            self.0
+        }
+    }
     use super::*;
     use crate::dtv::{self, DevAddr, DiscoveryStep, SteamOp, SteamOpState};
     use crate::gate::TransmitAuthority;
@@ -888,10 +901,20 @@ mod tests {
         } else {
             (LinkPhase::ReadyOff, None)
         };
-        e.encode(ValveAddr::new(0x03).unwrap(), op, phase, token.as_ref())
-            .unwrap()
-            .bytes()
-            .to_vec()
+        e.encode(
+            ValveAddr::new(0x03).unwrap(),
+            op,
+            phase,
+            token.as_ref(),
+            e.link()
+                .zone()
+                .map(FixtureAuthority)
+                .as_ref()
+                .map(|a| -> &dyn kdtv_units::OpenAuthority { a }),
+        )
+        .unwrap()
+        .bytes()
+        .to_vec()
     }
 
     fn encode_steam(op: &SteamOp) -> Vec<u8> {

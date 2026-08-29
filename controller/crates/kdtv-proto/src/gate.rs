@@ -183,8 +183,16 @@ impl PolarityAttestation {
 ///
 /// Separate from [`TransmitScope`] on purpose: a config file can *ask* for a
 /// real bus, and asking is not the same as being granted one.
+///
+/// Kebab-case on the wire (`"emulator-only"`, `"real-bus-attested"`), matching
+/// `kdtv-config`'s own spelling of the same choice and the `Display` form of
+/// [`TransmitScope`]. The two crates split this subject deliberately:
+/// `kdtv-config` parses and validates the *shape* of the operator's claim, and
+/// this crate decides whether the claim is *true* against the evidence. All
+/// fields here are public so that bridge is a struct literal, not a
+/// re-serialisation.
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case")]
 pub enum RequestedScope {
     /// The default, and the only scope today's evidence base can grant.
     #[default]
@@ -914,13 +922,13 @@ mod tests {
         assert_eq!(back, cfg);
 
         // An unknown key is a typo in a safety-relevant file, not a default.
-        let bad = r#"{"scope":"emulator_only","scoope":true}"#;
+        let bad = r#"{"scope":"emulator-only","scoope":true}"#;
         assert!(serde_json::from_str::<TransmitGateConfig>(bad).is_err());
 
         // And the scope spelling is the one the config file uses.
         assert_eq!(
             serde_json::to_string(&RequestedScope::RealBusAttested).unwrap(),
-            "\"real_bus_attested\""
+            "\"real-bus-attested\""
         );
     }
 }

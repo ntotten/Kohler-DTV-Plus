@@ -163,6 +163,28 @@ pub(crate) fn run() -> Result<()> {
         }
     }
 
+    heading("OpenAuthority implementations");
+    // `kdtv_units::OpenAuthority` is the permission `kdtv-proto` requires to
+    // encode an outlet-opening frame. It cannot be sealed, because the crate
+    // that must implement it — `kdtv-safety` — is not the crate that defines it.
+    // So the guarantee is that there is exactly one *shipping* implementation,
+    // and it is the safety kernel's grant. Test helpers are allowed and are the
+    // reason this counts implementations rather than forbidding them.
+    let found = find_impls(&root);
+    for (path, count) in &found {
+        println!("  {path}: {count}");
+    }
+    let shipping: Vec<_> = found.iter().filter(|(p, _)| !is_test_only(p)).collect();
+    match shipping.as_slice() {
+        [(p, 1)] if p.contains("kdtv-safety") => {
+            println!("  ok  exactly one shipping implementation, in kdtv-safety");
+        }
+        other => failures.push(format!(
+            "expected exactly one shipping OpenAuthority implementation in kdtv-safety, \
+             found {other:?} — a second one is a second way to open water"
+        )),
+    }
+
     report(&failures, "dependency graph audit")
 }
 
@@ -178,4 +200,85 @@ fn reachable_from<'a>(start: &'a str, deps: &BTreeMap<&'a str, Vec<&'a str>>) ->
         }
     }
     seen
+}
+
+/// Every file containing an `impl ... OpenAuthority`, with a count.
+fn find_impls(root: &std::path::Path) -> Vec<(String, usize)> {
+    let mut out = Vec::new();
+    let mut stack = vec![root.join("crates")];
+    while let Some(dir) = stack.pop() {
+        let Ok(entries) = std::fs::read_dir(&dir) else {
+            continue;
+        };
+        for e in entries.flatten() {
+            let p = e.path();
+            if p.is_dir() {
+                if p.file_name().is_some_and(|n| n == "target") {
+                    continue;
+                }
+                stack.push(p);
+            } else if p.extension().is_some_and(|x| x == "rs") {
+                let Ok(text) = std::fs::read_to_string(&p) else {
+                    continue;
+                };
+                let n = shipping_impls(&text);
+                if n > 0 {
+                    let rel = p.strip_prefix(root).unwrap_or(&p).display().to_string();
+                    out.push((rel, n));
+                }
+            }
+        }
+    }
+    out.sort();
+    out
+}
+
+/// A `tests/` directory holds integration tests, and `kdtv-emulator` never
+/// ships — neither is a second way to open water. Implementations inside a
+/// `#[cfg(test)]` module are filtered out by [`shipping_impls`].
+fn is_test_only(path: &str) -> bool {
+    path.contains("/tests/") || path.contains("kdtv-emulator")
+}
+
+/// Count `impl ... OpenAuthority for ...` outside any `#[cfg(test)]` module.
+///
+/// The trait is unsealed precisely so a test can supply an implementation, so
+/// this has to distinguish a test helper from a second way to open water. It
+/// tracks brace depth and leaves the test module at its matching close brace.
+///
+/// A first version simply latched a flag on the first `#[cfg(test)]` and never
+/// cleared it, which meant anything after a test module — including at the end
+/// of the file, which is exactly where one gets appended — counted as test code.
+/// Verified against a deliberately forged implementation placed there.
+fn shipping_impls(text: &str) -> usize {
+    let mut n = 0usize;
+    let mut depth: i32 = 0;
+    let mut pending_test_mod = false;
+    let mut test_depth: Option<i32> = None;
+
+    for line in text.lines() {
+        let t = line.trim_start();
+        if t.starts_with("#[cfg(test)]") {
+            pending_test_mod = true;
+        }
+
+        let in_test = test_depth.is_some();
+        if !in_test && t.starts_with("impl ") && t.contains("OpenAuthority for") {
+            n += 1;
+        }
+
+        let opens = i32::try_from(line.matches('{').count()).unwrap_or(0);
+        let closes = i32::try_from(line.matches('}').count()).unwrap_or(0);
+        if pending_test_mod && t.contains("mod ") && opens > 0 {
+            test_depth = Some(depth);
+            pending_test_mod = false;
+        }
+        depth += opens - closes;
+        if let Some(d) = test_depth
+            && depth <= d
+        {
+            test_depth = None;
+        }
+    }
+    n
 }

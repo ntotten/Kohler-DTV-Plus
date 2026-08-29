@@ -29,7 +29,7 @@ enum Command {
     AuditGraph,
     /// Assert no fixture claims to have been captured from this hardware.
     ///
-    /// The transmit gate cannot open while every fixture is tier [C]. This is
+    /// The transmit gate cannot open while every fixture is tier `[C]`. This is
     /// the same claim checked against the committed data rather than the code.
     GateClosed,
     /// Report requirement coverage from requirements.toml.

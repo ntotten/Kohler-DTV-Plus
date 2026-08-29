@@ -26,6 +26,16 @@ use kdtv_proto::saturn::{
 use kdtv_units::{Cx2, LinkKind, Slot, SlotSet, ValveSetpoint, ZoneId};
 use proptest::prelude::*;
 
+/// Stands in for `kdtv-safety`'s grant, which is the only shipping
+/// implementation of this trait.
+#[derive(Debug)]
+struct TestAuthority(kdtv_units::ZoneId);
+impl kdtv_units::OpenAuthority for TestAuthority {
+    fn authorised_zone(&self) -> kdtv_units::ZoneId {
+        self.0
+    }
+}
+
 /// The emulator scope, which is the only scope today's tier [C] fixture set can
 /// grant. Without one there is no encoder at all — `kdtv_proto::gate`.
 fn auth() -> TransmitAuthority {
@@ -251,7 +261,7 @@ proptest! {
 
         for op in ops {
             let f = e
-                .encode(target, &op, LinkPhase::Running, None)
+                .encode(target, &op, LinkPhase::Running, None, Some(&TestAuthority(kdtv_units::ZoneId::Zone1)))
                 .expect("an allowlisted write in Running must encode");
             let mut rx = RxBuffer::new();
             rx.extend(f.bytes());
@@ -334,7 +344,7 @@ proptest! {
         }
 
         for op in ops {
-            let Ok(f) = e.encode(target, &op, LinkPhase::Running, None) else {
+            let Ok(f) = e.encode(target, &op, LinkPhase::Running, None, Some(&TestAuthority(kdtv_units::ZoneId::Zone1))) else {
                 continue;
             };
             prop_assert!(f.len() <= MAX_FRAME);

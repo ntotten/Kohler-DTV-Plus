@@ -135,6 +135,17 @@ impl OpenGrant {
     }
 }
 
+/// The grant is the workspace's only permission to open water.
+///
+/// `kdtv-proto` requires an [`kdtv_units::OpenAuthority`] to encode an outlet-opening frame,
+/// and this is the only implementation of it. `cargo xtask audit-graph` asserts
+/// that remains true.
+impl kdtv_units::OpenAuthority for OpenGrant {
+    fn authorised_zone(&self) -> ZoneId {
+        self.zone
+    }
+}
+
 /// Why a request to open water was refused.
 ///
 /// A refusal changes no valve state and transmits nothing. That is the whole
