@@ -84,6 +84,8 @@ negative result you cannot describe is not an experiment — it is a hope.
 | [I1](#i1--the-shower-stops-mid-use) | The shower stops mid-use | **open** | Tankless minimum-flow cutout → valve cannot reach setpoint → valve shuts off | E1 · high-flow shower |
 | [I2](#i2--the-k-99693-interface-was-disconnected) | The K-99693 interface was disconnected | **resolved** 2026-07-29 | Sealed housing pulled the internal connector out | — |
 | [I3](#i3--valuescgi-intermittently-drops-a-healthy-valve) | `values.cgi` intermittently drops a healthy valve | **open** | Truncated response, not a real dropout | E7 · measure the rate |
+| [I4](#i4--is-automatic-purge-on) | Is automatic purge on? | **open** | Two of our own documents disagree; the live controller settles it | E12 · re-read the setting |
+| [I5](#i5--the-saturn-register-map-is-contradictory) | The Saturn register map is contradictory | **open** | The vendored sources describe different register numbering | E13 · resolve from capture |
 
 ---
 
@@ -683,3 +685,113 @@ It fails in two directions:
   except by counting keys or noticing the response took twenty seconds.
   `system_info.cgi` does the same thing, 36 keys against 39. Nothing is written to
   the controller's error log when this happens.
+
+
+---
+
+## I4 — Is automatic purge on?
+
+**Status: open.** Two documents in this repository state opposite things, and
+neither was re-checked against the live controller when the other was written.
+Cheap to settle; it is here because it is a prerequisite, not because it is hard.
+
+### Symptom
+
+Not a fault — a contradiction in our own record:
+
+| Source | Says |
+| --- | --- |
+| [research/FIELD-NOTES.md](research/FIELD-NOTES.md) §3 | `auto_purge = 1` and `auto_purge_enable = 1`, so pressing start runs a purge cycle first |
+| [docs/system-specification.md](docs/system-specification.md) §2 | "automatic purge disabled" |
+
+### Next to try
+
+- [ ] **E12 · Re-read the setting.**
+  - **Discriminates:** the two documents, directly.
+  - **Method:** one idle read of `values.cgi`; compare `auto_purge`,
+    `auto_purge_enable`, and both per-valve purge fields against what each
+    document claims. Read-only, no consent needed. Note which document was
+    written from a live read and which inherited the value.
+  - **Purge is on:** the replacement controller's state machine needs a purge
+    state, "confirmed off" has to mean *flow stopped* rather than *valve
+    acknowledged off*, and the Phase 3/4 stop-latency numbers are measuring the
+    wrong edge until corrected.
+  - **Purge is off:** FIELD-NOTES §3 needs a correction and a date, and the
+    replacement design simplifies.
+
+- [ ] **E12b · Observe it, if the setting says on.**
+  - **Method:** during the first captured shower, note whether water moves
+    before the valve reports on, and whether it continues after stop is
+    acknowledged. The passive Saturn tap sees both edges directly.
+  - **⚠️ Consent:** moves water. Operator present.
+
+### Why it matters
+
+`start` and `stop` in the replacement controller's public API are supposed to
+mean something physical. If purge is enabled they do not mean it directly, and
+every latency measurement taken against the valve's acknowledgement rather than
+against flow is off by the purge duration. It also affects what an operator sees
+when they hit stop and water keeps running — which, in a system being trusted
+to fail closed, is exactly the moment confidence is decided.
+
+### Open questions
+
+- Was the "disabled" reading taken from the live unit on 2026-08-22, or carried
+  forward from an earlier draft? Provenance decides which document to trust
+  before E12 is even run.
+- Does purge respect the temperature clamp, or does it run at whatever the
+  valve's purge logic chooses?
+
+---
+
+## I5 — The Saturn register map is contradictory
+
+**Status: open.** The two vendored reverse-engineering documents describe
+different register numbering for the same protocol. Blocking for the replacement
+controller's encoder; harmless until then.
+
+### Symptom
+
+| Source | `0x15` | `0x10` |
+| --- | --- | --- |
+| [docs/devices/valve-control.md](docs/devices/valve-control.md) | firmware info **and** calibration read | not stated |
+| [research/xagon0/docs/protocols/saturn-protocol.md](research/xagon0/docs/protocols/saturn-protocol.md) | read configuration parameters | read calibration data |
+
+The same document set also disagrees on the master address for a Prompt 3-Port
+(`0x10` "always" versus "always use `0x00` with DTV+ hardware"), and on response
+timing (a single 320 ms communication timeout versus a 400 ms response timeout
+with a 320 ms message timeout).
+
+### Next to try
+
+- [ ] **E13 · Resolve the register map from the passive capture.**
+  - **Discriminates:** the two sources, on evidence from our own hardware.
+  - **Method:** Phase 1 of
+    [CONTROLLER-DESIGN.md](docs/replacement-controller/CONTROLLER-DESIGN.md).
+    Decode the K-99695's own boot and idle traffic and record which control
+    bytes it actually sends, what comes back, and at what cadence. No
+    transmission — the front end is physically receive-only.
+  - **They agree with one source:** that source becomes the reference for the
+    encoder and the other is annotated as describing a different revision.
+  - **They agree with neither:** more likely than it sounds, and more valuable —
+    our firmware pair (`0.12` and `0.14`) is what the encoder has to match.
+
+### What we know
+
+- Both sources are third-party analysis of DTV+ firmware, tier **[C]** in
+  [docs/system-specification.md](docs/system-specification.md). Neither has been
+  verified against our unit.
+- `saturn-protocol.md`'s own worked example shows a `0x1E` Prompt 3-Port
+  answering to master address `0x00`, which is evidence for `0x00` on the
+  three-port — but it is one capture from unknown hardware. **Inference, not
+  confirmation.**
+- The vendored material carries no license and is documented in
+  [research/xagon0/PROVENANCE.md](research/xagon0/PROVENANCE.md).
+
+### Why it matters
+
+An encoder built on the wrong map sends well-formed frames to the wrong
+register. On a device that owns a mixing valve, "well-formed but wrong" is the
+failure mode worth spending a capture to avoid — and the design already forbids
+the calibration, EEPROM, reset and bootloader control bytes precisely because
+being confident about which byte is which is the whole safety argument.

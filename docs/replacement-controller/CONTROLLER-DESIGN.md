@@ -469,21 +469,20 @@ from receive-only captures, not guesses:
 7. What fault frames are observable?
 8. Where are termination and idle bias applied?
 9. What are the verified A/B/ground pins and polarity?
-10. **What is the actual register/control-byte map?** The two vendored sources
-    contradict each other: `valve-control.md` puts both firmware info and
-    calibration read at `0x15`, while `saturn-protocol.md` puts configuration
-    at `0x15` and calibration at `0x10`. Questions 1-9 resolve the *frames*;
-    this one resolves the *numbering*, and an encoder built on the wrong map
-    can send a plausible frame to the wrong register.
+10. **What is the actual register/control-byte map?** Tracked as
+    [I5](../../INVESTIGATIONS.md#i5--the-saturn-register-map-is-contradictory).
+    Questions 1-9 resolve the *frames*; this one resolves the *numbering*, and
+    an encoder built on the wrong map sends a well-formed frame to the wrong
+    register. Question 1 above is part of the same contradiction.
 11. **Does the address-clear broadcast (`0x3A`/`0x03`) disturb calibration or
     any other stored valve configuration?** The design permits address clear
     during discovery. Zone 1 holds `v1_cal_code = 173` and zone 2 holds `160`;
     both are recorded in the recovery baseline before any capture begins, and
     both are re-read after the first discovery to confirm they survived.
-12. **Is automatic purge on or off?** FIELD-NOTES §3 records `auto_purge = 1`
-    and `auto_purge_enable = 1`; [system-specification.md](../system-specification.md)
-    records "automatic purge disabled". Both cannot be right, and the answer
-    changes what `start` and `stop` mean physically — see the purge note below.
+12. **Is automatic purge on or off?** Tracked as
+    [I4](../../INVESTIGATIONS.md#i4--is-automatic-purge-on) — two of our own
+    documents disagree, and the answer changes what `start` and `stop` mean
+    physically. See the purge note below.
 
 Capture one valve at a time with no HTTP polling or other automation:
 
