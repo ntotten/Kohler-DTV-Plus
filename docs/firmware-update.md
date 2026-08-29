@@ -43,9 +43,9 @@ Once triggered, the controller performs these steps in order:
 
 ## Update Folder
 
-| Mode | Folder | Source |
-|------|--------|--------|
-| Standard (consumer) | `00` | Default folder on FTP server |
+| Mode                | Folder             | Source                       |
+| ------------------- | ------------------ | ---------------------------- |
+| Standard (consumer) | `00`               | Default folder on FTP server |
 | Hospitality (hotel) | Custom folder name | Configured in `STRING_S[39]` |
 
 Hospitality mode allows hotel installations to use a separate update channel with firmware tailored for commercial deployments.
@@ -54,10 +54,10 @@ Hospitality mode allows hotel installations to use a separate update channel wit
 
 The endpoint `/ftp_status.cgi` returns a JSON response with the current update state:
 
-| Field | Description |
-|-------|-------------|
-| `internet_status` | Whether the controller can reach the internet |
-| `upload_enable` | Whether firmware upload is currently permitted |
+| Field             | Description                                    |
+| ----------------- | ---------------------------------------------- |
+| `internet_status` | Whether the controller can reach the internet  |
+| `upload_enable`   | Whether firmware upload is currently permitted |
 
 This is useful for verifying connectivity before triggering a manual update, or for monitoring the progress of an in-flight update.
 
@@ -65,20 +65,20 @@ This is useful for verifying connectivity before triggering a manual update, or 
 
 The same endpoint exposes every component the updater can stage. Field set observed on 0.0.3.89:
 
-| Field | Component |
-|-------|-----------|
-| `ftp_ctl_image_size` | Controller application |
-| `ftp_ui_image_size` | Amulet (V1) UI |
-| `ftp_ui_app_file` | Linux (V2) UI pack |
-| `ftp_ui_rfs_file0` ... `ftp_ui_rfs_file7` | Eight UI resource (rfs) files |
-| `ftp_ui_lang_file` | UI language pack |
-| `ftp_ui_touch_file` | UI touch controller |
-| `ftp_coproc_image_size` | UI coprocessor |
-| `ftp_prompt2_flash_size` / `ftp_prompt2_eeprom_size` | Prompt 2 **valve** flash / EEPROM |
-| `ftp_prompt3_flash_size` / `ftp_prompt3_eeprom_size` | Prompt 3 **valve** flash / EEPROM |
-| `ftp_versions_file` | The `versions.txt` manifest |
-| `ftp_lang_image_size` | Additional language image |
-| `ftp_downloaded_size`, `ftp_file_count`, `ftp_current_file_count`, `ftp_file_id`, `ftp_download_error` | Transfer progress bookkeeping |
+| Field                                                                                                  | Component                         |
+| ------------------------------------------------------------------------------------------------------ | --------------------------------- |
+| `ftp_ctl_image_size`                                                                                   | Controller application            |
+| `ftp_ui_image_size`                                                                                    | Amulet (V1) UI                    |
+| `ftp_ui_app_file`                                                                                      | Linux (V2) UI pack                |
+| `ftp_ui_rfs_file0` ... `ftp_ui_rfs_file7`                                                              | Eight UI resource (rfs) files     |
+| `ftp_ui_lang_file`                                                                                     | UI language pack                  |
+| `ftp_ui_touch_file`                                                                                    | UI touch controller               |
+| `ftp_coproc_image_size`                                                                                | UI coprocessor                    |
+| `ftp_prompt2_flash_size` / `ftp_prompt2_eeprom_size`                                                   | Prompt 2 **valve** flash / EEPROM |
+| `ftp_prompt3_flash_size` / `ftp_prompt3_eeprom_size`                                                   | Prompt 3 **valve** flash / EEPROM |
+| `ftp_versions_file`                                                                                    | The `versions.txt` manifest       |
+| `ftp_lang_image_size`                                                                                  | Additional language image         |
+| `ftp_downloaded_size`, `ftp_file_count`, `ftp_current_file_count`, `ftp_file_id`, `ftp_download_error` | Transfer progress bookkeeping     |
 
 The `*_size` values on an idle unit match the staged files shown by `/files.cgi` — confirming firmware moves over plaintext FTP. The valve fields are notable: the update system can reflash the valve MCUs, not just the controller and interfaces.
 

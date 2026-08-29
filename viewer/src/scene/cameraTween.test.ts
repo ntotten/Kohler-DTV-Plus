@@ -20,7 +20,12 @@ const pose = (
 
 describe('ease', () => {
   it('pins both ends exactly, whatever the exponents', () => {
-    for (const [i, o] of [[1, 1], [1.35, 2.6], [4, 0.5], [0.2, 9]]) {
+    for (const [i, o] of [
+      [1, 1],
+      [1.35, 2.6],
+      [4, 0.5],
+      [0.2, 9],
+    ]) {
       expect(ease(0, i, o)).toBe(0);
       expect(ease(1, i, o)).toBe(1);
     }

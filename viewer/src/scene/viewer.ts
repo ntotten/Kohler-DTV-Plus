@@ -371,11 +371,7 @@ export function createViewer(canvas: HTMLCanvasElement, container: HTMLElement):
       gesture = {
         pointerId: event.pointerId,
         pick,
-        probe: createDragProbe(
-          event.clientX,
-          event.clientY,
-          dragThresholdPx(event.pointerType),
-        ),
+        probe: createDragProbe(event.clientX, event.clientY, dragThresholdPx(event.pointerType)),
       };
       // Geared up for the whole gesture, including the pixels before the drag
       // is confirmed — those either become part of the orbit, in which case
@@ -469,7 +465,12 @@ export function createViewer(canvas: HTMLCanvasElement, container: HTMLElement):
         snapToDirection(modelRoot, camera, controls, pick.towards);
         return;
       case 'step':
-        snapToDirection(modelRoot, camera, controls, stepDirection(pick.step, camera, controls.target));
+        snapToDirection(
+          modelRoot,
+          camera,
+          controls,
+          stepDirection(pick.step, camera, controls.target),
+        );
         return;
       case 'roll':
         // Roll keeps the camera where it is and turns the picture, so it must

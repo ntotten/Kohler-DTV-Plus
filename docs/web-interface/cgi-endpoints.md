@@ -12,15 +12,15 @@ Complete reference for all CGI endpoints exposed by the Kohler DTV+ web interfac
 
 Start a shower with explicit valve/outlet/temperature parameters.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `valve_num` | `1` or `2` | Number of valves to activate |
-| `valve1_outlet` | string | Outlet combination for valve 1 (e.g. `"12"`, `"123"`) |
-| `valve1_massage` | int | Massage mode: `0` = none, `1` = wave, `2` = single, `3` / `4` = custom |
-| `valve1_temp` | float | Target temperature in Celsius |
-| `valve2_outlet` | string | Outlet combination for valve 2 (empty string if unused) |
-| `valve2_massage` | int | Massage mode for valve 2 |
-| `valve2_temp` | float | Target temperature in Celsius for valve 2 |
+| Parameter        | Type       | Description                                                            |
+| ---------------- | ---------- | ---------------------------------------------------------------------- |
+| `valve_num`      | `1` or `2` | Number of valves to activate                                           |
+| `valve1_outlet`  | string     | Outlet combination for valve 1 (e.g. `"12"`, `"123"`)                  |
+| `valve1_massage` | int        | Massage mode: `0` = none, `1` = wave, `2` = single, `3` / `4` = custom |
+| `valve1_temp`    | float      | Target temperature in Celsius                                          |
+| `valve2_outlet`  | string     | Outlet combination for valve 2 (empty string if unused)                |
+| `valve2_massage` | int        | Massage mode for valve 2                                               |
+| `valve2_temp`    | float      | Target temperature in Celsius for valve 2                              |
 
 **Example -- single valve, outlets 1 and 2, 40 C, no massage:**
 
@@ -46,9 +46,9 @@ GET /stop_shower.cgi
 
 Start a saved user preset.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `user` | int (1-6) | User preset number |
+| Parameter | Type      | Description        |
+| --------- | --------- | ------------------ |
+| `user`    | int (1-6) | User preset number |
 
 ```
 GET /start_user.cgi?user=3
@@ -70,10 +70,10 @@ Toggle the massage function on the active shower. No parameters.
 
 Activate the steam generator.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `temp` | int | Target temperature (in Fahrenheit by default, depends on unit setting) |
-| `time` | int | Duration in minutes |
+| Parameter | Type | Description                                                            |
+| --------- | ---- | ---------------------------------------------------------------------- |
+| `temp`    | int  | Target temperature (in Fahrenheit by default, depends on unit setting) |
+| `time`    | int  | Duration in minutes                                                    |
 
 ```
 GET /steam_on.cgi?temp=110&time=20
@@ -95,9 +95,9 @@ Check or trigger the steam generator power-clean cycle. No parameters.
 
 Turn on a light module at a given intensity.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `module` | int (1-3) | Light module number |
+| Parameter   | Type        | Description           |
+| ----------- | ----------- | --------------------- |
+| `module`    | int (1-3)   | Light module number   |
 | `intensity` | int (0-100) | Brightness percentage |
 
 ```
@@ -108,9 +108,9 @@ GET /light_on.cgi?module=1&intensity=75
 
 Turn off a light module.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `module` | int (1-3) | Light module number |
+| Parameter | Type      | Description         |
+| --------- | --------- | ------------------- |
+| `module`  | int (1-3) | Light module number |
 
 ```
 GET /light_off.cgi?module=2
@@ -124,38 +124,38 @@ GET /light_off.cgi?module=2
 
 Activate the rain panel with a solid color or lighting effect.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `mode` | int | `1` = solid color, `2` = effect |
-| `color` | int | Hue value (0-360) or `-1` for white. Used when `mode=1`. |
-| `effect` | int (0-7) | Effect index. Used when `mode=2`. |
+| Parameter | Type      | Description                                              |
+| --------- | --------- | -------------------------------------------------------- |
+| `mode`    | int       | `1` = solid color, `2` = effect                          |
+| `color`   | int       | Hue value (0-360) or `-1` for white. Used when `mode=1`. |
+| `effect`  | int (0-7) | Effect index. Used when `mode=2`.                        |
 
 **Color values (hue):**
 
-| Hue | Color |
-|-----|-------|
-| 0 | Red |
-| 30 | Orange |
-| 60 | Yellow |
-| 115 | Green |
-| 235 | Blue |
+| Hue | Color  |
+| --- | ------ |
+| 0   | Red    |
+| 30  | Orange |
+| 60  | Yellow |
+| 115 | Green  |
+| 235 | Blue   |
 | 270 | Violet |
 | 305 | Purple |
-| 330 | Pink |
-| -1 | White |
+| 330 | Pink   |
+| -1  | White  |
 
 **Effect values:**
 
-| Index | Effect |
-|-------|--------|
-| 0 | Color Cycle |
-| 1 | Warm |
-| 2 | Cool |
-| 3 | Rise |
-| 4 | Set |
-| 5 | Clouds |
-| 6 | Reflect |
-| 7 | Thunder |
+| Index | Effect      |
+| ----- | ----------- |
+| 0     | Color Cycle |
+| 1     | Warm        |
+| 2     | Cool        |
+| 3     | Rise        |
+| 4     | Set         |
+| 5     | Clouds      |
+| 6     | Reflect     |
+| 7     | Thunder     |
 
 **Example -- solid blue:**
 
@@ -181,9 +181,9 @@ Turn off the rain panel. No parameters.
 
 Start audio playback.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `volume` | int (0-100) | Volume level |
+| Parameter | Type        | Description  |
+| --------- | ----------- | ------------ |
+| `volume`  | int (0-100) | Volume level |
 
 ```
 GET /music_on.cgi?volume=50
@@ -217,10 +217,10 @@ Returns system information (firmware versions, serial numbers, hardware revision
 
 Read datatable values. See [values.cgi Guide](../../research/xagon0/docs/web-interface/values-cgi-guide.md) for full details.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `page` | string | Page identifier |
-| `type` | string | Data type filter |
+| Parameter | Type   | Description      |
+| --------- | ------ | ---------------- |
+| `page`    | string | Page identifier  |
+| `type`    | string | Data type filter |
 
 Response is JSON with a `values` array.
 
@@ -263,7 +263,7 @@ Sets the check-for-updates flag. The controller will poll for firmware updates o
 Returns the default landing page URL.
 
 ```json
-{"url": "settings.html"}
+{ "url": "settings.html" }
 ```
 
 ---
@@ -274,13 +274,13 @@ Returns the default landing page URL.
 
 **The primary settings endpoint.** Used by the web UI to write configuration values.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `index` | int (1-105) | Variable ID -- see [save_variable Reference](../../research/xagon0/docs/web-interface/save-variable-reference.md) |
-| `value` | varies | Value to write |
-| `module` | int (1-3) | Optional: light module selector |
-| `valve` | int (1-2) | Optional: valve selector |
-| `outlet` | varies | Optional: outlet selector |
+| Parameter | Type        | Description                                                                                                       |
+| --------- | ----------- | ----------------------------------------------------------------------------------------------------------------- |
+| `index`   | int (1-105) | Variable ID -- see [save_variable Reference](../../research/xagon0/docs/web-interface/save-variable-reference.md) |
+| `value`   | varies      | Value to write                                                                                                    |
+| `module`  | int (1-3)   | Optional: light module selector                                                                                   |
+| `valve`   | int (1-2)   | Optional: valve selector                                                                                          |
+| `outlet`  | varies      | Optional: outlet selector                                                                                         |
 
 **Example -- set music volume to 60:**
 
@@ -300,12 +300,12 @@ See [save_variable Reference](../../research/xagon0/docs/web-interface/save-vari
 
 Direct datatable read/write access.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `type` | int | `0` = byte, `1` = word, `2` = color, `3` = string |
-| `page` | char/int | `'s'` or `'S'` = stationary, `'g'` or `'G'` = ghost, or page number `0-29` |
-| `index` | int | Variable index within the page |
-| `value` | varies | Value to write (max 25 chars for strings). Omit to read. |
+| Parameter | Type     | Description                                                                |
+| --------- | -------- | -------------------------------------------------------------------------- |
+| `type`    | int      | `0` = byte, `1` = word, `2` = color, `3` = string                          |
+| `page`    | char/int | `'s'` or `'S'` = stationary, `'g'` or `'G'` = ghost, or page number `0-29` |
+| `index`   | int      | Variable index within the page                                             |
+| `value`   | varies   | Value to write (max 25 chars for strings). Omit to read.                   |
 
 **Response:** `":)"` on success, `":("` on invalid page.
 
@@ -349,9 +349,9 @@ Clear the entire datatable (destructive -- resets all configuration).
 
 Invoke a Remote Procedure Call by index.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `index` | int | RPC command index |
+| Parameter | Type | Description       |
+| --------- | ---- | ----------------- |
+| `index`   | int  | RPC command index |
 
 Response: `":)"` on success.
 
@@ -369,25 +369,25 @@ See [RPC Reference](../../research/xagon0/docs/web-interface/rpc-reference.md) f
 
 Configure simulated devices using an 11-character binary string.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `value` | string | 11-character binary string (`0` or `1` per position) |
+| Parameter | Type   | Description                                          |
+| --------- | ------ | ---------------------------------------------------- |
+| `value`   | string | 11-character binary string (`0` or `1` per position) |
 
 **Bit positions:**
 
-| Bit | Device |
-|-----|--------|
-| 0 | 6-port valve 1 |
-| 1 | 6-port valve 2 |
-| 2 | Prompt3 valve 1 |
-| 3 | Prompt3 valve 2 |
-| 4 | Prompt2 valve 1 |
-| 5 | Prompt2 valve 2 |
-| 6 | Cold water |
-| 7 | Steam |
-| 8 | Rain panel |
-| 9 | LightBridge |
-| 10 | Amplifier |
+| Bit | Device          |
+| --- | --------------- |
+| 0   | 6-port valve 1  |
+| 1   | 6-port valve 2  |
+| 2   | Prompt3 valve 1 |
+| 3   | Prompt3 valve 2 |
+| 4   | Prompt2 valve 1 |
+| 5   | Prompt2 valve 2 |
+| 6   | Cold water      |
+| 7   | Steam           |
+| 8   | Rain panel      |
+| 9   | LightBridge     |
+| 10  | Amplifier       |
 
 **Mutual exclusion:** Only one valve type can be active per valve slot. For example, you cannot enable both bit 0 (6-port valve 1) and bit 2 (Prompt3 valve 1) simultaneously.
 
@@ -409,28 +409,28 @@ Returns JSON describing both real and simulated device status.
 
 **Response fields:**
 
-| Field | Description |
-|-------|-------------|
-| `real_valve_attached` | Whether a real valve is physically connected |
-| `Valve_1_attached` / `Valve_2_attached` | Per-valve real detection |
-| `v1_status` / `v2_status` | 6-port valve simulation status |
-| `v1_P3status` / `v2_P3status` | Prompt3 valve simulation status |
-| `v1_P2status` / `v2_P2status` | Prompt2 valve simulation status |
-| `steam_status` | `0` = real, `1` = sim ON, `2` = sim available |
-| `rain_status` | Same as above |
-| `light_status` | Same as above |
-| `amp_status` | Same as above |
-| `coldwater` | Cold water simulation state |
-| `warning` | Warning flags (bitfield) |
+| Field                                   | Description                                   |
+| --------------------------------------- | --------------------------------------------- |
+| `real_valve_attached`                   | Whether a real valve is physically connected  |
+| `Valve_1_attached` / `Valve_2_attached` | Per-valve real detection                      |
+| `v1_status` / `v2_status`               | 6-port valve simulation status                |
+| `v1_P3status` / `v2_P3status`           | Prompt3 valve simulation status               |
+| `v1_P2status` / `v2_P2status`           | Prompt2 valve simulation status               |
+| `steam_status`                          | `0` = real, `1` = sim ON, `2` = sim available |
+| `rain_status`                           | Same as above                                 |
+| `light_status`                          | Same as above                                 |
+| `amp_status`                            | Same as above                                 |
+| `coldwater`                             | Cold water simulation state                   |
+| `warning`                               | Warning flags (bitfield)                      |
 
 **Port assignments for simulation:**
 
 | Port | Simulated Device |
-|------|-----------------|
-| 5 | Steam |
-| 6 | Rain panel |
-| 7 | LightBridge |
-| 8 | Amplifier |
+| ---- | ---------------- |
+| 5    | Steam            |
+| 6    | Rain panel       |
+| 7    | LightBridge      |
+| 8    | Amplifier        |
 
 ---
 
@@ -517,7 +517,7 @@ data_table_default.txt               size 10221 bytes
 \backup
 ```
 
-> **Important:** there is no corresponding *download* CGI, and the web server's document root is a read-only filesystem compiled into the firmware image — it cannot reach `a:\`. This endpoint enumerates filenames only. Extraction requires hardware access; see [../repair/firmware-extraction.md](../repair/firmware-extraction.md).
+> **Important:** there is no corresponding _download_ CGI, and the web server's document root is a read-only filesystem compiled into the firmware image — it cannot reach `a:\`. This endpoint enumerates filenames only. Extraction requires hardware access; see [../repair/firmware-extraction.md](../repair/firmware-extraction.md).
 
 ### `unpack_bin.cgi`
 
@@ -569,10 +569,10 @@ Remove a light module from the system configuration.
 
 Some CGI operations are gated by lock flags to prevent conflicts during shower operation.
 
-| Flag | Value | Description |
-|------|-------|-------------|
-| `CGI_SHOWER_START` | `0x00000001` | Set when a shower start is in progress |
-| `CGI_SHOWER_LOCK` | `0x00000002` | Set while the shower is actively running |
+| Flag               | Value        | Description                              |
+| ------------------ | ------------ | ---------------------------------------- |
+| `CGI_SHOWER_START` | `0x00000001` | Set when a shower start is in progress   |
+| `CGI_SHOWER_LOCK`  | `0x00000002` | Set while the shower is actively running |
 
 When `CGI_SHOWER_LOCK` is active, configuration-changing endpoints may return errors or be silently ignored. Always check shower state before making settings changes programmatically.
 

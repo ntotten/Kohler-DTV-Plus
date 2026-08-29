@@ -12,17 +12,17 @@ what to try next. It is not a history: how a hypothesis died goes in
 
 ## The pattern
 
-*This section is the transferable part. A project that starts because something
+_This section is the transferable part. A project that starts because something
 broke and would not stop breaking needs exactly four documents, and this is the
-one that is usually missing.*
+one that is usually missing._
 
 ### Three homes, and only three
 
-| Home | Holds | Tense |
-| --- | --- | --- |
-| **INVESTIGATIONS.md** (this file) | What we believe now, and what to try next | present / future |
-| [STORY-LOG.md](STORY-LOG.md) | What happened, what it changed, what we got wrong | past |
-| `research/diagnostics/` | Raw captures, dated in the filename | evidence |
+| Home                              | Holds                                             | Tense            |
+| --------------------------------- | ------------------------------------------------- | ---------------- |
+| **INVESTIGATIONS.md** (this file) | What we believe now, and what to try next         | present / future |
+| [STORY-LOG.md](STORY-LOG.md)      | What happened, what it changed, what we got wrong | past             |
+| `research/diagnostics/`           | Raw captures, dated in the filename               | evidence         |
 
 Everything else is a spec, and specs multiply. Resist a new document per
 investigation: an investigation that outgrows a section here is usually two
@@ -36,7 +36,7 @@ Each investigation carries these, in this order. **The order is the point.**
    hypothesis in one clause.
 2. **Symptom** — what is actually observed, in the operator's words where
    possible. Not a theory.
-3. **Next to try** — the queue. *This comes before the analysis on purpose.*
+3. **Next to try** — the queue. _This comes before the analysis on purpose._
 4. **What we know** — evidence, each item traceable to a capture, a measurement,
    or a source.
 5. **Ruled out** — and by what. A hypothesis killed is progress; record the
@@ -79,13 +79,13 @@ negative result you cannot describe is not an experiment — it is a hope.
 
 ## Index
 
-| # | Investigation | Status | Leading hypothesis | Next action |
-| --- | --- | --- | --- | --- |
-| [I1](#i1--the-shower-stops-mid-use) | The shower stops mid-use | **open** | Tankless minimum-flow cutout → valve cannot reach setpoint → valve shuts off | E1 · high-flow shower |
-| [I2](#i2--the-k-99693-interface-was-disconnected) | The K-99693 interface was disconnected | **resolved** 2026-07-29 | Sealed housing pulled the internal connector out | — |
-| [I3](#i3--valuescgi-intermittently-drops-a-healthy-valve) | `values.cgi` intermittently drops a healthy valve | **open** | Truncated response, not a real dropout | E7 · measure the rate |
-| [I4](#i4--is-automatic-purge-on) | Is automatic purge on? | **open** | Two of our own documents disagree; the live controller settles it | E12 · re-read the setting |
-| [I5](#i5--the-saturn-register-map-is-contradictory) | The Saturn register map is contradictory | **open** | The vendored sources describe different register numbering | E13 · resolve from capture |
+| #                                                         | Investigation                                     | Status                  | Leading hypothesis                                                           | Next action                |
+| --------------------------------------------------------- | ------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------- | -------------------------- |
+| [I1](#i1--the-shower-stops-mid-use)                       | The shower stops mid-use                          | **open**                | Tankless minimum-flow cutout → valve cannot reach setpoint → valve shuts off | E1 · high-flow shower      |
+| [I2](#i2--the-k-99693-interface-was-disconnected)         | The K-99693 interface was disconnected            | **resolved** 2026-07-29 | Sealed housing pulled the internal connector out                             | —                          |
+| [I3](#i3--valuescgi-intermittently-drops-a-healthy-valve) | `values.cgi` intermittently drops a healthy valve | **open**                | Truncated response, not a real dropout                                       | E7 · measure the rate      |
+| [I4](#i4--is-automatic-purge-on)                          | Is automatic purge on?                            | **open**                | Two of our own documents disagree; the live controller settles it            | E12 · re-read the setting  |
+| [I5](#i5--the-saturn-register-map-is-contradictory)       | The Saturn register map is contradictory          | **open**                | The vendored sources describe different register numbering                   | E13 · resolve from capture |
 
 ---
 
@@ -95,11 +95,11 @@ negative result you cannot describe is not an experiment — it is a hope.
 valve cannot reach setpoint → valve shuts off.** The hypothesis has changed twice,
 both on 2026-07-26.
 
-| Revision | Leading hypothesis | What changed it |
-| --- | --- | --- |
-| Initial | Failing K-99693 sending spurious stop commands | — |
-| 2nd | Valve power loss or RS-485 comms loss | Video: the controller still reports "running" for ~1 min after the water stops, so nothing commanded it |
-| **Current** | **Tankless minimum-flow cutout** | Hot source is tankless; and valve errors never reach the controller's on-board log, so the empty log does not exclude them |
+| Revision    | Leading hypothesis                             | What changed it                                                                                                            |
+| ----------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Initial     | Failing K-99693 sending spurious stop commands | —                                                                                                                          |
+| 2nd         | Valve power loss or RS-485 comms loss          | Video: the controller still reports "running" for ~1 min after the water stops, so nothing commanded it                    |
+| **Current** | **Tankless minimum-flow cutout**               | Hot source is tankless; and valve errors never reach the controller's on-board log, so the empty log does not exclude them |
 
 ### Symptom
 
@@ -112,7 +112,7 @@ observation below predates the repair.
 
 ### Next to try
 
-- [ ] **E1 · High-flow shower.** *The cheapest next step, and it needs no code.*
+- [ ] **E1 · High-flow shower.** _The cheapest next step, and it needs no code._
   - **Discriminates:** H0 (tankless minimum flow) from everything else.
   - **Method:** run with several outlets open — overhead plus body sprays — well
     above any plausible minimum firing flow. Time it. Compare against the
@@ -135,8 +135,8 @@ observation below predates the repair.
   - **Does not stop, repeatedly:** unexpected and important. Something about the
     reconnection changed the system, and the whole ranking needs revisiting.
   - **⚠️ Consent:** moves water. Operator present.
-  - *Note: run E1 and E2 in the same session if convenient, but not the same
-    shower — they need different outlet configurations.*
+  - _Note: run E1 and E2 in the same session if convenient, but not the same
+    shower — they need different outlet configurations._
 
 - [ ] **E3 · Identify the tankless unit.**
   - **Discriminates:** nothing directly — it supplies the number H0 rests on.
@@ -157,7 +157,7 @@ observation below predates the repair.
   - Costs nothing beyond noting two times per shower.
 
 - [ ] **E5 · Outlet water temperature over time.**
-  - **Discriminates:** H0 and H1 from H2/H3 — a temperature drop *preceding* the
+  - **Discriminates:** H0 and H1 from H2/H3 — a temperature drop _preceding_ the
     stop is H0's signature and is invisible to the controller.
   - **Method:** any logging thermometer at an outlet. This is deliberately
     outside the DTV+, because the chain H0 describes is mostly invisible to
@@ -165,7 +165,7 @@ observation below predates the repair.
   - **Confirmed necessary, 2026-08-04.** There is **no measured water temperature
     anywhere in the CGI API** — checked, not assumed. `valve1_temp_string` and
     `valve1Setpoint` both carry the setpoint; none of `values.cgi`'s 304 keys or
-    `system_info.cgi`'s 39 carries a thermistor reading. The controller *has* the
+    `system_info.cgi`'s 39 carries a thermistor reading. The controller _has_ the
     number — it reads it from the valve over Saturn and pushes
     `DT_W_Temperature` to the touchscreen — but no endpoint surfaces it. xagon0's
     documented `values.cgi?type=word` datatable form, which would have given
@@ -174,9 +174,9 @@ observation below predates the repair.
     all return the identical 304-key object as the bare call, and Kohler's own
     `control.js` never passes them either. So this experiment cannot be replaced
     by a better poller.
-  - *Open: whether `valve1_temp_string` starts tracking actual temperature while
+  - _Open: whether `valve1_temp_string` starts tracking actual temperature while
     water is running. Only ever sampled idle, where setpoint and actual coincide.
-    Worth one glance during the first captured shower before buying a sensor.*
+    Worth one glance during the first captured shower before buying a sensor._
   - **⚠️ Consent:** requires a shower to be running.
 
 - [ ] **E10 · Measure the handshower's flow rate with a bucket.**
@@ -193,7 +193,7 @@ observation below predates the repair.
 
 - [ ] **E6 · Telemetry capture spanning a shutoff.**
   - **Discriminates:** H2 and H3 cleanly; H0 and H4 only if
-    `valve1_ErrorResettable` / `ErrorFatal` are sampled *during* the event.
+    `valve1_ErrorResettable` / `ErrorFatal` are sampled _during_ the event.
   - **Method:** the brief in
     [research/PROMPT-observability.md](research/PROMPT-observability.md), already
     revised for the reconnected interface.
@@ -214,18 +214,18 @@ observation below predates the repair.
 (transcript at `E:\proj-med\build-661-diag-kohler-shower\2026-07-14-DTV-shower-unexpectedly-stops.txt`,
 not copied into this repo):
 
-| Time | Observation |
-| --- | --- |
-| 00:57 | "Shower disappeared. No, it says, thinks it's running. Sort of problem with the valve." |
-| 03:10 | Overhead turned off, **handshower alone left running** — deliberately reducing flow |
-| 04:58-05:23 | Target raised to 97 °F — then "**Target's gone down to 96**", reverting on its own |
-| ~06:40 | "**it just kind of seized up and stopped**" — water stops, nothing was touched |
-| 06:46 | "**if I go over to the shower, it says that it's still running.**" |
-| 07:11 | "…at some point it figures out, oh, either the poor valve has lost power or shut down" |
-| 08:21 | Controller returns to the clock screen, now correctly showing not-running |
+| Time        | Observation                                                                             |
+| ----------- | --------------------------------------------------------------------------------------- |
+| 00:57       | "Shower disappeared. No, it says, thinks it's running. Sort of problem with the valve." |
+| 03:10       | Overhead turned off, **handshower alone left running** — deliberately reducing flow     |
+| 04:58-05:23 | Target raised to 97 °F — then "**Target's gone down to 96**", reverting on its own      |
+| ~06:40      | "**it just kind of seized up and stopped**" — water stops, nothing was touched          |
+| 06:46       | "**if I go over to the shower, it says that it's still running.**"                      |
+| 07:11       | "…at some point it figures out, oh, either the poor valve has lost power or shut down"  |
+| 08:21       | Controller returns to the clock screen, now correctly showing not-running               |
 
 A stop command — from the interface, the app, or anything else — sets the
-controller's state to off *immediately*. That is not what happens. **The water
+controller's state to off _immediately_. That is not what happens. **The water
 stops first and the controller finds out about a minute later.**
 
 Two further clues from the same session: the setpoint reverted 97 → 96 on its
@@ -256,11 +256,11 @@ document got this wrong.** Valve faults (`OVERTEMP_*`, `ALG_*`, `RELAY_FAULT`,
 codes 2-39) were listed as excluded. That was incorrect, and the distinction
 matters:
 
-- **Valve error codes** are *"reported by the mixing valve hardware over the
-  Saturn serial protocol"* — they surface as `valveN_ErrorFatal` /
+- **Valve error codes** are _"reported by the mixing valve hardware over the
+  Saturn serial protocol"_ — they surface as `valveN_ErrorFatal` /
   `valveN_ErrorResettable`, which are **current-state flags, not history**.
-- **The on-board log** holds *"Codes 100-204… logged by the DTV+ controller
-  itself"*.
+- **The on-board log** holds _"Codes 100-204… logged by the DTV+ controller
+  itself"_.
 
 Both from [xagon0 error-codes.md](research/xagon0/docs/troubleshooting/error-codes.md).
 A transient valve error — trips, then recovers — leaves **no trace at all** once
@@ -293,14 +293,14 @@ controlled capture: the only thing ever logged is the UI detach.
 
 ### Ruled out
 
-| Cause | Why not |
-| --- | --- |
-| Configurable runtime limit | `max_valve1_runtime_enable = 0`, `max_valve1_runtime = 0` |
-| Prompt 3 valve watchdog | 1800 s, not 2-4 min — and this is a six-port valve, not a Prompt 3 |
-| Commanded stop, any source | Controller still reports running after water stops |
-| Failing interface sending spurious stops | Same evidence. Struck 2026-07-26 |
-| Interface corrosion | Contacts inspected: clean copper/gold, vapor-tight, recessed away from water |
-| Hot supply *exhaustion* | Source is tankless — no reservoir to run down |
+| Cause                                    | Why not                                                                      |
+| ---------------------------------------- | ---------------------------------------------------------------------------- |
+| Configurable runtime limit               | `max_valve1_runtime_enable = 0`, `max_valve1_runtime = 0`                    |
+| Prompt 3 valve watchdog                  | 1800 s, not 2-4 min — and this is a six-port valve, not a Prompt 3           |
+| Commanded stop, any source               | Controller still reports running after water stops                           |
+| Failing interface sending spurious stops | Same evidence. Struck 2026-07-26                                             |
+| Interface corrosion                      | Contacts inspected: clean copper/gold, vapor-tight, recessed away from water |
+| Hot supply _exhaustion_                  | Source is tankless — no reservoir to run down                                |
 
 ### Hypotheses, ranked
 
@@ -322,9 +322,9 @@ The hot water source is tankless, which supplies the mechanism that was missing:
    ([temperature-system.md](research/xagon0/docs/control-logic/temperature-system.md));
    the controller only sends a setpoint and reads back actual temperature.
 4. **The valve shuts off rather than deliver water at the wrong temperature** —
-   the operator's own expectation, stated on camera at 04:14: *"I know it's
-   supposed to cut off if they can't achieve the desired temperature."* Candidate
-   codes: `ALG_COLD_TIMEOUT` (38) — *"hot supply may be unavailable"* — or
+   the operator's own expectation, stated on camera at 04:14: _"I know it's
+   supposed to cut off if they can't achieve the desired temperature."_ Candidate
+   codes: `ALG_COLD_TIMEOUT` (38) — _"hot supply may be unavailable"_ — or
    `ALG_HOT_TIMEOUT` (39).
 5. **Nothing reaches the controller's log,** because valve errors travel Saturn as
    transient flags rather than log codes 100-204.
@@ -381,8 +381,8 @@ valve-side visibility. xagon0 documents the failure modes: runs over 50 ft,
 missing 120 Ω termination, cabling near AC lines
 ([known-issues.md](research/xagon0/docs/troubleshooting/known-issues.md)).
 
-**Note:** if the valve merely lost comms but kept power it would normally *keep
-running* until its own safety timeout — yet the water stops immediately. That
+**Note:** if the valve merely lost comms but kept power it would normally _keep
+running_ until its own safety timeout — yet the water stops immediately. That
 argues for H2 over H3, or for a valve that fails closed on comms loss.
 
 **Confirm or kill:** `conn` → `dis` with **no** setpoint reversion. Probably needs
@@ -406,15 +406,15 @@ Would leave a task exception (130-146) and make the controller unreachable for
 A trace spanning a real shutoff, sampled at the app's existing 5 s active rate —
 no added controller load:
 
-| Hypothesis | Signature |
-| --- | --- |
-| H0 · tankless min-flow | `valve1_ErrorResettable` sets transiently (38/39); outlet temperature falls before the stop |
-| H1 · mechanical | Nothing anywhere — controller simply times out |
-| H2 · valve power loss | `conn` → `dis`, setpoint reverts to `def_temp`, controller still reports running ~1 min |
-| H3 · RS-485 | `conn` → `dis` with no setpoint reversion |
-| H4 · valve fault | New `cerror_logs.cgi` entry and/or `ErrorFatal`/`ErrorResettable` set |
-| H5 · controller reboot | Controller unreachable 30-60 s |
-| **Not a fault** | `con_string` → `dis` **with a short payload** — see [I3](#i3--valuescgi-intermittently-drops-a-healthy-valve). Must be excluded before claiming any of the above. |
+| Hypothesis             | Signature                                                                                                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| H0 · tankless min-flow | `valve1_ErrorResettable` sets transiently (38/39); outlet temperature falls before the stop                                                                       |
+| H1 · mechanical        | Nothing anywhere — controller simply times out                                                                                                                    |
+| H2 · valve power loss  | `conn` → `dis`, setpoint reverts to `def_temp`, controller still reports running ~1 min                                                                           |
+| H3 · RS-485            | `conn` → `dis` with no setpoint reversion                                                                                                                         |
+| H4 · valve fault       | New `cerror_logs.cgi` entry and/or `ErrorFatal`/`ErrorResettable` set                                                                                             |
+| H5 · controller reboot | Controller unreachable 30-60 s                                                                                                                                    |
+| **Not a fault**        | `con_string` → `dis` **with a short payload** — see [I3](#i3--valuescgi-intermittently-drops-a-healthy-valve). Must be excluded before claiming any of the above. |
 
 The ~1 minute detection timeout means 5 s sampling gives roughly 12 samples
 across the transition — ample resolution.
@@ -459,8 +459,8 @@ amplifier — bus peers, not web clients. The thing that polls `system_info.cgi`
 every 5 s and `values.cgi` every 10 s is the controller's own **web page**,
 `control.js`, which is a different client entirely.
 
-**What still needs recording, and matters more:** the interface *can command the
-shower* over the bus, as `INVOKE_RPC` frames. Those commands never pass through
+**What still needs recording, and matters more:** the interface _can command the
+shower_ over the bus, as `INVOKE_RPC` frames. Those commands never pass through
 our proxy and never appear in the egress log. So an absent `REQ` line means "we
 did not send it" — never "nobody sent it".
 
@@ -554,8 +554,8 @@ First seen 2026-07-26. See [FIELD-NOTES.md](research/FIELD-NOTES.md) §6.
 
 ### Next to try
 
-- [x] **E8 · Measure the rate and the length.** — *first pass run 2026-08-04,
-  read-only. Answered the mechanism; did not yet measure the rate.*
+- [x] **E8 · Measure the rate and the length.** — _first pass run 2026-08-04,
+      read-only. Answered the mechanism; did not yet measure the rate._
   - **Result: every degraded read observed with timing attached was both short
     and slow.** Three degraded reads across two events, each arriving only after
     the server had stopped answering — two 8 s timeouts elapsed first, and the
@@ -573,8 +573,8 @@ First seen 2026-07-26. See [FIELD-NOTES.md](research/FIELD-NOTES.md) §6.
   - **Still open:** the natural rate. Everything degraded tonight followed load
     we generated, so this is a mechanism finding, not a frequency one. E11.
 
-- [ ] **E9 · Fix the guard.** — *unblocked by E8, deliberately not done in the
-  same change as the egress log.*
+- [ ] **E9 · Fix the guard.** — _unblocked by E8, deliberately not done in the
+      same change as the egress log._
   - The current guard requires a loss to be reported **twice** before believing
     it, and on 2026-08-04 the degraded payload arrived twice consecutively. It is
     also **disarmed on the first read after every process restart**, because
@@ -582,8 +582,8 @@ First seen 2026-07-26. See [FIELD-NOTES.md](research/FIELD-NOTES.md) §6.
     which is how a 299-key payload reached the 30 s cache and was served from it
     that night, recorded as a `CACHE ... keys=299` line in the capture.
   - **Better rule, now that the mechanism is known:** distrust a valve-loss
-    payload when it is *short relative to the session maximum* **or** *slow
-    relative to the endpoint's normal ~175 ms*, rather than counting repetitions.
+    payload when it is _short relative to the session maximum_ **or** _slow
+    relative to the endpoint's normal ~175 ms_, rather than counting repetitions.
     Both are properties of the single sample, so it works on the first read and
     after a restart.
 
@@ -653,11 +653,11 @@ both induced. Whether it ever happens unprovoked is E11, and the "one bad read i
 It fails in two directions:
 
 - **Toward the user.** A client that caches `values.cgi` — which you want to do,
-  to keep the request rate down — caches the *bad* payload and then insists the
+  to keep the request rate down — caches the _bad_ payload and then insists the
   shower has no configured outlets for the whole TTL. That is a disabled start
   button for 30 seconds, potentially with someone already standing in the shower.
 - **Toward [I1](#i1--the-shower-stops-mid-use).** "The controller has lost the
-  valve" is *precisely* the signature that investigation is hunting, and one such
+  valve" is _precisely_ the signature that investigation is hunting, and one such
   sample has already been promoted to evidentiary status. Telemetry built on the
   current logic would generate that finding on schedule.
 
@@ -665,7 +665,7 @@ It fails in two directions:
 
 - ~~Does it cluster around load?~~ **Answered: yes, and load appears to be the
   whole mechanism.** Every instance seen with timing attached followed a stall.
-  Whether it *ever* happens without one is E11.
+  Whether it _ever_ happens without one is E11.
 - ~~Does it cluster around the wall interface's own polling?~~ **Moot** — the
   interface is not an HTTP client at all. See I1's confounders.
 - ~~Is 304 the invariant full length?~~ **No.** 303 before the interface was
@@ -686,7 +686,6 @@ It fails in two directions:
   `system_info.cgi` does the same thing, 36 keys against 39. Nothing is written to
   the controller's error log when this happens.
 
-
 ---
 
 ## I4 — Is automatic purge on?
@@ -696,10 +695,10 @@ neither was re-read against the live controller when the other was written.
 
 ### Symptom
 
-| Source | States |
-| --- | --- |
-| [research/FIELD-NOTES.md](research/FIELD-NOTES.md) §3 | `auto_purge = 1`, `auto_purge_enable = 1`; start runs a purge cycle first |
-| [docs/system-specification.md](docs/system-specification.md) §2 | "automatic purge disabled" |
+| Source                                                          | States                                                                    |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [research/FIELD-NOTES.md](research/FIELD-NOTES.md) §3           | `auto_purge = 1`, `auto_purge_enable = 1`; start runs a purge cycle first |
+| [docs/system-specification.md](docs/system-specification.md) §2 | "automatic purge disabled"                                                |
 
 ### Next to try
 
@@ -741,12 +740,12 @@ for the same protocol. Blocking for the replacement controller's encoder.
 
 ### Symptom
 
-| Item | [valve-control.md](docs/devices/valve-control.md) | [saturn-protocol.md](research/xagon0/docs/protocols/saturn-protocol.md) |
-| --- | --- | --- |
-| Register `0x15` | Firmware info, and calibration read | Read configuration parameters |
-| Register `0x10` | Not stated | Read calibration data |
-| Prompt 3 master address | `0x10` always | `0x00` with DTV+ hardware |
-| Response timing | 320 ms communication timeout | 400 ms response timeout, 320 ms message timeout |
+| Item                    | [valve-control.md](docs/devices/valve-control.md) | [saturn-protocol.md](research/xagon0/docs/protocols/saturn-protocol.md) |
+| ----------------------- | ------------------------------------------------- | ----------------------------------------------------------------------- |
+| Register `0x15`         | Firmware info, and calibration read               | Read configuration parameters                                           |
+| Register `0x10`         | Not stated                                        | Read calibration data                                                   |
+| Prompt 3 master address | `0x10` always                                     | `0x00` with DTV+ hardware                                               |
+| Response timing         | 320 ms communication timeout                      | 400 ms response timeout, 320 ms message timeout                         |
 
 ### Next to try
 

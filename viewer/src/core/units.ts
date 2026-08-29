@@ -83,7 +83,12 @@ export function basisToZUp(from: UpAxis): number[] {
 }
 
 /** Apply `basisToZUp` to a single point, returned as a fresh triple. */
-export function applyBasis(basis: number[], x: number, y: number, z: number): [number, number, number] {
+export function applyBasis(
+  basis: number[],
+  x: number,
+  y: number,
+  z: number,
+): [number, number, number] {
   // Column-major: basis[col * 3 + row].
   return [
     basis[0] * x + basis[3] * y + basis[6] * z,
@@ -136,10 +141,22 @@ export function displayMatrixElements(from: UpAxis, sourceUnit: LengthUnit): num
   // Rows of B (column-major storage): row r is [b[r], b[3+r], b[6+r]].
   // C keeps row 0, promotes B's row 2 to row 1, and negates B's row 1 into row 2.
   return [
-    b[0] * s, b[3] * s, b[6] * s, 0,
-    b[2] * s, b[5] * s, b[8] * s, 0,
-    -b[1] * s, -b[4] * s, -b[7] * s, 0,
-    0, 0, 0, 1,
+    b[0] * s,
+    b[3] * s,
+    b[6] * s,
+    0,
+    b[2] * s,
+    b[5] * s,
+    b[8] * s,
+    0,
+    -b[1] * s,
+    -b[4] * s,
+    -b[7] * s,
+    0,
+    0,
+    0,
+    0,
+    1,
   ];
 }
 
@@ -158,12 +175,7 @@ export function displayMatrixElements(from: UpAxis, sourceUnit: LengthUnit): num
  * in the tests, so the two can never drift apart.
  */
 export function exportToDisplayMatrixElements(): number[] {
-  return [
-    1, 0, 0, 0,
-    0, 0, 1, 0,
-    0, -1, 0, 0,
-    0, 0, 0, 1,
-  ];
+  return [1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1];
 }
 
 /** Apply a row-major 4x4 (translation-free) to a point. Test/inspection helper. */

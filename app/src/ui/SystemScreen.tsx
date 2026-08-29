@@ -32,16 +32,13 @@ export function SystemScreen({ model, onHome }: Props) {
         <Row k="outlets configured" v={valve.outlets.filter((o) => o.configured).length} />
         <Row k="massage" v={model.massageEnabled ? 'enabled' : 'disabled'} />
         <Row k="controller clock" v={model.clock || '—'} />
-        <Row
-          k="last poll"
-          v={model.ts ? new Date(model.ts).toLocaleTimeString() : '—'}
-        />
+        <Row k="last poll" v={model.ts ? new Date(model.ts).toLocaleTimeString() : '—'} />
 
         {!model.interfacePresent && (
           <p className="sys-note">
-            The controller reports no wall interface attached (<code>num_interface = 0</code>).
-            That is the K-99693 fault this app works around — the valve, amplifier and controller
-            are all healthy and reachable, so everything here drives the shower directly over the
+            The controller reports no wall interface attached (<code>num_interface = 0</code>). That
+            is the K-99693 fault this app works around — the valve, amplifier and controller are all
+            healthy and reachable, so everything here drives the shower directly over the
             controller&rsquo;s own CGI API.
           </p>
         )}

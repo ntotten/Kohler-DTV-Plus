@@ -1,0 +1,13 @@
+{
+  "name": "kohler-dtv-plus",
+  "private": true,
+  "description": "Repository-wide formatting for the Kohler DTV+ project. The app and viewer keep their own package.json.",
+  "type": "module",
+  "scripts": {
+    "format": "oxfmt",
+    "format:check": "oxfmt --check"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.65.0"
+  }
+}

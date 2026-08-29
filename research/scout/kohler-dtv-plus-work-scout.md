@@ -14,12 +14,12 @@ the shower stops mid-use — documented publicly for YouTube and for Kohler supp
 > The first draft read the repository as ground truth. The repository is **behind reality**, so
 > it systematically understated the project. Corrected:
 >
-> | First draft | Actually |
-> |---|---|
-> | "No valve has ever been opened by the app" | A full shower has been run through the app against the live valve. It worked. |
-> | "The interface is disconnected, `num_interface = 0`" | **Measured 2026-08-04:** `num_interface = 1`, `ui1_con_string = conn`. Reconnected and healthy. |
-> | "No record Kohler was contacted" | Contacted **2026-07-27**; quoted **~$2013** for a replacement — which is what justified the cut. |
-> | "The fabrication week's detail is decaying" | **45 raw clips exist**, queued for processing through `e:\git\inferiere`. Nothing is being lost. |
+> | First draft                                          | Actually                                                                                         |
+> | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+> | "No valve has ever been opened by the app"           | A full shower has been run through the app against the live valve. It worked.                    |
+> | "The interface is disconnected, `num_interface = 0`" | **Measured 2026-08-04:** `num_interface = 1`, `ui1_con_string = conn`. Reconnected and healthy.  |
+> | "No record Kohler was contacted"                     | Contacted **2026-07-27**; quoted **~$2013** for a replacement — which is what justified the cut. |
+> | "The fabrication week's detail is decaying"          | **45 raw clips exist**, queued for processing through `e:\git\inferiere`. Nothing is being lost. |
 >
 > **The durable lesson:** this project's evidence lives in three places and only one is the git
 > tree. The others are the operator's footage (`E:\proj-med\build-661-diag-kohler-shower\raw`)
@@ -28,27 +28,28 @@ the shower stops mid-use — documented publicly for YouTube and for Kohler supp
 > **Path note, added after this sweep.** `research/SHUTOFF-INVESTIGATION.md` was folded into a
 > new top-level [INVESTIGATIONS.md](../../INVESTIGATIONS.md) as investigation **I1**, and the old
 > file deleted. `file:line` citations to it below were accurate when written; read them against
-> I1. W1's experiments now live in I1's *Next to try* queue as **E1** and **E2**, and W10's as
+> I1. W1's experiments now live in I1's _Next to try_ queue as **E1** and **E2**, and W10's as
 > **E8**/**E9** under **I3** — that queue, not this ledger, is where they are tracked from here.
 
 ## The ledger
 
-| # | Title | Shape | Age | Route | Cost of delay |
-|---|---|---|---|---|---|
-| **W1** | [Two discriminating showers nobody has run](#w1) | blocked-decision | 9 d | `just-do-it` | Investigation parked; a free natural experiment decays as memory of "before" fades |
-| **W10** | [The degraded `values.cgi` payload repeats, defeating the guard](#w10) 🔥 | silent-failure | 0 d | `batch` | Every day is a chance to blank the UI mid-shower, or to fabricate a valve-dropout finding |
-| ~~**W2**~~ | [StrictMode double-fires `quick_shower.cgi`](#w2) — **DONE `fa66f82`** | silent-failure | 9 d | ~~`batch`~~ | — closed 2026-08-04 |
-| **W8** | [Four documents describe a world that has moved on](#w8) | doc-rot | 9 d | `just-do-it` | The front page states a premise the hardware contradicts |
-| **W6** | [Kohler was contacted and quoted $2013; the repo doesn't know](#w6) | doc-rot | 8 d | `just-do-it` | The number that justifies the whole repair survives only in a filename |
-| **W4** | [Telemetry specified, never built](#w4) | dormant-decision | 0 d (revised) | `batch` | Every shutoff meanwhile destroys transient evidence rather than deferring it |
-| **W3** | [The fabrication record is blocked on another repo's pipeline](#w3) | drift | 7 d | `study` | Low — the source is safe; but the dependency is invisible to both repos |
-| **W5** | [Degraded `values.cgi` silently clamps to 113 °F](#w5) | silent-failure | 1 d | `batch` | Nothing here; undercuts the published scald policy for anyone else |
-| **W7** | [`cnc/` — twelve undocumented files](#w7) | orphan | 3 d | `just-do-it` | Cheap now; in six months nobody knows which cover is on the wall |
-| **W9** | [Unlicensed vendored material under a draft licence](#w9) | irreversible | 9 d | `just-do-it` | Compounds with reach, not time; forks aren't retractable |
+| #          | Title                                                                     | Shape            | Age           | Route        | Cost of delay                                                                             |
+| ---------- | ------------------------------------------------------------------------- | ---------------- | ------------- | ------------ | ----------------------------------------------------------------------------------------- |
+| **W1**     | [Two discriminating showers nobody has run](#w1)                          | blocked-decision | 9 d           | `just-do-it` | Investigation parked; a free natural experiment decays as memory of "before" fades        |
+| **W10**    | [The degraded `values.cgi` payload repeats, defeating the guard](#w10) 🔥 | silent-failure   | 0 d           | `batch`      | Every day is a chance to blank the UI mid-shower, or to fabricate a valve-dropout finding |
+| ~~**W2**~~ | [StrictMode double-fires `quick_shower.cgi`](#w2) — **DONE `fa66f82`**    | silent-failure   | 9 d           | ~~`batch`~~  | — closed 2026-08-04                                                                       |
+| **W8**     | [Four documents describe a world that has moved on](#w8)                  | doc-rot          | 9 d           | `just-do-it` | The front page states a premise the hardware contradicts                                  |
+| **W6**     | [Kohler was contacted and quoted $2013; the repo doesn't know](#w6)       | doc-rot          | 8 d           | `just-do-it` | The number that justifies the whole repair survives only in a filename                    |
+| **W4**     | [Telemetry specified, never built](#w4)                                   | dormant-decision | 0 d (revised) | `batch`      | Every shutoff meanwhile destroys transient evidence rather than deferring it              |
+| **W3**     | [The fabrication record is blocked on another repo's pipeline](#w3)       | drift            | 7 d           | `study`      | Low — the source is safe; but the dependency is invisible to both repos                   |
+| **W5**     | [Degraded `values.cgi` silently clamps to 113 °F](#w5)                    | silent-failure   | 1 d           | `batch`      | Nothing here; undercuts the published scald policy for anyone else                        |
+| **W7**     | [`cnc/` — twelve undocumented files](#w7)                                 | orphan           | 3 d           | `just-do-it` | Cheap now; in six months nobody knows which cover is on the wall                          |
+| **W9**     | [Unlicensed vendored material under a draft licence](#w9)                 | irreversible     | 9 d           | `just-do-it` | Compounds with reach, not time; forks aren't retractable                                  |
 
 ---
 
 <a id="w1"></a>
+
 ## W1 · Two discriminating showers that nobody has run
 
 **Shape** blocked-decision · **Last substantive touch** 2026-07-26 (9 days) · **Route** `just-do-it`
@@ -76,7 +77,7 @@ The high-flow experiment is named as the cheapest next step by four documents �
 [STORY-LOG.md](../../STORY-LOG.md) records no such run.
 
 **The second shower is newly possible and nobody has noticed.** The shutoffs predate the
-interface's removal by ~2 months, and the interface has now been *absent and present* across the
+interface's removal by ~2 months, and the interface has now been _absent and present_ across the
 fault's lifetime — a free natural experiment created by the repair. No document asks the
 question.
 
@@ -92,6 +93,7 @@ per condition to mean anything, it stops being free.
 ---
 
 <a id="w10"></a>
+
 ## W10 · 🔥 The degraded `values.cgi` payload can repeat, defeating the guard built to catch it
 
 **Shape** silent-failure · **Found** 2026-08-04, this sweep · **Route** `batch` · **On fire**
@@ -132,7 +134,7 @@ premise explicitly ("the very next read is normal again"), and the guard at
 **Why this is on fire and not merely a bug.** It fails in two directions at once. Toward the
 user, it produces the exact outcome FIELD-NOTES §6 says the guard exists to prevent — "a disabled
 start button for 30 seconds, potentially with someone already standing in the shower." Toward the
-investigation, it fabricates evidence: "controller has lost the valve" is *precisely* the
+investigation, it fabricates evidence: "controller has lost the valve" is _precisely_ the
 signature being hunted, and [SHUTOFF-INVESTIGATION.md:164-175](../../INVESTIGATIONS.md#i1--the-shower-stops-mid-use)
 already promoted one such sample to evidentiary status. Telemetry built on the current logic
 would generate that finding on schedule.
@@ -142,8 +144,8 @@ and a genuine disconnection do not look the same on the wire, and the code curre
 the content, never the completeness.
 
 **What its age means:** zero days — but this is not a recency artifact. The underlying blip is
-documented from 2026-07-26; what is new is a *counter-example to the assumption the mitigation
-rests on*, which only appears if someone happens to read twice at the wrong moment.
+documented from 2026-07-26; what is new is a _counter-example to the assumption the mitigation
+rests on_, which only appears if someone happens to read twice at the wrong moment.
 
 **Steelman against:** n=1. Two consecutive degraded reads were observed once, and the sample
 immediately afterwards was six-for-six healthy, so the base rate for repetition may be very low —
@@ -156,6 +158,7 @@ the better first move — which is why this routes to `batch` and not `just-do-i
 ---
 
 <a id="w2"></a>
+
 ## W2 · ✅ CLOSED — React StrictMode double-fired `quick_shower.cgi` on an outlet toggle
 
 **Shape** silent-failure · **Closed** 2026-08-04 in `fa66f82` · **Was** `batch`, on fire
@@ -202,7 +205,7 @@ valve commands are what [FIELD-NOTES.md:26-29](../FIELD-NOTES.md#L26-L29) record
 a controller offline.
 
 **Route changed** from `just-do-it` to `batch`: the plan's first two tasks are to pin the defect
-with a failing test and to *measure* the doubling rather than infer it, which is more than a
+with a failing test and to _measure_ the doubling rather than infer it, which is more than a
 no-ceremony fix carries. The batch explicitly forbids the tempting wrong fix — disabling
 StrictMode, which hides the detector rather than the defect.
 
@@ -221,6 +224,7 @@ be a doubled request the controller simply absorbs, and nobody has observed it m
 ---
 
 <a id="w8"></a>
+
 ## W8 · Four documents describe a world that has moved on
 
 **Shape** doc-rot · **Last substantive touch** 2026-07-26 (9 days) · **Route** `just-do-it`
@@ -242,19 +246,19 @@ Goal:    No document states a fact that npm test, the live controller, or the sa
 
 Five concrete corrections:
 
-| Document | Says | Actually |
-|---|---|---|
-| [README.md:13-23](../../README.md#L13-L23) | `num_interface = 0`, `ui1_con_string = not_seen` as the reason the project exists | Measured 2026-08-04: `1` and `conn` |
-| [DESIGN.md:11-14](../../DESIGN.md#L11-L14) | Same premise | Same |
-| [DESIGN.md:203-206](../../DESIGN.md#L203-L206) | "no valve has been opened by this app yet" | A full shower has been run through it |
-| [PROTOCOL.md:45-53](../../PROTOCOL.md#L45-L53) | Three readable endpoints | Five — `cerror_logs.cgi` and `kerror_logs.cgi` are exposed at [cgi-safety.mjs:40-45](../../app/server/cgi-safety.mjs#L40-L45); [FLOW.md:161-163](../../FLOW.md#L161-L163) has it right |
-| [DESIGN.md:166](../../DESIGN.md#L166) / [viewer/README.md:87](../../viewer/README.md#L87) | 49 / 88 unit tests | 56 / 164, measured |
+| Document                                                                                  | Says                                                                              | Actually                                                                                                                                                                               |
+| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [README.md:13-23](../../README.md#L13-L23)                                                | `num_interface = 0`, `ui1_con_string = not_seen` as the reason the project exists | Measured 2026-08-04: `1` and `conn`                                                                                                                                                    |
+| [DESIGN.md:11-14](../../DESIGN.md#L11-L14)                                                | Same premise                                                                      | Same                                                                                                                                                                                   |
+| [DESIGN.md:203-206](../../DESIGN.md#L203-L206)                                            | "no valve has been opened by this app yet"                                        | A full shower has been run through it                                                                                                                                                  |
+| [PROTOCOL.md:45-53](../../PROTOCOL.md#L45-L53)                                            | Three readable endpoints                                                          | Five — `cerror_logs.cgi` and `kerror_logs.cgi` are exposed at [cgi-safety.mjs:40-45](../../app/server/cgi-safety.mjs#L40-L45); [FLOW.md:161-163](../../FLOW.md#L161-L163) has it right |
+| [DESIGN.md:166](../../DESIGN.md#L166) / [viewer/README.md:87](../../viewer/README.md#L87) | 49 / 88 unit tests                                                                | 56 / 164, measured                                                                                                                                                                     |
 
 **What its age means:** every one of these is a document whose last touch predates the change it
 should reflect. That is the age tell itself, not a coincidence — and the premise rot is nine days
 old only because the whole repo is.
 
-**Steelman against:** the premise text is *historical* and arguably correct as history — the
+**Steelman against:** the premise text is _historical_ and arguably correct as history — the
 project exists because the interface failed, and that remains true even though it has since been
 repaired. Rewriting the front page to say "the interface works now" risks obscuring why any of
 this was built, and the fix is a narrative decision (does the README tell the origin story or the
@@ -264,6 +268,7 @@ unambiguous errors.
 ---
 
 <a id="w6"></a>
+
 ## W6 · Kohler was contacted and quoted $2013, and the repository does not know
 
 **Shape** doc-rot · **Last substantive touch** 2026-07-27 (8 days) · **Route** `just-do-it`
@@ -301,6 +306,7 @@ already been modified.
 ---
 
 <a id="w4"></a>
+
 ## W4 · The telemetry capture was specified and never built
 
 **Shape** dormant-decision · **Prompt revised** 2026-08-04 by this sweep · **Route** `batch`
@@ -327,7 +333,7 @@ running it unchanged would have primed a session with stale constraints. What ch
 1. **The reconnected interface is now a first-class variable, and one change is a constraint, not
    context.** The interface is a second HTTP client polling `system_info.cgi` every 5 s against a
    two-session ceiling. The concurrency budget is tighter than when revision 1 was written, and
-   the brief now says to establish what the interface costs *before* adding anything.
+   the brief now says to establish what the interface costs _before_ adding anything.
 2. **The natural experiment is called out** — the interface has been absent and present across
    the fault's lifetime, so "does the shutoff still happen now?" is newly answerable.
 3. **W10 is folded in as a requirement**, not a note: record payload completeness alongside
@@ -348,6 +354,7 @@ is cheaper per bit of information and sits outside the fragile controller entire
 ---
 
 <a id="w3"></a>
+
 ## W3 · The fabrication record is blocked on another repository's pipeline
 
 **Shape** drift · **Last substantive touch** 2026-07-28 (7 days) · **Route** `study`
@@ -368,12 +375,12 @@ Goal:    A known, costed path from 45 raw clips to dated story-log entries.
 **Corrected from the first draft, which called this a decay clock.** It is not.
 `E:\proj-med\build-661-diag-kohler-shower\raw` holds **45 clips** spanning 2026-06-25 to 07-29:
 
-| Source | Clips | Covers |
-|---|---|---|
-| `mob/` | 19 | The original removal that pulled the connector; the whole 07-28 fabrication day |
-| `obs/` | 18 | The Kohler support call (07-27); 07-28 bench work; rear access cover install (07-29) |
-| `gopro/` | 4 | — |
-| `img/` | 4 | 2026-07-27 stills |
+| Source   | Clips | Covers                                                                               |
+| -------- | ----- | ------------------------------------------------------------------------------------ |
+| `mob/`   | 19    | The original removal that pulled the connector; the whole 07-28 fabrication day      |
+| `obs/`   | 18    | The Kohler support call (07-27); 07-28 bench work; rear access cover install (07-29) |
+| `gopro/` | 4     | —                                                                                    |
+| `img/`   | 4     | 2026-07-27 stills                                                                    |
 
 Nothing is being lost, so the urgency drops sharply and the **shape changes**: this is not "write
 the missing entries from memory", it is "run the pipeline, then derive the log from what it
@@ -395,6 +402,7 @@ fabrication week is on video, unprocessed" and moving on.
 ---
 
 <a id="w5"></a>
+
 ## W5 · A degraded `values.cgi` silently declares the system Fahrenheit and clamps the ceiling to 113
 
 **Shape** silent-failure · **Last substantive touch** 2026-08-03 (1 day) · **Route** `batch`
@@ -434,6 +442,7 @@ controller's own UI bounds Celsius input at 26–`max_temp` and would likely rej
 ---
 
 <a id="w7"></a>
+
 ## W7 · `cnc/` holds twelve undocumented files, including the toolpath that cut a $1500 part
 
 **Shape** orphan · **Last substantive touch** 2026-08-01 (3 days) · **Route** `just-do-it`
@@ -465,6 +474,7 @@ Deleting the superseded v1 files might serve a reader better than documenting th
 ---
 
 <a id="w9"></a>
+
 ## W9 · A public repo carries three unlicensed third-party bodies under a licence labelled a draft
 
 **Shape** irreversible · **Last substantive touch** 2026-07-26 (9 days) · **Route** `just-do-it`
@@ -498,16 +508,16 @@ that removes material currently carried without objection.
 
 ## Considered and dropped
 
-| Candidate | Why it didn't clear the bar |
-|---|---|
-| DESIGN.md's Known gaps (presets, massage speed, second valve, PWA) | Spec-compliant deferrals declared plainly at [DESIGN.md:202-216](../../DESIGN.md#L202-L216). Deliberately deferred is not drift. The one item that *has* graduated — "no valve opened" — moved into W8. |
-| The Android / Capacitor port | Aspirational by design, decision already made, seam verified in [config.ts](../../app/src/api/config.ts). Scope not yet started is not a finding. |
-| `SOURCES.md` swept exactly once | Nine days is not stale for an index of slow-moving upstream repos. Flagging it would be promoting a weak item to fill an age quota. |
-| The viewer has no stated goal in-repo | **Withdrawn on correction.** It is a deliberate Maker Galaxy experiment and the gizmo is already graduating. The residual — that neither repo records which experiments cross over — is noted in the state doc §7, and is too small to bill as work here. |
-| The `values.cgi` blip filter's `suspectCount` logic | **Partially withdrawn.** The state machine behaves as written; its *premise* does not hold. Promoted to W10. |
-| The viewer's view-cube work (5 commits / 2 days) | In flight with an owner and momentum. WIP is not priority. |
-| `viewer/README.md` has two items numbered `3` | A markdown slip with no consequence. Fold into any edit that touches the file. |
-| The 2017 fork-era content | Genuinely dead and correctly so. Only live residue is licensing, captured in W9. |
+| Candidate                                                          | Why it didn't clear the bar                                                                                                                                                                                                                               |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DESIGN.md's Known gaps (presets, massage speed, second valve, PWA) | Spec-compliant deferrals declared plainly at [DESIGN.md:202-216](../../DESIGN.md#L202-L216). Deliberately deferred is not drift. The one item that _has_ graduated — "no valve opened" — moved into W8.                                                   |
+| The Android / Capacitor port                                       | Aspirational by design, decision already made, seam verified in [config.ts](../../app/src/api/config.ts). Scope not yet started is not a finding.                                                                                                         |
+| `SOURCES.md` swept exactly once                                    | Nine days is not stale for an index of slow-moving upstream repos. Flagging it would be promoting a weak item to fill an age quota.                                                                                                                       |
+| The viewer has no stated goal in-repo                              | **Withdrawn on correction.** It is a deliberate Maker Galaxy experiment and the gizmo is already graduating. The residual — that neither repo records which experiments cross over — is noted in the state doc §7, and is too small to bill as work here. |
+| The `values.cgi` blip filter's `suspectCount` logic                | **Partially withdrawn.** The state machine behaves as written; its _premise_ does not hold. Promoted to W10.                                                                                                                                              |
+| The viewer's view-cube work (5 commits / 2 days)                   | In flight with an owner and momentum. WIP is not priority.                                                                                                                                                                                                |
+| `viewer/README.md` has two items numbered `3`                      | A markdown slip with no consequence. Fold into any edit that touches the file.                                                                                                                                                                            |
+| The 2017 fork-era content                                          | Genuinely dead and correctly so. Only live residue is licensing, captured in W9.                                                                                                                                                                          |
 
 ## Quota check — **not met, and it cannot be**
 

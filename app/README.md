@@ -69,8 +69,8 @@ proxy enforces it:
 - **The table self-checks at import**, so an over-permissive entry throws at
   startup instead of shipping.
 
-`mac.cgi` and `serial.cgi` are rated 3/5 upstream — *documented as causing
-system lockups* — and are blocked. The MAC comes from `values.cgi` instead.
+`mac.cgi` and `serial.cgi` are rated 3/5 upstream — _documented as causing
+system lockups_ — and are blocked. The MAC comes from `values.cgi` instead.
 
 Because the controller allows only **2 concurrent HTTP sessions**, every request
 goes through a single queue with a minimum gap. Running two copies of this app,
@@ -78,12 +78,12 @@ or this app plus the controller's own web page, can still exceed that.
 
 ### API
 
-| Route | Purpose |
-| --- | --- |
-| `GET /api/status` | Combined `values.cgi` + `system_info.cgi`. `values` is served from a 30 s cache (`valuesCached` says which); `?fresh=1` bypasses it. |
-| `GET /api/safety` | The live safety policy — risk ceiling and exposed endpoints. |
-| `GET /api/read/:name` | Raw read passthrough, gated. |
-| `POST /api/command/:name` | Fire a command, gated. JSON body = query params. |
+| Route                     | Purpose                                                                                                                              |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /api/status`         | Combined `values.cgi` + `system_info.cgi`. `values` is served from a 30 s cache (`valuesCached` says which); `?fresh=1` bypasses it. |
+| `GET /api/safety`         | The live safety policy — risk ceiling and exposed endpoints.                                                                         |
+| `GET /api/read/:name`     | Raw read passthrough, gated.                                                                                                         |
+| `POST /api/command/:name` | Fire a command, gated. JSON body = query params.                                                                                     |
 
 ### Tests
 
@@ -124,7 +124,7 @@ if you re-mirror the controller.
   request per arrow tap.
 - After any command the UI holds its own state for 5 s so a poll landing
   mid-flight doesn't snap the display back.
-- `valve1outletN` from the controller is the *armed selection*, not water flow,
+- `valve1outletN` from the controller is the _armed selection_, not water flow,
   and it is indexed by `valveN_outletM_func.id` rather than the slot number.
 - `valveN_Currentstatus` of `PurgeActive` means water is already running — it is
   the auto-purge warm-up.

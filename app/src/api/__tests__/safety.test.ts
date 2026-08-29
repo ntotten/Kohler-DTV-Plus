@@ -128,10 +128,15 @@ describe('transient bad-read guard', () => {
   });
 
   it('notices a second valve dropping too', () => {
-    expect(losesAValve({ valve1_installed: true, valve2_installed: false }, {
-      valve1_installed: true,
-      valve2_installed: true,
-    })).toBe(true);
+    expect(
+      losesAValve(
+        { valve1_installed: true, valve2_installed: false },
+        {
+          valve1_installed: true,
+          valve2_installed: true,
+        },
+      ),
+    ).toBe(true);
   });
 });
 

@@ -91,7 +91,9 @@ describe('what it has to make visible', () => {
     const params = { valve1_outlet: '13', valve1_temp: 96, valve1_massage: 0 };
     for (const id of [traceId(), traceId()]) traceRequest(id, 'quick_shower.cgi', params, 0, 2);
 
-    const reqs = (await read()).filter((l) => l.includes(' REQ ') && l.includes('quick_shower.cgi'));
+    const reqs = (await read()).filter(
+      (l) => l.includes(' REQ ') && l.includes('quick_shower.cgi'),
+    );
     expect(reqs).toHaveLength(2);
     expect(reqs[0]).toContain('valve1_outlet=13 valve1_temp=96 valve1_massage=0');
     // Different ids, so the pair reads as two commands rather than one retried.

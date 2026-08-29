@@ -40,9 +40,9 @@ export function SettingsScreen({ theme, onTheme, onNavigate, onHome }: Props) {
         </button>
 
         <p className="sys-note">
-          Shower configuration — outlets, temperature limits, presets — lives on the controller
-          and is edited from its own web pages at the controller&rsquo;s address. This app reads
-          that configuration but does not change it.
+          Shower configuration — outlets, temperature limits, presets — lives on the controller and
+          is edited from its own web pages at the controller&rsquo;s address. This app reads that
+          configuration but does not change it.
         </p>
       </div>
 

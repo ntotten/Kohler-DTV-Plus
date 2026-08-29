@@ -10,7 +10,7 @@ the changes alter the constraints rather than just the context.
 
 **Amended 2026-08-04, 22:30.** Added the egress request/response tracing
 requirement and the browser log viewer — change 5 below, and items 5-7 of "What
-I want built". Short version: a trace of controller *state* cannot see what this
+I want built". Short version: a trace of controller _state_ cannot see what this
 app told the shower to do, and we found out the hard way that it needed to.
 
 ---
@@ -40,8 +40,8 @@ The setpoint also reverted 97 → 96 °F on its own during that session, and 96 
 `def_temp`.
 
 **The most important fact, and it constrains everything:** I cleared the
-controller's error log *before* filming that session, reproduced the shutoff on
-camera, and captured the log *after*. It said `No errors are logged from
+controller's error log _before_ filming that session, reproduced the shutoff on
+camera, and captured the log _after_. It said `No errors are logged from
 Controller`. Cleared before, reproduced during, empty after — a controlled
 negative. Captures are in `research/diagnostics/2026-07-14-*.log`.
 
@@ -53,10 +53,10 @@ That demoted what had been the leading theory. If the valve lost power or fell
 off the RS-485 bus, code 100 is exactly what should have appeared.
 
 **Important caveat on that negative:** it rules out things that write to the
-controller's on-board log (codes 100-204). It does **not** rule out *valve*
+controller's on-board log (codes 100-204). It does **not** rule out _valve_
 errors, which travel the Saturn serial protocol and surface only as the transient
 flags `valve1_ErrorFatal` / `valve1_ErrorResettable`. Those are current state, not
-history — read them the next day and you learn nothing. Sampling them *during* a
+history — read them the next day and you learn nothing. Sampling them _during_ a
 shutoff is the single highest-value thing this work can do.
 
 **Current leading hypothesis — tankless heater minimum-flow cutout.** My hot
@@ -121,7 +121,7 @@ running water. **That is stale.** The operator has run a full shower through the
 browser app against the live valve, and it worked. The command path is proven end
 to end, not just as far as `stop_shower.cgi`.
 
-This does **not** relax the constraint below: *you* still never open a valve. It
+This does **not** relax the constraint below: _you_ still never open a valve. It
 does mean the transport, the gate, `quick_shower.cgi` and the optimistic-state
 handling are load-bearing production code with a real user, so telemetry must not
 destabilise them.
@@ -187,12 +187,12 @@ stop and an app-issued stop are indistinguishable from controller state alone.
 Egress tracing is therefore a prerequisite for the state trace being
 interpretable, not a nice-to-have alongside it.
 
-**What this does *not* mean.** The shutoffs predate this app by ~2 months, and
+**What this does _not_ mean.** The shutoffs predate this app by ~2 months, and
 predate the doubled command. It is not a suspect for the original fault. It is
 noise that must be excluded from future traces.
 
 **And a limitation to state plainly in what you build:** our egress log sees
-only *our* client. The reconnected K-99693 wall interface is a second client
+only _our_ client. The reconnected K-99693 wall interface is a second client
 talking to the same controller, and its commands do not pass through our proxy.
 "No REQ line in our log" means "we didn't send it", never "nobody sent it". Say
 so in the log's own documentation, because that distinction will be load-bearing
@@ -324,22 +324,27 @@ anything push-shaped on this hardware:
   stream anywhere in the mirrored JS:
 
   ```js
-  setInterval(function () { loadXMLDoc();   }, 5000);   // system_info.cgi
-  setInterval(function () { load_status();  }, 10000);  // values.cgi
+  setInterval(function () {
+    loadXMLDoc();
+  }, 5000); // system_info.cgi
+  setInterval(function () {
+    load_status();
+  }, 10000); // values.cgi
   ```
 
   Two things follow. First, Kohler's own UI polls `system_info.cgi` at **5 s**,
   which is exactly our active rate — so we are within what the hardware was
   designed to serve, and the lockups others hit were probably about
-  *concurrency* rather than interval alone. Second, if a push transport exists
+  _concurrency_ rather than interval alone. Second, if a push transport exists
   it is undocumented and unused by the vendor's own client, so treat finding one
   as unlikely. Confirm by checking whether any endpoint holds the socket open
   rather than closing it, but timebox it.
+
 - **New, and now the more interesting version of this question:** the wall
   interface is back on the bus and is itself a client. Does its presence show up
   anywhere readable — a session count, a last-seen timestamp, a changing field
-  that only moves when it polls? If the controller exposes anything about *who
-  else is talking to it*, that is both a confounder we must record and possibly a
+  that only moves when it polls? If the controller exposes anything about _who
+  else is talking to it_, that is both a confounder we must record and possibly a
   cheaper signal than anything we would build.
 - Is there anything on the RS-485 side we could observe passively? The valve and
   controller talk Saturn protocol; `research/xagon0/docs/protocols/` documents
@@ -356,17 +361,17 @@ I'd like that established rather than assumed.
 
 `INVESTIGATIONS.md` I1 has the signature table. In short:
 
-| Hypothesis | Signature |
-| --- | --- |
-| **Tankless min-flow → valve cutout** | `valve1_ErrorResettable` sets transiently (look for `ALG_COLD_TIMEOUT` 38 / `ALG_HOT_TIMEOUT` 39); outlet temperature falls before the stop |
-| Valve power loss / reset | `valve_1_con_string` → `dis`, setpoint reverts to `def_temp`, controller still reports running for ~1 min |
-| RS-485 comms loss | `conn` → `dis`, no setpoint reversion |
-| Controller reboot | Unreachable 30-60 s |
-| Purely mechanical/hydraulic | Nothing anywhere — controller simply times out |
-| **Truncated read (NOT a fault)** | `con_string` → `dis` **with a short payload** — 300 keys rather than 304. Must be excluded before any of the above is claimed. |
+| Hypothesis                             | Signature                                                                                                                                        |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Tankless min-flow → valve cutout**   | `valve1_ErrorResettable` sets transiently (look for `ALG_COLD_TIMEOUT` 38 / `ALG_HOT_TIMEOUT` 39); outlet temperature falls before the stop      |
+| Valve power loss / reset               | `valve_1_con_string` → `dis`, setpoint reverts to `def_temp`, controller still reports running for ~1 min                                        |
+| RS-485 comms loss                      | `conn` → `dis`, no setpoint reversion                                                                                                            |
+| Controller reboot                      | Unreachable 30-60 s                                                                                                                              |
+| Purely mechanical/hydraulic            | Nothing anywhere — controller simply times out                                                                                                   |
+| **Truncated read (NOT a fault)**       | `con_string` → `dis` **with a short payload** — 300 keys rather than 304. Must be excluded before any of the above is claimed.                   |
 | **Commanded by our app (NOT a fault)** | A `REQ` line for `stop_shower.cgi` or `quick_shower.cgi` in the egress log, just before the state change. Must be excluded first — see change 5. |
 
-Note the last three rows. If the trace shows *nothing*, that is itself a result,
+Note the last three rows. If the trace shows _nothing_, that is itself a result,
 and it points outside the controller. If it shows a valve dropout, the first
 question is whether the payload was complete — see change 3. And before any stop
 is called spontaneous, the egress log must show we did not ask for it — bearing
@@ -404,7 +409,7 @@ Also worth capturing: wall-clock duration from shower start to shutoff, across
 many events, so we can see whether it clusters (timer) or scatters (fault).
 
 `cerror_logs.cgi` and `kerror_logs.cgi` are already exposed as reads (0/5) — poll
-them for *changes* rather than continuously.
+them for _changes_ rather than continuously.
 
 ## Open questions this session may be able to close
 

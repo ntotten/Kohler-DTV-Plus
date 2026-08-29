@@ -1,13 +1,6 @@
 import type { ShowerModel } from '../api/model';
 import type { Screen } from './screens';
-import {
-  DropIcon,
-  MusicIcon,
-  SettingsIcon,
-  SpaIcon,
-  StopSquareIcon,
-  UserIcon,
-} from './Icons';
+import { DropIcon, MusicIcon, SettingsIcon, SpaIcon, StopSquareIcon, UserIcon } from './Icons';
 
 interface Props {
   model: ShowerModel;
@@ -30,11 +23,7 @@ function Tile({
   running?: boolean;
 }) {
   return (
-    <button
-      className={`tile${running ? ' running' : ''}`}
-      onClick={onClick}
-      disabled={disabled}
-    >
+    <button className={`tile${running ? ' running' : ''}`} onClick={onClick} disabled={disabled}>
       {icon}
       {label}
     </button>
@@ -43,9 +32,7 @@ function Tile({
 
 export function HomeScreen({ model, onNavigate, onStopAll, busy }: Props) {
   const now = new Date();
-  const time = now
-    .toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-    .toLowerCase();
+  const time = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).toLowerCase();
   const date = now.toLocaleDateString([], {
     month: '2-digit',
     day: '2-digit',

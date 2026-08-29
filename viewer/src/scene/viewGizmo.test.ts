@@ -7,7 +7,10 @@ import { nearestRegionDirection, stepDirection, type GizmoStep } from './viewGiz
 // can be silently wrong — a mis-signed rotation still looks like a rotation.
 
 /** A camera looking at the origin from `from`, matrices up to date. */
-function cameraLookingFrom(from: [number, number, number], up = [0, 1, 0]): THREE.PerspectiveCamera {
+function cameraLookingFrom(
+  from: [number, number, number],
+  up = [0, 1, 0],
+): THREE.PerspectiveCamera {
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
   camera.position.set(...from);
   camera.up.set(up[0], up[1], up[2]);
@@ -47,7 +50,12 @@ describe('nearestRegionDirection', () => {
           if (!x && !y && !z) continue;
           const probe = new THREE.Vector3(x, y, z).normalize().multiplyScalar(2);
           const snapped = nearestRegionDirection(probe);
-          reached.add(snapped.toArray().map((n) => n.toFixed(4)).join(','));
+          reached.add(
+            snapped
+              .toArray()
+              .map((n) => n.toFixed(4))
+              .join(','),
+          );
         }
       }
     }

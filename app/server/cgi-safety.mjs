@@ -71,7 +71,11 @@ export const CGI = {
     expose: 'command',
     note: 'Persistent config write, indices 1-105. Only index 43 (volume) is used by this app.',
   },
-  'massage_toggle.cgi': { risk: 2, expose: false, note: 'Toggles massage. quick_shower is used instead.' },
+  'massage_toggle.cgi': {
+    risk: 2,
+    expose: false,
+    note: 'Toggles massage. quick_shower is used instead.',
+  },
   'light_module.cgi': { risk: 2, expose: false, note: 'Secondary light modules. Unused.' },
   'change_user.cgi': { risk: 2, expose: false, note: 'Switches active user context. Unused.' },
   'update_change.cgi': { risk: 2, expose: false, note: 'Signals a config update. Unused.' },
@@ -109,7 +113,11 @@ export const CGI = {
   // ------------------------------------------------------------- 5: critical
   'reset_factory.cgi': { risk: 5, expose: false, note: 'Full factory wipe.' },
   'clear_dt.cgi': { risk: 5, expose: false, note: 'Clears the entire datatable.' },
-  'fileupload.cgi': { risk: 5, expose: false, note: 'Firmware upload. A bad image bricks the unit.' },
+  'fileupload.cgi': {
+    risk: 5,
+    expose: false,
+    note: 'Firmware upload. A bad image bricks the unit.',
+  },
   'unpack_bin.cgi': { risk: 5, expose: false, note: 'Unpacks an uploaded firmware image.' },
 };
 

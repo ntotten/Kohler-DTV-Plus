@@ -419,7 +419,10 @@ export function createViewGizmo(): ViewGizmoHandles {
     // once the camera's is.
     scene.updateMatrixWorld(true);
     raycaster.setFromCamera(pointer, camera);
-    const hit = raycaster.intersectObjects(regions.map((r) => r.object), false)[0];
+    const hit = raycaster.intersectObjects(
+      regions.map((r) => r.object),
+      false,
+    )[0];
     return hit ? (regions.find((r) => r.object === hit.object) ?? null) : null;
   }
 
@@ -506,11 +509,7 @@ export function nearestRegionDirection(to: THREE.Vector3): THREE.Vector3 {
 // ---------------------------------------------------------------- cube
 
 function buildCube(scene: THREE.Scene, regions: Region[]): void {
-  const e = [
-    new THREE.Vector3(1, 0, 0),
-    new THREE.Vector3(0, 1, 0),
-    new THREE.Vector3(0, 0, 1),
-  ];
+  const e = [new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1)];
 
   // Every facet's boundary, gathered as it is built and turned into one line
   // object at the end. Collected here rather than derived afterwards with
@@ -554,14 +553,16 @@ function buildCube(scene: THREE.Scene, regions: Region[]): void {
             span(e, i, si * INNER, j, sj * CUBE_HALF, k, INNER),
             span(e, i, si * CUBE_HALF, j, sj * INNER, k, INNER),
           ];
-          const normal = e[i]
-            .clone()
-            .multiplyScalar(si)
-            .addScaledVector(e[j], sj)
-            .normalize();
+          const normal = e[i].clone().multiplyScalar(si).addScaledVector(e[j], sj).normalize();
           const mesh = new THREE.Mesh(polygon(corners, normal, false), cubeMaterial(CHAMFER_COLOR));
           outlines.push(corners);
-          add(scene, regions, mesh, { kind: 'view', towards: normal, label: 'edge' }, CHAMFER_COLOR);
+          add(
+            scene,
+            regions,
+            mesh,
+            { kind: 'view', towards: normal, label: 'edge' },
+            CHAMFER_COLOR,
+          );
         }
       }
     }
@@ -579,7 +580,13 @@ function buildCube(scene: THREE.Scene, regions: Region[]): void {
         const normal = new THREE.Vector3(sx, sy, sz).normalize();
         const mesh = new THREE.Mesh(polygon(corners, normal, false), cubeMaterial(CHAMFER_COLOR));
         outlines.push(corners);
-        add(scene, regions, mesh, { kind: 'view', towards: normal, label: 'corner' }, CHAMFER_COLOR);
+        add(
+          scene,
+          regions,
+          mesh,
+          { kind: 'view', towards: normal, label: 'corner' },
+          CHAMFER_COLOR,
+        );
       }
     }
   }
@@ -618,8 +625,7 @@ function cubeMaterial(color: number, map?: THREE.Texture): THREE.Material {
  * visibly darker than the rest.
  */
 function buildEdges(outlines: THREE.Vector3[][]): LineSegments2 {
-  const key = (v: THREE.Vector3): string =>
-    `${v.x.toFixed(4)},${v.y.toFixed(4)},${v.z.toFixed(4)}`;
+  const key = (v: THREE.Vector3): string => `${v.x.toFixed(4)},${v.y.toFixed(4)},${v.z.toFixed(4)}`;
   const seen = new Set<string>();
   const positions: number[] = [];
 
@@ -680,11 +686,7 @@ function span(
   k: number,
   c: number,
 ): THREE.Vector3 {
-  return e[i]
-    .clone()
-    .multiplyScalar(a)
-    .addScaledVector(e[j], b)
-    .addScaledVector(e[k], c);
+  return e[i].clone().multiplyScalar(a).addScaledVector(e[j], b).addScaledVector(e[k], c);
 }
 
 /**
@@ -711,7 +713,11 @@ function faceBasis(normal: THREE.Vector3): { right: THREE.Vector3; up: THREE.Vec
  * back-facing pick region is invisible and unclickable, which is a tedious bug
  * to chase for the sake of a cross product.
  */
-function polygon(corners: THREE.Vector3[], normal: THREE.Vector3, withUv: boolean): THREE.BufferGeometry {
+function polygon(
+  corners: THREE.Vector3[],
+  normal: THREE.Vector3,
+  withUv: boolean,
+): THREE.BufferGeometry {
   const facing = new THREE.Vector3()
     .subVectors(corners[1], corners[0])
     .cross(new THREE.Vector3().subVectors(corners[2], corners[0]));

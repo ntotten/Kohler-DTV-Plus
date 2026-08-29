@@ -182,7 +182,13 @@ export function createKohlerMiddleware({ host = DEFAULT_HOST } = {}) {
         // Any command may have moved something values.cgi reports (save_variable
         // certainly does), so drop the cache rather than serve a stale view.
         valuesCache = null;
-        return send(res, 200, { ok: true, name, params, status: r.status, body: r.body?.slice(0, 500) });
+        return send(res, 200, {
+          ok: true,
+          name,
+          params,
+          status: r.status,
+          body: r.body?.slice(0, 500),
+        });
       }
 
       return send(res, 404, { ok: false, error: 'unknown endpoint' });

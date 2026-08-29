@@ -9,7 +9,7 @@ slow as it is.
 ## The one-line answer
 
 The phone talks only to your dev machine on port 5180. The Vite dev server
-serves the React app *and*, in the same Node process, hosts an `/api`
+serves the React app _and_, in the same Node process, hosts an `/api`
 middleware that opens a raw TCP socket to the controller on port 80. There is
 no separate proxy script and no Python anywhere — the middleware is a Vite
 plugin (`vite.config.ts` -> `kohlerApi`) loaded into the dev server.
@@ -103,24 +103,24 @@ sequenceDiagram
 
 ## Who talks to whom
 
-| Hop | Protocol | Who initiates |
-| --- | --- | --- |
-| phone -> dev machine :5180 | normal HTTP/1.1, JSON | browser `fetch` |
-| dev machine -> controller :80 | HTTP/1.0 out, **HTTP/0.9 in**, raw `net.Socket` | Node |
-| phone -> controller | **never happens** | — |
+| Hop                           | Protocol                                        | Who initiates   |
+| ----------------------------- | ----------------------------------------------- | --------------- |
+| phone -> dev machine :5180    | normal HTTP/1.1, JSON                           | browser `fetch` |
+| dev machine -> controller :80 | HTTP/1.0 out, **HTTP/0.9 in**, raw `net.Socket` | Node            |
+| phone -> controller           | **never happens**                               | —               |
 
 ## Timings, in one place
 
-| Thing | Value | Where |
-| --- | --- | --- |
-| Poll, idle | 15 s | `POLL_IDLE_MS` |
-| Poll, running | 5 s | `POLL_ACTIVE_MS` |
-| Fast-cadence tail after stop | 120 s | `ACTIVE_TAIL_MS` |
-| Optimistic UI grace after a command | 5 s | `GRACE_MS` |
-| `values.cgi` proxy cache | 30 s | `VALUES_TTL_MS` |
-| Floor between controller requests | 120 ms | `MIN_GAP_MS` |
-| Temperature debounce | 450 ms | `useShower.adjustTemp` |
-| Sustained idle load | ~0.07 req/s | was ~0.8 req/s before `c8cefc1` |
+| Thing                               | Value       | Where                           |
+| ----------------------------------- | ----------- | ------------------------------- |
+| Poll, idle                          | 15 s        | `POLL_IDLE_MS`                  |
+| Poll, running                       | 5 s         | `POLL_ACTIVE_MS`                |
+| Fast-cadence tail after stop        | 120 s       | `ACTIVE_TAIL_MS`                |
+| Optimistic UI grace after a command | 5 s         | `GRACE_MS`                      |
+| `values.cgi` proxy cache            | 30 s        | `VALUES_TTL_MS`                 |
+| Floor between controller requests   | 120 ms      | `MIN_GAP_MS`                    |
+| Temperature debounce                | 450 ms      | `useShower.adjustTemp`          |
+| Sustained idle load                 | ~0.07 req/s | was ~0.8 req/s before `c8cefc1` |
 
 ## Things worth knowing
 
@@ -136,7 +136,7 @@ sequenceDiagram
   cached, because that is where run state lives.
 - **The proxy filters a known `values.cgi` blip.** Roughly once in 30–50 reads
   the controller returns a connected valve as `valve1_installed: false`. A
-  payload that *loses* a previously-installed valve has to say so twice before
+  payload that _loses_ a previously-installed valve has to say so twice before
   it is believed, and is never cached — otherwise the UI would insist the shower
   has no outlets for 30 s, possibly while someone is standing in it.
 - **`GET /api/status?fresh=1` bypasses the cache.** The proxy supports it; the

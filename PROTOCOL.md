@@ -18,10 +18,10 @@ Nothing here is documented or supported by Kohler.
 The controller runs **MQX HTTP – Freescale Embedded Web Server**. Two quirks
 will break a normal HTTP client:
 
-1. **`.cgi` endpoints reply in HTTP/0.9** — a bare body with *no status line and
-   no headers*. Node's `http`/`fetch` and Python's `requests` both reject this
+1. **`.cgi` endpoints reply in HTTP/0.9** — a bare body with _no status line and
+   no headers_. Node's `http`/`fetch` and Python's `requests` both reject this
    (`Received HTTP/0.9 when not allowed`). Static files (`.html`, `.js`, `.png`)
-   *do* get a normal `HTTP/1.0 200 OK`.
+   _do_ get a normal `HTTP/1.0 200 OK`.
 
    `curl` needs `--http0.9`. In this repo the fix is a raw TCP client:
    [app/server/kohler-client.mjs](app/server/kohler-client.mjs).
@@ -44,32 +44,32 @@ that file is the authoritative table and rates ~50 endpoints.
 
 ### Read
 
-| Endpoint | Risk | Returns |
-| --- | --- | --- |
-| `values.cgi` | 0/5 | ~303 keys: full configuration plus coarse state. |
-| `system_info.cgi` | 0/5 | 39 keys: live status the wall interface polls. |
-| `languages.cgi` | 0/5 | Installed language packs. |
-| `powerclean_check.cgi` | 3/5 | **Blocked.** Documented as able to *trigger* the steam power-clean cycle, not merely report it. |
-| `mac.cgi`, `serial.cgi` | 3/5 | **Blocked.** Documented as causing system lockups. Both returned empty on this unit; the MAC is in `values.cgi` anyway. |
+| Endpoint                | Risk | Returns                                                                                                                 |
+| ----------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------- |
+| `values.cgi`            | 0/5  | ~303 keys: full configuration plus coarse state.                                                                        |
+| `system_info.cgi`       | 0/5  | 39 keys: live status the wall interface polls.                                                                          |
+| `languages.cgi`         | 0/5  | Installed language packs.                                                                                               |
+| `powerclean_check.cgi`  | 3/5  | **Blocked.** Documented as able to _trigger_ the steam power-clean cycle, not merely report it.                         |
+| `mac.cgi`, `serial.cgi` | 3/5  | **Blocked.** Documented as causing system lockups. Both returned empty on this unit; the MAC is in `values.cgi` anyway. |
 
 ### Commands
 
 All are `GET` with query parameters. A successful command returns `:)`.
 
-| Endpoint | Risk | Parameters |
-| --- | --- | --- |
-| `quick_shower.cgi` | 2/5 | `valve_num`, `valve1_outlet`, `valve1_massage`, `valve1_temp`, `valve2_outlet`, `valve2_massage`, `valve2_temp` |
-| `stop_shower.cgi` | 1/5 | — |
-| `start_user.cgi` | 2/5 | `user` (1-6) |
-| `stop_user.cgi` | 1/5 | — |
-| `steam_on.cgi` | 2/5 | `temp`, `time` |
-| `steam_off.cgi` | 1/5 | — |
-| `music_on.cgi` / `music_off.cgi` | 1/5 | `volume` (0-100) |
-| `light_on.cgi` | 1/5 | `module`, `intensity` (0-100) |
-| `light_off.cgi` | 1/5 | `module` |
-| `rain_on.cgi` | 1/5 | `mode=1&color=…` (hue 0-360, `-1` white) or `mode=2&effect=…` (0-7) |
-| `rain_off.cgi` | 1/5 | — |
-| `save_variable.cgi` | 2/5 | `index` (1-105), `value` — persistent config write; see [index table](research/controller-mirror/js/values.js) |
+| Endpoint                         | Risk | Parameters                                                                                                      |
+| -------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------- |
+| `quick_shower.cgi`               | 2/5  | `valve_num`, `valve1_outlet`, `valve1_massage`, `valve1_temp`, `valve2_outlet`, `valve2_massage`, `valve2_temp` |
+| `stop_shower.cgi`                | 1/5  | —                                                                                                               |
+| `start_user.cgi`                 | 2/5  | `user` (1-6)                                                                                                    |
+| `stop_user.cgi`                  | 1/5  | —                                                                                                               |
+| `steam_on.cgi`                   | 2/5  | `temp`, `time`                                                                                                  |
+| `steam_off.cgi`                  | 1/5  | —                                                                                                               |
+| `music_on.cgi` / `music_off.cgi` | 1/5  | `volume` (0-100)                                                                                                |
+| `light_on.cgi`                   | 1/5  | `module`, `intensity` (0-100)                                                                                   |
+| `light_off.cgi`                  | 1/5  | `module`                                                                                                        |
+| `rain_on.cgi`                    | 1/5  | `mode=1&color=…` (hue 0-360, `-1` white) or `mode=2&effect=…` (0-7)                                             |
+| `rain_off.cgi`                   | 1/5  | —                                                                                                               |
+| `save_variable.cgi`              | 2/5  | `index` (1-105), `value` — persistent config write; see [index table](research/controller-mirror/js/values.js)  |
 
 ### Do not call
 
@@ -87,10 +87,10 @@ Also blocked at 3/5: `saveDT.cgi`, `saveUI.cgi`, `check_updates.cgi`,
 
 Configuration writes may be silently ignored while water is running:
 
-| Flag | Value | Meaning |
-| --- | --- | --- |
-| `CGI_SHOWER_START` | `0x01` | A shower start is in progress. |
-| `CGI_SHOWER_LOCK` | `0x02` | The shower is actively running. |
+| Flag               | Value  | Meaning                         |
+| ------------------ | ------ | ------------------------------- |
+| `CGI_SHOWER_START` | `0x01` | A shower start is in progress.  |
+| `CGI_SHOWER_LOCK`  | `0x02` | The shower is actively running. |
 
 ## Starting the shower
 
@@ -107,7 +107,7 @@ GET /quick_shower.cgi?valve_num=1
       &valve2_outlet=&valve2_massage=0&valve2_temp=100
 ```
 
-`valve_num` selects which valve the call is *for*; parameters for both valves are
+`valve_num` selects which valve the call is _for_; parameters for both valves are
 sent regardless. For a two-valve system the controller's UI issues the call
 twice, once per valve.
 
@@ -125,7 +125,7 @@ through. xagon0 documents this parameter as Celsius, which most likely reflects 
 Celsius-configured unit rather than a protocol difference.
 
 > ⚠️ **Scald risk.** `max_temp` is whatever the installer configured — 113 °F on
-> this system, which is *above* the 109 °F / 43 °C scald threshold. The
+> this system, which is _above_ the 109 °F / 43 °C scald threshold. The
 > controller's limit is therefore not a safety guarantee. Clamp to `max_temp`,
 > never raise it, and verify real water temperature with a thermometer. Note also
 > that the reported temperature is the valve's own thermistor reading, not an
@@ -144,44 +144,44 @@ actually moving.
 
 `system_info.cgi`:
 
-| Field | Meaning |
-| --- | --- |
-| `ui_shower_on`, `ui_steam_running` | Water / steam actually running. |
-| `valve1Setpoint` | Target temperature. |
-| `valve1outlet1..6` | Armed outlet selection (see above). |
-| `valve1_massage` | Current massage mode. |
-| `valve1_Currentstatus` | Free text, e.g. `Off`. |
-| `musicStatus`, `volStatus`, `muteStatus` | Amplifier. |
-| `steamTimeStatus`, `steamTimeMinutes` | Steam remaining. |
-| `devices_running` | Anything at all running. |
+| Field                                    | Meaning                             |
+| ---------------------------------------- | ----------------------------------- |
+| `ui_shower_on`, `ui_steam_running`       | Water / steam actually running.     |
+| `valve1Setpoint`                         | Target temperature.                 |
+| `valve1outlet1..6`                       | Armed outlet selection (see above). |
+| `valve1_massage`                         | Current massage mode.               |
+| `valve1_Currentstatus`                   | Free text, e.g. `Off`.              |
+| `musicStatus`, `volStatus`, `muteStatus` | Amplifier.                          |
+| `steamTimeStatus`, `steamTimeMinutes`    | Steam remaining.                    |
+| `devices_running`                        | Anything at all running.            |
 
 `values.cgi`:
 
-| Field | Meaning |
-| --- | --- |
-| `one_type`..`six_type` | Valve 1 fitting per position, `outlet_0`..`outlet_23`. |
-| `one_massage`..`six_massage` | Whether that position participates in massage. |
-| `v2_*` | Same for valve 2. |
-| `def_temp`, `max_temp` | Default and maximum temperature. |
-| `def_outlet` | Default outlet position. |
-| `user_1..6`, `user_N_enabled` | Presets. |
-| `*_con_string` | Component health: `conn`, `not_seen`, `dis`. |
-| `num_interface` | Number of wall interfaces the controller can see. |
+| Field                         | Meaning                                                |
+| ----------------------------- | ------------------------------------------------------ |
+| `one_type`..`six_type`        | Valve 1 fitting per position, `outlet_0`..`outlet_23`. |
+| `one_massage`..`six_massage`  | Whether that position participates in massage.         |
+| `v2_*`                        | Same for valve 2.                                      |
+| `def_temp`, `max_temp`        | Default and maximum temperature.                       |
+| `def_outlet`                  | Default outlet position.                               |
+| `user_1..6`, `user_N_enabled` | Presets.                                               |
+| `*_con_string`                | Component health: `conn`, `not_seen`, `dis`.           |
+| `num_interface`               | Number of wall interfaces the controller can see.      |
 
 ### Outlet types
 
 `outlet_N` maps to a fitting icon, not a text label — Kohler ships no names.
 Derived from the controller's own art (`/images/outlets/N_on.png`):
 
-| N | Fitting | N | Fitting |
-| --- | --- | --- | --- |
-| 0 | not assigned | 12 | bodyspray, round |
-| 1-2 | showerhead | 13-14 | bodysprays (2) |
-| 3-4 | two showerheads | 15-16 | bodysprays (3) |
-| 5-6 | rainhead | 17-18 | foot spray |
-| 7-8 | handshower | 19-20 | foot sprays (2) |
-| 9-10 | bath spout | 21-22 | foot sprays (3) |
-| 11 | bodyspray, square | 23 | Real Rain |
+| N    | Fitting           | N     | Fitting          |
+| ---- | ----------------- | ----- | ---------------- |
+| 0    | not assigned      | 12    | bodyspray, round |
+| 1-2  | showerhead        | 13-14 | bodysprays (2)   |
+| 3-4  | two showerheads   | 15-16 | bodysprays (3)   |
+| 5-6  | rainhead          | 17-18 | foot spray       |
+| 7-8  | handshower        | 19-20 | foot sprays (2)  |
+| 9-10 | bath spout        | 21-22 | foot sprays (3)  |
+| 11   | bodyspray, square | 23    | Real Rain        |
 
 Types 9, 10 and 23 cannot take part in massage — the controller's own UI
 excludes them regardless of the per-outlet massage flag.

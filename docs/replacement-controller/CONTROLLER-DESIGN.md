@@ -153,11 +153,11 @@ is removed.
 Fail-off latency is measured at the outlet, from the last transmitted frame to
 observed flow stop, on every fault path in the Phase 3 test list:
 
-| Measured latency | Result |
-| --- | --- |
-| ≤ 10 s | Pass |
-| 10-30 s | Does not proceed past Phase 3 without written justification and a second opinion |
-| > 30 s | Reject this architecture |
+| Measured latency | Result                                                                           |
+| ---------------- | -------------------------------------------------------------------------------- |
+| ≤ 10 s           | Pass                                                                             |
+| 10-30 s          | Does not proceed past Phase 3 without written justification and a second opinion |
+| > 30 s           | Reject this architecture                                                         |
 
 A failing result is not to be solved by putting an unreviewed hobby relay in a
 valve's mains circuit.
@@ -179,10 +179,10 @@ Non-negotiable rules:
    configuration check — takes both down.
 6. Setpoints are clamped at both ends before transmission:
 
-   | Bound | Value | Source |
-   | --- | --- | --- |
-   | Ceiling | `Cx2 = 85` — 42.5 °C / 108.5 °F | 109 °F user-facing limit, rounded down to the 0.5 °C step below it |
-   | Floor | `Cx2 = 60` — 30 °C / 86 °F | `MIN_SYS_VALVE_TEMP`; below it the valve returns error 3, *parameter out of range* |
+   | Bound   | Value                           | Source                                                                             |
+   | ------- | ------------------------------- | ---------------------------------------------------------------------------------- |
+   | Ceiling | `Cx2 = 85` — 42.5 °C / 108.5 °F | 109 °F user-facing limit, rounded down to the 0.5 °C step below it                 |
+   | Floor   | `Cx2 = 60` — 30 °C / 86 °F      | `MIN_SYS_VALVE_TEMP`; below it the valve returns error 3, _parameter out of range_ |
 
 7. Custom sessions have a 20-minute hard limit. No keepalive may extend a
    session automatically. The limit sits below the Prompt 3 valve's own
@@ -193,9 +193,9 @@ Non-negotiable rules:
    firmware-update commands are absent from production firmware.
 9. Invalid input and invalid wire data get different responses:
 
-   | Condition | Response |
-   | --- | --- |
-   | Request fails API validation — temperature outside the clamp, unconfigured outlet bit, unknown zone | Rejected to the caller. No valve state changes. |
+   | Condition                                                                                                                | Response                                               |
+   | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
+   | Request fails API validation — temperature outside the clamp, unconfigured outlet bit, unknown zone                      | Rejected to the caller. No valve state changes.        |
    | Reported fault, checksum failure on a write, malformed or out-of-range value in a valve response, missed safety response | `all-off`, zone latched unavailable until acknowledged |
 
 10. AI, Homebridge, the Worker, and remote clients cannot send raw valve frames.
@@ -209,15 +209,15 @@ in [SHOPPING-LIST.md](SHOPPING-LIST.md).
 
 ### Buy now
 
-| Qty | Component                 | Specific choice / requirement                                      | Purpose                                                                              |
-| --: | ------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-|   1 | Application computer      | Raspberry Pi 4 Model B, 2 GB                                       | Valve controller, local API, logs, and wired Ethernet.                               |
-|   1 | Pi power supply           | Official Raspberry Pi 15 W USB-C supply                            | Independent low-voltage power; never tap a valve supply.                             |
-|   2 | Storage cards             | 64 GB high-endurance microSD                                       | One installed and one imaged recovery spare.                                         |
-|   2 | Valve interfaces          | Waveshare `USB TO RS485/422`, SKU `23949`; one dedicated per valve | Two separately isolated RS-485 links in DIN enclosures.                               |
-|   1 | Passive-capture interface | Physically receive-only isolated RS-485 front end                  | Capture the factory buses before the replacement transmits.                          |
-|   1 | Temperature instrument    | Calibrated fast-response immersion probe thermometer               | Independently verify delivered water temperature at commissioning.                   |
-|   1 | Permanent outlet sensor   | Pi-readable temperature probe on outlet plumbing                   | Continuous independent temperature measurement; also serves E5.                      |
+| Qty | Component                 | Specific choice / requirement                                          | Purpose                                                                              |
+| --: | ------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+|   1 | Application computer      | Raspberry Pi 4 Model B, 2 GB                                           | Valve controller, local API, logs, and wired Ethernet.                               |
+|   1 | Pi power supply           | Official Raspberry Pi 15 W USB-C supply                                | Independent low-voltage power; never tap a valve supply.                             |
+|   2 | Storage cards             | 64 GB high-endurance microSD                                           | One installed and one imaged recovery spare.                                         |
+|   2 | Valve interfaces          | Waveshare `USB TO RS485/422`, SKU `23949`; one dedicated per valve     | Two separately isolated RS-485 links in DIN enclosures.                              |
+|   1 | Passive-capture interface | Physically receive-only isolated RS-485 front end                      | Capture the factory buses before the replacement transmits.                          |
+|   1 | Temperature instrument    | Calibrated fast-response immersion probe thermometer                   | Independently verify delivered water temperature at commissioning.                   |
+|   1 | Permanent outlet sensor   | Pi-readable temperature probe on outlet plumbing                       | Continuous independent temperature measurement; also serves E5.                      |
 |   1 | Electrical test set       | True-RMS meter; borrow an oscilloscope and isolated differential probe | Verify pins, polarity, idle bias, termination, and waveform without assuming labels. |
 
 References:
@@ -291,18 +291,18 @@ deadline in the table below.
 All `[C]` — third-party reverse engineering, unverified against this hardware.
 Confirm each from the Phase 1 capture before the encoder transmits.
 
-| Parameter | Value | Note |
-| --- | --- | --- |
-| Line | 9600 8N1, no flow control | RS-485 half-duplex |
-| Max frame | 20 bytes | `AA 55` sync, addr, control, len, data, checksum |
-| Checksum | 2's complement over addr + control + len + data | |
-| Valve tick | 525 ms | Master poll cadence |
-| Response timeout | 400 ms | Time to wait for a valve response |
-| Message timeout | 320 ms | Maximum time for a complete message to arrive |
-| Echo timeout | 20 ms | See the note on echo below |
-| Enquiry rate | 2000 ms | Between address-discovery attempts |
-| Clear delay | 2000 ms | After address clear, before re-discovery |
-| Retries | 3 | Read, write, and address management alike |
+| Parameter        | Value                                           | Note                                             |
+| ---------------- | ----------------------------------------------- | ------------------------------------------------ |
+| Line             | 9600 8N1, no flow control                       | RS-485 half-duplex                               |
+| Max frame        | 20 bytes                                        | `AA 55` sync, addr, control, len, data, checksum |
+| Checksum         | 2's complement over addr + control + len + data |                                                  |
+| Valve tick       | 525 ms                                          | Master poll cadence                              |
+| Response timeout | 400 ms                                          | Time to wait for a valve response                |
+| Message timeout  | 320 ms                                          | Maximum time for a complete message to arrive    |
+| Echo timeout     | 20 ms                                           | See the note on echo below                       |
+| Enquiry rate     | 2000 ms                                         | Between address-discovery attempts               |
+| Clear delay      | 2000 ms                                         | After address clear, before re-discovery         |
+| Retries          | 3                                               | Read, write, and address management alike        |
 
 Response timing is contradicted between sources and is tracked as
 [I5](../../INVESTIGATIONS.md#i5--the-saturn-register-map-is-contradictory).
@@ -318,18 +318,18 @@ valve electrically; direction is inferred from address and content.
 `outlet_set` in the public API is defined in configuration slot numbers — 1..6
 for zone 1, 1..3 for zone 2. Three numbering schemes exist and do not agree:
 
-| Space | Where it appears |
-| --- | --- |
-| Configuration slot | `one_type`..`six_type`, `valveN_outletM_func` key names, `quick_shower.cgi` digits |
-| Status index (`id`) | `system_info.cgi`'s `valveNoutletM` booleans; bridged by `valveN_outletM_func.id` |
-| Saturn wire bitmap | The bytes sent to the valve; differs per valve type |
+| Space               | Where it appears                                                                   |
+| ------------------- | ---------------------------------------------------------------------------------- |
+| Configuration slot  | `one_type`..`six_type`, `valveN_outletM_func` key names, `quick_shower.cgi` digits |
+| Status index (`id`) | `system_info.cgi`'s `valveNoutletM` booleans; bridged by `valveN_outletM_func.id`  |
+| Saturn wire bitmap  | The bytes sent to the valve; differs per valve type                                |
 
 Wire bitmaps per valve type:
 
-| Valve | Outlet numbering | First outlet mask |
-| --- | --- | --- |
-| DTV 6-port | Outlet 0..5 | `0x01` |
-| Prompt 3 generic | Outlet 1..6 | `0x04` |
+| Valve            | Outlet numbering | First outlet mask |
+| ---------------- | ---------------- | ----------------- |
+| DTV 6-port       | Outlet 0..5      | `0x01`            |
+| Prompt 3 generic | Outlet 1..6      | `0x04`            |
 
 Both mappings live in one table with a regression test that permutes a slot.
 The slot-to-status mapping is the identity on this system, so an identity-only
@@ -423,13 +423,13 @@ The vendored reverse-engineering notes contradict themselves. Resolve these
 from receive-only captures, not guesses:
 
 1. Does the three-port valve use DTV+ master identity `0x00` or Prompt identity
-   `0x10` here? *[valve-control.md](../devices/valve-control.md) says a Prompt
+   `0x10` here? _[valve-control.md](../devices/valve-control.md) says a Prompt
    3-Port always uses `0x10`;
    [saturn-protocol.md](../../research/xagon0/docs/protocols/saturn-protocol.md)
    says to always use `0x00` with DTV+ hardware — and its own worked example
    shows a `0x1E` Prompt 3-Port answering to master `0x00`. That example is
    evidence for `0x00`, but it is one third-party capture from unknown
-   hardware, and it is inference until ours says the same.*
+   hardware, and it is inference until ours says the same._
 2. What exact discovery and address-allocation frames does each valve use?
 3. What are the exact all-off command and acknowledgement for each valve?
 4. Does K-99695 write one compound desired state or separate temperature,
@@ -484,11 +484,11 @@ Method: after the tap is validated on scenarios 1-9, run the failing
 configuration — handshower alone, matching the 2026-07-14 conditions — with the
 tap recording, until flow stops or the session reaches its limit.
 
-| Observation | Discriminates |
-| --- | --- |
-| A valve fault frame precedes the stop | Separates H0 from H4; the fault code identifies the cause |
+| Observation                                  | Discriminates                                                     |
+| -------------------------------------------- | ----------------------------------------------------------------- |
+| A valve fault frame precedes the stop        | Separates H0 from H4; the fault code identifies the cause         |
 | The valve stops with no fault and no command | Points to supply power or valve logic; excludes controller action |
-| No stop occurs | Constrains the reproduction conditions |
+| No stop occurs                               | Constrains the reproduction conditions                            |
 
 **⚠️ Consent:** moves water. Operator present. Result to
 [STORY-LOG.md](../../STORY-LOG.md), verdict to
@@ -563,10 +563,10 @@ The K-99693 wall interface shares that controller.
 
 Select one option and record which:
 
-| Option | Cost | Condition |
-| --- | --- | --- |
-| Power the K-99695 down for the pilot (preferred) | No shower available during Phase 3 | Removes the unknown |
-| Leave the K-99695 running | Zone 2 remains available | Zone 2 locked out for the duration; controller error log and `values.cgi` monitored for the detach and subsequent behaviour, recorded as a result |
+| Option                                           | Cost                               | Condition                                                                                                                                         |
+| ------------------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Power the K-99695 down for the pilot (preferred) | No shower available during Phase 3 | Removes the unknown                                                                                                                               |
+| Leave the K-99695 running                        | Zone 2 remains available           | Zone 2 locked out for the duration; controller error log and `values.cgi` monitored for the detach and subsequent behaviour, recorded as a result |
 
 Procedure:
 

@@ -6,19 +6,19 @@ without a network fetch.
 
 ## kohler-dtv-plus/99693-P.obj
 
-| | |
-| --- | --- |
-| Part | Kohler K-99693 DTV+ Digital Interface (wall control unit) |
-| Format | Wavefront OBJ, ASCII |
-| Producer | `3ds Max Wavefront OBJ Exporter v0.97b`, per the file's own header |
-| Authored | 2014-03-24 14:09:43, per the file's own header |
-| Geometry | 2392 vertices, 2301 face records, 9146 vertex normals, one group `99693` |
-| Triangulated | 4544 triangles (the face records are largely quads) |
-| Materials | None. No `mtllib`, no `usemtl`, no UVs. |
-| Watertight | **No.** 224 unshared edges — an open surface, not a solid. |
+|                 |                                                                                                                               |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Part            | Kohler K-99693 DTV+ Digital Interface (wall control unit)                                                                     |
+| Format          | Wavefront OBJ, ASCII                                                                                                          |
+| Producer        | `3ds Max Wavefront OBJ Exporter v0.97b`, per the file's own header                                                            |
+| Authored        | 2014-03-24 14:09:43, per the file's own header                                                                                |
+| Geometry        | 2392 vertices, 2301 face records, 9146 vertex normals, one group `99693`                                                      |
+| Triangulated    | 4544 triangles (the face records are largely quads)                                                                           |
+| Materials       | None. No `mtllib`, no `usemtl`, no UVs.                                                                                       |
+| Watertight      | **No.** 224 unshared edges — an open surface, not a solid.                                                                    |
 | Downloaded from | Kohler's own product page — <https://www.kohler.com/en/products/showers/shop-shower-trims-valves/dtv-digital-interface-99693> |
-| Staged at | `E:\proj-med\build-661-diag-kohler-shower\kohler\kohler-digital-interface-99693\99693-P.obj` |
-| Copied on | 2026-07-27 |
+| Staged at       | `E:\proj-med\build-661-diag-kohler-shower\kohler\kohler-digital-interface-99693\99693-P.obj`                                  |
+| Copied on       | 2026-07-27                                                                                                                    |
 
 **Source.** This file came from Kohler's public product page for the K-99693,
 linked above, which publishes the part's CAD in several formats alongside the
@@ -36,11 +36,11 @@ byte-comparable against whatever Kohler publishes.
 The file declares neither, as OBJ has no facility to. Both were **established by
 measurement, not assumed**:
 
-| Axis | Mesh extent | Spec sheet | Reading |
-| --- | --- | --- | --- |
-| X | 5.259 | 5-1/4 in (5.250) | width |
-| Y | 1.214 | 1-3/16 in (1.1875) | depth |
-| Z | 3.310 | 3-5/16 in (3.3125) | height |
+| Axis | Mesh extent | Spec sheet         | Reading |
+| ---- | ----------- | ------------------ | ------- |
+| X    | 5.259       | 5-1/4 in (5.250)   | width   |
+| Y    | 1.214       | 1-3/16 in (1.1875) | depth   |
+| Z    | 3.310       | 3-5/16 in (3.3125) | height  |
 
 So the file is in **inches**, with **Z up** and Y as depth — the usual 3ds Max
 and mechanical-CAD convention. This is recorded as `sourceUnit: "in"` and
@@ -66,13 +66,13 @@ All 11 loops are closed and 8 of them are exactly planar, which is what makes
 them safely cappable. The app's repair pass (`src/core/repair.ts`) closes the
 mesh completely:
 
-| | As published | Repaired |
-| --- | --- | --- |
-| Triangles | 4,544 | 4,736 |
-| Boundary edges | 222 | 0 |
-| Non-manifold edges | 2 | 0 |
-| Watertight | no | yes |
-| Envelope | 133.59 × 30.84 × 84.07 mm | **identical to 0.0001 mm** |
+|                    | As published              | Repaired                   |
+| ------------------ | ------------------------- | -------------------------- |
+| Triangles          | 4,544                     | 4,736                      |
+| Boundary edges     | 222                       | 0                          |
+| Non-manifold edges | 2                         | 0                          |
+| Watertight         | no                        | yes                        |
+| Envelope           | 133.59 × 30.84 × 84.07 mm | **identical to 0.0001 mm** |
 
 The envelope invariant is enforced by the verify gate, not just asserted: a
 repair that moved the outer surface would be a dimensional error on the exact
@@ -91,7 +91,7 @@ and the depth analysis finds no geometry at all between the front bezel
 
 This is a **visualization model**. It does not contain the PCB, the
 wire-to-board connector, internal ribs, bosses or fasteners. It is a reliable
-guide to the part's *outside* and no guide whatsoever to what sits behind a
+guide to the part's _outside_ and no guide whatsoever to what sits behind a
 given point on the rear face. Anyone planning to cut into the real assembly
 needs to establish clearances from the physical part, not from this file.
 

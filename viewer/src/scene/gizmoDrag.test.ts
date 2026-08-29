@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  CLICK_SLOP_PX,
-  COARSE_CLICK_SLOP_PX,
-  createDragProbe,
-  dragThresholdPx,
-} from './gizmoDrag';
+import { CLICK_SLOP_PX, COARSE_CLICK_SLOP_PX, createDragProbe, dragThresholdPx } from './gizmoDrag';
 
 // The click-versus-drag decision, tested without a pointer or a camera. It is
 // the part of drag-to-orbit that can be silently wrong: a threshold that is too

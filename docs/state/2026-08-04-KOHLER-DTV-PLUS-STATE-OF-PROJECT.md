@@ -67,11 +67,11 @@ the world, so reading it as ground truth understated the project.** They are
 recorded here rather than silently fixed, because the pattern is itself the
 finding.
 
-| First draft said | Actually | How it was established |
-| --- | --- | --- |
-| "No valve has ever been opened by the app" | **The operator has run a full shower through the browser app against the live valve. It worked.** The command path is proven end to end. | Operator, 2026-08-04. The repo says otherwise at `DESIGN.md:203-206`. |
-| "The K-99693 interface is disconnected; `num_interface = 0`" | **It is reconnected and healthy.** `num_interface = 1`, `ui1_con_string = conn`. | Measured — `npm run selftest` and six direct `values.cgi` reads, 2026-08-04. |
-| "No record that Kohler support was contacted" | **They were, on 2026-07-27, and quoted ~$2013 for a replacement** — which is what justified cutting the housing. | Operator's recording: `raw/obs/2026-07-27-kohler,digial-interface,tech-support (@04_07_$2013_for replacement).mp4`. |
+| First draft said                                             | Actually                                                                                                                                 | How it was established                                                                                              |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| "No valve has ever been opened by the app"                   | **The operator has run a full shower through the browser app against the live valve. It worked.** The command path is proven end to end. | Operator, 2026-08-04. The repo says otherwise at `DESIGN.md:203-206`.                                               |
+| "The K-99693 interface is disconnected; `num_interface = 0`" | **It is reconnected and healthy.** `num_interface = 1`, `ui1_con_string = conn`.                                                         | Measured — `npm run selftest` and six direct `values.cgi` reads, 2026-08-04.                                        |
+| "No record that Kohler support was contacted"                | **They were, on 2026-07-27, and quoted ~$2013 for a replacement** — which is what justified cutting the housing.                         | Operator's recording: `raw/obs/2026-07-27-kohler,digial-interface,tech-support (@04_07_$2013_for replacement).mp4`. |
 
 A fourth correction is a reframing rather than a factual error: the parts viewer
 is not an unowned side quest, it is a **deliberate Maker Galaxy experiment** —
@@ -120,7 +120,7 @@ In the project's own terms (README.md:3-15, AGENT.md:7-16):
   **⚠️ This premise is now historical.** Measured 2026-08-04: `num_interface = 1`,
   `ui1_con_string = conn` — the interface is back. `README.md:18-23` and
   `DESIGN.md:11-14` both still open with the old reading as the project's
-  justification. The app is no longer the *only* way to run this shower, which
+  justification. The app is no longer the _only_ way to run this shower, which
   changes what it is for (a better remote interface, and now a diagnostic
   instrument) without changing whether it is worth having.
 - **Find out why the shower stops mid-use.** An open investigation, ~2 months of
@@ -131,36 +131,36 @@ In the project's own terms (README.md:3-15, AGENT.md:7-16):
 
 ### Deliberate stances — do not violate these without a thesis change
 
-| Stance | Where | Why it is load-bearing |
-| --- | --- | --- |
-| **Nothing above 2/5 is reachable, ever** | `app/server/cgi-safety.mjs:27,117-123` | The table self-throws at import. Widening it needs a recorded reason and a deliberate test edit. |
-| **Never open a valve without in-the-moment consent** | AGENT.md:31-34 | Read-only work is free; moving water is not. Asked every time, not once. |
-| **15 s idle / 5 s active polling is a floor, not a preference** | `research/FIELD-NOTES.md:14-96` | Three separate people wedged this controller with faster polling, taking it out for hours. |
-| **No test may ever open a valve** | AGENT.md:79-81, DESIGN.md:163 | `npm run selftest` is safe to run while someone is showering. |
-| **The viewer has no hardware surface** | `viewer/README.md:7-10` | Two apps, no shared code, no shared port. The fabrication tool cannot move water. |
-| **A guessed unit is worse than a refusal** | `viewer/README.md:38-41` | The viewer refuses catalog entries that do not declare `sourceUnit` and `sourceUpAxis`. |
-| **Mark inference as inference** | AGENT.md:41-44 | The project's value is that its findings are grounded. |
-| **Report your own failures, especially then** | AGENT.md:45-47 | A corrected wrong turn is more useful than a clean narrative. |
+| Stance                                                          | Where                                  | Why it is load-bearing                                                                           |
+| --------------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Nothing above 2/5 is reachable, ever**                        | `app/server/cgi-safety.mjs:27,117-123` | The table self-throws at import. Widening it needs a recorded reason and a deliberate test edit. |
+| **Never open a valve without in-the-moment consent**            | AGENT.md:31-34                         | Read-only work is free; moving water is not. Asked every time, not once.                         |
+| **15 s idle / 5 s active polling is a floor, not a preference** | `research/FIELD-NOTES.md:14-96`        | Three separate people wedged this controller with faster polling, taking it out for hours.       |
+| **No test may ever open a valve**                               | AGENT.md:79-81, DESIGN.md:163          | `npm run selftest` is safe to run while someone is showering.                                    |
+| **The viewer has no hardware surface**                          | `viewer/README.md:7-10`                | Two apps, no shared code, no shared port. The fabrication tool cannot move water.                |
+| **A guessed unit is worse than a refusal**                      | `viewer/README.md:38-41`               | The viewer refuses catalog entries that do not declare `sourceUnit` and `sourceUpAxis`.          |
+| **Mark inference as inference**                                 | AGENT.md:41-44                         | The project's value is that its findings are grounded.                                           |
+| **Report your own failures, especially then**                   | AGENT.md:45-47                         | A corrected wrong turn is more useful than a clean narrative.                                    |
 
 ## 3. What is actually built
 
 ### 3.1 `app/` — the hardware interface
 
-| Claim | Label | Evidence |
-| --- | --- | --- |
-| Raw-socket HTTP/0.9 transport, one global queue, 120 ms floor | **real** | `app/server/kohler-client.mjs:17-91` — `enqueue()` chains every call; `MIN_GAP_MS = 120` |
-| Safety gate refuses >2/5 before a packet is sent | **real** | `cgi-safety.mjs:130-154`; self-check throws at import (`:117-123`) |
-| 18 endpoints reachable — 5 read, 13 command | **real** — measured | `node -e` against `exposedEndpoints()` returns `total 18 / read 5 / command 13` of 56 rated names |
-| 56 unit tests, no hardware | **real** — measured | `npm test` → 2 files, 56 passed |
-| `values.cgi` 30 s cache; `system_info.cgi` always live | **real** | `middleware.mjs:39,70-86,98-118` |
-| Valve-dropout blip filter ("must say so twice") | **real** | `middleware.mjs:57-86`; pinned to the 2026-07-26 observation in FIELD-NOTES §6 |
-| Polling 15 s / 5 s with a 120 s tail | **real** | `useShower.ts:20-23,88-90` |
-| Capacitor seam exists | **real** | `app/src/api/config.ts` — `VITE_API_BASE`, `apiUrl()` |
-| Command path confirmed end-to-end, **including opening a valve** | **real** | The operator has run a full shower through the app against the live valve. `DESIGN.md:203-206` still claims "no valve has been opened by this app yet" and is **stale** |
-| Steam / lighting / rain panel | **claimed** | Coded from xagon0 and the controller's own JS. None installed here; untestable (DESIGN.md:207-209) |
-| Second valve | **claimed** | Modelled, one valve on this system (DESIGN.md:214) |
-| Android/Capacitor port | **aspirational** | A recommendation and a seam. No `android-cap` directory exists in this repo |
-| Preset saving, massage speed | **aspirational** | `save_variable.cgi` sequence not worked out; speed parameter not located |
+| Claim                                                            | Label               | Evidence                                                                                                                                                                |
+| ---------------------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Raw-socket HTTP/0.9 transport, one global queue, 120 ms floor    | **real**            | `app/server/kohler-client.mjs:17-91` — `enqueue()` chains every call; `MIN_GAP_MS = 120`                                                                                |
+| Safety gate refuses >2/5 before a packet is sent                 | **real**            | `cgi-safety.mjs:130-154`; self-check throws at import (`:117-123`)                                                                                                      |
+| 18 endpoints reachable — 5 read, 13 command                      | **real** — measured | `node -e` against `exposedEndpoints()` returns `total 18 / read 5 / command 13` of 56 rated names                                                                       |
+| 56 unit tests, no hardware                                       | **real** — measured | `npm test` → 2 files, 56 passed                                                                                                                                         |
+| `values.cgi` 30 s cache; `system_info.cgi` always live           | **real**            | `middleware.mjs:39,70-86,98-118`                                                                                                                                        |
+| Valve-dropout blip filter ("must say so twice")                  | **real**            | `middleware.mjs:57-86`; pinned to the 2026-07-26 observation in FIELD-NOTES §6                                                                                          |
+| Polling 15 s / 5 s with a 120 s tail                             | **real**            | `useShower.ts:20-23,88-90`                                                                                                                                              |
+| Capacitor seam exists                                            | **real**            | `app/src/api/config.ts` — `VITE_API_BASE`, `apiUrl()`                                                                                                                   |
+| Command path confirmed end-to-end, **including opening a valve** | **real**            | The operator has run a full shower through the app against the live valve. `DESIGN.md:203-206` still claims "no valve has been opened by this app yet" and is **stale** |
+| Steam / lighting / rain panel                                    | **claimed**         | Coded from xagon0 and the controller's own JS. None installed here; untestable (DESIGN.md:207-209)                                                                      |
+| Second valve                                                     | **claimed**         | Modelled, one valve on this system (DESIGN.md:214)                                                                                                                      |
+| Android/Capacitor port                                           | **aspirational**    | A recommendation and a seam. No `android-cap` directory exists in this repo                                                                                             |
+| Preset saving, massage speed                                     | **aspirational**    | `save_variable.cgi` sequence not worked out; speed parameter not located                                                                                                |
 
 ### 3.2 `viewer/` — the parts viewer
 
@@ -178,32 +178,32 @@ repository's roadmap, and this repo is the sandbox. Its high commit velocity is
 a prototype iterating, not attention leaking away from the shower.
 
 **This purpose is recorded nowhere in the tree.** `viewer/README.md:371-383` and
-`:418-429` describe the *mechanical* Maker Galaxy alignment (shared catalog
+`:418-429` describe the _mechanical_ Maker Galaxy alignment (shared catalog
 fields, the ported `cameraFit.ts`, the decal record shape) but never say the app
 exists to prove a Maker Galaxy hypothesis. A reader concludes it is a tool that
 happens to resemble another project's.
 
-| Claim | Label | Evidence |
-| --- | --- | --- |
-| 164 unit tests across 10 files | **real** — measured | `npm test` in `viewer/` → 164 passed |
-| Export gate re-derives the bbox from exported bytes | **real** | `viewer/scripts/verify-exports.ts`; `npm run check` includes it |
-| K-99693 CAD is inches, Z-up, open, hollow | **real** — measured | 4,544 tris, 224 unshared edges, 190.30 cm³ enclosed after repair (`viewer/README.md:71-88`) |
-| Mesh repair does not move the envelope | **real** | Gate fails on >0.0001 mm drift; measured 0.000000 mm |
-| View cube with 26 pick regions, drag-to-orbit, tweened transitions | **real** | `viewGizmo.ts`, `gizmoDrag.ts`, `cameraTween.ts` + their tests |
-| Decal layer cannot reach an exported STL | **real** | Asserted by the verify gate, not trusted |
+| Claim                                                              | Label               | Evidence                                                                                    |
+| ------------------------------------------------------------------ | ------------------- | ------------------------------------------------------------------------------------------- |
+| 164 unit tests across 10 files                                     | **real** — measured | `npm test` in `viewer/` → 164 passed                                                        |
+| Export gate re-derives the bbox from exported bytes                | **real**            | `viewer/scripts/verify-exports.ts`; `npm run check` includes it                             |
+| K-99693 CAD is inches, Z-up, open, hollow                          | **real** — measured | 4,544 tris, 224 unshared edges, 190.30 cm³ enclosed after repair (`viewer/README.md:71-88`) |
+| Mesh repair does not move the envelope                             | **real**            | Gate fails on >0.0001 mm drift; measured 0.000000 mm                                        |
+| View cube with 26 pick regions, drag-to-orbit, tweened transitions | **real**            | `viewGizmo.ts`, `gizmoDrag.ts`, `cameraTween.ts` + their tests                              |
+| Decal layer cannot reach an exported STL                           | **real**            | Asserted by the verify gate, not trusted                                                    |
 
 ### 3.3 `research/` — the investigation
 
-| Claim | Label | Evidence |
-| --- | --- | --- |
-| The shutoff was not commanded | **real** | 2026-07-14 recording: controller reports running ~1 min after water stops (SHUTOFF-INVESTIGATION.md:44-56) |
-| The shutoff writes nothing to the controller log | **real** — controlled negative | Log cleared before, repro filmed, empty after (`:69-104`) |
-| Valve errors are **not** excluded by that negative | **real** — and a recorded self-correction | Valve codes are transient Saturn flags, not log entries (`:105-127`) |
-| Tankless minimum-flow cutout is the leading hypothesis | **claimed** — untested | A mechanism that fits every observation. No experiment has been run (`:190-250`) |
-| Community failure reports drove the polling design | **real** | FIELD-NOTES §1, with sources and line-numbered upstream references |
-| A trace spanning a real shutoff | **does not exist** | No telemetry code anywhere in the tree; `research/diagnostics/` holds three files, all from 2026-07-26 or earlier |
-| Kohler support contacted; ~$2013 quoted for a replacement | **real** — and recorded outside the repo | `raw/obs/2026-07-27-kohler,digial-interface,tech-support (@04_07_$2013_for replacement).mp4`. This is what discharged step 1 of the plan of record and justified cutting the housing |
-| The interface is reconnected and healthy | **real** — measured 2026-08-04 | `num_interface = 1`, `ui1_con_string = conn`, valve `conn` fw 0.12, controller fw `0.0.3.89`, 304 keys |
+| Claim                                                     | Label                                     | Evidence                                                                                                                                                                             |
+| --------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| The shutoff was not commanded                             | **real**                                  | 2026-07-14 recording: controller reports running ~1 min after water stops (SHUTOFF-INVESTIGATION.md:44-56)                                                                           |
+| The shutoff writes nothing to the controller log          | **real** — controlled negative            | Log cleared before, repro filmed, empty after (`:69-104`)                                                                                                                            |
+| Valve errors are **not** excluded by that negative        | **real** — and a recorded self-correction | Valve codes are transient Saturn flags, not log entries (`:105-127`)                                                                                                                 |
+| Tankless minimum-flow cutout is the leading hypothesis    | **claimed** — untested                    | A mechanism that fits every observation. No experiment has been run (`:190-250`)                                                                                                     |
+| Community failure reports drove the polling design        | **real**                                  | FIELD-NOTES §1, with sources and line-numbered upstream references                                                                                                                   |
+| A trace spanning a real shutoff                           | **does not exist**                        | No telemetry code anywhere in the tree; `research/diagnostics/` holds three files, all from 2026-07-26 or earlier                                                                    |
+| Kohler support contacted; ~$2013 quoted for a replacement | **real** — and recorded outside the repo  | `raw/obs/2026-07-27-kohler,digial-interface,tech-support (@04_07_$2013_for replacement).mp4`. This is what discharged step 1 of the plan of record and justified cutting the housing |
+| The interface is reconnected and healthy                  | **real** — measured 2026-08-04            | `num_interface = 1`, `ui1_con_string = conn`, valve `conn` fw 0.12, controller fw `0.0.3.89`, 304 keys                                                                               |
 
 **New finding, 2026-08-04 — the degraded `values.cgi` payload can repeat.**
 FIELD-NOTES §6 records an intermittent read (~1 in 30-50) where a healthy valve
@@ -243,8 +243,8 @@ Ordered by how much they matter, not by size.
 
 ### 4.1 The investigation's own cheapest next step has not been taken — **drift**
 
-`SHUTOFF-INVESTIGATION.md:12-14` states it in bold: *"The cheapest next step is
-an experiment, not code:* run the shower with several outlets open, well above
+`SHUTOFF-INVESTIGATION.md:12-14` states it in bold: _"The cheapest next step is
+an experiment, not code:_ run the shower with several outlets open, well above
 any minimum firing flow, and see whether it survives materially longer." It is
 repeated at `:229-240` and again at `:386-389`. `PROMPT-observability.md:142-147`
 asks the same question a third time.
@@ -264,7 +264,7 @@ runs. It is 187 lines of settled design.
 `grep` for `jsonl`, `telemetry` or `trace` across `app/` and `viewer/` returns
 nothing outside `node_modules`. The session it primes never happened. The
 document's own most valuable line is `:43-45`: sampling
-`valve1_ErrorFatal` / `valve1_ErrorResettable` *during* a shutoff is "the single
+`valve1_ErrorFatal` / `valve1_ErrorResettable` _during_ a shutoff is "the single
 highest-value thing this work can do," and those flags are invisible after the
 fact.
 
@@ -287,8 +287,8 @@ The evidence exists — `cnc/` (12 files) and `Images/2026-07-28-*.png` (4
 photographs) — but the narrative does not. The cut is mentioned only in passing,
 inside the first clause of an entry about sealant (`STORY-LOG.md:45`).
 
-AGENT.md:65-67 states the reason this matters: *"write it as it happens, because
-the detail is gone by the next session."*
+AGENT.md:65-67 states the reason this matters: _"write it as it happens, because
+the detail is gone by the next session."_
 
 **Correction to the first draft: the detail is not gone.** The operator has
 **45 raw clips** at `E:\proj-med\build-661-diag-kohler-shower\raw`, spanning
@@ -363,11 +363,11 @@ they are gaps between claim and code, not merely bugs:
 - **`useShower.ts:175-185` sends a valve command from inside a `setState`
   updater**, and `main.tsx:7` mounts the app in `<StrictMode>`. React's
   documented contract double-invokes updater functions in development, so
-  toggling an outlet *while water is running* issues `quick_shower.cgi` twice in
+  toggling an outlet _while water is running_ issues `quick_shower.cgi` twice in
   the documented run mode (`npm run dev`). Rapid successive valve commands are
   precisely what FIELD-NOTES §1 records as having taken a controller offline.
 
-### 4.6 Spec-compliant deferrals — the gaps that are *not* drift
+### 4.6 Spec-compliant deferrals — the gaps that are _not_ drift
 
 DESIGN.md:202-216 lists these itself, plainly, which is the correct handling:
 steam/lighting/rain unproven, presets read-only, massage speed UI-only, second
@@ -378,7 +378,7 @@ should read them as scope the project has consciously declined, not as rot.
 running water. …no valve has been opened by this app yet" (DESIGN.md:203-206) is
 no longer true. A full shower has been run through the app. That line is the
 project's most conservative self-assessment and it now understates what has been
-proven — worth correcting precisely *because* the honest-limitations section is
+proven — worth correcting precisely _because_ the honest-limitations section is
 what makes the rest of the document trustworthy.
 
 ### 4.7 Counted-artifact rot — **doc rot, trivial**
@@ -398,13 +398,13 @@ days beginning 2026-07-26. The 2017 layer is inert: `_config.yml` was deleted on
 2026-07-26 and nothing else survives from it but README lineage. **There is no
 old code in this repository.**
 
-| Period | What moved |
-| --- | --- |
+| Period                  | What moved                                                                                         |
+| ----------------------- | -------------------------------------------------------------------------------------------------- |
 | 2026-07-26 (34 commits) | Everything: app, safety gate, protocol docs, the whole investigation, the licence, the fork detach |
-| 2026-07-27 (3) | Parts viewer ships |
-| 2026-07-28 → 08-01 | **Physical fabrication. Two commits, both binary-only (`cnc/`, `Images/`), no narrative** |
-| 2026-08-03 (10) | Mesh repair, decals, view gizmo, cold-start UI fix, gasket write-up |
-| 2026-08-04 (5) | View-cube drag tuning — the only genuinely in-flight workstream |
+| 2026-07-27 (3)          | Parts viewer ships                                                                                 |
+| 2026-07-28 → 08-01      | **Physical fabrication. Two commits, both binary-only (`cnc/`, `Images/`), no narrative**          |
+| 2026-08-03 (10)         | Mesh repair, decals, view gizmo, cold-start UI fix, gasket write-up                                |
+| 2026-08-04 (5)          | View-cube drag tuning — the only genuinely in-flight workstream                                    |
 
 **In flight:** the viewer's view cube (5 commits in 2 days, `git status` clean) —
 a Maker Galaxy prototype, with the gizmo already heading for that platform.
@@ -441,7 +441,7 @@ The documents give three answers, and they do not agree on order.
    needs no code, close to conclusive. **Still credible; it is the correct next
    step, and it is operator work.**
 2. **`PROMPT-observability.md` — build the JSONL telemetry capture.** Credible
-   *as a second step*, and the document itself says so (`:142-147`). Building it
+   _as a second step_, and the document itself says so (`:142-147`). Building it
    before the experiment risks "a beautifully engineered logger that cannot see
    the fault" — the brief's own phrase.
 3. **`SHUTOFF-INVESTIGATION.md:367-373` — contact Kohler, then cut if
@@ -452,8 +452,8 @@ A fourth step exists that no document names, and it may be the best one:
 
 4. **Exploit the natural experiment the repair just created.** The shutoffs
    predate the interface's removal by ~2 months; the interface has now been
-   absent and present across the fault's lifetime. *Does the shutoff still
-   happen now?* Nobody has asked. It costs a shower, it needs no code, and it
+   absent and present across the fault's lifetime. _Does the shutoff still
+   happen now?_ Nobody has asked. It costs a shower, it needs no code, and it
    discriminates a whole class of hypotheses that the disconnection made
    untestable.
 
@@ -472,12 +472,12 @@ the footage pipeline and rewrite the four documents that are behind reality.
 This repo is unusually explicit about its siblings, and all three references
 resolve:
 
-| Sibling | Relationship | Divergence a planner must not paper over |
-| --- | --- | --- |
-| **`e:\git\mg-controller`** | DESIGN.md:178-200 models the Android/Capacitor port on `apps/android-cap` (**verified to exist**) | The DTV+ port cannot follow mg-controller's pattern directly: HTTP/0.9 means a Node proxy stays in the picture on every platform. `CapacitorHttp` does not rescue it. Copying the config without that constraint produces an app that silently cannot talk to the hardware. |
-| **Maker Galaxy** (`mg-web`, `mg-api`, …) | **`viewer/` is a Maker Galaxy experiment, not merely an aligned one.** It exists to learn what a viewer needs when a vendor product and a repair add-on are rendered together — a project shape Maker Galaxy expects — and the view gizmo is already on a path into that platform. Mechanically: the catalog's `files[]` fields and `cameraFit.ts` are a deliberate port of `viewerHelpers.js`; decal records follow Studio's markup model | **`sourceUnit` and `sourceUpAxis` are additions Maker Galaxy does not have.** Its viewer assumes STL/3MF are already in millimetres — true for maker-authored models, false for manufacturer CAD. A part moving *into* that catalog loses the declaration this viewer refuses to load without: the same class of error the viewer exists to prevent, running in the opposite direction. **This is now a graduation risk, not a hypothetical** — whatever crosses over must carry the declaration with it or the guarantee is lost at the border. Second divergence: **this repo has no visibility into which experiments graduate.** The gizmo's path into Maker Galaxy is recorded in neither repo. |
-| **`e:\git\inferiere`** | The 45 raw clips at `E:\proj-med\build-661-diag-kohler-shower\raw` are queued for processing there — rename, transcribe, index, summarise, package for ZoomTube playback | **This repo's narrative gap (§4.3) is blocked on another repo's tooling.** Nothing in either repository records the dependency, so a planner looking at Kohler-DTV-Plus sees an unwritten story log and no reason it is unwritten, while a planner looking at `inferiere` sees no consumer waiting. |
-| **`e:\git\OpenMakerLicense`** | LICENSE.md is vendored verbatim from commit `543803f`, with a re-sync instruction rather than a local edit | The vendored text is a **draft**. If the canonical licence changes, this repo's terms silently diverge from the canonical ones until someone re-syncs. Nothing checks this. |
+| Sibling                                  | Relationship                                                                                                                                                                                                                                                                                                                                                                                                                               | Divergence a planner must not paper over                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`e:\git\mg-controller`**               | DESIGN.md:178-200 models the Android/Capacitor port on `apps/android-cap` (**verified to exist**)                                                                                                                                                                                                                                                                                                                                          | The DTV+ port cannot follow mg-controller's pattern directly: HTTP/0.9 means a Node proxy stays in the picture on every platform. `CapacitorHttp` does not rescue it. Copying the config without that constraint produces an app that silently cannot talk to the hardware.                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **Maker Galaxy** (`mg-web`, `mg-api`, …) | **`viewer/` is a Maker Galaxy experiment, not merely an aligned one.** It exists to learn what a viewer needs when a vendor product and a repair add-on are rendered together — a project shape Maker Galaxy expects — and the view gizmo is already on a path into that platform. Mechanically: the catalog's `files[]` fields and `cameraFit.ts` are a deliberate port of `viewerHelpers.js`; decal records follow Studio's markup model | **`sourceUnit` and `sourceUpAxis` are additions Maker Galaxy does not have.** Its viewer assumes STL/3MF are already in millimetres — true for maker-authored models, false for manufacturer CAD. A part moving _into_ that catalog loses the declaration this viewer refuses to load without: the same class of error the viewer exists to prevent, running in the opposite direction. **This is now a graduation risk, not a hypothetical** — whatever crosses over must carry the declaration with it or the guarantee is lost at the border. Second divergence: **this repo has no visibility into which experiments graduate.** The gizmo's path into Maker Galaxy is recorded in neither repo. |
+| **`e:\git\inferiere`**                   | The 45 raw clips at `E:\proj-med\build-661-diag-kohler-shower\raw` are queued for processing there — rename, transcribe, index, summarise, package for ZoomTube playback                                                                                                                                                                                                                                                                   | **This repo's narrative gap (§4.3) is blocked on another repo's tooling.** Nothing in either repository records the dependency, so a planner looking at Kohler-DTV-Plus sees an unwritten story log and no reason it is unwritten, while a planner looking at `inferiere` sees no consumer waiting.                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **`e:\git\OpenMakerLicense`**            | LICENSE.md is vendored verbatim from commit `543803f`, with a re-sync instruction rather than a local edit                                                                                                                                                                                                                                                                                                                                 | The vendored text is a **draft**. If the canonical licence changes, this repo's terms silently diverge from the canonical ones until someone re-syncs. Nothing checks this.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 Beyond the portfolio: this project deliberately positions itself against the
 **upstream DTV+ community** (`SOURCES.md` Tier 1) rather than duplicating it —
@@ -506,12 +506,12 @@ For a fresh agent, in order:
 
 ### Who wins when two disagree
 
-| Area | Authority | Beaten by |
-| --- | --- | --- |
-| **What is reachable on the controller** | `app/server/cgi-safety.mjs` — it is the running table and it self-throws | `GET /api/safety` beats even the file when the two could differ; PROTOCOL.md, DISCLAIMER.md and both READMEs are downstream prose and **are currently behind it** (§4.7) |
-| **Wire format and parameters** | `PROTOCOL.md`, then `research/controller-mirror/js/` — the controller's own shipped code | Where xagon0's docs and the controller's own JS conflict (massage `1`), **the controller wins**; PROTOCOL.md:116-119 records why |
-| **Timings and polling** | `useShower.ts` / `middleware.mjs` constants | `FIELD-NOTES.md` §1 is the *justification* and must be updated with any change; `FLOW.md`'s timings table is a mirror and loses |
-| **What the controller does** | Measurement against the hardware, then a cited community report | Any uncited claim. AGENT.md:41-44 requires inference be marked as inference |
-| **Investigation state** | `research/SHUTOFF-INVESTIGATION.md` for the current ranking | `STORY-LOG.md` for *when and why* a hypothesis died. Where they conflict, the investigation doc is the summary and the log is the evidence — **but the log is currently missing a week** (§4.3) |
-| **Units, orientation, geometry** | `viewer/`'s catalog declarations + `npm run verify` against the real CAD | The K-99694 bracket drawing beats the K-99693 spec sheet on orientation (STORY-LOG.md:19-27); a measurement beats a published figure |
-| **Licensing** | `LICENSE.md`'s scope table for what is and is not covered | The canonical OpenMakerLicense repo beats the vendored copy; nothing beats "the upstream states no licence" |
+| Area                                    | Authority                                                                                | Beaten by                                                                                                                                                                                       |
+| --------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **What is reachable on the controller** | `app/server/cgi-safety.mjs` — it is the running table and it self-throws                 | `GET /api/safety` beats even the file when the two could differ; PROTOCOL.md, DISCLAIMER.md and both READMEs are downstream prose and **are currently behind it** (§4.7)                        |
+| **Wire format and parameters**          | `PROTOCOL.md`, then `research/controller-mirror/js/` — the controller's own shipped code | Where xagon0's docs and the controller's own JS conflict (massage `1`), **the controller wins**; PROTOCOL.md:116-119 records why                                                                |
+| **Timings and polling**                 | `useShower.ts` / `middleware.mjs` constants                                              | `FIELD-NOTES.md` §1 is the _justification_ and must be updated with any change; `FLOW.md`'s timings table is a mirror and loses                                                                 |
+| **What the controller does**            | Measurement against the hardware, then a cited community report                          | Any uncited claim. AGENT.md:41-44 requires inference be marked as inference                                                                                                                     |
+| **Investigation state**                 | `research/SHUTOFF-INVESTIGATION.md` for the current ranking                              | `STORY-LOG.md` for _when and why_ a hypothesis died. Where they conflict, the investigation doc is the summary and the log is the evidence — **but the log is currently missing a week** (§4.3) |
+| **Units, orientation, geometry**        | `viewer/`'s catalog declarations + `npm run verify` against the real CAD                 | The K-99694 bracket drawing beats the K-99693 spec sheet on orientation (STORY-LOG.md:19-27); a measurement beats a published figure                                                            |
+| **Licensing**                           | `LICENSE.md`'s scope table for what is and is not covered                                | The canonical OpenMakerLicense repo beats the vendored copy; nothing beats "the upstream states no licence"                                                                                     |

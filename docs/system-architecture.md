@@ -6,16 +6,16 @@ all on serial buses, with Ethernet only at the controller.
 
 ## Components
 
-| Part                    | What it is                                                      | Notes                                                                                                              |
-| ----------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| **K-99695(-NA)**        | System controller — the networked "brain"                       | Runs everything; the only Ethernet port. Also an **ECO** variant (K-99695-E, CALGreen) with its own firmware line. |
-| **K-99693-P / K-99693** | Wall interface (touchscreen)                                    | Two hardware generations — see [wall-interface.md](devices/wall-interface.md). Up to 3 per system. Bracket: K-99694.       |
-| **DTV 6-port valve**    | Thermostatic mixing valve, 6 outlets                            | Firmware type `0x06`.                                                                                              |
-| **Prompt 2-port valve** | Thermostatic mixing valve                                       | Firmware type `0x17`.                                                                                              |
-| **Prompt 3-port valve** | Thermostatic mixing valve, optional flow control                | Firmware type `0x1E` (flow-control variant `0xFF`).                                                                |
-| K-99696                 | Bluetooth amplifier module                                      | DTV+ bus device; answers to two IDs (`0x40` or `0x07`) — a real quirk.                                             |
-| K-97999                 | Konnect Wi-Fi module                                            | Optional cloud bridge; ARM/Linux-class board per [FCC research](fcc-filings.md).                       |
-| —                       | Steam generator, rain panel (RGB), LightBridge lighting dimmers | DTV+ bus devices `0x05`, `0x03`, `0x08`.                                                                           |
+| Part                    | What it is                                                      | Notes                                                                                                                |
+| ----------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **K-99695(-NA)**        | System controller — the networked "brain"                       | Runs everything; the only Ethernet port. Also an **ECO** variant (K-99695-E, CALGreen) with its own firmware line.   |
+| **K-99693-P / K-99693** | Wall interface (touchscreen)                                    | Two hardware generations — see [wall-interface.md](devices/wall-interface.md). Up to 3 per system. Bracket: K-99694. |
+| **DTV 6-port valve**    | Thermostatic mixing valve, 6 outlets                            | Firmware type `0x06`.                                                                                                |
+| **Prompt 2-port valve** | Thermostatic mixing valve                                       | Firmware type `0x17`.                                                                                                |
+| **Prompt 3-port valve** | Thermostatic mixing valve, optional flow control                | Firmware type `0x1E` (flow-control variant `0xFF`).                                                                  |
+| K-99696                 | Bluetooth amplifier module                                      | DTV+ bus device; answers to two IDs (`0x40` or `0x07`) — a real quirk.                                               |
+| K-97999                 | Konnect Wi-Fi module                                            | Optional cloud bridge; ARM/Linux-class board per [FCC research](fcc-filings.md).                                     |
+| —                       | Steam generator, rain panel (RGB), LightBridge lighting dimmers | DTV+ bus devices `0x05`, `0x03`, `0x08`.                                                                             |
 
 The controller powers the wall interface(s) and talks to everything else over
 RS-485. Peripherals have their own power.

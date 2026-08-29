@@ -50,13 +50,13 @@ The web server's document root is a read-only TFS compiled into the firmware ima
 
 ## Owner checklist
 
-| # | Action |
-|---|---|
-| 1 | Isolate the controller on its own VLAN; only admin hosts may reach it |
-| 2 | Never expose it to the internet or port-forward it |
-| 3 | Reboot weekly (a smart plug on a schedule suffices) to pre-empt the flash and network-stack failure modes |
-| 4 | Automate against the API serialised, <= 1 request/second, failing closed |
-| 5 | Run the update flow only on a LAN whose DNS you control, and never serve the device an unverified image |
+| #   | Action                                                                                                    |
+| --- | --------------------------------------------------------------------------------------------------------- |
+| 1   | Isolate the controller on its own VLAN; only admin hosts may reach it                                     |
+| 2   | Never expose it to the internet or port-forward it                                                        |
+| 3   | Reboot weekly (a smart plug on a schedule suffices) to pre-empt the flash and network-stack failure modes |
+| 4   | Automate against the API serialised, <= 1 request/second, failing closed                                  |
+| 5   | Run the update flow only on a LAN whose DNS you control, and never serve the device an unverified image   |
 
 ---
 

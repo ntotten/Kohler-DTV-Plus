@@ -41,10 +41,10 @@ B&H listed the cards at $26.99 each and in stock when checked.
 The exact converter was not found at DigiKey, Mouser, or PiShop US. Buy it from
 the manufacturer rather than a marketplace seller.
 
-| Qty | Item                                                     | Purchase link                                                                 | Buying note                                                        |
-| --: | -------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-|   2 | Waveshare `USB TO RS485/422`, SKU `23949`               | [Waveshare direct](https://www.waveshare.com/usb-to-rs485-422.htm)           | Use one separately isolated converter per valve.                   |
-|   2 | Included USB-A-to-USB-B cable, approximately 1.2 meters | [Included with SKU 23949](https://www.waveshare.com/wiki/USB_TO_RS485/422)   | One is included with each converter; order no duplicate USB cable. |
+| Qty | Item                                                    | Purchase link                                                              | Buying note                                                        |
+| --: | ------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+|   2 | Waveshare `USB TO RS485/422`, SKU `23949`               | [Waveshare direct](https://www.waveshare.com/usb-to-rs485-422.htm)         | Use one separately isolated converter per valve.                   |
+|   2 | Included USB-A-to-USB-B cable, approximately 1.2 meters | [Included with SKU 23949](https://www.waveshare.com/wiki/USB_TO_RS485/422) | One is included with each converter; order no duplicate USB cable. |
 
 Confirm on arrival that the two units report distinct USB serial numbers.
 Adapters in this class may ship with blank or duplicated serials; two identical

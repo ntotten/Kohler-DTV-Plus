@@ -27,28 +27,28 @@ Device power-cycled by operator; healthy on first contact. All probes were
 single sequential requests, `Connection: close`, ≥8 s gaps. Total requests
 sent: 8 (plus 3 pings, 2 TCP connect probes).
 
-| # | Probe | Result |
-| --- | --- | --- |
-| 1 | `GET /system_info.cgi` | 200, 782 B — matches baseline exactly. Healthy. |
-| 2 | `GET /files.cgi` | **Full `a:\` map**: `corys.txt` (144 B), `data_table.txt`/`data_table_default.txt` (10,221 B each), `\backup\` (empty), and `\images\` containing `temp.txt` (16 B), **`dtvplus2_app_v0.0.3.89.S19` (4,715,750 B)**, **`ui_amulet_v0.1.3.72.S19` (12,992,824 B)**, **`dtvplus2_uiapp_v0.0.7.44.pack.tar` (6,440,960 B)**, `versions.txt` (171 B). |
-| 3 | `GET /images/versions.txt` | 404 — docroot is NOT `a:\`; no `images` alias. |
-| 4 | `GET /control.html` | 200, 17,993 B — docroot healthy; static content is TFS compiled into the firmware. |
-| 5 | `GET /corys.txt` | 404 — confirms docroot is TFS, not `a:\`. |
-| 6 | TCP connect `192.168.4.80:21` | closed — no FTP server. |
-| 7 | TCP connect `:23` | closed — no telnet/shell server. |
-| 8 | `GET /files_available.cgi` | `{"dtv2_app":"dtvplus2_app_v0.0.3.89.S19",…,"ui_amulet":"ui_amulet_v0.1.3.72.S19",…,"prompt3_flash":0,…}` — confirms inventory; controller can also reflash **valve** firmware (prompt2/prompt3 eeprom+flash slots, all 0 = none staged). |
-| 9 | `GET /a/images/versions.txt` | 404 — no `a` alias. |
+| #   | Probe                         | Result                                                                                                                                                                                                                                                                                                                                            |
+| --- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `GET /system_info.cgi`        | 200, 782 B — matches baseline exactly. Healthy.                                                                                                                                                                                                                                                                                                   |
+| 2   | `GET /files.cgi`              | **Full `a:\` map**: `corys.txt` (144 B), `data_table.txt`/`data_table_default.txt` (10,221 B each), `\backup\` (empty), and `\images\` containing `temp.txt` (16 B), **`dtvplus2_app_v0.0.3.89.S19` (4,715,750 B)**, **`ui_amulet_v0.1.3.72.S19` (12,992,824 B)**, **`dtvplus2_uiapp_v0.0.7.44.pack.tar` (6,440,960 B)**, `versions.txt` (171 B). |
+| 3   | `GET /images/versions.txt`    | 404 — docroot is NOT `a:\`; no `images` alias.                                                                                                                                                                                                                                                                                                    |
+| 4   | `GET /control.html`           | 200, 17,993 B — docroot healthy; static content is TFS compiled into the firmware.                                                                                                                                                                                                                                                                |
+| 5   | `GET /corys.txt`              | 404 — confirms docroot is TFS, not `a:\`.                                                                                                                                                                                                                                                                                                         |
+| 6   | TCP connect `192.168.4.80:21` | closed — no FTP server.                                                                                                                                                                                                                                                                                                                           |
+| 7   | TCP connect `:23`             | closed — no telnet/shell server.                                                                                                                                                                                                                                                                                                                  |
+| 8   | `GET /files_available.cgi`    | `{"dtv2_app":"dtvplus2_app_v0.0.3.89.S19",…,"ui_amulet":"ui_amulet_v0.1.3.72.S19",…,"prompt3_flash":0,…}` — confirms inventory; controller can also reflash **valve** firmware (prompt2/prompt3 eeprom+flash slots, all 0 = none staged).                                                                                                         |
+| 9   | `GET /a/images/versions.txt`  | 404 — no `a` alias.                                                                                                                                                                                                                                                                                                                               |
 
 ## What the target file is (and isn't)
 
 `a:\images\dtvplus2_app_v0.0.3.89.S19` (4,715,750 B ≈ ~2 MB binary) is the
-**complete application firmware**: MQX 3.8 kernel + RTCS + filesystem drivers
-+ all Kohler application code (all tasks, bus drivers, CGI handlers),
-statically linked into one RAM image (S3 records all ≥ `0x40500000`). It also
-contains the **TFS web UI** — the docroot is compiled into this image, which
-is why `/control.html` serves while `a:\` holds no web files (verified in
-probes 4–5). Extracting this one file yields every byte of code that executes
-on the controller.
+**complete application firmware**: MQX 3.8 kernel + RTCS + filesystem drivers +
+all Kohler application code (all tasks, bus drivers, CGI handlers), statically
+linked into one RAM image (S3 records all ≥ `0x40500000`). It also contains the
+**TFS web UI** — the docroot is compiled into this image, which is why
+`/control.html` serves while `a:\` holds no web files (verified in probes 4–5).
+Extracting this one file yields every byte of code that executes on the
+controller.
 
 Not in the file: the **bootloader** (internal flash of the MCF54416, plus a
 backup in NAND blocks 0–499 — does S19 CRC validation and carries the TFS
@@ -63,13 +63,13 @@ it requires BDM (internal flash) or chip-off.
 
 ### CVE / public-vuln landscape (checked 2026-08-25, NVD + CISA + web)
 
-| Finding | Relevance |
-| --- | --- |
-| **CVE-2021-22680** (BadAlloc, Microsoft Section 52, ICSA-21-119-04): integer overflow in MQX `mem_alloc`/`_lwmem_alloc`/`_partition`, "NXP MQX 5.1 and prior", CVSS 7.3 | MQX 3.8 predates 5.1 and shares the allocator code — plausibly affected. Reachability needs an attacker-sized allocation reachable over HTTP (CGI query parsing is the candidate surface). Blind heap corruption on this fragile unit is a LAST resort; a crash here means a power cycle. |
-| HCC Embedded CVEs (CVE-2020-25767, -2021-31226/7/8, -2021-31400/1, -2021-36762) | All are **InterNiche/NicheStack** — a different TCP/IP stack. Ours is MQX **RTCS**. The HCC product in our device is SafeFAT/SafeFlash (filesystem), not the network stack. Do not confuse the two. |
-| ColdFire / MCF5441 | Nothing applicable (only a QEMU emulator CVE). |
-| Kohler / DTV | **Nothing published.** No CVEs, no public exploits. |
-| Design-level weaknesses (no CVE needed) | No authentication on any endpoint; HTTP/0.9 CGI; `fileupload.cgi` accepts firmware with **no observed signature verification** (only bootloader CRC32 + address-range checks per HARDWARE.md §13); `unpack_bin.cgi` extracts an uploaded tar into the SafeFAT filesystem; `edit_dt.cgi` reads/writes the raw datatable; update client uses plaintext FTP with hardcoded user `ftpuser`. |
+| Finding                                                                                                                                                                 | Relevance                                                                                                                                                                                                                                                                                                                                                                               |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CVE-2021-22680** (BadAlloc, Microsoft Section 52, ICSA-21-119-04): integer overflow in MQX `mem_alloc`/`_lwmem_alloc`/`_partition`, "NXP MQX 5.1 and prior", CVSS 7.3 | MQX 3.8 predates 5.1 and shares the allocator code — plausibly affected. Reachability needs an attacker-sized allocation reachable over HTTP (CGI query parsing is the candidate surface). Blind heap corruption on this fragile unit is a LAST resort; a crash here means a power cycle.                                                                                               |
+| HCC Embedded CVEs (CVE-2020-25767, -2021-31226/7/8, -2021-31400/1, -2021-36762)                                                                                         | All are **InterNiche/NicheStack** — a different TCP/IP stack. Ours is MQX **RTCS**. The HCC product in our device is SafeFAT/SafeFlash (filesystem), not the network stack. Do not confuse the two.                                                                                                                                                                                     |
+| ColdFire / MCF5441                                                                                                                                                      | Nothing applicable (only a QEMU emulator CVE).                                                                                                                                                                                                                                                                                                                                          |
+| Kohler / DTV                                                                                                                                                            | **Nothing published.** No CVEs, no public exploits.                                                                                                                                                                                                                                                                                                                                     |
+| Design-level weaknesses (no CVE needed)                                                                                                                                 | No authentication on any endpoint; HTTP/0.9 CGI; `fileupload.cgi` accepts firmware with **no observed signature verification** (only bootloader CRC32 + address-range checks per HARDWARE.md §13); `unpack_bin.cgi` extracts an uploaded tar into the SafeFAT filesystem; `edit_dt.cgi` reads/writes the raw datatable; update client uses plaintext FTP with hardcoded user `ftpuser`. |
 
 ### Off-device firmware sources — all dead ends, confirmed
 
@@ -117,7 +117,7 @@ it requires BDM (internal flash) or chip-off.
    the standard Freescale ColdFire BDM layout; SW201 pushbutton and SW101
    slide switch nearby are likely reset/boot-mode). P&E USB Multilink
    Universal / Cyclone (or a TBLCF DIY) → halt CPU → dump: (a) the 16 MB
-   external SRAM containing the *running* application (loaded at
+   external SRAM containing the _running_ application (loaded at
    `0x40500000`), (b) the MCF54416's 256 KB internal flash = **bootloader +
    TFS recovery app**, (c) NAND contents via the CPU's NAND controller.
    Guaranteed, non-destructive, ~$60–$500 of probe hardware. The board is
@@ -178,7 +178,8 @@ Kohler connected product exists as of today.
 (`dtvplus2_uiapp_v0.0.7.44.pack.tar`). This **resolves HARDWARE.md §14's open
 question: our wall interface is the Linux variant** — relevant to the GPL
 track: Kohler ships at least two Linux systems in this product family (panel
-+ Konnect) and has never offered source.
+
+- Konnect) and has never offered source.
 
 ### Explicitly rejected after analysis
 
@@ -188,7 +189,7 @@ track: Kohler ships at least two Linux systems in this product family (panel
 - Long-URI heap non-termination (`strncpy(path, cp, max_uri)` at
   httpd.c:331): real bug class, but each attempt risks an unhandled task
   exception — a power cycle per datapoint on a box we cannot auto-reboot.
-- Serving crafted firmware via the update flow: it's an *install* path, not
+- Serving crafted firmware via the update flow: it's an _install_ path, not
   extraction, and risks replacing the only working copy. Never.
 - `unpack_bin.cgi` tar-slip: SafeFAT has no symlinks; write-only primitive.
 

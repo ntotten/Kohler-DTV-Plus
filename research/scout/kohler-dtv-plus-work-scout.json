@@ -6,9 +6,7 @@
   "revisedAt": "2026-08-04",
   "generatedBy": "work-scout sweep",
   "stateOfProjectDoc": "docs/state/2026-08-04-KOHLER-DTV-PLUS-STATE-OF-PROJECT.md",
-  "attachedBatchPlans": [
-    "research/scout/B01-strictmode-double-command.md"
-  ],
+  "attachedBatchPlans": ["research/scout/B01-strictmode-double-command.md"],
   "oneLineDescription": "A replacement browser interface for a Kohler DTV+ shower, plus an open investigation into why the shower stops mid-use, documented publicly for YouTube and for Kohler support.",
   "revisionNote": "Three first-draft findings were wrong, all in the same direction: the repository lags reality, so reading it as ground truth understated the project. Corrected — (1) the app HAS opened a valve and driven a full shower; (2) the K-99693 interface IS reconnected and healthy, measured num_interface=1 / ui1_con_string=conn; (3) Kohler support WAS contacted on 2026-07-27 and quoted ~$2013 for a replacement, which is what justified the cut; (4) the fabrication week's detail is NOT decaying — 45 raw clips exist and are queued for processing through e:\\git\\inferiere. The durable lesson: this project's evidence lives in the git tree, the operator's footage, and the hardware. A repo-only sweep will always under-report it.",
   "repoActivity": {

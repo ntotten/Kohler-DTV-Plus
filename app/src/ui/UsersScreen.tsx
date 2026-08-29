@@ -29,9 +29,9 @@ export function UsersScreen({ model, busy, onStart, onStop, onHome }: Props) {
 
         {!anyEnabled && (
           <p className="sys-note">
-            No presets are saved yet. Presets are stored on the controller and are normally
-            created from the wall interface — with that unit offline, start the shower from the
-            shower screen instead.
+            No presets are saved yet. Presets are stored on the controller and are normally created
+            from the wall interface — with that unit offline, start the shower from the shower
+            screen instead.
           </p>
         )}
       </div>
