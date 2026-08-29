@@ -6,3 +6,6 @@ research/reference/guide-pages/
 *.tmp
 .DS_Store
 Thumbs.db
+
+# Root tooling install (oxfmt). The app and viewer ignore their own.
+node_modules/

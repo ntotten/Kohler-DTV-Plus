@@ -1,0 +1,39 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+
+  "printWidth": 100,
+
+  // Markdown line breaks are left exactly as authored. The formatter still
+  // normalises headings, list markers, tables, and code fences, but it never
+  // reflows a paragraph — several docs wrap deliberately, and a reflow would
+  // bury real edits under whitespace churn in review.
+  "proseWrap": "preserve",
+
+  "overrides": [
+    {
+      // Single quotes for the code, matching what is already here (the CSS
+      // runs 10 single to 4 double). Left at the default — double — for YAML
+      // and HTML, which is what those files already use.
+      "files": ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,css}"],
+      "options": { "singleQuote": true }
+    }
+  ],
+
+  "ignorePatterns": [
+    "**/node_modules/",
+    "**/dist/",
+    "**/package-lock.json",
+
+    // Vendored third-party material. Reformatting it would break the
+    // byte-for-byte correspondence PROVENANCE.md claims.
+    // See research/xagon0/PROVENANCE.md.
+    "research/xagon0/",
+
+    // Evidence. These are raw captures off the controller and off the wire;
+    // they are cited as what the hardware actually returned, so they stay
+    // exactly as captured. See AGENT.md, "Evidence lives in research/".
+    "research/diagnostics/",
+    "research/controller-mirror/",
+    "app/test/fixtures/"
+  ]
+}
