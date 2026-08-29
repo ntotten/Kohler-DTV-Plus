@@ -1,0 +1,11 @@
+{
+  "endpoint": "/sim_dev_values.cgi",
+  "method": "GET",
+  "started_utc": "2026-08-22T14:28:39Z",
+  "started_local": "2026-08-22T10:28:39-0400",
+  "completed_utc": "2026-08-22T14:28:39Z",
+  "completed_local": "2026-08-22T10:28:39-0400",
+  "curl_exit": 0,
+  "byte_count": 284,
+  "sha256": "0e71927ad3eac6a47c5c346a469ae11ac8285fcd7c57724221dc016db49ac9c1"
+}

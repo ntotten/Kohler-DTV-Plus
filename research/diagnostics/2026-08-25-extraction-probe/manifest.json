@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "controller_url": "http://192.168.4.80",
+  "purpose": "Firmware-extraction reconnaissance. Read-only probes run the same day the device was power-cycled by the operator after an unreachable-at-L2 crash window. See ../EXTRACTION.md for analysis and ../research/ for vendored sources.",
+  "request_policy": {
+    "sequential": true,
+    "pause_seconds": 8,
+    "connection_close": true,
+    "max_time_seconds": 8,
+    "notes": "Strictly one request in flight. No bursts. No write-class endpoints were called. Total HTTP requests: 8. TCP connect probes: 2 (ports 21, 23)."
+  },
+  "captures": [
+    {
+      "endpoint": "/system_info.cgi",
+      "method": "GET",
+      "file": "system_info.raw",
+      "byte_count": 782,
+      "sha256": "39af6024c8806853e9514121221f0842a7ae1f8b00456631aafa761e19365c0a",
+      "result": "200 — matches 2026-08-22 baseline byte count. Health check."
+    },
+    {
+      "endpoint": "/files.cgi",
+      "method": "GET",
+      "file": "files.raw",
+      "byte_count": 852,
+      "sha256": "c6137038653273d9886ac041a19e9883bda70321432d4e321c127a44c02186ce",
+      "result": "200 — full a:\\ filesystem map. Confirms firmware images present: dtvplus2_app_v0.0.3.89.S19 (4715750 B), ui_amulet_v0.1.3.72.S19 (12992824 B), dtvplus2_uiapp_v0.0.7.44.pack.tar (6440960 B), versions.txt (171 B), temp.txt (16 B); root has corys.txt (144 B), data_table.txt, data_table_default.txt, empty \\backup\\."
+    },
+    {
+      "endpoint": "/images/versions.txt",
+      "method": "GET",
+      "file": "images-versions-404.raw",
+      "byte_count": 109,
+      "sha256": "4344ccb92860d45d20374eabb970366ce4da022fd518a8b9c5fafde72cbfd878",
+      "result": "404 — docroot is not a:\\ and no images alias exists."
+    },
+    {
+      "endpoint": "/control.html",
+      "method": "GET",
+      "file": "control.html.raw",
+      "byte_count": 17993,
+      "sha256": "26c0dae1a5cfbca2c7ba039cf194d286c2292a7815b8890a6b92ca80580ae98d",
+      "result": "200 — docroot healthy; static content is TFS compiled into firmware."
+    },
+    {
+      "endpoint": "/corys.txt",
+      "method": "GET",
+      "file": "corys-404.raw",
+      "byte_count": 109,
+      "sha256": "4344ccb92860d45d20374eabb970366ce4da022fd518a8b9c5fafde72cbfd878",
+      "result": "404 — docroot is TFS, not a:\\ root."
+    },
+    {
+      "endpoint": "/files_available.cgi",
+      "method": "GET",
+      "file": "files_available.raw",
+      "byte_count": 258,
+      "sha256": "6a486e88f80915c6226449608f54517a7f6da29b93882ea70d576c2aba98ffee",
+      "result": "200 — firmware inventory incl. valve-reflash slots (prompt2/prompt3 eeprom+flash, all 0=absent)."
+    },
+    {
+      "endpoint": "/a/images/versions.txt",
+      "method": "GET",
+      "byte_count": 109,
+      "result": "404 — no a: alias. Not saved (identical body to the other 404 captures)."
+    },
+    {
+      "endpoint": "tcp/21",
+      "method": "CONNECT",
+      "result": "closed — no FTP server"
+    },
+    {
+      "endpoint": "tcp/23",
+      "method": "CONNECT",
+      "result": "closed — no telnet/shell server"
+    }
+  ]
+}

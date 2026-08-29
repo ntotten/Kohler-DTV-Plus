@@ -1,0 +1,1018 @@
+{
+  "parsed_event_count": 84,
+  "sources": {
+    "Prompt3": 83,
+    "UI": 1
+  },
+  "prompt3": {
+    "count": 83,
+    "first_local": "2026-08-12T20:30:37",
+    "latest_local": "2026-08-22T09:37:52",
+    "interval_count": 82,
+    "min_interval_seconds": 0,
+    "median_interval_seconds": 6089.5,
+    "max_interval_seconds": 263363,
+    "intervals": [
+      {
+        "from": "2026-08-12T20:30:37",
+        "to": "2026-08-12T20:30:37",
+        "seconds": 0
+      },
+      {
+        "from": "2026-08-12T20:30:37",
+        "to": "2026-08-12T22:42:37",
+        "seconds": 7920
+      },
+      {
+        "from": "2026-08-12T22:42:37",
+        "to": "2026-08-13T00:00:38",
+        "seconds": 4681
+      },
+      {
+        "from": "2026-08-13T00:00:38",
+        "to": "2026-08-13T00:07:37",
+        "seconds": 419
+      },
+      {
+        "from": "2026-08-13T00:07:37",
+        "to": "2026-08-13T01:06:37",
+        "seconds": 3540
+      },
+      {
+        "from": "2026-08-13T01:06:37",
+        "to": "2026-08-13T02:53:37",
+        "seconds": 6420
+      },
+      {
+        "from": "2026-08-13T02:53:37",
+        "to": "2026-08-13T04:41:37",
+        "seconds": 6480
+      },
+      {
+        "from": "2026-08-13T04:41:37",
+        "to": "2026-08-13T08:31:39",
+        "seconds": 13802
+      },
+      {
+        "from": "2026-08-13T08:31:39",
+        "to": "2026-08-13T10:42:38",
+        "seconds": 7859
+      },
+      {
+        "from": "2026-08-13T10:42:38",
+        "to": "2026-08-13T15:02:39",
+        "seconds": 15601
+      },
+      {
+        "from": "2026-08-13T15:02:39",
+        "to": "2026-08-13T16:24:38",
+        "seconds": 4919
+      },
+      {
+        "from": "2026-08-13T16:24:38",
+        "to": "2026-08-13T17:19:38",
+        "seconds": 3300
+      },
+      {
+        "from": "2026-08-13T17:19:38",
+        "to": "2026-08-13T18:46:38",
+        "seconds": 5220
+      },
+      {
+        "from": "2026-08-13T18:46:38",
+        "to": "2026-08-13T19:55:39",
+        "seconds": 4141
+      },
+      {
+        "from": "2026-08-13T19:55:39",
+        "to": "2026-08-13T22:31:38",
+        "seconds": 9359
+      },
+      {
+        "from": "2026-08-13T22:31:38",
+        "to": "2026-08-14T00:14:38",
+        "seconds": 6180
+      },
+      {
+        "from": "2026-08-14T00:14:38",
+        "to": "2026-08-14T00:51:41",
+        "seconds": 2223
+      },
+      {
+        "from": "2026-08-14T00:51:41",
+        "to": "2026-08-14T01:25:39",
+        "seconds": 2038
+      },
+      {
+        "from": "2026-08-14T01:25:39",
+        "to": "2026-08-14T04:51:39",
+        "seconds": 12360
+      },
+      {
+        "from": "2026-08-14T04:51:39",
+        "to": "2026-08-14T08:03:40",
+        "seconds": 11521
+      },
+      {
+        "from": "2026-08-14T08:03:40",
+        "to": "2026-08-14T11:27:40",
+        "seconds": 12240
+      },
+      {
+        "from": "2026-08-14T11:27:40",
+        "to": "2026-08-14T14:30:40",
+        "seconds": 10980
+      },
+      {
+        "from": "2026-08-14T14:30:40",
+        "to": "2026-08-14T16:52:40",
+        "seconds": 8520
+      },
+      {
+        "from": "2026-08-14T16:52:40",
+        "to": "2026-08-14T19:25:41",
+        "seconds": 9181
+      },
+      {
+        "from": "2026-08-14T19:25:41",
+        "to": "2026-08-14T22:02:42",
+        "seconds": 9421
+      },
+      {
+        "from": "2026-08-14T22:02:42",
+        "to": "2026-08-14T22:35:41",
+        "seconds": 1979
+      },
+      {
+        "from": "2026-08-14T22:35:41",
+        "to": "2026-08-14T23:53:42",
+        "seconds": 4681
+      },
+      {
+        "from": "2026-08-14T23:53:42",
+        "to": "2026-08-15T02:02:41",
+        "seconds": 7739
+      },
+      {
+        "from": "2026-08-15T02:02:41",
+        "to": "2026-08-15T04:39:42",
+        "seconds": 9421
+      },
+      {
+        "from": "2026-08-15T04:39:42",
+        "to": "2026-08-15T05:45:18",
+        "seconds": 3936
+      },
+      {
+        "from": "2026-08-15T05:45:18",
+        "to": "2026-08-15T07:03:42",
+        "seconds": 4704
+      },
+      {
+        "from": "2026-08-15T07:03:42",
+        "to": "2026-08-15T08:22:41",
+        "seconds": 4739
+      },
+      {
+        "from": "2026-08-15T08:22:41",
+        "to": "2026-08-15T09:21:41",
+        "seconds": 3540
+      },
+      {
+        "from": "2026-08-15T09:21:41",
+        "to": "2026-08-15T11:37:41",
+        "seconds": 8160
+      },
+      {
+        "from": "2026-08-15T11:37:41",
+        "to": "2026-08-15T13:44:41",
+        "seconds": 7620
+      },
+      {
+        "from": "2026-08-15T13:44:41",
+        "to": "2026-08-15T17:10:42",
+        "seconds": 12361
+      },
+      {
+        "from": "2026-08-15T17:10:42",
+        "to": "2026-08-15T18:30:41",
+        "seconds": 4799
+      },
+      {
+        "from": "2026-08-15T18:30:41",
+        "to": "2026-08-15T20:02:43",
+        "seconds": 5522
+      },
+      {
+        "from": "2026-08-15T20:02:43",
+        "to": "2026-08-15T23:34:42",
+        "seconds": 12719
+      },
+      {
+        "from": "2026-08-15T23:34:42",
+        "to": "2026-08-16T00:42:44",
+        "seconds": 4082
+      },
+      {
+        "from": "2026-08-16T00:42:44",
+        "to": "2026-08-16T01:01:42",
+        "seconds": 1138
+      },
+      {
+        "from": "2026-08-16T01:01:42",
+        "to": "2026-08-16T02:40:02",
+        "seconds": 5900
+      },
+      {
+        "from": "2026-08-16T02:40:02",
+        "to": "2026-08-16T03:48:41",
+        "seconds": 4119
+      },
+      {
+        "from": "2026-08-16T03:48:41",
+        "to": "2026-08-16T05:21:41",
+        "seconds": 5580
+      },
+      {
+        "from": "2026-08-16T05:21:41",
+        "to": "2026-08-16T07:50:41",
+        "seconds": 8940
+      },
+      {
+        "from": "2026-08-16T07:50:41",
+        "to": "2026-08-16T09:18:44",
+        "seconds": 5283
+      },
+      {
+        "from": "2026-08-16T09:18:44",
+        "to": "2026-08-16T11:52:44",
+        "seconds": 9240
+      },
+      {
+        "from": "2026-08-16T11:52:44",
+        "to": "2026-08-16T15:33:43",
+        "seconds": 13259
+      },
+      {
+        "from": "2026-08-16T15:33:43",
+        "to": "2026-08-16T16:40:44",
+        "seconds": 4021
+      },
+      {
+        "from": "2026-08-16T16:40:44",
+        "to": "2026-08-16T18:44:44",
+        "seconds": 7440
+      },
+      {
+        "from": "2026-08-16T18:44:44",
+        "to": "2026-08-16T19:38:44",
+        "seconds": 3240
+      },
+      {
+        "from": "2026-08-16T19:38:44",
+        "to": "2026-08-16T22:13:43",
+        "seconds": 9299
+      },
+      {
+        "from": "2026-08-16T22:13:43",
+        "to": "2026-08-16T23:22:44",
+        "seconds": 4141
+      },
+      {
+        "from": "2026-08-16T23:22:44",
+        "to": "2026-08-17T00:26:45",
+        "seconds": 3841
+      },
+      {
+        "from": "2026-08-17T00:26:45",
+        "to": "2026-08-17T02:22:43",
+        "seconds": 6958
+      },
+      {
+        "from": "2026-08-17T02:22:43",
+        "to": "2026-08-17T05:29:44",
+        "seconds": 11221
+      },
+      {
+        "from": "2026-08-17T05:29:44",
+        "to": "2026-08-17T06:39:44",
+        "seconds": 4200
+      },
+      {
+        "from": "2026-08-17T06:39:44",
+        "to": "2026-08-17T08:35:45",
+        "seconds": 6961
+      },
+      {
+        "from": "2026-08-17T08:35:45",
+        "to": "2026-08-17T10:32:45",
+        "seconds": 7020
+      },
+      {
+        "from": "2026-08-17T10:32:45",
+        "to": "2026-08-17T15:56:44",
+        "seconds": 19439
+      },
+      {
+        "from": "2026-08-17T15:56:44",
+        "to": "2026-08-17T17:05:45",
+        "seconds": 4141
+      },
+      {
+        "from": "2026-08-17T17:05:45",
+        "to": "2026-08-17T18:16:45",
+        "seconds": 4260
+      },
+      {
+        "from": "2026-08-17T18:16:45",
+        "to": "2026-08-17T19:54:45",
+        "seconds": 5880
+      },
+      {
+        "from": "2026-08-17T19:54:45",
+        "to": "2026-08-17T21:45:46",
+        "seconds": 6661
+      },
+      {
+        "from": "2026-08-17T21:45:46",
+        "to": "2026-08-17T23:19:46",
+        "seconds": 5640
+      },
+      {
+        "from": "2026-08-17T23:19:46",
+        "to": "2026-08-18T00:53:46",
+        "seconds": 5640
+      },
+      {
+        "from": "2026-08-18T00:53:46",
+        "to": "2026-08-18T03:16:46",
+        "seconds": 8580
+      },
+      {
+        "from": "2026-08-18T03:16:46",
+        "to": "2026-08-18T05:25:46",
+        "seconds": 7740
+      },
+      {
+        "from": "2026-08-18T05:25:46",
+        "to": "2026-08-18T08:32:47",
+        "seconds": 11221
+      },
+      {
+        "from": "2026-08-18T08:32:47",
+        "to": "2026-08-18T10:02:47",
+        "seconds": 5400
+      },
+      {
+        "from": "2026-08-18T10:02:47",
+        "to": "2026-08-18T14:04:48",
+        "seconds": 14521
+      },
+      {
+        "from": "2026-08-18T14:04:48",
+        "to": "2026-08-18T17:24:47",
+        "seconds": 11999
+      },
+      {
+        "from": "2026-08-18T17:24:47",
+        "to": "2026-08-18T21:28:47",
+        "seconds": 14640
+      },
+      {
+        "from": "2026-08-18T21:28:47",
+        "to": "2026-08-18T23:27:47",
+        "seconds": 7140
+      },
+      {
+        "from": "2026-08-18T23:27:47",
+        "to": "2026-08-19T00:20:47",
+        "seconds": 3180
+      },
+      {
+        "from": "2026-08-19T00:20:47",
+        "to": "2026-08-19T01:47:47",
+        "seconds": 5220
+      },
+      {
+        "from": "2026-08-19T01:47:47",
+        "to": "2026-08-19T03:37:46",
+        "seconds": 6599
+      },
+      {
+        "from": "2026-08-19T03:37:46",
+        "to": "2026-08-19T04:56:47",
+        "seconds": 4741
+      },
+      {
+        "from": "2026-08-19T04:56:47",
+        "to": "2026-08-19T06:14:47",
+        "seconds": 4680
+      },
+      {
+        "from": "2026-08-19T06:14:47",
+        "to": "2026-08-19T07:54:46",
+        "seconds": 5999
+      },
+      {
+        "from": "2026-08-19T07:54:46",
+        "to": "2026-08-22T09:04:09",
+        "seconds": 263363
+      },
+      {
+        "from": "2026-08-22T09:04:09",
+        "to": "2026-08-22T09:37:52",
+        "seconds": 2023
+      }
+    ]
+  },
+  "events": [
+    {
+      "local_iso": "2026-08-12T20:30:37",
+      "epoch_assuming_local_wall_clock": 1786581037000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[08:30.37 p.m. 08/12/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-12T20:30:37",
+      "epoch_assuming_local_wall_clock": 1786581037000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[08:30.37 p.m. 08/12/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-12T22:42:37",
+      "epoch_assuming_local_wall_clock": 1786588957000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[10:42.37 p.m. 08/12/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-13T00:00:38",
+      "epoch_assuming_local_wall_clock": 1786593638000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[12:00.38 a.m. 08/13/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-13T00:07:37",
+      "epoch_assuming_local_wall_clock": 1786594057000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[00:07.37 a.m. 08/13/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-13T01:06:37",
+      "epoch_assuming_local_wall_clock": 1786597597000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[01:06.37 a.m. 08/13/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-13T02:53:37",
+      "epoch_assuming_local_wall_clock": 1786604017000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[02:53.37 a.m. 08/13/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-13T04:41:37",
+      "epoch_assuming_local_wall_clock": 1786610497000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[04:41.37 a.m. 08/13/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-13T08:31:39",
+      "epoch_assuming_local_wall_clock": 1786624299000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[08:31.39 a.m. 08/13/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-13T10:42:38",
+      "epoch_assuming_local_wall_clock": 1786632158000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[10:42.38 a.m. 08/13/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-13T15:02:39",
+      "epoch_assuming_local_wall_clock": 1786647759000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[03:02.39 p.m. 08/13/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-13T16:24:38",
+      "epoch_assuming_local_wall_clock": 1786652678000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[04:24.38 p.m. 08/13/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-13T17:19:38",
+      "epoch_assuming_local_wall_clock": 1786655978000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[05:19.38 p.m. 08/13/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-13T18:46:38",
+      "epoch_assuming_local_wall_clock": 1786661198000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[06:46.38 p.m. 08/13/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-13T19:55:39",
+      "epoch_assuming_local_wall_clock": 1786665339000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[07:55.39 p.m. 08/13/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-13T22:31:38",
+      "epoch_assuming_local_wall_clock": 1786674698000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[10:31.38 p.m. 08/13/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-14T00:14:38",
+      "epoch_assuming_local_wall_clock": 1786680878000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[00:14.38 a.m. 08/14/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-14T00:51:41",
+      "epoch_assuming_local_wall_clock": 1786683101000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[12:51.41 a.m. 08/14/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-14T01:25:39",
+      "epoch_assuming_local_wall_clock": 1786685139000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[01:25.39 a.m. 08/14/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-14T04:51:39",
+      "epoch_assuming_local_wall_clock": 1786697499000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[04:51.39 a.m. 08/14/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-14T08:03:40",
+      "epoch_assuming_local_wall_clock": 1786709020000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[08:03.40 a.m. 08/14/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-14T11:27:40",
+      "epoch_assuming_local_wall_clock": 1786721260000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[11:27.40 a.m. 08/14/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-14T14:30:40",
+      "epoch_assuming_local_wall_clock": 1786732240000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[02:30.40 p.m. 08/14/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-14T16:52:40",
+      "epoch_assuming_local_wall_clock": 1786740760000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[04:52.40 p.m. 08/14/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-14T19:25:41",
+      "epoch_assuming_local_wall_clock": 1786749941000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[07:25.41 p.m. 08/14/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-14T22:02:42",
+      "epoch_assuming_local_wall_clock": 1786759362000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[10:02.42 p.m. 08/14/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-14T22:35:41",
+      "epoch_assuming_local_wall_clock": 1786761341000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[10:35.41 p.m. 08/14/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-14T23:53:42",
+      "epoch_assuming_local_wall_clock": 1786766022000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[11:53.42 p.m. 08/14/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-15T02:02:41",
+      "epoch_assuming_local_wall_clock": 1786773761000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[02:02.41 a.m. 08/15/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-15T04:39:42",
+      "epoch_assuming_local_wall_clock": 1786783182000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[04:39.42 a.m. 08/15/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-15T05:45:18",
+      "epoch_assuming_local_wall_clock": 1786787118000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[05:45.18 a.m. 08/15/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-15T07:03:42",
+      "epoch_assuming_local_wall_clock": 1786791822000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[07:03.42 a.m. 08/15/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-15T08:22:41",
+      "epoch_assuming_local_wall_clock": 1786796561000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[08:22.41 a.m. 08/15/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-15T09:21:41",
+      "epoch_assuming_local_wall_clock": 1786800101000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[09:21.41 a.m. 08/15/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-15T11:37:41",
+      "epoch_assuming_local_wall_clock": 1786808261000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[11:37.41 a.m. 08/15/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-15T13:44:41",
+      "epoch_assuming_local_wall_clock": 1786815881000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[01:44.41 p.m. 08/15/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-15T17:10:42",
+      "epoch_assuming_local_wall_clock": 1786828242000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[05:10.42 p.m. 08/15/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-15T18:30:41",
+      "epoch_assuming_local_wall_clock": 1786833041000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[06:30.41 p.m. 08/15/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-15T20:02:43",
+      "epoch_assuming_local_wall_clock": 1786838563000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[08:02.43 p.m. 08/15/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-15T23:34:42",
+      "epoch_assuming_local_wall_clock": 1786851282000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[11:34.42 p.m. 08/15/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-16T00:42:44",
+      "epoch_assuming_local_wall_clock": 1786855364000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[12:42.44 a.m. 08/16/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-16T01:01:42",
+      "epoch_assuming_local_wall_clock": 1786856502000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[01:01.42 a.m. 08/16/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-16T02:40:02",
+      "epoch_assuming_local_wall_clock": 1786862402000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[02:40.02 a.m. 08/16/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-16T03:48:41",
+      "epoch_assuming_local_wall_clock": 1786866521000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[03:48.41 a.m. 08/16/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-16T05:21:41",
+      "epoch_assuming_local_wall_clock": 1786872101000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[05:21.41 a.m. 08/16/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-16T07:50:41",
+      "epoch_assuming_local_wall_clock": 1786881041000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[07:50.41 a.m. 08/16/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-16T09:18:44",
+      "epoch_assuming_local_wall_clock": 1786886324000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[09:18.44 a.m. 08/16/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-16T11:52:44",
+      "epoch_assuming_local_wall_clock": 1786895564000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[11:52.44 a.m. 08/16/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-16T15:33:43",
+      "epoch_assuming_local_wall_clock": 1786908823000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[03:33.43 p.m. 08/16/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-16T16:40:44",
+      "epoch_assuming_local_wall_clock": 1786912844000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[04:40.44 p.m. 08/16/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-16T18:44:44",
+      "epoch_assuming_local_wall_clock": 1786920284000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[06:44.44 p.m. 08/16/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-16T19:38:44",
+      "epoch_assuming_local_wall_clock": 1786923524000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[07:38.44 p.m. 08/16/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-16T22:13:43",
+      "epoch_assuming_local_wall_clock": 1786932823000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[10:13.43 p.m. 08/16/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-16T23:22:44",
+      "epoch_assuming_local_wall_clock": 1786936964000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[11:22.44 p.m. 08/16/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-17T00:26:45",
+      "epoch_assuming_local_wall_clock": 1786940805000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[12:26.45 a.m. 08/17/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-17T02:22:43",
+      "epoch_assuming_local_wall_clock": 1786947763000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[02:22.43 a.m. 08/17/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-17T05:29:44",
+      "epoch_assuming_local_wall_clock": 1786958984000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[05:29.44 a.m. 08/17/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-17T06:39:44",
+      "epoch_assuming_local_wall_clock": 1786963184000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[06:39.44 a.m. 08/17/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-17T08:35:45",
+      "epoch_assuming_local_wall_clock": 1786970145000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[08:35.45 a.m. 08/17/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-17T10:32:45",
+      "epoch_assuming_local_wall_clock": 1786977165000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[10:32.45 a.m. 08/17/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-17T15:56:44",
+      "epoch_assuming_local_wall_clock": 1786996604000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[03:56.44 p.m. 08/17/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-17T17:05:45",
+      "epoch_assuming_local_wall_clock": 1787000745000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[05:05.45 p.m. 08/17/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-17T18:16:45",
+      "epoch_assuming_local_wall_clock": 1787005005000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[06:16.45 p.m. 08/17/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-17T19:54:45",
+      "epoch_assuming_local_wall_clock": 1787010885000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[07:54.45 p.m. 08/17/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-17T21:45:46",
+      "epoch_assuming_local_wall_clock": 1787017546000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[09:45.46 p.m. 08/17/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-17T23:19:46",
+      "epoch_assuming_local_wall_clock": 1787023186000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[11:19.46 p.m. 08/17/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-18T00:53:46",
+      "epoch_assuming_local_wall_clock": 1787028826000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[00:53.46 a.m. 08/18/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-18T03:16:46",
+      "epoch_assuming_local_wall_clock": 1787037406000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[03:16.46 a.m. 08/18/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-18T05:25:46",
+      "epoch_assuming_local_wall_clock": 1787045146000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[05:25.46 a.m. 08/18/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-18T08:32:47",
+      "epoch_assuming_local_wall_clock": 1787056367000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[08:32.47 a.m. 08/18/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-18T10:02:47",
+      "epoch_assuming_local_wall_clock": 1787061767000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[10:02.47 a.m. 08/18/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-18T14:04:48",
+      "epoch_assuming_local_wall_clock": 1787076288000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[02:04.48 p.m. 08/18/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-18T17:24:47",
+      "epoch_assuming_local_wall_clock": 1787088287000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[05:24.47 p.m. 08/18/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-18T21:28:47",
+      "epoch_assuming_local_wall_clock": 1787102927000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[09:28.47 p.m. 08/18/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-18T23:27:47",
+      "epoch_assuming_local_wall_clock": 1787110067000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[11:27.47 p.m. 08/18/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-19T00:20:47",
+      "epoch_assuming_local_wall_clock": 1787113247000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[00:20.47 a.m. 08/19/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-19T01:47:47",
+      "epoch_assuming_local_wall_clock": 1787118467000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[01:47.47 a.m. 08/19/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-19T03:37:46",
+      "epoch_assuming_local_wall_clock": 1787125066000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[03:37.46 a.m. 08/19/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-19T04:56:47",
+      "epoch_assuming_local_wall_clock": 1787129807000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[04:56.47 a.m. 08/19/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-19T06:14:47",
+      "epoch_assuming_local_wall_clock": 1787134487000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[06:14.47 a.m. 08/19/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-19T07:54:46",
+      "epoch_assuming_local_wall_clock": 1787140486000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[07:54.46 a.m. 08/19/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-22T09:04:09",
+      "epoch_assuming_local_wall_clock": 1787403849000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[09:04.09 a.m. 08/22/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-22T09:37:52",
+      "epoch_assuming_local_wall_clock": 1787405872000,
+      "code": 100,
+      "source": "Prompt3",
+      "raw": "[09:37.52 a.m. 08/22/2026] 100:  Prompt3 Error"
+    },
+    {
+      "local_iso": "2026-08-22T09:39:10",
+      "epoch_assuming_local_wall_clock": 1787405950000,
+      "code": 100,
+      "source": "UI",
+      "raw": "[09:39.10 a.m. 08/22/2026] 100:  UI Error"
+    }
+  ]
+}

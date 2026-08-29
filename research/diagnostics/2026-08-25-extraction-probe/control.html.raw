@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title>Kohler Shower Settings</title>
+    <!--[if lt IE 9]>
+<script src="js/ie9.js"></script>
+<![endif]-->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link href="css/redmond/jquery_ui_1.10.0.custom.css" rel="stylesheet" />
+    <script type="text/javascript" src="js/jquery_1.9.1.js"></script>
+    <script type="text/javascript" src="js/jquery_ui_1.10.2.custom.js"></script>
+    <script type="text/javascript" src="js/timepicker.js"></script>
+    <script type="text/javascript" src="js/values.js"></script>
+    <script type="text/javascript" src="js/control.js"></script>
+    <script type="text/javascript" src="js/html5.js"></script>
+    <script type="text/javascript" src="js/common.js"></script>
+    <link href="css/local.css" rel="stylesheet" />
+    <script type="text/javascript">
+	function page_load() {
+    	if (typeof jQuery !== 'function' ||
+        	typeof load !== 'function' ||
+        	typeof test_ui !== 'function') {
+        	// Was not loaded.
+        	document.body.style.background = "#ffffff";
+        	document.body.innerHTML = document.body.innerHTML = 'There was a page error, please refresh';
+    } else {
+       //$('#chroma_color').hide();
+       //$('#control_light1_div').hide();
+       //$('#light_1').hide();
+       //$('#LZ1StatusDiv').hide();
+       //$('#control_light2_div').hide();
+       //$('#light_2').hide();
+       //$('#LZ2StatusDiv').hide();
+       //$('#control_light3_div').hide();
+       //$('#light_3').hide();
+       //$('#LZ3StatusDiv').hide();
+       //$('#valve_1_div').hide();
+       //$('#valve1_status').hide();
+       //$('#valve_2_div').hide();
+       //$('#valve2_status').hide();
+       //$('#music_status').hide();
+       //$('#shower_control_div').hide();
+       //$('#valve_status').hide();
+       //$('#shower_status').hide();
+       //$('#ui-id-1').hide();
+       //$('#control_div').hide();
+       //$('#light_control_div').hide();
+       //$('#chroma_control_div').hide();
+       //$('#chroma_settings_div').hide();
+       //$('.lightingModulesString').hide();
+       //$('#light_status').hide();
+       //$('#steam_div').hide();
+       //$('#steam_control_div').hide();
+       //$('#steam_status').hide();
+       //$('#amp_div').hide();
+       // $('#tabs').hide();			//Commented by TF team
+        language();
+        setTimeout(function () {
+            load();
+        }, 500);
+        setTimeout(function () {
+                $('#tabs').show();
+        }, 1000);
+    }
+}
+    </script>
+</head>
+
+<body onload="page_load()">
+    <div hidden="hidden" id="tabs">
+    <img src="images/logo.png" alt="Kohler" class="logo">
+    <p>
+    <div id="top-tabs">
+        <a class="active" href="control.html" id="control-tab">Control</a>
+        <a href="settings.html" id="settings-tab">Settings</a>
+        <a href="service.html" id="service-tab">Service</a>
+    </div>
+
+    <div id="tabs-Control" class="ui-tabs ui-widget ui-widget-content ui-corner-all">
+
+       <div id="shower_status">
+          <p class="title currStatusString">Current Status</p>
+                <table style="width:100%">
+                <tr>
+                <td style="width:28%;">
+                    <div id="valve_status">
+                        <div id="valve1_status">
+                            <span class="subtitle valve1_text">Shower Valve 1:&#58;</span>    <!--changed Shower Valve 1 to Shower Valve 1&#58;-->
+							<span class="subtitle valve1_Currentstatus"></span>             <!--Added By TF team-->
+                            <br/>
+							<div id="currTempStatusString1">  <!--Added by TF Team 08-08-->
+                            <span class="subtitle currTempStatusString">Current Temperature:&#58;</span>
+                            <span class="subtitle valve1Temp"></span>
+							</div>  <!--Added by TF Team 08-08-->
+                            <br/>
+                            <br/>
+                        </div>
+                        <div id="valve2_status">
+                            <span class="subtitle valve2_text">Shower Valve 2:&#58;</span>    <!--changed Shower Valve 2 to Shower Valve 2&#58;-->
+							 <span class="subtitle valve2_Currentstatus"></span>             <!--Added By TF team-->
+                            <br/>
+							<div id="currTempStatusString2">  <!--Added by TF Team 08-08-->
+                            <span class="subtitle currTempStatusString">Current Temperature:&#58;</span>
+                            <span class="subtitle valve2Temp"></span>
+							</div> <!--Added by TF Team 08-08-->
+                        </div>
+                    </div>
+                 </td>
+                 <td class="borderleft" style="width:20%; padding: 0 20px;">
+                    <div id="light_status">
+                        <div id="LZ1StatusDiv">
+                            <span id="light1_name" class="subtitle LZ1String"></span>
+                            <span class="subtitle LZ1Status"></span>
+                        </div>
+                        <br/>
+                        <div id="LZ2StatusDiv"> <span id="light2_name" class="subtitle LZ2String"></span>
+                            <span class="subtitle LZ2Status"></span>
+                        </div>
+                        <br/>
+                        <div id="LZ3StatusDiv"> <span id="light3_name" class="subtitle LZ3String"></span>
+                            <span class="subtitle LZ3Status"></span>
+                        </div>
+                    </div>
+                  </td>
+                  <td class="borderleft" style="width:18%; padding: 0 20px;">
+
+                    <div id="music_status">
+                        <span class="subtitle music_text">Music:</span>
+                        <span id="musicStatusSpan" class="subtitle"></span>
+                        <p>
+                        <div id="music_volume_div">
+                            <span class="subtitle muteString">Mute:</span>
+                            <span id="muteStatus" class="subtitle"></span>
+							<br/>
+                            <span class="subtitle volume_string">Volume:</span>
+                            <span  id="volStatus" class="subtitle"></span>
+                        </div>
+                    </div>
+                  </td>
+                  <td class="borderleft" style="width:34%; padding: 0 20px;">
+
+                    <div id="steam_status">
+                    <span class="subtitle steam_dev_string">Steam:</span>
+                        <span class="subtitle steamStatus"></span>
+                        <p>
+                        <div id ="steamTempStatus">
+                            <span class="subtitle steamTempString">Steam Temperature:</span>
+                            <span class="subtitle steamTempStatus"></span>
+                        </div>
+
+                        <div id ="steamTimeStatus">
+                            <span class="subtitle steamTimeString">Steam Time Remaining:</span>
+                            <span class="subtitle steamTimeStatus"></span>
+                            <span class="subtitle minutesString"></span>
+                        </div>
+                    </div>
+                </td>
+                </tr>
+                </table>
+            </div>
+            <p></p>
+
+            <div id="control_div" class="bordertop">
+                <p></p>
+				<table style="width:100%">                         <!--Added by TF team -->
+				<tr>												<!--Added by TF team-->
+				<td style="float:left;width:250px;margin:0;">								<!--Added by TF team-->
+				
+                <div id="user_control_div">
+                <span class="title">User Presets</span>
+                <p>
+                    <div class="radio-div" id="user1_div">
+                        <input type="radio" id="user1" name="user" value="1" />
+                        <label for="user1"><span class="text user1_name radio_button_label">User Preset 1</span>
+                        </label>
+                    </div>
+                    <br/>
+                    <div class="radio-div" id="user2_div">
+                        <input type="radio" id="user2" name="user" value="2" />
+                        <label for="user2"><span class="text user2_name radio_button_label">User Preset 2</span>
+                        </label>
+                    </div>
+                    <br/>
+                    <div class="radio-div" id="user3_div">
+                        <input type="radio" id="user3" name="user" value="3" />
+                        <label for="user3"><span class="text user3_name radio_button_label">User Preset 3</span>
+                        </label>
+                    </div>
+                    <br/>
+                    <div class="radio-div" id="user4_div">
+                        <input type="radio" id="user4" name="user" value="4" />
+                        <label for="user4"><span class="text user4_name radio_button_label">User Preset 4</span>
+                        </label>
+                    </div>
+                    <br/>
+                    <div class="radio-div" id="user5_div">
+                        <input type="radio" id="user5" name="user" value="5" />
+                        <label for="user5"><span class="text user5_name radio_button_label">User Preset 5</span>
+                        </label>
+                    </div>
+                    <br/>
+                    <div class="radio-div" id="user6_div">
+                        <input type="radio" id="user6" name="user" value="6" />
+                        <label for="user6"><span class="text user6_name radio_button_label">User Preset 6</span>
+                        </label>
+                    </div>
+                    <br/>
+                    <br/>
+                    <input type="button" id="userstartbutton" class="userbutton" onclick="start_user();" value="Start" />
+                    <br/>
+                    <br/>
+                    <input type="button" id="userstopbutton" class="userbutton" onclick="stop_user();" value="Stop" />
+                </div>
+				</td>									<!--Added by TF team-->
+
+				<td class="borderleft" style="float:left;width:305px;margin:0;padding:0 10px;">  <!--Added by TF team-->
+				 
+                <!-- <div id="shower_control_div" class="borderleft borderright"> -->  <!--Commented by TF team-->
+				<div id="shower_control_div">      <!--Border only to right Added by TF team-->
+                <span class="title">Shower</span>
+                    <p></p>
+                    <div id="valve_1_div" class="highlightbox">
+                    <div id="valve_1_text" class="highlightbox_text">
+                        <span class="subtitle showerZone1String">Shower Zone 1 (Valve 1)</span>
+                        <p>
+                        <span class="text setTempString">Set Temperature:</span>
+                        <input type="number" id="valve1_temp" style="width:115px;" onchange="number_blur(this);if(bool_shower_on){quick_shower(1);}"/>
+                        <div id="valve_1_control_div">
+                            <table>
+                                <tr>
+                                    <td style="padding-bottom: 0;"><span class="text OutletsString">Outlets</span>
+                                    </td>
+                                    <td class="outlets_border">
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <br/>
+                        <div>
+                        <ul id="valve_1_control"></ul>
+                        </div>
+                        <br/>
+                        <div style="clear: both;">
+							<p></p>
+                            <span class="text setMassageString1">Massage:</span>
+                            <select id="massage_select_1" style="width:180px;" onchange="if(this.value==0){$('#valve_1_control_div').show();if(bool_shower_on){quick_shower(1);}}else{$('#valve_1_control_div').hide();if(bool_shower_on){quick_shower(1);}}"><!--Added quick_shower(); TF team 10-07-->
+											<!--<option class="v1_massage_blank"   value=''></option>-->
+											<option id="v1_massage_none"    value='0'>Off</option>
+                                            <option id="v1_massage_single"  value='1'>Single</option>
+                                            <option id="v1_massage_wave"    value='2'>Wave</option>
+                                            <option id="v1_massage_custom1" value='3'>Custom 1</option>
+                                            <option id="v1_massage_custom2" value='4'>Custom 2</option>
+						   </select>
+                        </div>
+                    </div>
+                    </div>
+                    <br/>
+                    <div id="valve_2_div" class="highlightbox">
+                    <div id="valve_2_text" class="highlightbox_text">
+                    <span class="subtitle showerZone2String">Shower Zone 2 (Valve 2)</span>
+                        <p>
+                        <span class="text setTempString">Set Temperature:</span>
+                        <input type="number" id="valve2_temp" style="width:115px;" onchange="number_blur(this);if(bool_shower_on){quick_shower(2);}"/>
+                        <div id="valve_2_control_div">
+                            <table>
+                                <tr>
+                                    <td style="padding-bottom: 0;"><span class="text OutletsString">Outlets</span>
+                                    </td>
+                                    <td class="outlets_border">
+									</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <br/>
+                        <div>
+                            <ul id="valve_2_control"></ul>
+                        </div>
+						<br/>
+                        <div style="clear: both;">
+							<p></p>
+                            <span class="text setMassageString2">Massage:</span>  <!--Changed setMassageString1 to 2 for valve 2 by TF team 11-07-->
+                            <select id="massage_select_2" style="width:180px;" onchange="if(this.value==0){$('#valve_2_control_div').show();if(bool_shower_on){quick_shower(2);}}else{$('#valve_2_control_div').hide();if(bool_shower_on){quick_shower(2);}}"> <!--Added quick_shower(); TF team 10-07-->
+											<option id="v2_massage_none"    value='0'>Off</option>
+                                            <option id="v2_massage_single"  value='1'>Single</option>
+                                            <option id="v2_massage_wave"    value='2'>Wave</option>
+                                            <option id="v2_massage_custom1" value='3'>Custom 1</option>
+                                            <option id="v2_massage_custom2" value='4'>Custom 2</option>
+							</select>
+                        </div>
+                    </div>
+                    </div>
+                    <br/>
+					<div style = "margin-left:85px;">
+                    <input type="button"  id="startshower" class="showerbutton" onclick="shower_cmd();" /> <!--Added id by TF team 10-07 -->
+					</div>
+                    <!-- <input type="button" id="stopshower"   class="showerbutton" value="Stop" onclick="stop_shower();" /> <!--Added id by TF team 10-07 -->
+                </div>
+				<span id = "shower_hide_message"  hidden="hidden" style="display:none;color:red;font-size:75%;padding: 0 0 20px 20px;">Cannot Run Shower While Spa Is Running</span>		<!--TF team 31-07-->
+				</td>									<!--Added by TF team-->
+				<td class = "borderleft" style="position:absolute; left:620px;margin:0; padding:0 10px">  <!--Added by TF team-->
+				
+                <div id="steam_control_div">
+                    <span class="title steam_dev_string">Steam</span>
+                    <p>
+                        <table>
+                            <tr style="vertical-align: top;">
+                                <td class="text setTempString">Set Temperature:</td>
+                                <td style="padding: 0 0 20px 20px;">
+                                    <input type="number" id="steam_set_temp" style="width:100px" onchange="number_blur(this);if(bool_steam_on){steam_on();}" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text setTimeString">Set Time:</td>
+                                <td style="padding: 0 0 20px 20px;">
+                                    <input type="number" min="1" max="20" id="steam_set_time" style="width:100px" onchange="number_blur(this);if(bool_steam_on){steam_on();}" />
+									
+                                </td>
+                            </tr>
+                        </table>
+                        <p>
+						<div style = "margin-left:85px;">
+                        <input type="button" id="steambutton_on" onclick="steam_cmd();" class="steambutton"/>
+						</div>
+                        <!-- <input type="button" id="steambutton_off" onclick="steam_off();" class="steambutton" value="Off" /> -->
+                </div>
+				<span id = "steam_hide_message" hidden="hidden" style="display:none;color:red;font-size:75%;padding: 0 0 20px 20px;">Cannot Run Steam While Spa Is Running</span>		<!--TF team 31-07-->
+				</td>									<!--Added by TF team-->
+            </div>
+        </div>
+		</tr>												<!--Added by TF team-->
+		</table>											<!--Added by TF team-->
+    </div>
+</body>
+</html>

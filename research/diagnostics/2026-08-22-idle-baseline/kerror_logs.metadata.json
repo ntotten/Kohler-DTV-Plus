@@ -1,0 +1,11 @@
+{
+  "endpoint": "/kerror_logs.cgi",
+  "method": "GET",
+  "started_utc": "2026-08-22T14:28:31Z",
+  "started_local": "2026-08-22T10:28:31-0400",
+  "completed_utc": "2026-08-22T14:28:31Z",
+  "completed_local": "2026-08-22T10:28:31-0400",
+  "curl_exit": 0,
+  "byte_count": 40,
+  "sha256": "d4355637b28bdea578e10f00780f8337230e2769035a26b3b6728e0a1c36c369"
+}

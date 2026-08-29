@@ -1,0 +1,11 @@
+{
+  "endpoint": "/values.cgi",
+  "method": "GET",
+  "started_utc": "2026-08-22T14:28:07Z",
+  "started_local": "2026-08-22T10:28:07-0400",
+  "completed_utc": "2026-08-22T14:28:07Z",
+  "completed_local": "2026-08-22T10:28:07-0400",
+  "curl_exit": 0,
+  "byte_count": 7539,
+  "sha256": "5ee83a915c8c88c2c1b0d3091e01672ca081185e2349803c90e40ed0e1454f4a"
+}

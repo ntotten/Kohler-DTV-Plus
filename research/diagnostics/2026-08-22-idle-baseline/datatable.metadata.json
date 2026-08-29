@@ -1,0 +1,12 @@
+{
+  "endpoint": "/datatable.cgi",
+  "method": "GET",
+  "started_utc": "2026-08-22T14:34:23Z",
+  "started_local": "2026-08-22T10:34:23-0400",
+  "completed_utc": "2026-08-22T14:34:25Z",
+  "completed_local": "2026-08-22T10:34:25-0400",
+  "curl_exit": 0,
+  "byte_count": 91889,
+  "sha256": "ea92096de1ed653234cdd6d08a055b69d96c698c0496e2e2158057370deca39c",
+  "safety_source": "aaronse/Kohler-DTV-Plus app/server/cgi-safety.mjs: datatable.cgi risk 1/5; debug view; not exposed"
+}

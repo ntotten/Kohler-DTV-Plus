@@ -42,6 +42,8 @@ is the replacement input.
 | [docs/](docs/) | Controller reference — hardware, firmware update pipeline, CGI surface, security posture, what firmware extraction would take, and the [replacement-controller design](docs/replacement-controller/CONTROLLER-DESIGN.md). |
 | [research/SOURCES.md](research/SOURCES.md) | Monitoring index — where to sweep for new community findings. |
 | [research/FIELD-NOTES.md](research/FIELD-NOTES.md) | What breaks when you automate a DTV+ — failure reports from the community, sourced, with what we changed in response. |
+| [research/diagnostics/](research/diagnostics/) | Raw controller captures, dated — error logs, idle baselines, and the extraction probe. |
+| [research/reference-links.md](research/reference-links.md) | Bibliography — projects, integrations, Kohler documents, FCC exhibits, patents, platform sources. |
 | [research/controller-mirror/](research/controller-mirror/) | Verbatim mirror of the controller's own web UI, plus live payload captures. |
 | [research/xagon0/](research/xagon0/) | Vendored third-party analysis — see [PROVENANCE.md](research/xagon0/PROVENANCE.md). |
 | [research/reference/](research/reference/) | Kohler's user guide, rendered for interface reference. |

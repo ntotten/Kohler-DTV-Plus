@@ -1,0 +1,11 @@
+{
+  "endpoint": "/system_info.cgi",
+  "method": "GET",
+  "started_utc": "2026-08-22T14:28:15Z",
+  "started_local": "2026-08-22T10:28:15-0400",
+  "completed_utc": "2026-08-22T14:28:15Z",
+  "completed_local": "2026-08-22T10:28:15-0400",
+  "curl_exit": 0,
+  "byte_count": 782,
+  "sha256": "53462d1a2a882f268d1b52394e76f77568f64006320ef2c2390a47386a638bdc"
+}

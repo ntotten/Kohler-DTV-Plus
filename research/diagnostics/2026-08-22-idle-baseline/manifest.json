@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "controller_url": "http://192.168.4.80",
+  "request_policy": {
+    "sequential": true,
+    "pause_seconds": 8,
+    "connection_close": true,
+    "max_time_seconds": 5,
+    "allowed_endpoints": [
+      "/values.cgi",
+      "/system_info.cgi",
+      "/cerror_logs.cgi",
+      "/kerror_logs.cgi",
+      "/sim_dev_values.cgi"
+    ]
+  },
+  "captures": [
+    {
+      "endpoint": "/cerror_logs.cgi",
+      "method": "GET",
+      "started_utc": "2026-08-22T14:28:23Z",
+      "started_local": "2026-08-22T10:28:23-0400",
+      "completed_utc": "2026-08-22T14:28:23Z",
+      "completed_local": "2026-08-22T10:28:23-0400",
+      "curl_exit": 0,
+      "byte_count": 6070,
+      "sha256": "eb1fd6f8868b2c25d1363ec981502178d0e1335d168f5f352fb72db87d12b1cb"
+    },
+    {
+      "endpoint": "/kerror_logs.cgi",
+      "method": "GET",
+      "started_utc": "2026-08-22T14:28:31Z",
+      "started_local": "2026-08-22T10:28:31-0400",
+      "completed_utc": "2026-08-22T14:28:31Z",
+      "completed_local": "2026-08-22T10:28:31-0400",
+      "curl_exit": 0,
+      "byte_count": 40,
+      "sha256": "d4355637b28bdea578e10f00780f8337230e2769035a26b3b6728e0a1c36c369"
+    },
+    {
+      "endpoint": "/sim_dev_values.cgi",
+      "method": "GET",
+      "started_utc": "2026-08-22T14:28:39Z",
+      "started_local": "2026-08-22T10:28:39-0400",
+      "completed_utc": "2026-08-22T14:28:39Z",
+      "completed_local": "2026-08-22T10:28:39-0400",
+      "curl_exit": 0,
+      "byte_count": 284,
+      "sha256": "0e71927ad3eac6a47c5c346a469ae11ac8285fcd7c57724221dc016db49ac9c1"
+    },
+    {
+      "endpoint": "/system_info.cgi",
+      "method": "GET",
+      "started_utc": "2026-08-22T14:28:15Z",
+      "started_local": "2026-08-22T10:28:15-0400",
+      "completed_utc": "2026-08-22T14:28:15Z",
+      "completed_local": "2026-08-22T10:28:15-0400",
+      "curl_exit": 0,
+      "byte_count": 782,
+      "sha256": "53462d1a2a882f268d1b52394e76f77568f64006320ef2c2390a47386a638bdc"
+    },
+    {
+      "endpoint": "/values.cgi",
+      "method": "GET",
+      "started_utc": "2026-08-22T14:28:07Z",
+      "started_local": "2026-08-22T10:28:07-0400",
+      "completed_utc": "2026-08-22T14:28:07Z",
+      "completed_local": "2026-08-22T10:28:07-0400",
+      "curl_exit": 0,
+      "byte_count": 7539,
+      "sha256": "5ee83a915c8c88c2c1b0d3091e01672ca081185e2349803c90e40ed0e1454f4a"
+    }
+  ],
+  "additional_recovery_capture": {
+    "classification": "1/5 low risk read-only datatable debug view",
+    "evidence": "aaronse/Kohler-DTV-Plus app/server/cgi-safety.mjs and vendored CGI reference",
+    "capture": {
+      "endpoint": "/datatable.cgi",
+      "method": "GET",
+      "started_utc": "2026-08-22T14:34:23Z",
+      "started_local": "2026-08-22T10:34:23-0400",
+      "completed_utc": "2026-08-22T14:34:25Z",
+      "completed_local": "2026-08-22T10:34:25-0400",
+      "curl_exit": 0,
+      "byte_count": 91889,
+      "sha256": "ea92096de1ed653234cdd6d08a055b69d96c698c0496e2e2158057370deca39c",
+      "safety_source": "aaronse/Kohler-DTV-Plus app/server/cgi-safety.mjs: datatable.cgi risk 1/5; debug view; not exposed"
+    }
+  }
+}
