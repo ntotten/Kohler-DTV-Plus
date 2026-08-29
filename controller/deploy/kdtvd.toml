@@ -1,0 +1,147 @@
+# Configuration for the replacement master. Installed at /etc/kdtvd/kdtvd.toml.
+#
+# The daemon validates this file completely before it opens anything, and
+# REFUSES TO START if any of it is wrong. There is no degraded start: a service
+# that cannot be sure which physical valve is on which bus must not drive either
+# of them. Run `kdtvd --check-only --config <path>` to validate without opening
+# a link — that is what scripts/deploy.sh does on the target before it replaces
+# the running binary.
+#
+# Values here can only narrow the built-in safety bounds, never widen them. The
+# setpoint ceiling, the session limit and the steam envelope are compiled in.
+
+profile = "production"          # "production" | "bench"
+                                # bench permits PTY links and scaled session
+                                # timers; production refuses both.
+
+# ---------------------------------------------------------------- transmit gate
+#
+# The gate that decides whether this service may put bytes on a real bus.
+#
+# Every wire fixture in this repository is tier [C]: derived from third-party
+# reverse engineering and never verified against this installation. Until Phase 1
+# packet capture promotes them to tier [A], `scope` must be "emulator-only" and
+# the daemon will refuse to open a real serial port.
+#
+# Setting "real-bus-attested" without captured fixtures is not a way round this.
+# The daemon checks the fixture provenance itself and refuses, naming every
+# fixture still at [C].
+[transmit_gate]
+scope = "emulator-only"
+
+# Filled in at Phase 1, together with the promoted fixtures:
+# scope = "real-bus-attested"
+# capture_ref = "research/diagnostics/2026-XX-XX-saturn-zone1.bin"
+# fixtures_sha256 = "..."          # changes whenever a fixture is promoted, so
+#                                  # opening the gate is a reviewable, dated act
+# [transmit_gate.polarity]
+#   zone1 = "A+ = converter TA, measured 2026-XX-XX"   # TA/TB are the
+#   zone2 = "A+ = converter TA, measured 2026-XX-XX"   # converter's convention,
+#   steam = "A+ = adapter pin 2, measured 2026-XX-XX"  # not Kohler's
+
+# ------------------------------------------------------------------------ zones
+#
+# One section per valve bus. Both must resolve to present, DISTINCT devices or
+# the daemon refuses to start — binding to /dev/ttyUSB0 by enumeration order is
+# how zone 1 silently becomes zone 2 after a reboot.
+#
+# Use a by-id or by-path name, never /dev/ttyUSB*. Label the physical converter
+# to match.
+
+[zones.zone1]
+port = "/dev/serial/by-id/usb-Waveshare_USB_TO_RS485-if00-port0"
+valve = "dtv-6-port"            # "dtv-6-port" | "prompt-3-port"
+
+# The master address the valve answers. UNRESOLVED between 0x00 and 0x10 for the
+# Prompt 3: docs/devices/valve-control.md says a Prompt 3 always uses 0x10,
+# saturn-protocol.md says always use 0x00 with DTV+ hardware and shows a worked
+# example of a Prompt 3 answering 0x00. Tracked as investigation I5 and packet
+# capture question 1. Default 0x00; set from the Phase 1 capture, not by trying
+# both against a live valve.
+master_address = 0x00
+
+# Configuration slots this valve actually has, and what each drives. A slot that
+# is not listed cannot be opened: the encoder rejects it rather than sending a
+# bit the valve may map to something else.
+outlets = [
+  { slot = 1, status_index = 1, wire_outlet = 0, name = "overhead rain" },
+  { slot = 2, status_index = 2, wire_outlet = 1, name = "handshower" },
+  { slot = 3, status_index = 3, wire_outlet = 2, name = "body spray left" },
+  { slot = 4, status_index = 4, wire_outlet = 3, name = "body spray right" },
+  { slot = 5, status_index = 5, wire_outlet = 4, name = "bath filler" },
+]
+
+# The outlet whose supply pipe carries the independent temperature probe.
+# Continuous independent coverage exists for this outlet only; every other
+# outlet is verified individually with an immersion probe at commissioning.
+instrumented_slot = 1
+
+[zones.zone2]
+port = "/dev/serial/by-id/usb-Waveshare_USB_TO_RS485-if01-port0"
+valve = "prompt-3-port"
+master_address = 0x00
+outlets = [
+  { slot = 1, status_index = 1, wire_outlet = 1, name = "overhead" },
+  { slot = 2, status_index = 2, wire_outlet = 2, name = "handshower" },
+  { slot = 3, status_index = 3, wire_outlet = 3, name = "body spray" },
+]
+instrumented_slot = 1
+
+# ------------------------------------------------------------------------ steam
+#
+# The DTV+ link to the K-1737-K1 adapter. The generator behind it is a
+# self-contained appliance installed by a professional and is out of scope: we
+# send the adapter setpoints, the same relationship this service has with the
+# valves.
+[steam]
+enabled = false                 # until the adapter lead is built and metered
+port = "/dev/serial/by-id/usb-Waveshare_USB_TO_RS485-if02-port0"
+
+# Both unresolved in the sources, so both are configurable and neither is
+# declared correct. STEAM_TICK_TIME is 150 ms; dtv-plus-protocol.md gives a
+# 500 ms port tick. Retries are given as 4 in one place and 5 in another.
+tick_ms = 150
+retries = 4
+
+# ------------------------------------------ independent temperature measurement
+#
+# PT1000 on a MAX31865, one channel per zone, clamped to the supply pipe of that
+# zone's instrumented outlet. The sensor has NO authority to open an outlet. It
+# can only contribute to an all-off.
+#
+# A surface clamp is not an immersion measurement: it reads pipe wall, lags by
+# seconds, and reads low. The correction below is characterised at commissioning
+# against an immersion probe, and every threshold is evaluated on the corrected
+# value. The raw reading is logged beside it.
+#
+# With no `correction` the channel is uncorrected — which invents no offset, and
+# is why the absolute raw trip exists.
+[sensors.zone1]
+chip_select = "spi0.0"
+# correction = [
+#   { surface_c = 33.0, immersion_c = 35.0 },
+#   { surface_c = 42.0, immersion_c = 45.0 },
+# ]
+
+[sensors.zone2]
+chip_select = "spi0.1"
+
+# -------------------------------------------------------------------------- api
+#
+# Local, authenticated, and bound to loopback. The controller has no
+# authentication of its own; anything that can reach this API can run the shower.
+[api]
+bind = "127.0.0.1:8443"
+# The token is read from the file systemd supplies as a credential, never from
+# this file — a configuration file gets copied, pasted and pasted into an issue.
+token_file = "/run/credentials/kdtvd.service/api-token"
+session_ttl_s = 900
+
+# ------------------------------------------------------------------------- logs
+[logging]
+directory = "/var/log/kdtvd"
+# Raw RX/TX frame bytes with monotonic and wall-clock stamps. Large, and the
+# thing you will want after an unexplained event.
+frames = true
+# Bounded so a frame log cannot fill the card.
+max_total_mb = 512
