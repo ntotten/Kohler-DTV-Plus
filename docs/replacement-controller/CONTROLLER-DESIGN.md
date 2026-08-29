@@ -231,6 +231,14 @@ captured factory wiring and electrical review show that the reference conductor
 is required. Do not join the two field-side `PE` terminals. Valve line power
 remains in the original listed receptacles and wiring.
 
+Verify the USB bridge chip on arrival rather than assuming it. More
+importantly, **confirm the two converters report distinct USB serial numbers**
+before installing either. Adapters in this class frequently ship with blank or
+duplicated serials; two identical ones make a `by-id` symlink resolve both zones
+onto the same device, which the "present and distinct" start check cannot catch
+because the path does resolve. If the serials collide, bind by physical USB port
+path instead and physically label the ports.
+
 ### Field-select after inspecting the installation
 
 Do not order these by assumption:
@@ -257,11 +265,75 @@ Run one small controller daemon on the Pi. Rust is preferred for the protocol
 and state-machine implementation, but the safety contract matters more than the
 language.
 
-The two FTDI-based converters appear as separate USB serial interfaces. Bind
-logical zones to stable device paths using each adapter's identity or physical
-USB path, not incidental `/dev/ttyUSB0` enumeration order. Label each adapter
-after mapping it. Refuse to start if both expected interfaces are not present
-and distinct.
+The two converters appear as separate USB serial interfaces. Bind logical zones
+to stable device paths using each adapter's identity or physical USB path, not
+incidental `/dev/ttyUSB0` enumeration order. Label each adapter after mapping
+it. Refuse to start if both expected interfaces are not present and distinct.
+
+**Set the USB-serial latency timer to 1 ms** (`latency_timer`, and
+`ASYNC_LOW_LATENCY` where the driver offers it). The FTDI default is 16 ms,
+which is larger than the protocol's 20 ms echo timeout and coarse enough to
+smear every deadline in the table below. It is a one-line `udev` rule and it is
+not optional — at this default, measured timings are the adapter's, not the
+bus's.
+
+### Protocol parameters
+
+Starting values, all `[C]` — third-party reverse engineering, not yet verified
+against our hardware. **Confirm every one of these from the Phase 1 capture
+before the encoder transmits anything.** They are recorded here so the
+implementation does not have to re-derive them, and so a disagreement with the
+capture is visible rather than silently absorbed.
+
+| Parameter | Value | Note |
+| --- | --- | --- |
+| Line | 9600 8N1, no flow control | RS-485 half-duplex |
+| Max frame | 20 bytes | `AA 55` sync, addr, control, len, data, checksum |
+| Checksum | 2's complement over addr + control + len + data | |
+| Valve tick | 525 ms | Master poll cadence |
+| Response timeout | 400 ms | Time to wait for a valve response |
+| Message timeout | 320 ms | Maximum time for a complete message to arrive |
+| Echo timeout | 20 ms | See the note on echo below |
+| Enquiry rate | 2000 ms | Between address-discovery attempts |
+| Clear delay | 2000 ms | After address clear, before re-discovery |
+| Retries | 3 | Read, write, and address management alike |
+
+The two vendored sources disagree on one of these:
+[valve-control.md](../devices/valve-control.md) gives a single 320 ms
+"communication timeout", while
+[saturn-protocol.md](../../research/xagon0/docs/protocols/saturn-protocol.md)
+splits it into a 400 ms response timeout and a 320 ms message timeout. The
+capture settles it.
+
+**On echo.** The stock master waits 20 ms for its own transmission to come back
+on the half-duplex bus. A converter with automatic direction control generally
+does not present a local echo, so the replacement has no equivalent signal.
+That is not a safety problem with one master per bus, but the decoder and the
+emulator must not expect echoes, and the passive tap cannot tell master from
+valve electrically — direction has to be inferred from address and content.
+
+### Outlet index spaces
+
+`outlet_set` in the public API is defined in **configuration slot numbers**
+(1..6 for zone 1, 1..3 for zone 2) and nothing else. Three different numbering
+schemes are in play and they do not agree:
+
+| Space | Where it appears |
+| --- | --- |
+| Configuration slot | `one_type`..`six_type`, `valveN_outletM_func` key names, `quick_shower.cgi` digits |
+| Status index (`id`) | `system_info.cgi`'s `valveNoutletM` booleans — bridged by `valveN_outletM_func.id` |
+| Saturn wire bitmap | The bytes actually sent to the valve — **and the two valves differ** |
+
+The wire bitmaps are not the same shape on the two zones. The six-port valve
+maps outlet 0 to bit 0 (`0x01`); the Prompt 3 generic map starts outlet 1 at
+`0x04`. Encoding one valve's convention onto the other opens the wrong fitting.
+
+Both mappings live in one table with a regression test that deliberately
+permutes a slot, for the same reason
+[`model.ts`](../../app/src/api/model.ts) already has one: on this system the
+slot-to-status mapping happens to be the identity, so an identity-only test
+proves nothing. FIELD-NOTES §2 records this trap dereferencing a null in a
+shipped Hubitat driver.
 
 The service owns:
 
@@ -329,6 +401,12 @@ measured communication-loss shutdown.
 Required logs:
 
 - Pi boot ID, service boot ID, command ID, request source, and requested state;
+- wall-clock timestamps **paired with NTP sync state** — a Pi 4 has no RTC, so
+  every stamp before first sync is wrong, and correlating a shutoff against the
+  tankless unit's own fault log needs real time. Add an RTC module or record
+  the sync state alongside each stamp; do not emit a bare wall clock;
+- the independent outlet temperature alongside the valve's reported one, so the
+  two can be compared over the life of the installation rather than once;
 - local safety clamps and rejection reason;
 - raw RX/TX frame bytes with monotonic and wall-clock timestamps;
 - acknowledgement latency, retry count, actual temperature, flow if supported,
