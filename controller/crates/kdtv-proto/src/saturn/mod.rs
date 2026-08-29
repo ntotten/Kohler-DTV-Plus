@@ -36,7 +36,7 @@
 //! | [`outlets`] | The three outlet numbering spaces and the one table that bridges them |
 //! | [`faults`] | Error bytes, the two incompatible tables, fault bitmaps |
 //! | [`timing`] | Link timing. No echo timeout — see the module docs for why |
-//! | [`decode`] | The permissive decoder |
+//! | [`mod@decode`] | The permissive decoder |
 //! | [`encode`] | The allowlist encoder, [`SaturnOp`], and [`DiscoveryToken`] |
 //!
 //! # The wire format
