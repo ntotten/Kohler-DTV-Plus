@@ -12,14 +12,17 @@ publish.workspace = true
 name = "kdtvd"
 path = "src/main.rs"
 
+# kdtv-api and kdtv-service are added when the run path needs them. Until then
+# this binary is the validator deploy.sh runs on the target, and declaring
+# crates it does not call would couple its build to theirs.
 [dependencies]
-kdtv-api = { workspace = true }
 kdtv-config = { workspace = true }
 kdtv-hal = { workspace = true }
-kdtv-service = { workspace = true }
+kdtv-proto = { workspace = true }
 kdtv-telemetry = { workspace = true }
 kdtv-units = { workspace = true }
 anyhow = { workspace = true }
+thiserror = { workspace = true }
 clap = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
