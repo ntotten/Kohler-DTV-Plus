@@ -761,6 +761,7 @@ dependencies = [
  "hex",
  "include_dir",
  "kdtv-units",
+ "proptest",
  "serde",
  "serde_json",
  "sha2",
