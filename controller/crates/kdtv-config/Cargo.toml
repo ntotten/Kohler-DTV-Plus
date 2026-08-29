@@ -14,7 +14,10 @@ kdtv-proto = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 toml = { workspace = true }
-jiff = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+tempfile = { workspace = true }
 
 [lints]
 workspace = true
