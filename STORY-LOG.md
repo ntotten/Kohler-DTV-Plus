@@ -10,6 +10,72 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ---
 
+## 2026-08-29
+
+### 12:28 — Reviewing the replacement-controller design found four rules that would have misfired, and one sentence that was just wrong
+
+The design for the direct valve controller got a full read against the protocol
+notes, the field notes, and the investigations. The architecture held up — two
+isolated converters, one per valve, no shared bus, fail-off through the valve's
+own comms timeout. `docs/hardware.md` independently supports it: two separate
+Saturn ports on a dual UART, and a 3-pin A+/B-/GND valve connector with no power
+rail, so the K-99695 really can be de-energised without taking the valves with
+it. Both still `[C]` tier until Phase 0 confirms them.
+
+What did not hold up were four of the eleven non-negotiable rules:
+
+- **Rule 9 would have let a typo take a zone out of service.** It treated "the
+  request is invalid" and "the wire data is invalid" as the same event, both
+  ending in `all-off` plus a latch requiring acknowledgement. One out-of-range
+  value from Homebridge and the zone is down until a human clears it.
+- **Rule 6 clamped only the ceiling.** `MIN_SYS_VALVE_TEMP` is `Cx2 60`; below
+  it the valve answers error 3, *parameter out of range* — which rule 9 then
+  turned into a latched-off zone. Asking for a cool shower would have bricked
+  the zone until acknowledged.
+- **Rule 5 contradicted itself on blast radius** — close *both* serial ports,
+  latch *the affected zone*. Dropping a running shower on the healthy zone
+  because the other zone's USB cable moved is its own hazard: sudden cold, wet
+  floor, startled person.
+- **The stop-latency gate had no number.** The document said reject the
+  architecture if latency is "unacceptable" and separately said to record it.
+  A threshold chosen after the measurement, by the person who wants it to pass,
+  is not a gate. It is 10 seconds now, written down in advance.
+
+**And the correction worth recording:** the design opened by calling the K-99695
+"the unstable K-99695 controller". Our own story log, five entries below this
+one, says otherwise — both hangs on 2026-08-04 were self-inflicted by concurrent
+HTTP sessions of our making, and Kohler's own web page polls at the same
+interval without trouble. The controller has been reliable when driven within
+its limits. That sentence has been replaced with the actual reasons, and with a
+plain statement that this work is **not expected to fix I1** — the leading
+hypothesis there is a tankless minimum-flow cutout, outside the DTV+ entirely.
+
+**Why it matters:** three of those four rules only bite in service, months after
+anyone would remember writing them, and all three fail toward *unavailable*
+rather than toward *unsafe* — which is why they would have survived review by
+anyone who only asked "is it safe?". The interesting part is that the safety
+argument was sound and the safety *rules* were not.
+
+**The best thing to come out of the review** is not a fix. Phase 1 builds a
+receive-only tap on the Saturn bus. I1 has been open since July because the
+shutoff is invisible to controller telemetry — the water stops and the K-99695
+finds out about a minute later through a timeout. The tap sits on the other side
+of that timeout. Scenario 10 is now: run the configuration that fails, tap
+recording, until it stops. Once the tap exists it costs one shower, and it may
+answer I1 outright.
+
+Two contradictions between our own documents were also promoted to
+investigations rather than resolved by assertion: whether automatic purge is on
+([I4](INVESTIGATIONS.md#i4--is-automatic-purge-on)), and the Saturn register map
+([I5](INVESTIGATIONS.md#i5--the-saturn-register-map-is-contradictory)).
+
+**For Kohler:** a replacement master for these valves is feasible only because
+the valve owns mixing, over-temperature handling, and fail-closed on
+communication loss — but nothing in the public or reverse-engineered record
+states the valve's communication-loss shutdown *latency*. That number is the
+entire safety argument for any third-party controller, and it currently has to
+be measured by each person who builds one.
+
 ## 2026-08-04
 
 ### 23:10 — The egress log's first capture caught a controller hang, and explained the `values.cgi` blip
