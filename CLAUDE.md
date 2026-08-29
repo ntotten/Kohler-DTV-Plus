@@ -26,6 +26,9 @@ for Kohler technical support. See the Story log section of
 ## Commands
 
 ```bash
+npm install && npm run format                     # repo root: format everything
+npm run format:check                              # ...or just check
+
 cd app
 npm run dev                                       # http://localhost:5180
 npm run check                                     # typecheck + unit tests + build

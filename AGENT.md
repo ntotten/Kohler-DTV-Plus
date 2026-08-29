@@ -91,8 +91,19 @@ see — those get collated when we contact them.
   the operator asks. Reference the path and extract the technical content.
 - **Tests:** `npm test` for anything without hardware, `npm run selftest` for
   read-only live checks. Neither may ever open a valve.
+- **Formatting is mechanical.** `npm run format` at the repo root runs
+  [oxfmt](https://github.com/oxc-project/oxc) over the Markdown, TypeScript,
+  CSS, YAML, HTML, and JSON. Do not hand-align tables or argue about quotes —
+  run it. Vendored material and raw captures are exempt and stay byte-for-byte
+  as received; the exclusions and their reasons are in
+  [.oxfmtrc.json](.oxfmtrc.json).
 
 ## Verification
+
+```bash
+npm install                                       # repo root, once — formatting only
+npm run format:check                              # or `npm run format` to fix
+```
 
 ```bash
 cd app

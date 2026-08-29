@@ -40,9 +40,14 @@ applies to humans as well as agents.
 2. Branch, and keep commits grouped by theme. Explain _why_, and record what was
    wrong before when fixing something.
 3. Run `cd app && npm run check` — typecheck, unit tests, and build.
-4. Open the pull request. Say what you verified against real hardware and what
+4. Run `npm run format` at the repo root before committing. It formats the
+   Markdown and the code with [oxfmt](https://github.com/oxc-project/oxc), so
+   review stays about the change rather than the whitespace. Vendored material
+   under `research/xagon0/` and raw captures under `research/diagnostics/` are
+   deliberately exempt — see [.oxfmtrc.json](.oxfmtrc.json).
+5. Open the pull request. Say what you verified against real hardware and what
    you did not.
-5. Accept the [CLA](CLA.md). Pull requests cannot be merged without it.
+6. Accept the [CLA](CLA.md). Pull requests cannot be merged without it.
 
 Documentation, field reports, and diagnostic captures from other DTV+ owners are
 as valuable as code — arguably more so, given the open

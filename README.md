@@ -79,6 +79,14 @@ npm run check          # typecheck + tests + export gate + build
 See [viewer/README.md](viewer/README.md) for why manufacturer CAD needs its
 units declared, and what the K-99693 model turned out to be missing.
 
+Formatting is repo-wide and mechanical, run from the root:
+
+```bash
+npm install
+npm run format         # Markdown, TypeScript, CSS, YAML, HTML, JSON
+npm run format:check   # what CI would check
+```
+
 ## Safety gate
 
 The controller has no authentication and exposes endpoints that can wipe or
