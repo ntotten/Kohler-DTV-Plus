@@ -24,6 +24,7 @@ open questions and queued experiments, [INVESTIGATIONS.md](../INVESTIGATIONS.md)
 | [devices/touchscreen UI](devices/touchscreen-ui.md) | The UI device, and how to tell V1 from V2 from the version string |
 | [devices/valve control](devices/valve-control.md) | Valve behaviour, and which safety behaviour is owned by the valve rather than the controller |
 | [control-logic/temperature system](control-logic/temperature-system.md) | Q-format conversions and safety limits |
+| [replacement-controller/](replacement-controller/) | Raspberry Pi and isolated dual-RS-485 replacement plan, its safety constraints and rollback, and the parts to buy |
 | [state/](state/) | Point-in-time assessments of the repository |
 
 ## Provenance
