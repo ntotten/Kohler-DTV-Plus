@@ -2,7 +2,8 @@
 #
 # Run the real ARM64 daemon binary on this machine, under user-mode emulation.
 #
-#   ./scripts/pi-sim.sh -- --config etc/emulated.toml
+#   ./scripts/pi-sim.sh --check-only --config deploy/kdtvd.toml
+#   ./scripts/pi-sim.sh -- --check-only --config deploy/kdtvd.toml
 #
 # This is the closest thing to the Pi that does not involve a Pi: the binary is
 # the same aarch64 ELF that gets deployed, executed by qemu-aarch64. It catches
@@ -28,6 +29,15 @@ BIN="target/$PI_TARGET/release/kdtvd"
 if [ ! -f "$BIN" ]; then
   say "no ARM64 binary yet; building one"
   "$CONTROLLER_DIR/scripts/build.sh" --pi
+fi
+
+# A leading `--` is what a reader naturally types to separate this script's
+# arguments from the daemon's, and it was in this script's own usage line. It
+# has to be dropped rather than forwarded: clap reads `--` as end-of-options and
+# then treats every following flag as a positional argument, so `kdtvd` — which
+# takes none — rejects the first one. Found by running it.
+if [ "${1:-}" = "--" ]; then
+  shift
 fi
 
 say "running $BIN under $QEMU"
