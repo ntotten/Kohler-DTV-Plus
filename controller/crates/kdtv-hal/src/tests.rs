@@ -65,6 +65,62 @@ fn every_link_kind_has_line_settings_and_only_serial_is_gated() {
     assert!(!Backend::Loopback.is_real_bus());
 }
 
+/// The committed configuration, the committed fixture tree, and the gate, end
+/// to end: `deploy/kdtvd.toml` binds to real device nodes, and every one of them
+/// is then refused at open.
+///
+/// This is the claim the README makes, tested rather than asserted: the daemon
+/// gets all the way to the port and cannot go through it.
+#[tokio::test]
+async fn the_deployed_configuration_binds_and_is_then_refused_at_the_gate() {
+    use kdtv_config::{FsEntry, MapFs, ValidatedConfig};
+    use kdtv_proto::{FixtureSet, TransmitAuthority};
+    use std::path::Path;
+
+    const TOKEN: &str = "/run/credentials/kdtvd.service/api-token";
+    let toml = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../deploy/kdtvd.toml");
+
+    // The reference installation as udev presents it, which is the same machine
+    // `fixtures/sysfs/reference` describes.
+    let config_fs = MapFs::new()
+        .with(
+            "/dev/serial/by-id/usb-Waveshare_USB_TO_RS485-if00-port0",
+            FsEntry::link("/dev/ttyUSB0"),
+        )
+        .with(
+            "/dev/serial/by-id/usb-Waveshare_USB_TO_RS485-if01-port0",
+            FsEntry::link("/dev/ttyUSB1"),
+        )
+        .with(
+            "/dev/serial/by-id/usb-Waveshare_USB_TO_RS485-if02-port0",
+            FsEntry::link("/dev/ttyUSB2"),
+        )
+        .with(TOKEN, FsEntry::own(TOKEN).with_mode(0o400));
+
+    let cfg = ValidatedConfig::load(&toml, &config_fs).unwrap();
+    let bindings = crate::bindings_of(&cfg);
+    // Steam is disabled in the committed file, so it is not bound. A link that
+    // is not driven is not opened.
+    assert_eq!(bindings.len(), 2, "{bindings:?}");
+
+    let sysfs = crate::DirSysfs::fixture("reference");
+    let bound = crate::resolve_distinct(&bindings, &sysfs).unwrap();
+    assert_eq!(bound.len(), 2);
+    assert!(bound.iter().all(|b| b.backend() == Backend::Serial));
+
+    let auth = TransmitAuthority::emulator_only(FixtureSet::embedded());
+    let mut factory = crate::LinuxLinkFactory::new(sysfs);
+    for binding in &bound {
+        let err = factory.open(binding, &auth).await.unwrap_err();
+        assert!(err.is_gate(), "{} opened: {err:?}", binding.link());
+    }
+
+    // And the configured chip selects still agree with the constant.
+    for zone in ZoneId::ALL {
+        ChipSelect::check(zone, cfg.sensor(zone).chip_select()).unwrap();
+    }
+}
+
 /// The chip-select mapping restated once more from outside the module, because
 /// it is the thing configuration is checked against.
 #[test]

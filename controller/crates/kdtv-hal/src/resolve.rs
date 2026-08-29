@@ -280,6 +280,25 @@ pub enum ResolveError {
     },
 }
 
+/// The links a validated configuration asks for, paired with their configured
+/// paths, in the order [`kdtv_config::ValidatedConfig::links`] gives.
+///
+/// Steam appears only when it is enabled. A disabled steam block still has its
+/// port checked for shape and collision by `kdtv-config`, but there is nothing
+/// here to bind: a link that is not driven is not opened.
+#[must_use]
+pub fn bindings_of(cfg: &kdtv_config::ValidatedConfig) -> Vec<(LinkKind, PortPath)> {
+    let mut out: Vec<(LinkKind, PortPath)> = cfg
+        .zones()
+        .into_iter()
+        .map(|z| (z.link(), z.port().clone()))
+        .collect();
+    if let Some(steam) = cfg.steam() {
+        out.push((steam.link(), steam.port().clone()));
+    }
+    out
+}
+
 /// Binds every link to a device, or refuses.
 ///
 /// All-or-nothing: on any failure no [`PortBinding`] is returned for any link,

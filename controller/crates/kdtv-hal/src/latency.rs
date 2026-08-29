@@ -65,6 +65,31 @@ pub const REQUIRED_LATENCY_MS: u8 = 1;
 /// it ended at.
 pub const FTDI_DEFAULT_LATENCY_MS: u8 = 16;
 
+/// What became of the `ASYNC_LOW_LATENCY` flag.
+///
+/// One variant, on purpose. It carries a fact that would otherwise live only in
+/// a source comment: the flag is **not** set, and why. Putting it in the type
+/// means it reaches the boot log and the commissioning report, where somebody
+/// reading the timing numbers can see what was and was not done to the bridge.
+/// Adding a second variant later is a visible change rather than a silent one.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub enum LowLatencyFlag {
+    /// Not set. See the module documentation: `TIOCSSERIAL` needs a raw
+    /// `ioctl`, `unsafe_code = "deny"` applies workspace-wide, and no
+    /// dependency here exposes a safe wrapper. On `ftdi_sio` it is the same
+    /// setting as `latency_timer = 1`, which was applied and read back — `[I]`,
+    /// inference from the driver's documented behaviour, not measured here.
+    NotSetNoSafeIoctl,
+}
+
+impl fmt::Display for LowLatencyFlag {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(
+            "ASYNC_LOW_LATENCY not set (no safe ioctl; latency_timer covers it on ftdi_sio [I])",
+        )
+    }
+}
+
 /// The hardening state of one open port.
 ///
 /// There is deliberately no variant meaning "a real bridge, hardening skipped".
@@ -79,6 +104,8 @@ pub enum Hardened {
         latency_ms: u8,
         /// What it held before. `None` when it could not be read first.
         was_ms: Option<u8>,
+        /// The other route to the same setting, and its state.
+        low_latency_flag: LowLatencyFlag,
     },
     /// A pseudo-terminal. No USB bridge, no buffering timer, nothing to set.
     Pty { node: String },
@@ -101,9 +128,17 @@ impl fmt::Display for Hardened {
             Self::FtdiLatencyTimer {
                 latency_ms,
                 was_ms: Some(was),
+                low_latency_flag,
                 ..
-            } => write!(f, "latency_timer {was} -> {latency_ms} ms"),
-            Self::FtdiLatencyTimer { latency_ms, .. } => write!(f, "latency_timer {latency_ms} ms"),
+            } => write!(
+                f,
+                "latency_timer {was} -> {latency_ms} ms; {low_latency_flag}"
+            ),
+            Self::FtdiLatencyTimer {
+                latency_ms,
+                low_latency_flag,
+                ..
+            } => write!(f, "latency_timer {latency_ms} ms; {low_latency_flag}"),
             Self::Pty { .. } => f.write_str("pty, no latency timer"),
         }
     }
@@ -159,6 +194,7 @@ pub fn harden(binding: &PortBinding, sysfs: &dyn SysfsView) -> Result<Hardened, 
                 node,
                 latency_ms: read_back,
                 was_ms,
+                low_latency_flag: LowLatencyFlag::NotSetNoSafeIoctl,
             })
         }
     }
@@ -224,7 +260,13 @@ mod tests {
                 }
             ));
         }
-        assert_eq!(hardened[0].1.to_string(), "latency_timer 16 -> 1 ms");
+        let rendered = hardened[0].1.to_string();
+        assert!(
+            rendered.starts_with("latency_timer 16 -> 1 ms"),
+            "{rendered}"
+        );
+        // The boot log says what was not done to the bridge, as well as what was.
+        assert!(rendered.contains("ASYNC_LOW_LATENCY not set"), "{rendered}");
     }
 
     /// The refusal the read-back exists for.

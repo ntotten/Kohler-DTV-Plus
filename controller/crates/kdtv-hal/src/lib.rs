@@ -25,8 +25,7 @@
 //! Everything the encoders produce is tier `[C]`. This crate is the transmit
 //! gate's *second* boundary: [`LinkFactory::open`] refuses a real serial backend
 //! unless [`kdtv_proto::TransmitAuthority::permits_real_bus_on`] returns true for
-//! that link.
-//! Gating only the encoder would leave a real port open with a real
+//! that link. Gating only the encoder would leave a real port open with a real
 //! `SerialStream` behind it, relying on nothing ever writing bytes from another
 //! source. See [`mod@factory`].
 //!
@@ -71,11 +70,11 @@ pub use clock::{Clock, LinuxClock, NtpProbe, TimesyncdProbe, WallClock};
 pub use factory::{AuthorityRecord, LinkFactory, LinuxLinkFactory, OpenError, permit_open};
 pub use ids::{FileIdStore, IdError, IdStore, RESERVATION_BLOCK};
 pub use latency::{
-    FTDI_DEFAULT_LATENCY_MS, Hardened, REQUIRED_LATENCY_MS, harden, harden_all,
+    FTDI_DEFAULT_LATENCY_MS, Hardened, LowLatencyFlag, REQUIRED_LATENCY_MS, harden, harden_all,
 };
 pub use link::{Backend, BoxedFuture, LineSettings, Link, LinkDescriptor, LinkIoError};
 pub use resolve::{
-    BridgeKind, PortBinding, ResolveError, ResolvedPort, UsbIdentity, resolve_distinct,
+    BridgeKind, PortBinding, ResolveError, ResolvedPort, UsbIdentity, bindings_of, resolve_distinct,
 };
 pub use rtd::{
     CS_FOR_ZONE, ChipSelect, EXPANSION_CS, FaultRegister, NO_GPIO_OUTPUT, RtdChannel, RtdError,
