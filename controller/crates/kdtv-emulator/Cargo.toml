@@ -8,18 +8,12 @@ license.workspace = true
 repository.workspace = true
 publish = false
 
+# Only what is actually used. The workspace crates get added back as the device
+# models, the simulated HAL and the end-to-end rig land; declaring them early
+# couples this crate's build to crates it does not yet call.
 [dependencies]
-kdtv-config = { workspace = true }
-kdtv-hal = { workspace = true }
-kdtv-proto = { workspace = true }
-kdtv-units = { workspace = true }
-nix = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-smallvec = { workspace = true }
+nix = { workspace = true, features = ["fs", "term", "poll"] }
 thiserror = { workspace = true }
-tokio = { workspace = true }
-tracing = { workspace = true }
 
 [lints]
 workspace = true
