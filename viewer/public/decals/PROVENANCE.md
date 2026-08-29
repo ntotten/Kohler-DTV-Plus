@@ -16,17 +16,17 @@ covers the image files only.
 
 ## kohler-dtv-plus/k-99693-shower-dark.svg
 
-| | |
-| --- | --- |
-| Depicts | The **replacement** interface built in this repository (`app/`), "shower" screen, dark theme |
-| Authored | 2026-08-03, for this repository |
-| Format | SVG, self-contained: no external fonts, no embedded rasters, no scripts |
-| viewBox | `0 0 814.677 1310.691` — **exactly ten units per millimetre** of the K-99693 faceplate |
-| Rendered | Rasterised in-browser at 14 px/mm, giving 1141 × 1835 on an 81.47 × 131.07 mm face |
+|          |                                                                                              |
+| -------- | -------------------------------------------------------------------------------------------- |
+| Depicts  | The **replacement** interface built in this repository (`app/`), "shower" screen, dark theme |
+| Authored | 2026-08-03, for this repository                                                              |
+| Format   | SVG, self-contained: no external fonts, no embedded rasters, no scripts                      |
+| viewBox  | `0 0 814.677 1310.691` — **exactly ten units per millimetre** of the K-99693 faceplate       |
+| Rendered | Rasterised in-browser at 14 px/mm, giving 1141 × 1835 on an 81.47 × 131.07 mm face           |
 
 **This is not Kohler's user interface.** The K-99693's real display shows
 Kohler's own DTV+ software, which this drawing does not attempt to reproduce.
-The *content* is our replacement UI. Nothing in it should be read as a depiction
+The _content_ is our replacement UI. Nothing in it should be read as a depiction
 of the shipped product's software.
 
 **The physical arrangement is copied from the real product**, from Kohler's own
@@ -64,12 +64,12 @@ apart, rather than stretching the drawing to fit and saying nothing.
 
 ## kohler-dtv-plus/k-99693-shower-dark.png
 
-| | |
-| --- | --- |
-| Depicts | The same replacement interface, captured unretouched |
-| Source | `research/screenshots/dark-02-shower.png`, captured 2026-07-26 |
-| Size | 1120 × 1800 px (portrait, aspect 0.622) |
-| Copied on | 2026-08-03 |
+|           |                                                                |
+| --------- | -------------------------------------------------------------- |
+| Depicts   | The same replacement interface, captured unretouched           |
+| Source    | `research/screenshots/dark-02-shower.png`, captured 2026-07-26 |
+| Size      | 1120 × 1800 px (portrait, aspect 0.622)                        |
+| Copied on | 2026-08-03                                                     |
 
 A verbatim copy of the screenshot, kept as a second decal on the same anchor.
 Its 1120 × 1800 aspect is 0.6222 against the faceplate's 0.6216 — **0.11%

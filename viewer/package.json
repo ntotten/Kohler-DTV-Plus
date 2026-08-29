@@ -1,9 +1,9 @@
 {
   "name": "parts-viewer",
-  "private": true,
   "version": "0.1.0",
-  "type": "module",
+  "private": true,
   "description": "Interactive 3D viewer and STL exporter for appliance/fixture service parts. Deliberately independent of the DTV+ hardware app.",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

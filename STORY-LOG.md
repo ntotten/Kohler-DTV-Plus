@@ -112,8 +112,8 @@ The K-99693 is a device on the RS-485 bus: discovered over the DTV+ protocol as
 device ID `0x30`, then synchronised over Amulet CRC at 115200 baud on a 50 ms
 tick. User input comes back as `INVOKE_RPC` frames on that bus. It never opens a
 TCP connection. The confusion is understandable — the thing polling
-`system_info.cgi` every 5 s and `values.cgi` every 10 s is the controller's *web
-page*, `control.js`, which is a different client entirely.
+`system_info.cgi` every 5 s and `values.cgi` every 10 s is the controller's _web
+page_, `control.js`, which is a different client entirely.
 
 Confirmed against the live unit: `num_interface = 1`, `ui1_con_string = conn`,
 `valve_1_con_string = conn` fw 0.12, controller fw 0.0.3.89.
@@ -199,7 +199,7 @@ the same on the wire, and the code currently reads only the content, never the
 completeness. That is a cheaper and more direct discriminator than repetition.
 
 **Why it matters:** it fails in two directions. Toward the user, it can blank the
-UI mid-shower. Toward the investigation, it *fabricates* the exact signature we
+UI mid-shower. Toward the investigation, it _fabricates_ the exact signature we
 are hunting — "the controller has lost the valve" is the state the 2026-07-14
 video shows during a shutoff, and one such sample has already been promoted to
 evidence. Any telemetry that logs `con_string` without logging payload
@@ -264,13 +264,13 @@ The TPU flange gives us a broad surface and a long leak path. What it wants is a
 
 |     Rank | Candidate                                        | Rating for this joint | What looked attractive                                                                                                          | What killed it—or nearly did                                                                                                                                             | Verdict                                                |
 | -------: | ------------------------------------------------ | :-------------------: | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
-| 🥇 **1** | **Permatex “The Right Stuff” 90 Minute**         |         ⭐⭐⭐⭐⭐         | Thick, flexible gasket maker; fills irregularities; works naturally with the wide flange; can form a continuous exterior fillet | TPU adhesion still depends on scuffing, cleaning and leaving enough sealant thickness                                                                                    | **Winner: primary TPU-to-ABS seal**                    |
-| 🥈 **2** | **E6800**                                        |         ⭐⭐⭐⭐☆         | Flexible waterproof adhesive with more structural holding power than ordinary silicone                                          | Longer cure, messier removal and less gasket-like; potentially overkill if the flange is already well located                                                            | **Best backup if retention becomes a problem**         |
-| 🥉 **3** | **Clear bathroom-grade silicone**                |         ⭐⭐⭐☆☆         | Designed for wet environments; familiar; easy to tool into a fillet                                                             | Product chemistry varies, and adhesion to printed TPU is uncertain                                                                                                       | **Plausible, but less confidence than Right Stuff**    |
-|    **4** | **E6000**                                        |         ⭐⭐⭐☆☆         | Flexible adhesive/sealant already on hand                                                                                       | E6800 is the more appropriate member of the family for environmental exposure                                                                                            | **Usable fallback, no compelling reason to choose it** |
-|    **5** | **DAP Dynaflex 230**                             |         ⭐⭐☆☆☆         | Flexible, paintable and easy to apply                                                                                           | Fundamentally a building/trim caulk, not the material I want protecting electronics inside a shower wall                                                                 | **Wrong tier of product for the consequences**         |
-|    **6** | **Dielectric grease / Super Lube**               |         ⭐⭐☆☆☆         | Compatible with TPU and ABS; fills microscopic gaps; moisture resistant                                                         | Only works as an aid to a **mechanically compressed removable gasket**. Here it would contaminate the surfaces and sabotage the adhesive bond holding the cover in place | **Clever idea, wrong joint**                           |
-|    **7** | **MG Chemicals 422C silicone conformal coating** |         ⭐☆☆☆☆         | Already used to protect PCBs from condensation and moisture                                                                     | It is a thin coating, not a gap-filling housing seal. It cannot bridge the TPU/ABS joint or replace a gasket                                                             | **Useful on the PCB, useless as the perimeter seal**   |
+| 🥇 **1** | **Permatex “The Right Stuff” 90 Minute**         |      ⭐⭐⭐⭐⭐       | Thick, flexible gasket maker; fills irregularities; works naturally with the wide flange; can form a continuous exterior fillet | TPU adhesion still depends on scuffing, cleaning and leaving enough sealant thickness                                                                                    | **Winner: primary TPU-to-ABS seal**                    |
+| 🥈 **2** | **E6800**                                        |       ⭐⭐⭐⭐☆       | Flexible waterproof adhesive with more structural holding power than ordinary silicone                                          | Longer cure, messier removal and less gasket-like; potentially overkill if the flange is already well located                                                            | **Best backup if retention becomes a problem**         |
+| 🥉 **3** | **Clear bathroom-grade silicone**                |       ⭐⭐⭐☆☆        | Designed for wet environments; familiar; easy to tool into a fillet                                                             | Product chemistry varies, and adhesion to printed TPU is uncertain                                                                                                       | **Plausible, but less confidence than Right Stuff**    |
+|    **4** | **E6000**                                        |       ⭐⭐⭐☆☆        | Flexible adhesive/sealant already on hand                                                                                       | E6800 is the more appropriate member of the family for environmental exposure                                                                                            | **Usable fallback, no compelling reason to choose it** |
+|    **5** | **DAP Dynaflex 230**                             |        ⭐⭐☆☆☆        | Flexible, paintable and easy to apply                                                                                           | Fundamentally a building/trim caulk, not the material I want protecting electronics inside a shower wall                                                                 | **Wrong tier of product for the consequences**         |
+|    **6** | **Dielectric grease / Super Lube**               |        ⭐⭐☆☆☆        | Compatible with TPU and ABS; fills microscopic gaps; moisture resistant                                                         | Only works as an aid to a **mechanically compressed removable gasket**. Here it would contaminate the surfaces and sabotage the adhesive bond holding the cover in place | **Clever idea, wrong joint**                           |
+|    **7** | **MG Chemicals 422C silicone conformal coating** |        ⭐☆☆☆☆         | Already used to protect PCBs from condensation and moisture                                                                     | It is a thin coating, not a gap-filling housing seal. It cannot bridge the TPU/ABS joint or replace a gasket                                                             | **Useful on the PCB, useless as the perimeter seal**   |
 |    **8** | **Elmer’s Glue-All**                             |         ☆☆☆☆☆         | It exists                                                                                                                       | Water, heat, humidity, ABS, TPU and expensive shower electronics all vote no                                                                                             | **Absolutely not**                                     |
 
 The dielectric-grease idea was the most tempting wrong turn.
@@ -438,7 +438,7 @@ Three things landed with it:
 2. **A licence.** The
    [Open Maker License](https://github.com/aaronse/OpenMakerLicense) — AGPL-3.0
    with a maker addendum — covering work original to this repo, with an
-   explicit scope table for what it *cannot* cover.
+   explicit scope table for what it _cannot_ cover.
 3. **`_config.yml` deleted.** A one-line Jekyll theme setting from 2017, for a
    GitHub Pages site that was never enabled.
 
@@ -460,7 +460,7 @@ The hot water source is a **tankless** heater. Two consequences.
 First, a correction to my own analysis. I had listed valve faults among the
 things the empty controller log ruled out. **That was wrong.** Valve error codes
 travel the Saturn serial protocol and surface as `valve1_ErrorFatal` /
-`valve1_ErrorResettable` — *current-state flags, not history*. The on-board log
+`valve1_ErrorResettable` — _current-state flags, not history_. The on-board log
 holds controller codes 100-204 only. A valve error that trips and clears leaves
 no trace, so reading those flags the next day proves nothing.
 
@@ -470,12 +470,12 @@ Second, tankless supplies the mechanism that was missing:
    reservoir — below it the burner stops and hot water goes cold in seconds.
 2. The valve can't reach its 96 °F setpoint.
 3. The valve shuts off rather than deliver cold water — exactly what the operator
-   expected on camera: *"it's supposed to cut off if they can't achieve the
-   desired temperature."*
+   expected on camera: _"it's supposed to cut off if they can't achieve the
+   desired temperature."_
 4. Nothing appears in the controller's log, because valve errors don't go there.
 
 **And it explains the detail that didn't fit.** In the 07-14 repro the operator
-turned off the overhead and left *only the handshower* running, to save water,
+turned off the overhead and left _only the handshower_ running, to save water,
 ~3.5 minutes before it failed. Under every other theory that's neutral. Under
 this one it's the trigger — a single handshower is exactly where a tankless unit
 can fall below minimum firing flow.
@@ -642,7 +642,7 @@ vapor-tight and recessed well away from direct water.
 
 The original intent was only to inspect for corrosion behind the panel.
 
-**Why it matters:** this is why the project exists. It is *not* the cause of the
+**Why it matters:** this is why the project exists. It is _not_ the cause of the
 shutoffs, which predate it by ~2 months.
 **For Kohler:** sealing the housing and the blue seal plug together at
 installation makes the interface effectively non-removable without pulling the

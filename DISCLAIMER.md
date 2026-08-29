@@ -37,14 +37,14 @@ Endpoints are rated 0-5. The scale is from
 [xagon0/Kohler-DTV-Plus](https://github.com/xagon0/Kohler-DTV-Plus) (see
 [research/xagon0/DISCLAIMER.md](research/xagon0/DISCLAIMER.md)):
 
-| Rating | Meaning |
-| --- | --- |
-| 0/5 | Safe — read-only or no side effects |
-| 1/5 | Low risk — minor settings changes |
-| 2/5 | Moderate — changes device behaviour |
-| 3/5 | Caution — may cause lockups, requires reboot |
-| 4/5 | Dangerous — can cause persistent issues |
-| 5/5 | Critical — can brick the controller |
+| Rating | Meaning                                      |
+| ------ | -------------------------------------------- |
+| 0/5    | Safe — read-only or no side effects          |
+| 1/5    | Low risk — minor settings changes            |
+| 2/5    | Moderate — changes device behaviour          |
+| 3/5    | Caution — may cause lockups, requires reboot |
+| 4/5    | Dangerous — can cause persistent issues      |
+| 5/5    | Critical — can brick the controller          |
 
 ### How this repository enforces it
 

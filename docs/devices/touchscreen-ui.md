@@ -6,14 +6,14 @@ The touchscreen interface provides user interaction for the DTV+ system. Two har
 
 ## Device Configuration
 
-| Parameter | Value |
-|---|---|
-| Device ID (v1) | `0x30` |
-| Device ID (v2) | `0x31` |
-| Discovery protocol | DTV+ |
-| Data protocol | Amulet CRC |
-| Baud rate | 115200 |
-| Tick interval | 50 ms |
+| Parameter          | Value      |
+| ------------------ | ---------- |
+| Device ID (v1)     | `0x30`     |
+| Device ID (v2)     | `0x31`     |
+| Discovery protocol | DTV+       |
+| Data protocol      | Amulet CRC |
+| Baud rate          | 115200     |
+| Tick interval      | 50 ms      |
 
 ## Hardware Versions
 
@@ -35,10 +35,10 @@ The touchscreen interface provides user interaction for the DTV+ system. Two har
 
 The version string is the reliable way to tell the two apart. The controller's `amulet_version_string` field is a legacy name that outlived the hardware change — do not trust the field name, trust the number:
 
-| Reports | Is | Firmware file line |
-|---|---|---|
-| `0.1.x` / 3.7x | V1 (Amulet, ColdFire MCF52252) | `ui_amulet_v*.S19` |
-| `0.0.7.x` | V2 (Linux) | `dtvplus2_uiapp_v*.pack.tar` |
+| Reports        | Is                             | Firmware file line           |
+| -------------- | ------------------------------ | ---------------------------- |
+| `0.1.x` / 3.7x | V1 (Amulet, ColdFire MCF52252) | `ui_amulet_v*.S19`           |
+| `0.0.7.x`      | V2 (Linux)                     | `dtvplus2_uiapp_v*.pack.tar` |
 
 Corroborating evidence is public: Kohler's Konnect-module install sheet (an FCC exhibit — see [../public-record.md](../public-record.md)) requires "99693-P-NA UI sw **7.44**", which matches the Linux pack `dtvplus2_uiapp_v0.0.7.44.pack.tar` exactly.
 
@@ -95,14 +95,14 @@ The controller periodically re-sends critical variables to the touchscreen to gu
 
 ## Critical Datatable Variables
 
-| Variable | Description |
-|---|---|
-| DT_B_ShowerOnOff | Shower power state (0=off, 1=on) |
-| DT_B_SteamOnOff | Steam generator state (0=off, 1=on) |
-| DT_W_Temperature | Current water temperature |
-| DT_W_SetpointTemp | Target water temperature |
-| DT_B_UserSelection | Active user preset (1-4) |
-| DT_B_OutletState | Bitmask of active outlets |
+| Variable           | Description                         |
+| ------------------ | ----------------------------------- |
+| DT_B_ShowerOnOff   | Shower power state (0=off, 1=on)    |
+| DT_B_SteamOnOff    | Steam generator state (0=off, 1=on) |
+| DT_W_Temperature   | Current water temperature           |
+| DT_W_SetpointTemp  | Target water temperature            |
+| DT_B_UserSelection | Active user preset (1-4)            |
+| DT_B_OutletState   | Bitmask of active outlets           |
 
 ## File Transfer (Version 2 Only)
 
@@ -121,22 +121,22 @@ If the MD5 check fails, the touchscreen discards the file and reports an error. 
 
 The touchscreen can be configured to show different screens on wake/power-up:
 
-| Screen | Value | Description |
-|---|---|---|
-| Home | 0 | Main dashboard |
-| User Selection | 1 | Choose user preset |
-| Quick Start | 2 | One-touch start with last settings |
-| Settings | 3 | System configuration menu |
+| Screen         | Value | Description                        |
+| -------------- | ----- | ---------------------------------- |
+| Home           | 0     | Main dashboard                     |
+| User Selection | 1     | Choose user preset                 |
+| Quick Start    | 2     | One-touch start with last settings |
+| Settings       | 3     | System configuration menu          |
 
 ## CGI Variables
 
-| Variable Name | CGI Index | Description |
-|---|---|---|
-| interface_beep | 28 | Touch feedback beep (0=off, 1=on) |
-| interface_name | 29 | User-assigned interface name |
-| interface_auto_dim | 30 | Auto-dim enable (0=off, 1=on) |
-| interface_start_screen | 31 | Start screen selection (0-3) |
-| ui_user_lock | 97 | Lock interface to specific user |
+| Variable Name          | CGI Index | Description                       |
+| ---------------------- | --------- | --------------------------------- |
+| interface_beep         | 28        | Touch feedback beep (0=off, 1=on) |
+| interface_name         | 29        | User-assigned interface name      |
+| interface_auto_dim     | 30        | Auto-dim enable (0=off, 1=on)     |
+| interface_start_screen | 31        | Start screen selection (0-3)      |
+| ui_user_lock           | 97        | Lock interface to specific user   |
 
 ## Auto-Dim
 
@@ -148,12 +148,12 @@ Auto-dim helps extend backlight life and reduces glare in dark shower environmen
 
 The touchscreen displays the following error conditions:
 
-| Error Message | Condition |
-|---|---|
-| Water Too Hot | Valve reports overtemperature at outlet |
-| Steam Error | Steam generator fault (thermistor, overtemp, safety) |
-| Valve Offline | Valve not responding on Saturn bus |
-| Device Not Found | Expected device missing during discovery |
+| Error Message    | Condition                                            |
+| ---------------- | ---------------------------------------------------- |
+| Water Too Hot    | Valve reports overtemperature at outlet              |
+| Steam Error      | Steam generator fault (thermistor, overtemp, safety) |
+| Valve Offline    | Valve not responding on Saturn bus                   |
+| Device Not Found | Expected device missing during discovery             |
 
 Error messages are displayed as modal overlays that require user acknowledgment before returning to normal operation.
 

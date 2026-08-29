@@ -48,7 +48,7 @@ RS-485 connector pinout (all ports): pin 1 = A+ (non-inverting), pin 2 = B−
 | RTOS       | Freescale **MQX 3.8** (preemptive; message queues, semaphores, lightweight timers)          |
 | TCP/IP     | RTCS                                                                                        |
 | Filesystem | HCC SafeFlash + SafeFAT (dynamic wear levelling, per-page ECC, journalled metadata)         |
-| Web server | MQX HTTP server (see [api-reference.md](web-interface/api-reference.md) for behavior)                     |
+| Web server | MQX HTTP server (see [api-reference.md](web-interface/api-reference.md) for behavior)       |
 | Toolchain  | CodeWarrior 10.2 / ColdFire C/C++ 10.2 / P&E Micro BDM; artifacts `.S19` / `.elf` / `.rbin` |
 
 MQX runs 15+ tasks; the notable ones: `MAIN_TASK` (priority 17);

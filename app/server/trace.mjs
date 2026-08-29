@@ -212,7 +212,12 @@ export const traceResponse = safe(function traceResponse(id, endpoint, r) {
 });
 
 export const traceError = safe(function traceError(id, endpoint, err, attempt, attempts) {
-  traceLine('ERR', id, endpoint, `${String(err?.message || err)} attempt=${attempt + 1}/${attempts}`);
+  traceLine(
+    'ERR',
+    id,
+    endpoint,
+    `${String(err?.message || err)} attempt=${attempt + 1}/${attempts}`,
+  );
 });
 
 /** Free-text marker: process start, config, operator notes. */

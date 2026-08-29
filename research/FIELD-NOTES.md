@@ -56,14 +56,14 @@ total loss of control until it recovers.
 
 After hitting this repeatedly, `homeassistant-kohler` converged on:
 
-| Setting | Value | Source |
-| --- | --- | --- |
-| Idle poll interval | 15 s | [`coordinator.py:83`](https://github.com/niemyjski/homeassistant-kohler/blob/master/custom_components/kohler/coordinator.py) |
-| Active poll interval | 5 s | `coordinator.py:120-126` |
-| Fast-poll tail after stop | 120 s | `coordinator.py:122-124` |
-| Command debounce | 0.35 s | `QUICK_SHOWER_DEBOUNCE_SECONDS` |
-| Post-command refresh delay | 1.0 s | `POST_COMMAND_REFRESH_DELAY_SECONDS` |
-| Request timeout | 10 s | `coordinator.py:105` |
+| Setting                    | Value  | Source                                                                                                                       |
+| -------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| Idle poll interval         | 15 s   | [`coordinator.py:83`](https://github.com/niemyjski/homeassistant-kohler/blob/master/custom_components/kohler/coordinator.py) |
+| Active poll interval       | 5 s    | `coordinator.py:120-126`                                                                                                     |
+| Fast-poll tail after stop  | 120 s  | `coordinator.py:122-124`                                                                                                     |
+| Command debounce           | 0.35 s | `QUICK_SHOWER_DEBOUNCE_SECONDS`                                                                                              |
+| Post-command refresh delay | 1.0 s  | `POST_COMMAND_REFRESH_DELAY_SECONDS`                                                                                         |
+| Request timeout            | 10 s   | `coordinator.py:105`                                                                                                         |
 
 Kohler's own limit, per [xagon0's notes](xagon0/docs/troubleshooting/known-issues.md):
 **two concurrent HTTP sessions**, recovering after ~20 s. Browser tabs, polling
@@ -109,10 +109,10 @@ before.
 **Cause.** The controller uses two numbering schemes and they are not always the
 same:
 
-| Space | Where it appears | Meaning |
-| --- | --- | --- |
-| **Slot** `N` | `one_type`..`six_type`, `valveN_outletM_func` key names, and the digits in `quick_shower.cgi`'s `valve1_outlet` | Configuration position |
-| **Status index** `id` | `system_info.cgi`'s `valveNoutletM` booleans | Where that outlet's state is reported |
+| Space                 | Where it appears                                                                                                | Meaning                               |
+| --------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| **Slot** `N`          | `one_type`..`six_type`, `valveN_outletM_func` key names, and the digits in `quick_shower.cgi`'s `valve1_outlet` | Configuration position                |
+| **Status index** `id` | `system_info.cgi`'s `valveNoutletM` booleans                                                                    | Where that outlet's state is reported |
 
 The bridge is `valveN_outletM_func.id`. Both mature implementations do this, in
 mirror-image form:
@@ -201,10 +201,10 @@ See [DISCLAIMER.md](../DISCLAIMER.md) and
 
 Searches conflate these constantly. They share almost nothing:
 
-| System | Control path | Auth | Projects |
-| --- | --- | --- | --- |
-| **DTV+** (K-99695 controller) | **Local** CGI over HTTP/0.9 on port 80 | **None** | [homeassistant-kohler](https://github.com/niemyjski/homeassistant-kohler), [hubitat-kohlerdtv](https://github.com/dcmeglio/hubitat-kohlerdtv), [kohler-python](https://github.com/dcmeglio/kohler-python), this repo |
-| **Anthem / Konnect** | **Cloud** REST via Kohler's backend | Azure AD B2C OAuth | [ha-kohler-anthem](https://github.com/yon/ha-kohler-anthem), [kohler-konnect-ha](https://github.com/kenyonj/kohler-konnect-ha) |
+| System                        | Control path                           | Auth               | Projects                                                                                                                                                                                                             |
+| ----------------------------- | -------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **DTV+** (K-99695 controller) | **Local** CGI over HTTP/0.9 on port 80 | **None**           | [homeassistant-kohler](https://github.com/niemyjski/homeassistant-kohler), [hubitat-kohlerdtv](https://github.com/dcmeglio/hubitat-kohlerdtv), [kohler-python](https://github.com/dcmeglio/kohler-python), this repo |
+| **Anthem / Konnect**          | **Cloud** REST via Kohler's backend    | Azure AD B2C OAuth | [ha-kohler-anthem](https://github.com/yon/ha-kohler-anthem), [kohler-konnect-ha](https://github.com/kenyonj/kohler-konnect-ha)                                                                                       |
 
 The Anthem projects' problems are entirely different in kind — and instructive
 about what local control buys you:
@@ -251,13 +251,13 @@ with no command sent in between and nothing else touching the controller.
 Frequency is roughly **one bad read in 30-50**, though that is a rough figure
 from ordinary use rather than a controlled measurement.
 
-Note that the valve's *firmware version* was still reported in the bad payload,
+Note that the valve's _firmware version_ was still reported in the bad payload,
 so this looks like a partially-populated response rather than a genuine RS-485
 dropout.
 
 **Why it matters more than it looks.** A naive client shows a momentary glitch.
 A client that caches `values.cgi` — which you want to do, to keep the request
-rate down — caches the *bad* payload and then insists the shower has no
+rate down — caches the _bad_ payload and then insists the shower has no
 configured outlets for the whole TTL. That is a disabled start button for 30
 seconds, potentially with someone already standing in the shower.
 
@@ -318,13 +318,13 @@ Honest gaps, so nobody mistakes them for settled:
 
 ## Sources
 
-| Source | What it gave us |
-| --- | --- |
-| [niemyjski/homeassistant-kohler](https://github.com/niemyjski/homeassistant-kohler) | Lockup reports, converged polling values, outlet mapping, PurgeActive |
-| [dcmeglio/hubitat-kohlerdtv](https://github.com/dcmeglio/hubitat-kohlerdtv) | Independent confirmation of the outlet mapping direction |
-| [dcmeglio/kohler-python](https://github.com/dcmeglio/kohler-python) | Endpoint and parameter reference |
-| [xagon0/Kohler-DTV-Plus](https://github.com/xagon0/Kohler-DTV-Plus) | CGI risk ratings, session limit, protocol internals |
-| [timelery/Kohler-DTV-Plus](https://github.com/timelery/Kohler-DTV-Plus) | Original CGI enumeration; the persistent-failure report |
-| [yon/ha-kohler-anthem](https://github.com/yon/ha-kohler-anthem), [kenyonj/kohler-konnect-ha](https://github.com/kenyonj/kohler-konnect-ha) | Cloud-API contrast |
+| Source                                                                                                                                     | What it gave us                                                       |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| [niemyjski/homeassistant-kohler](https://github.com/niemyjski/homeassistant-kohler)                                                        | Lockup reports, converged polling values, outlet mapping, PurgeActive |
+| [dcmeglio/hubitat-kohlerdtv](https://github.com/dcmeglio/hubitat-kohlerdtv)                                                                | Independent confirmation of the outlet mapping direction              |
+| [dcmeglio/kohler-python](https://github.com/dcmeglio/kohler-python)                                                                        | Endpoint and parameter reference                                      |
+| [xagon0/Kohler-DTV-Plus](https://github.com/xagon0/Kohler-DTV-Plus)                                                                        | CGI risk ratings, session limit, protocol internals                   |
+| [timelery/Kohler-DTV-Plus](https://github.com/timelery/Kohler-DTV-Plus)                                                                    | Original CGI enumeration; the persistent-failure report               |
+| [yon/ha-kohler-anthem](https://github.com/yon/ha-kohler-anthem), [kenyonj/kohler-konnect-ha](https://github.com/kenyonj/kohler-konnect-ha) | Cloud-API contrast                                                    |
 
 Nothing here is affiliated with or endorsed by Kohler Co.

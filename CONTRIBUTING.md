@@ -37,7 +37,7 @@ applies to humans as well as agents.
 
 1. Open an issue first for anything non-trivial — especially protocol changes,
    new dependencies, or anything touching the safety gate.
-2. Branch, and keep commits grouped by theme. Explain *why*, and record what was
+2. Branch, and keep commits grouped by theme. Explain _why_, and record what was
    wrong before when fixing something.
 3. Run `cd app && npm run check` — typecheck, unit tests, and build.
 4. Open the pull request. Say what you verified against real hardware and what

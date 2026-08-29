@@ -134,7 +134,8 @@ export function repairMesh(
 
   // ---- collapse hairline non-manifold edges ---------------------------------
   const collapseTol = (options.nonManifoldCollapseMm ?? 0.05) * toSource;
-  const collapsedEdges = collapseTol > 0 ? collapseShortNonManifold(triangles, verts, collapseTol) : 0;
+  const collapsedEdges =
+    collapseTol > 0 ? collapseShortNonManifold(triangles, verts, collapseTol) : 0;
 
   // ---- find boundary --------------------------------------------------------
   // Only the count AFTER repair is reported; this pass just locates the holes.
@@ -213,9 +214,15 @@ export function repairMesh(
     const va = verts[a];
     const vb = verts[b];
     const vc = verts[c];
-    out[o] = va.x; out[o + 1] = va.y; out[o + 2] = va.z;
-    out[o + 3] = vb.x; out[o + 4] = vb.y; out[o + 5] = vb.z;
-    out[o + 6] = vc.x; out[o + 7] = vc.y; out[o + 8] = vc.z;
+    out[o] = va.x;
+    out[o + 1] = va.y;
+    out[o + 2] = va.z;
+    out[o + 3] = vb.x;
+    out[o + 4] = vb.y;
+    out[o + 5] = vb.z;
+    out[o + 6] = vc.x;
+    out[o + 7] = vc.y;
+    out[o + 8] = vc.z;
   });
 
   return {
@@ -312,10 +319,7 @@ function collapseShortNonManifold(
  * agrees with the boundary and therefore faces the wrong way. Only edges that
  * lie ON the loop are conclusive; interior diagonals are ignored.
  */
-function capMatchesBoundary(
-  capTris: Array<[number, number, number]>,
-  loopLength: number,
-): boolean {
+function capMatchesBoundary(capTris: Array<[number, number, number]>, loopLength: number): boolean {
   const isForward = (a: number, b: number) => (a + 1) % loopLength === b;
   const isBackward = (a: number, b: number) => (b + 1) % loopLength === a;
 
@@ -442,8 +446,7 @@ function bestFitPlane(points: Vec3[]): Plane {
   origin.z /= points.length;
 
   // Any vector not parallel to the normal works as a seed for the in-plane basis.
-  const seed =
-    Math.abs(normal.x) < 0.9 ? { x: 1, y: 0, z: 0 } : { x: 0, y: 1, z: 0 };
+  const seed = Math.abs(normal.x) < 0.9 ? { x: 1, y: 0, z: 0 } : { x: 0, y: 1, z: 0 };
   const u = normalize(cross(seed, normal));
   const v = cross(normal, u);
   return { origin, normal, u, v };

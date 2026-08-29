@@ -5,16 +5,28 @@ import { computeMeshStats } from './meshStats';
 /** Closed box, 12 triangles, wound outward. */
 function boxTriangles(w: number, h: number, d: number): number[][] {
   const v = [
-    [0, 0, 0], [w, 0, 0], [w, h, 0], [0, h, 0],
-    [0, 0, d], [w, 0, d], [w, h, d], [0, h, d],
+    [0, 0, 0],
+    [w, 0, 0],
+    [w, h, 0],
+    [0, h, 0],
+    [0, 0, d],
+    [w, 0, d],
+    [w, h, d],
+    [0, h, d],
   ];
   const faces = [
-    [0, 3, 2], [0, 2, 1],
-    [4, 5, 6], [4, 6, 7],
-    [0, 1, 5], [0, 5, 4],
-    [2, 3, 7], [2, 7, 6],
-    [1, 2, 6], [1, 6, 5],
-    [0, 4, 7], [0, 7, 3],
+    [0, 3, 2],
+    [0, 2, 1],
+    [4, 5, 6],
+    [4, 6, 7],
+    [0, 1, 5],
+    [0, 5, 4],
+    [2, 3, 7],
+    [2, 7, 6],
+    [1, 2, 6],
+    [1, 6, 5],
+    [0, 4, 7],
+    [0, 7, 3],
   ];
   return faces.map((f) => f.flatMap((i) => v[i]));
 }
@@ -102,7 +114,12 @@ describe('repairMesh — capping', () => {
     // An L-shaped hole. A fan from one vertex would emit triangles outside the
     // boundary; ear clipping must not.
     const l = [
-      [0, 0, 0], [30, 0, 0], [30, 10, 0], [10, 10, 0], [10, 30, 0], [0, 30, 0],
+      [0, 0, 0],
+      [30, 0, 0],
+      [30, 10, 0],
+      [10, 10, 0],
+      [10, 30, 0],
+      [0, 30, 0],
     ];
     const tris: number[][] = [];
     // Wall around the L, one quad per edge, extruded to z = 5.
@@ -189,7 +206,10 @@ describe('repairMesh — honesty about what it cannot fix', () => {
     // must be skipped and the result declared not watertight.
     const tris: number[][] = [];
     const ring = [
-      [0, 0, 0], [10, 0, 6], [10, 10, 0], [0, 10, 6],
+      [0, 0, 0],
+      [10, 0, 6],
+      [10, 10, 0],
+      [0, 10, 6],
     ];
     for (let i = 0; i < ring.length; i++) {
       const a = ring[i];
@@ -207,12 +227,19 @@ describe('repairMesh — honesty about what it cannot fix', () => {
     const tris = boxTriangles(10, 10, 10);
     tris.splice(0, 1); // half a face — leaves a triangular hole
     const { report } = repairMesh(toGeometry(tris), 'mm');
-    expect(report.watertight).toBe(report.boundaryEdgesAfter === 0 && report.nonManifoldEdges === 0);
+    expect(report.watertight).toBe(
+      report.boundaryEdgesAfter === 0 && report.nonManifoldEdges === 0,
+    );
   });
 
   it('reports skipped loops with their measurements in millimetres', () => {
     const tris: number[][] = [];
-    const ring = [[0, 0, 0], [10, 0, 6], [10, 10, 0], [0, 10, 6]];
+    const ring = [
+      [0, 0, 0],
+      [10, 0, 6],
+      [10, 10, 0],
+      [0, 10, 6],
+    ];
     for (let i = 0; i < ring.length; i++) {
       const a = ring[i];
       const b = ring[(i + 1) % ring.length];
@@ -258,7 +285,12 @@ describe('summarizeRepair', () => {
 
   it('says NOT watertight when holes remain', () => {
     const tris: number[][] = [];
-    const ring = [[0, 0, 0], [10, 0, 6], [10, 10, 0], [0, 10, 6]];
+    const ring = [
+      [0, 0, 0],
+      [10, 0, 6],
+      [10, 10, 0],
+      [0, 10, 6],
+    ];
     for (let i = 0; i < ring.length; i++) {
       const a = ring[i];
       const b = ring[(i + 1) % ring.length];

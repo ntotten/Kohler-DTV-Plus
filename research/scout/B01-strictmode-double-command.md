@@ -5,11 +5,11 @@
 > Corresponds to `KDTV-W2` in [`kohler-dtv-plus-work-scout.md`](kohler-dtv-plus-work-scout.md).
 
 Problem: Tapping an outlet while the shower is running sends `quick_shower.cgi` twice in `npm run dev`, which is the documented way to run the app and the operator's only remote way to run the shower.
-Cause:   `toggleOutlet` issues the command from inside the `setSelection` updater, and `<StrictMode>` double-invokes updater functions in development — an impure updater is exactly what that double-invocation exists to expose.
-Fix:     Extract the toggle decision into a pure function, apply it outside the updater, and issue the command once from the caller.
-Impact:  The controller receives one command per tap in every build, and the impurity that produced the duplicate becomes a test failure rather than an invisible extra request.
-Risk:    Doing nothing leaves duplicate valve commands ~120 ms apart on a controller whose documented failure mode is rapid successive valve commands going unreachable for up to three hours; doing it touches the app's hottest interaction path, so the pure function must preserve today's behaviour exactly.
-Goal:    A single outlet tap produces exactly one `quick_shower.cgi` request, pinned by a test that fails if a dispatch is ever moved back inside a state updater.
+Cause: `toggleOutlet` issues the command from inside the `setSelection` updater, and `<StrictMode>` double-invokes updater functions in development — an impure updater is exactly what that double-invocation exists to expose.
+Fix: Extract the toggle decision into a pure function, apply it outside the updater, and issue the command once from the caller.
+Impact: The controller receives one command per tap in every build, and the impurity that produced the duplicate becomes a test failure rather than an invisible extra request.
+Risk: Doing nothing leaves duplicate valve commands ~120 ms apart on a controller whose documented failure mode is rapid successive valve commands going unreachable for up to three hours; doing it touches the app's hottest interaction path, so the pure function must preserve today's behaviour exactly.
+Goal: A single outlet tap produces exactly one `quick_shower.cgi` request, pinned by a test that fails if a dispatch is ever moved back inside a state updater.
 
 ## Inputs
 

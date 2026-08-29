@@ -114,9 +114,7 @@ export function useShower() {
     // First successful read: adopt the configured defaults.
     if (!seeded.current) {
       seeded.current = true;
-      const armed = valve1.outlets
-        .filter((o) => o.selected && o.configured)
-        .map((o) => o.position);
+      const armed = valve1.outlets.filter((o) => o.selected && o.configured).map((o) => o.position);
       const def = valve1.outlets.filter((o) => o.isDefault && o.configured).map((o) => o.position);
       setSelection(new Set(armed.length ? armed : def));
       setTargetTemp(valve1.targetTemp || 100);
@@ -196,7 +194,11 @@ export function useShower() {
   const start = useCallback(() => {
     const positions = selection.size
       ? selection
-      : new Set(usableOutlets(valve1).filter((o) => o.isDefault).map((o) => o.position));
+      : new Set(
+          usableOutlets(valve1)
+            .filter((o) => o.isDefault)
+            .map((o) => o.position),
+        );
     if (!positions.size) {
       setLastError('Select at least one outlet first.');
       return;
@@ -246,9 +248,12 @@ export function useShower() {
     void run(() => api.stopPreset());
   }, [run]);
 
-  useEffect(() => () => {
-    if (tempSendTimer.current) clearTimeout(tempSendTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (tempSendTimer.current) clearTimeout(tempSendTimer.current);
+    },
+    [],
+  );
 
   return {
     model,

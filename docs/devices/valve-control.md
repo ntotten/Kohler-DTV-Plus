@@ -6,34 +6,34 @@ The valve control module manages water mixing valves for shower and bath systems
 
 ## Supported Valve Types
 
-| Valve Type | Device ID | Ports | Notes |
-|---|---|---|---|
-| DTV 6-Port | `0x06` | 6 | Legacy 6-port mixing valve |
-| Prompt 2-Port | `0x17` | 2 | Two-outlet valve |
-| Prompt 3-Port | `0x1E` | 3 | Three-outlet valve |
-| Prompt 3 Flow Ctrl | `0xFF` | 3 | Three-outlet with flow control |
+| Valve Type         | Device ID | Ports | Notes                          |
+| ------------------ | --------- | ----- | ------------------------------ |
+| DTV 6-Port         | `0x06`    | 6     | Legacy 6-port mixing valve     |
+| Prompt 2-Port      | `0x17`    | 2     | Two-outlet valve               |
+| Prompt 3-Port      | `0x1E`    | 3     | Three-outlet valve             |
+| Prompt 3 Flow Ctrl | `0xFF`    | 3     | Three-outlet with flow control |
 
 ## System Configuration
 
-| Parameter | Value |
-|---|---|
-| Max valves per port | 2 |
-| Max valves per system | 4 |
-| Tick interval | 525 ms |
-| Baud rate | 9600 |
+| Parameter             | Value  |
+| --------------------- | ------ |
+| Max valves per port   | 2      |
+| Max valves per system | 4      |
+| Tick interval         | 525 ms |
+| Baud rate             | 9600   |
 | Communication timeout | 320 ms |
 
 ## Master Address Selection
 
 **CRITICAL:** The master address depends on the valve type and network configuration. Using the wrong address means the valve will never respond.
 
-| Valve Type | Condition | Master Address |
-|---|---|---|
-| DTV 6-Port | Always | `0x00` |
-| Prompt 2-Port | Not networked | `0x00` |
-| Prompt 2-Port | Networked | `0x10` |
-| Prompt 3-Port | Always | `0x10` |
-| Prompt 3 Flow Ctrl | Always | `0x10` |
+| Valve Type         | Condition     | Master Address |
+| ------------------ | ------------- | -------------- |
+| DTV 6-Port         | Always        | `0x00`         |
+| Prompt 2-Port      | Not networked | `0x00`         |
+| Prompt 2-Port      | Networked     | `0x10`         |
+| Prompt 3-Port      | Always        | `0x10`         |
+| Prompt 3 Flow Ctrl | Always        | `0x10`         |
 
 If you send commands with `0x00` to a networked Prompt 2-Port or any Prompt 3, you will get **no response**. Always verify which address the target valve expects.
 
@@ -45,46 +45,46 @@ Temperatures use **Q-format Cx2** (Celsius times 2). This avoids floating-point 
 
 **Example:** 35 degrees C = 70 in Cx2 format.
 
-| Constant | Cx2 Value | Actual Temp |
-|---|---|---|
-| MIN_SYS_VALVE_TEMP | 60 | 30 degrees C |
-| MAX_WATER_TEMP | 98 | 49 degrees C |
+| Constant           | Cx2 Value | Actual Temp  |
+| ------------------ | --------- | ------------ |
+| MIN_SYS_VALVE_TEMP | 60        | 30 degrees C |
+| MAX_WATER_TEMP     | 98        | 49 degrees C |
 
 ## Outlet Bitmaps
 
 ### DTV 6-Port Outlets
 
-| Outlet | Bit | Mask |
-|---|---|---|
-| 0 | 0 | `0x01` |
-| 1 | 1 | `0x02` |
-| 2 | 2 | `0x04` |
-| 3 | 3 | `0x08` |
-| 4 | 4 | `0x10` |
-| 5 | 5 | `0x20` |
+| Outlet | Bit | Mask   |
+| ------ | --- | ------ |
+| 0      | 0   | `0x01` |
+| 1      | 1   | `0x02` |
+| 2      | 2   | `0x04` |
+| 3      | 3   | `0x08` |
+| 4      | 4   | `0x10` |
+| 5      | 5   | `0x20` |
 
 ### Prompt 3 Generic Outlets
 
-| Outlet | Mask |
-|---|---|
-| 1 | `0x04` |
-| 2 | `0x08` |
-| 3 | `0x10` |
-| 4 | `0x20` |
-| 5 | `0x40` |
-| 6 | `0x80` |
+| Outlet | Mask   |
+| ------ | ------ |
+| 1      | `0x04` |
+| 2      | `0x08` |
+| 3      | `0x10` |
+| 4      | `0x20` |
+| 5      | `0x40` |
+| 6      | `0x80` |
 
 ## Write Primary Flags
 
 These flags are combined as a bitmask when writing to the valve primary register:
 
-| Flag | Value | Description |
-|---|---|---|
-| ON | `0x01` | Valve is active |
-| PAUSE | `0x02` | Pause water flow |
-| FULL_COLD | `0x04` | Full cold water only |
-| DUTY_FLUSH | `0x20` | Duty flush cycle |
-| DISINFECT | `0x40` | Disinfection mode |
+| Flag       | Value  | Description          |
+| ---------- | ------ | -------------------- |
+| ON         | `0x01` | Valve is active      |
+| PAUSE      | `0x02` | Pause water flow     |
+| FULL_COLD  | `0x04` | Full cold water only |
+| DUTY_FLUSH | `0x20` | Duty flush cycle     |
+| DISINFECT  | `0x40` | Disinfection mode    |
 
 ## Valve State Machine
 
@@ -184,16 +184,16 @@ if remaining_seconds < 900:
 
 ## Error Codes
 
-| Error Name | Code | Description |
-|---|---|---|
-| ERROR_OK | 1 | No error, normal operation |
-| UNCONFIGURED | 0 | Valve not configured |
-| OVERTEMP_CONTROL | 3 | Control board overtemperature |
-| OVERTEMP_OUTLET | 7 | Outlet water overtemperature |
-| WELDED | 35 | Mixing valve mechanically stuck (welded) |
-| RELAY_FAULT | 36 | Relay driver fault |
-| M_STUCK | 60 | Motor stuck, cannot move |
-| M_HOMING | 71 | Motor homing failure |
+| Error Name       | Code | Description                              |
+| ---------------- | ---- | ---------------------------------------- |
+| ERROR_OK         | 1    | No error, normal operation               |
+| UNCONFIGURED     | 0    | Valve not configured                     |
+| OVERTEMP_CONTROL | 3    | Control board overtemperature            |
+| OVERTEMP_OUTLET  | 7    | Outlet water overtemperature             |
+| WELDED           | 35   | Mixing valve mechanically stuck (welded) |
+| RELAY_FAULT      | 36   | Relay driver fault                       |
+| M_STUCK          | 60   | Motor stuck, cannot move                 |
+| M_HOMING         | 71   | Motor homing failure                     |
 
 ## Safety Ownership
 
@@ -201,13 +201,13 @@ Anyone building a replacement master needs to know which safety layer lives wher
 
 **Valve-side (comes free with the hardware):**
 
-| Layer | Mechanism |
-|---|---|
-| Mixing loop | Proportional control against the valve's own thermistor. The controller sends a setpoint and reads back the result — **there is no PID loop in the controller** |
-| Hard envelope | Setpoints outside 30-49 C rejected (`RANGE_ERROR`); `MAX_WATER_TEMP` (Cx2 98 / 49 C / 120 F) is the hardware ceiling |
-| Over-temperature trips | `OVERTEMP_OUTLET` (delivered water too hot), `OVERTEMP_CONTROL` (board overheat), inlet too hot/cold |
-| Component fault detection | Thermistor open/short, motor stuck/homing, welded relay |
-| Fail-closed | Comms loss times out and closes the valve; power loss closes the solenoids. The failure direction is always OFF |
+| Layer                     | Mechanism                                                                                                                                                       |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mixing loop               | Proportional control against the valve's own thermistor. The controller sends a setpoint and reads back the result — **there is no PID loop in the controller** |
+| Hard envelope             | Setpoints outside 30-49 C rejected (`RANGE_ERROR`); `MAX_WATER_TEMP` (Cx2 98 / 49 C / 120 F) is the hardware ceiling                                            |
+| Over-temperature trips    | `OVERTEMP_OUTLET` (delivered water too hot), `OVERTEMP_CONTROL` (board overheat), inlet too hot/cold                                                            |
+| Component fault detection | Thermistor open/short, motor stuck/homing, welded relay                                                                                                         |
+| Fail-closed               | Comms loss times out and closes the valve; power loss closes the solenoids. The failure direction is always OFF                                                 |
 
 **Controller-side (a replacement master must reimplement):**
 
@@ -223,14 +223,14 @@ Anyone building a replacement master needs to know which safety layer lives wher
 
 Massage patterns use staggered activation of outlets with specific timing:
 
-| Parameter | Duration |
-|---|---|
-| Stagger delay | 500 ms |
-| Wave slow ON | 1300 ms |
-| Wave fast ON | 700 ms |
-| Single slow ON | 600 ms |
-| Single fast ON | 300 ms |
-| Wave OFF | 300 ms |
+| Parameter      | Duration |
+| -------------- | -------- |
+| Stagger delay  | 500 ms   |
+| Wave slow ON   | 1300 ms  |
+| Wave fast ON   | 700 ms   |
+| Single slow ON | 600 ms   |
+| Single fast ON | 300 ms   |
+| Wave OFF       | 300 ms   |
 
 ## Calibration System
 
@@ -246,10 +246,10 @@ Write calibration via Saturn register `0x95`. This permanently updates the EEPRO
 
 ### CGI Access
 
-| Variable | CGI Index | Description |
-|---|---|---|
-| six_port_calibration_valve1 | 61 | Calibration code for valve 1 |
-| six_port_calibration_valve2 | 62 | Calibration code for valve 2 |
+| Variable                    | CGI Index | Description                  |
+| --------------------------- | --------- | ---------------------------- |
+| six_port_calibration_valve1 | 61        | Calibration code for valve 1 |
+| six_port_calibration_valve2 | 62        | Calibration code for valve 2 |
 
 ### Calibration Value Interpretation
 
@@ -274,19 +274,19 @@ For Prompt 3 valves with flow control, use Saturn command `0xF7` to trigger the 
 
 ## CGI Variables
 
-| Variable Name | CGI Index | Description |
-|---|---|---|
-| valve_outlet_order | 32 | Outlet activation order |
-| valve_outlet_massage | 33 | Massage pattern assignment |
-| valve_outlet_default | 34 | Default outlet on startup |
-| valve_outlet_flow | 35 | Outlet flow rate setting |
-| valve_outlet_ramp | 36 | Temperature ramp rate |
-| valve_outlet_type | 37 | Outlet type identifier |
-| valve_default_temp | 38 | Default temperature (Cx2) |
-| valve_max_temp | 39 | Maximum temperature (Cx2) |
-| valve_massage_order | 40 | Massage outlet order |
-| valve_auto_purge | 41 | Auto-purge on shutoff |
-| valve_cold_water | 42 | Cold water flush setting |
-| six_port_calibration_valve1 | 61 | DTV 6-port cal code, valve 1 |
-| six_port_calibration_valve2 | 62 | DTV 6-port cal code, valve 2 |
-| max_valve_runtime | 99 | Maximum runtime in seconds |
+| Variable Name               | CGI Index | Description                  |
+| --------------------------- | --------- | ---------------------------- |
+| valve_outlet_order          | 32        | Outlet activation order      |
+| valve_outlet_massage        | 33        | Massage pattern assignment   |
+| valve_outlet_default        | 34        | Default outlet on startup    |
+| valve_outlet_flow           | 35        | Outlet flow rate setting     |
+| valve_outlet_ramp           | 36        | Temperature ramp rate        |
+| valve_outlet_type           | 37        | Outlet type identifier       |
+| valve_default_temp          | 38        | Default temperature (Cx2)    |
+| valve_max_temp              | 39        | Maximum temperature (Cx2)    |
+| valve_massage_order         | 40        | Massage outlet order         |
+| valve_auto_purge            | 41        | Auto-purge on shutoff        |
+| valve_cold_water            | 42        | Cold water flush setting     |
+| six_port_calibration_valve1 | 61        | DTV 6-port cal code, valve 1 |
+| six_port_calibration_valve2 | 62        | DTV 6-port cal code, valve 2 |
+| max_valve_runtime           | 99        | Maximum runtime in seconds   |

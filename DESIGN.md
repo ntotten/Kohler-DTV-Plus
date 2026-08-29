@@ -20,14 +20,14 @@ web pages use. That API is the replacement input.
 
 These are properties of the hardware, not choices:
 
-| Constraint | Consequence |
-| --- | --- |
+| Constraint                                                   | Consequence                                                                                 |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
 | `.cgi` replies are **HTTP/0.9** — no status line, no headers | Node `http`, `fetch`/undici and browser XHR all refuse them. A raw TCP client is mandatory. |
-| **2 concurrent HTTP sessions**, then a ~20 s hang | One global request queue with a minimum gap. Never parallel. |
-| No `Content-Length` on CGI replies | Read until the socket closes; `Connection: close` makes the server do that. |
-| **No authentication at all** | Anything on the LAN can run the shower. Network position is the only boundary. |
-| Endpoints that **brick or wedge** the unit | A hard safety gate, not an honour system. |
-| Reported temperature is a **thermistor reading** | Never presented as ground truth; scald threshold marked in the UI. |
+| **2 concurrent HTTP sessions**, then a ~20 s hang            | One global request queue with a minimum gap. Never parallel.                                |
+| No `Content-Length` on CGI replies                           | Read until the socket closes; `Connection: close` makes the server do that.                 |
+| **No authentication at all**                                 | Anything on the LAN can run the shower. Network position is the only boundary.              |
+| Endpoints that **brick or wedge** the unit                   | A hard safety gate, not an honour system.                                                   |
+| Reported temperature is a **thermistor reading**             | Never presented as ground truth; scald threshold marked in the UI.                          |
 
 ## Shape
 
@@ -68,7 +68,7 @@ app/src/ui/                    screens styled after the K-99693
 ### The safety gate is code, not documentation
 
 `cgi-safety.mjs` rates ~50 endpoints 0-5 and refuses anything above **2/5**
-before a packet is sent. An endpoint must *also* be explicitly exposed as `read`
+before a packet is sent. An endpoint must _also_ be explicitly exposed as `read`
 or `command` — a safe rating alone does not open it. 18 endpoints are reachable:
 5 reads and 13 commands.
 
@@ -183,11 +183,11 @@ Modelled on `e:\git\mg-controller\apps\android-cap`, which uses
 with no Node process, and `CapacitorHttp` will not rescue it — the blocker is
 HTTP/0.9 at the protocol level, which OkHttp rejects just as Node does. So:
 
-| Option | Verdict |
-| --- | --- |
-| Point the app at a LAN-hosted `npm run serve` | **Recommended.** Zero new code; needs an always-on box. |
-| Native raw-socket Capacitor plugin | Removes the server dependency, but reimplements the transport, queue and safety gate in Java/Kotlin — including duplicating the risk table. |
-| Talk to the controller directly from the WebView | Not possible. HTTP/0.9. |
+| Option                                           | Verdict                                                                                                                                     |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Point the app at a LAN-hosted `npm run serve`    | **Recommended.** Zero new code; needs an always-on box.                                                                                     |
+| Native raw-socket Capacitor plugin               | Removes the server dependency, but reimplements the transport, queue and safety gate in Java/Kotlin — including duplicating the risk table. |
+| Talk to the controller directly from the WebView | Not possible. HTTP/0.9.                                                                                                                     |
 
 The seam is already in place: `src/api/config.ts` reads `VITE_API_BASE`, and all
 requests route through `apiUrl()`. Building the bundle for a phone is:

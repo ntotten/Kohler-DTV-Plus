@@ -96,7 +96,9 @@ for (const entry of entries) {
       ? `    volume        ${volumeCm3(stats).toFixed(2)} cm3  (${estimatedMassGrams(stats).toFixed(1)} g solid PLA)`
       : `    mesh          OPEN — ${stats.boundaryEdges.toLocaleString()} unshared edges, volume withheld`,
   );
-  console.log(`    export        ${exportFilename(entry.part.sku ?? entry.part.title, 'mm')} (${result.buffer.byteLength.toLocaleString()} bytes)`);
+  console.log(
+    `    export        ${exportFilename(entry.part.sku ?? entry.part.title, 'mm')} (${result.buffer.byteLength.toLocaleString()} bytes)`,
+  );
 
   // Structural read-back.
   let written = 0;
@@ -105,7 +107,11 @@ for (const entry of entries) {
   } catch (error) {
     failures.push({ where, message: `exported STL failed its own length check: ${String(error)}` });
   }
-  check(where, written === stats.triangleCount, `wrote ${written} triangles, expected ${stats.triangleCount}`);
+  check(
+    where,
+    written === stats.triangleCount,
+    `wrote ${written} triangles, expected ${stats.triangleCount}`,
+  );
 
   // Geometric read-back: re-derive the envelope from the exported bytes rather
   // than trusting the in-memory numbers. This is what catches a transform that
@@ -120,13 +126,19 @@ for (const entry of entries) {
         `disagrees with measured ${stats.size[axis].toFixed(3)} mm`,
     );
   }
-  console.log(`    read-back     ${reread.size.map((n) => n.toFixed(2)).join(' x ')} mm, ${reread.degenerate} degenerate facet(s)`);
+  console.log(
+    `    read-back     ${reread.size.map((n) => n.toFixed(2)).join(' x ')} mm, ${reread.degenerate} degenerate facet(s)`,
+  );
 
   // A part whose largest dimension lands under 1 mm or over 2 m is almost
   // certainly a units error rather than a real part, and that is exactly the
   // failure this whole app exists to prevent.
   const largest = Math.max(...stats.size);
-  check(where, largest > 1 && largest < 2000, `largest dimension ${largest.toFixed(2)} mm looks like a units error`);
+  check(
+    where,
+    largest > 1 && largest < 2000,
+    `largest dimension ${largest.toFixed(2)} mm looks like a units error`,
+  );
 
   // ---- repair path ----------------------------------------------------------
   const repair = repairMesh(geometry, file.sourceUnit);
@@ -186,7 +198,10 @@ for (const entry of entries) {
       try {
         imageBytes = readFileSync(imagePath).byteLength;
       } catch {
-        failures.push({ where, message: `decal ${decal.decalId}: artwork missing at ${decal.image.url}` });
+        failures.push({
+          where,
+          message: `decal ${decal.decalId}: artwork missing at ${decal.image.url}`,
+        });
       }
 
       // Every corner must sit on the surface, allowing for the lift it was
@@ -225,7 +240,9 @@ for (const entry of entries) {
 
       console.log(`      ${decal.decalId}`);
       console.log(`        anchor      ${summarizeDecal(decal, quad)}`);
-      console.log(`        aspect      face ${quad.anchorAspect.toFixed(4)}, artwork ${quad.imageAspect.toFixed(4)} (${decal.fit ?? 'stretch'})`);
+      console.log(
+        `        aspect      face ${quad.anchorAspect.toFixed(4)}, artwork ${quad.imageAspect.toFixed(4)} (${decal.fit ?? 'stretch'})`,
+      );
       console.log(`        surface     worst corner ${worst.toFixed(4)} mm off the mesh`);
       console.log(`        artwork     ${decal.image.url} (${imageBytes.toLocaleString()} bytes)`);
     }
@@ -327,10 +344,18 @@ function facingAgreement(
 }
 
 function pointTriangleDistance(p: readonly number[], t: Float64Array, o: number): number {
-  const ax = t[o], ay = t[o + 1], az = t[o + 2];
-  const abx = t[o + 3] - ax, aby = t[o + 4] - ay, abz = t[o + 5] - az;
-  const acx = t[o + 6] - ax, acy = t[o + 7] - ay, acz = t[o + 8] - az;
-  const apx = p[0] - ax, apy = p[1] - ay, apz = p[2] - az;
+  const ax = t[o],
+    ay = t[o + 1],
+    az = t[o + 2];
+  const abx = t[o + 3] - ax,
+    aby = t[o + 4] - ay,
+    abz = t[o + 5] - az;
+  const acx = t[o + 6] - ax,
+    acy = t[o + 7] - ay,
+    acz = t[o + 8] - az;
+  const apx = p[0] - ax,
+    apy = p[1] - ay,
+    apz = p[2] - az;
 
   // Barycentric projection onto the triangle plane, clamped to the triangle —
   // the standard Ericson formulation.
@@ -339,10 +364,14 @@ function pointTriangleDistance(p: readonly number[], t: Float64Array, o: number)
   let u = 0;
   let v = 0;
   if (d1 > 0 || d2 > 0) {
-    const bpx = p[0] - (ax + abx), bpy = p[1] - (ay + aby), bpz = p[2] - (az + abz);
+    const bpx = p[0] - (ax + abx),
+      bpy = p[1] - (ay + aby),
+      bpz = p[2] - (az + abz);
     const d3 = abx * bpx + aby * bpy + abz * bpz;
     const d4 = acx * bpx + acy * bpy + acz * bpz;
-    const cpx = p[0] - (ax + acx), cpy = p[1] - (ay + acy), cpz = p[2] - (az + acz);
+    const cpx = p[0] - (ax + acx),
+      cpy = p[1] - (ay + acy),
+      cpz = p[2] - (az + acz);
     const d5 = abx * cpx + aby * cpy + abz * cpz;
     const d6 = acx * cpx + acy * cpy + acz * cpz;
     const vc = d1 * d4 - d3 * d2;

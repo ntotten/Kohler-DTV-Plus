@@ -12,14 +12,14 @@ All water temperatures in the DTV+ system are stored as **Celsius multiplied by 
 
 The controller runs on a resource-constrained microcontroller with no hardware floating-point unit. Floating-point emulation is slow and increases code size. By doubling the Celsius value, every half-degree maps to an integer:
 
-| Actual Temp | Cx2 Value | Notes                  |
-|-------------|-----------|------------------------|
-| 30.0 C      | 60        | Minimum system temp    |
-| 35.0 C      | 70        |                        |
-| 37.5 C      | 75        | Half-degree precision  |
-| 40.0 C      | 80        |                        |
-| 43.0 C      | 86        |                        |
-| 49.0 C      | 98        | Maximum water temp     |
+| Actual Temp | Cx2 Value | Notes                 |
+| ----------- | --------- | --------------------- |
+| 30.0 C      | 60        | Minimum system temp   |
+| 35.0 C      | 70        |                       |
+| 37.5 C      | 75        | Half-degree precision |
+| 40.0 C      | 80        |                       |
+| 43.0 C      | 86        |                       |
+| 49.0 C      | 98        | Maximum water temp    |
 
 This gives 0.5 degree C resolution with pure integer math -- no floating point needed.
 
@@ -27,10 +27,10 @@ This gives 0.5 degree C resolution with pure integer math -- no floating point n
 
 ## Temperature Limits
 
-| Constant            | Cx2 Value | Actual Temp | Description                                   |
-|---------------------|-----------|-------------|-----------------------------------------------|
-| `MIN_SYS_VALVE_TEMP`| 60       | 30.0 C      | Below this, the Full Cold flag is set          |
-| `MAX_WATER_TEMP`    | 98        | 49.0 C      | Absolute maximum water temperature setpoint    |
+| Constant             | Cx2 Value | Actual Temp | Description                                 |
+| -------------------- | --------- | ----------- | ------------------------------------------- |
+| `MIN_SYS_VALVE_TEMP` | 60        | 30.0 C      | Below this, the Full Cold flag is set       |
+| `MAX_WATER_TEMP`     | 98        | 49.0 C      | Absolute maximum water temperature setpoint |
 
 When the actual temperature drops below `MIN_SYS_VALVE_TEMP` (Cx2 = 60), the system sets a "Full Cold" flag indicating the valve cannot achieve the requested temperature -- typically because the hot supply is unavailable or insufficient.
 
@@ -41,6 +41,7 @@ When the actual temperature drops below `MIN_SYS_VALVE_TEMP` (Cx2 = 60), the sys
 The DTV+ controller does **not** perform PID (proportional-integral-derivative) temperature regulation itself. The mixing valve contains its own internal control loop that blends hot and cold water to achieve a target temperature.
 
 The DTV+ controller's role is limited to:
+
 1. Sending a **temperature setpoint** (as a Cx2 value) to the valve.
 2. Reading the **actual temperature** back from the valve's thermistor.
 3. Reporting errors if the valve cannot reach the setpoint.
@@ -60,15 +61,16 @@ Fx2 = ((Cx2 * 9) / 5) + 64
 ```
 
 Breaking this down:
+
 - `Cx2 * 9 / 5` converts the doubled-Celsius scale factor to doubled-Fahrenheit.
 - `+ 64` adds the Fahrenheit offset (32 degrees F, doubled = 64).
 
 ### Steam Temperature Range
 
-| Parameter       | Cx2 | Actual         |
-|-----------------|-----|----------------|
-| Steam min temp  | 48  | 24 C / 75.2 F  |
-| Steam max temp  | --  | 125 F          |
+| Parameter      | Cx2 | Actual        |
+| -------------- | --- | ------------- |
+| Steam min temp | 48  | 24 C / 75.2 F |
+| Steam max temp | --  | 125 F         |
 
 ---
 
@@ -129,7 +131,7 @@ def fx2_to_cx2(fx2_value):
 ### Quick Reference Table
 
 | Cx2 | Celsius | Fahrenheit | Fx2 |
-|-----|---------|------------|-----|
+| --- | ------- | ---------- | --- |
 | 60  | 30.0    | 86.0       | 172 |
 | 70  | 35.0    | 95.0       | 190 |
 | 75  | 37.5    | 99.5       | 199 |

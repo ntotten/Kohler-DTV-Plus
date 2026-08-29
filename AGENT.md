@@ -14,14 +14,14 @@ may be read by Kohler engineers and by a general audience.**
 
 ## Read before working
 
-| Document | When |
-| --- | --- |
-| [DISCLAIMER.md](DISCLAIMER.md) | **Always, first.** Safety policy and the CGI risk scale. |
-| [PROTOCOL.md](PROTOCOL.md) | Anything touching the controller API. |
-| [DESIGN.md](DESIGN.md) | Anything touching the app's architecture. |
-| [research/FIELD-NOTES.md](research/FIELD-NOTES.md) | Before changing polling, command, or state-handling behaviour. Other people's failures are recorded there for a reason. |
-| [INVESTIGATIONS.md](INVESTIGATIONS.md) | Any diagnostic or observability work. Open questions and the experiments queued to answer them. **Add findings here; add what happened to the story log.** |
-| [research/SOURCES.md](research/SOURCES.md) | Before searching the web from scratch. |
+| Document                                           | When                                                                                                                                                       |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [DISCLAIMER.md](DISCLAIMER.md)                     | **Always, first.** Safety policy and the CGI risk scale.                                                                                                   |
+| [PROTOCOL.md](PROTOCOL.md)                         | Anything touching the controller API.                                                                                                                      |
+| [DESIGN.md](DESIGN.md)                             | Anything touching the app's architecture.                                                                                                                  |
+| [research/FIELD-NOTES.md](research/FIELD-NOTES.md) | Before changing polling, command, or state-handling behaviour. Other people's failures are recorded there for a reason.                                    |
+| [INVESTIGATIONS.md](INVESTIGATIONS.md)             | Any diagnostic or observability work. Open questions and the experiments queued to answer them. **Add findings here; add what happened to the story log.** |
+| [research/SOURCES.md](research/SOURCES.md)         | Before searching the web from scratch.                                                                                                                     |
 
 ## Hard rules
 
@@ -66,6 +66,7 @@ detail is gone by the next session.
 ## 2026-07-26
 
 ### 12:42 — Video review kills the "phantom touch" theory
+
 The 2026-07-14 recording shows the controller still reporting "running" for
 about a minute after the water stops. A commanded stop sets state immediately,
 so nothing commanded this. The valve stops and the controller finds out later.
@@ -80,7 +81,7 @@ see — those get collated when we contact them.
 
 ## Conventions
 
-- **Commits:** grouped by theme, never one huge commit. Explain *why*, and record
+- **Commits:** grouped by theme, never one huge commit. Explain _why_, and record
   what was wrong before when fixing something.
 - **Evidence lives in `research/`.** Raw captures under `research/diagnostics/`
   with the date in the filename.

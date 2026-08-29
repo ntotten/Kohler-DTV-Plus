@@ -27,26 +27,26 @@ is the replacement input.
 
 ## What's here
 
-| | |
-| --- | --- |
-| [app/](app/) | React + Vite interface styled after the K-99693. Runs on a dev machine, a LAN box, or a phone browser. |
-| [viewer/](viewer/) | Separate 3D parts viewer and STL exporter for modification work. No hardware surface — it cannot touch the valve. |
-| [PROTOCOL.md](PROTOCOL.md) | The controller's CGI API — transport quirks, endpoints, payload fields, safety ratings. |
-| [DESIGN.md](DESIGN.md) | Architecture, decisions, testing, and what the Android/Capacitor port needs. |
-| [DISCLAIMER.md](DISCLAIMER.md) | Safety warnings, CGI risk scale, and how this repo enforces it. |
-| [LICENSE.md](LICENSE.md) | Open Maker License, plus what it does and does not cover. |
-| [CONTRIBUTING.md](CONTRIBUTING.md) / [CLA.md](CLA.md) | How to contribute safely, and the contributor agreement. |
-| [AGENT.md](AGENT.md) / [CLAUDE.md](CLAUDE.md) | Contract for agents working here, including the story-log convention. |
-| [STORY-LOG.md](STORY-LOG.md) | Significant events and reversals, newest first. |
-| [INVESTIGATIONS.md](INVESTIGATIONS.md) | What we are still trying to find out, and the experiments queued to find it out. Includes the open investigation into the shower stopping mid-use. |
-| [docs/](docs/) | Controller reference — hardware, firmware update pipeline, CGI surface, security posture, what firmware extraction would take, and the [replacement-controller design](docs/replacement-controller/CONTROLLER-DESIGN.md). |
-| [research/SOURCES.md](research/SOURCES.md) | Monitoring index — where to sweep for new community findings. |
-| [research/FIELD-NOTES.md](research/FIELD-NOTES.md) | What breaks when you automate a DTV+ — failure reports from the community, sourced, with what we changed in response. |
-| [research/diagnostics/](research/diagnostics/) | Raw controller captures, dated — error logs, idle baselines, and the extraction probe. |
-| [research/reference-links.md](research/reference-links.md) | Bibliography — projects, integrations, Kohler documents, FCC exhibits, patents, platform sources. |
-| [research/controller-mirror/](research/controller-mirror/) | Verbatim mirror of the controller's own web UI, plus live payload captures. |
-| [research/xagon0/](research/xagon0/) | Vendored third-party analysis — see [PROVENANCE.md](research/xagon0/PROVENANCE.md). |
-| [research/reference/](research/reference/) | Kohler's user guide, rendered for interface reference. |
+|                                                            |                                                                                                                                                                                                                           |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [app/](app/)                                               | React + Vite interface styled after the K-99693. Runs on a dev machine, a LAN box, or a phone browser.                                                                                                                    |
+| [viewer/](viewer/)                                         | Separate 3D parts viewer and STL exporter for modification work. No hardware surface — it cannot touch the valve.                                                                                                         |
+| [PROTOCOL.md](PROTOCOL.md)                                 | The controller's CGI API — transport quirks, endpoints, payload fields, safety ratings.                                                                                                                                   |
+| [DESIGN.md](DESIGN.md)                                     | Architecture, decisions, testing, and what the Android/Capacitor port needs.                                                                                                                                              |
+| [DISCLAIMER.md](DISCLAIMER.md)                             | Safety warnings, CGI risk scale, and how this repo enforces it.                                                                                                                                                           |
+| [LICENSE.md](LICENSE.md)                                   | Open Maker License, plus what it does and does not cover.                                                                                                                                                                 |
+| [CONTRIBUTING.md](CONTRIBUTING.md) / [CLA.md](CLA.md)      | How to contribute safely, and the contributor agreement.                                                                                                                                                                  |
+| [AGENT.md](AGENT.md) / [CLAUDE.md](CLAUDE.md)              | Contract for agents working here, including the story-log convention.                                                                                                                                                     |
+| [STORY-LOG.md](STORY-LOG.md)                               | Significant events and reversals, newest first.                                                                                                                                                                           |
+| [INVESTIGATIONS.md](INVESTIGATIONS.md)                     | What we are still trying to find out, and the experiments queued to find it out. Includes the open investigation into the shower stopping mid-use.                                                                        |
+| [docs/](docs/)                                             | Controller reference — hardware, firmware update pipeline, CGI surface, security posture, what firmware extraction would take, and the [replacement-controller design](docs/replacement-controller/CONTROLLER-DESIGN.md). |
+| [research/SOURCES.md](research/SOURCES.md)                 | Monitoring index — where to sweep for new community findings.                                                                                                                                                             |
+| [research/FIELD-NOTES.md](research/FIELD-NOTES.md)         | What breaks when you automate a DTV+ — failure reports from the community, sourced, with what we changed in response.                                                                                                     |
+| [research/diagnostics/](research/diagnostics/)             | Raw controller captures, dated — error logs, idle baselines, and the extraction probe.                                                                                                                                    |
+| [research/reference-links.md](research/reference-links.md) | Bibliography — projects, integrations, Kohler documents, FCC exhibits, patents, platform sources.                                                                                                                         |
+| [research/controller-mirror/](research/controller-mirror/) | Verbatim mirror of the controller's own web UI, plus live payload captures.                                                                                                                                               |
+| [research/xagon0/](research/xagon0/)                       | Vendored third-party analysis — see [PROVENANCE.md](research/xagon0/PROVENANCE.md).                                                                                                                                       |
+| [research/reference/](research/reference/)                 | Kohler's user guide, rendered for interface reference.                                                                                                                                                                    |
 
 ## Quick start
 
@@ -117,7 +117,7 @@ including Tim's original commits, is kept here intact.
   safety ratings, RS-485 protocol analysis, hardware and repair documentation.
 - [dcmeglio/kohler-python](https://github.com/dcmeglio/kohler-python) — endpoint
   and parameter reference.
-- Kohler's *User Guide — Digital Interface and System Controller for DTV+*
+- Kohler's _User Guide — Digital Interface and System Controller for DTV+_
   (1241234-5-D) for the interface design.
 
 ## License

@@ -119,9 +119,7 @@ export function computeMeshStats(geometry: RawGeometry, options: MeshStatsOption
 function signedTetraVolume(t: Float64Array): number {
   const [ax, ay, az, bx, by, bz, cx, cy, cz] = t;
   // ax . (b x c) / 6
-  return (
-    (ax * (by * cz - bz * cy) + ay * (bz * cx - bx * cz) + az * (bx * cy - by * cx)) / 6
-  );
+  return (ax * (by * cz - bz * cy) + ay * (bz * cx - bx * cz) + az * (bx * cy - by * cx)) / 6;
 }
 
 function triangleArea(t: Float64Array): number {

@@ -98,11 +98,7 @@ function bool(v: unknown): boolean {
   return s === 'true' || s === '1' || s === 'on' || s === 'yes';
 }
 
-function buildValve(
-  n: 1 | 2,
-  values: KohlerValues | null,
-  system: KohlerSystemInfo | null,
-): Valve {
+function buildValve(n: 1 | 2, values: KohlerValues | null, system: KohlerSystemInfo | null): Valve {
   const p = n === 2 ? 'v2_' : '';
   const installed = bool(values?.[n === 1 ? 'valve1_installed' : 'valve2_installed']);
   const defaultOutlet = num(values?.[n === 1 ? 'def_outlet' : 'v2_def_outlet']);

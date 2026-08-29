@@ -2,12 +2,12 @@
 
 Kohler's own documentation, used to reproduce the K-99693 interface.
 
-| | |
-| --- | --- |
-| `DTV-Plus-UserGuide-1241234-5.pdf` | *User Guide — Digital Interface and System Controller for DTV+*, revision 1241234-5-D. 92 pages. The interface screens are pages 42-88. |
-| `K-99693-P_spec.pdf` | K-99693-P specification sheet. |
-| `guide-text.txt` | Text extracted from the user guide, for searching. |
-| `interface-screens/` | The seven pages that informed the UI, as WebP. |
+|                                    |                                                                                                                                         |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `DTV-Plus-UserGuide-1241234-5.pdf` | _User Guide — Digital Interface and System Controller for DTV+_, revision 1241234-5-D. 92 pages. The interface screens are pages 42-88. |
+| `K-99693-P_spec.pdf`               | K-99693-P specification sheet.                                                                                                          |
+| `guide-text.txt`                   | Text extracted from the user guide, for searching.                                                                                      |
+| `interface-screens/`               | The seven pages that informed the UI, as WebP.                                                                                          |
 
 ## Regenerating the page renders
 

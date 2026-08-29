@@ -42,11 +42,11 @@ guessed unit is worse than a refusal, because it looks like an answer.
 
 The conventions are fixed:
 
-| Space | Units | Up axis | Used for |
-| --- | --- | --- | --- |
-| Source | as declared per file | as declared per file | nothing directly |
-| Export | mm | Z | STL output, all measurements, the pointer readout |
-| Display | mm | Y | the viewport only |
+| Space   | Units                | Up axis              | Used for                                          |
+| ------- | -------------------- | -------------------- | ------------------------------------------------- |
+| Source  | as declared per file | as declared per file | nothing directly                                  |
+| Export  | mm                   | Z                    | STL output, all measurements, the pointer readout |
+| Display | mm                   | Y                    | the viewport only                                 |
 
 Measurements are taken in **export** space, not display space, so the numbers in
 the inspector are the numbers in the downloaded file.
@@ -54,7 +54,7 @@ the inspector are the numbers in the downloaded file.
 ### Why not three's `STLExporter`
 
 `STLExporter` serialises a scene graph, which means you export what you are
-*looking at* — display space, whatever orientation the viewport happens to use.
+_looking at_ — display space, whatever orientation the viewport happens to use.
 That is precisely the failure this tool exists to prevent. [`src/core/stl.ts`](src/core/stl.ts)
 writes the format directly from the source geometry and the declared units
 instead, in about fifty lines, and can be tested in plain Node with no WebGL
@@ -96,11 +96,11 @@ downloadable — pick "As published" or "Repaired" next to the units selector.
 
 Three distinct fixes, which get conflated and are not the same thing:
 
-| Fix | What it addresses | Adds geometry? |
-| --- | --- | --- |
-| **Welding** (merge by distance) | *Cracks* — triangles that touch but reference duplicate vertices, so their shared edge is double-counted | no |
-| **Capping** (hole filling) | *Holes* — a boundary loop with nothing on the other side | yes |
-| **Seam collapse** | *T-junctions* — a hairline edge claimed by four triangles instead of two | no |
+| Fix                             | What it addresses                                                                                        | Adds geometry? |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------- |
+| **Welding** (merge by distance) | _Cracks_ — triangles that touch but reference duplicate vertices, so their shared edge is double-counted | no             |
+| **Capping** (hole filling)      | _Holes_ — a boundary loop with nothing on the other side                                                 | yes            |
+| **Seam collapse**               | _T-junctions_ — a hairline edge claimed by four triangles instead of two                                 | no             |
 
 Welding runs first and is not optional: a hole finder run on unwelded geometry
 sees every crack as a hole and would "fill" seams that were never open.
@@ -134,11 +134,11 @@ widget also reaches the twelve 45° edge-on views and the eight isometrics:
 Around it, in Fusion's arrangement — all of it idling at low opacity and
 brightening under the pointer:
 
-| Control | Where | What it does |
-| --- | --- | --- |
-| Four triangles | the four sides | 90° onto the neighbouring region |
+| Control            | Where                         | What it does                          |
+| ------------------ | ----------------------------- | ------------------------------------- |
+| Four triangles     | the four sides                | 90° onto the neighbouring region      |
 | A swept arrow band | wrapping the top-right corner | **Roll** ±90° about the line of sight |
-| A house | top left | Back to the default framing, refitted |
+| A house            | top left                      | Back to the default framing, refitted |
 
 Roll is the one rotation the cube itself cannot express, because every cube
 region implies a canonical up vector. It is also the one that needed care:
@@ -153,11 +153,11 @@ future rename degrades to "rolls but orbits Y-up" instead of throwing.
 Each face carries **two lines**: the CAD view name over the export axis it
 actually is.
 
-| | `+` | `−` |
-| --- | --- | --- |
-| X | `RIGHT` | `LEFT` |
-| Y | `BACK` | `FRONT` |
-| Z | `TOP` | `BOTTOM` |
+|     | `+`     | `−`      |
+| --- | ------- | -------- |
+| X   | `RIGHT` | `LEFT`   |
+| Y   | `BACK`  | `FRONT`  |
+| Z   | `TOP`   | `BOTTOM` |
 
 Both, because each covers the other's failure. The name is what anyone actually
 reaches for — nobody thinks "show me −Y". But the name is a convention imposed
@@ -224,7 +224,7 @@ Measured, not asserted — a 30 px cube drag lands on pixels identical to a 60 p
 model drag.
 
 That also closed an inconsistency that was impossible to explain: dragging the
-*empty* corner beside the cube already orbited, because the hit test returned
+_empty_ corner beside the cube already orbited, because the hit test returned
 nothing there and the event fell through to OrbitControls. One widget, two
 behaviours, and no way to tell in advance which you would get.
 
@@ -236,7 +236,7 @@ on a button is ambiguous in a way a drag on the cube is not.
 One thing has to be undone for this to work. The `pointerdown` is deliberately
 left to reach OrbitControls, so the drag gets the controls' own feel rather than
 a second implementation of it — but that means a click that wobbles two pixels
-has *already* queued a rotation, and damping spends only `dampingFactor` of it
+has _already_ queued a rotation, and damping spends only `dampingFactor` of it
 per frame. `renderFrame` applies the tween's pose and **then** calls
 `controls.update()`, so the leftover would be added on top of every frame of the
 animation and the view would settle a degree or two off the axis you clicked,
@@ -313,7 +313,7 @@ record's provenance note rather than presented as a measurement.
 
 The practical consequence: the standard views are CAD views and none of them
 shows the interface upright. **"Look at it, upright"** in the Appearance panel
-does, and it needs no per-part configuration — the anchor's `v` vector *is* the
+does, and it needs no per-part configuration — the anchor's `v` vector _is_ the
 artwork's up direction, so any decal on any part can be viewed the right way up.
 
 ### An anchor is three vectors
@@ -344,13 +344,13 @@ their right hand is on −Z. That is what makes `u × v` come out as +Y.
 `npm run verify` refuses a decal that is wrong in a way rendering would not
 reveal:
 
-| Check | Catches |
-| --- | --- |
-| `u · v ≈ 0` | A sheared anchor — always a mistyped corner |
-| Artwork aspect vs face aspect, 1% | Silently squashed artwork, unless `"fit": "contain"` says so on purpose |
-| Every corner within 0.05 mm of the mesh | An anchor that is internally consistent and simply not on the part |
-| Decal normal vs the facet beneath it | `u` and `v` swapped, which buries the artwork inside the part |
-| Export triangle count unchanged | A decal reaching the downloaded STL |
+| Check                                   | Catches                                                                 |
+| --------------------------------------- | ----------------------------------------------------------------------- |
+| `u · v ≈ 0`                             | A sheared anchor — always a mistyped corner                             |
+| Artwork aspect vs face aspect, 1%       | Silently squashed artwork, unless `"fit": "contain"` says so on purpose |
+| Every corner within 0.05 mm of the mesh | An anchor that is internally consistent and simply not on the part      |
+| Decal normal vs the facet beneath it    | `u` and `v` swapped, which buries the artwork inside the part           |
+| Export triangle count unchanged         | A decal reaching the downloaded STL                                     |
 
 The aspect check is the one that earns its keep. A stretched screenshot is the
 same class of error as a guessed unit: it renders perfectly, and it is wrong.
@@ -394,10 +394,10 @@ agree.
 3. **Parts are single meshes.** The Kohler CAD is one unnamed group, so buttons
    and bezel cannot be picked or isolated separately without splitting the mesh
    by hand in Blender first.
-3. **Dropped files assume mm and Z-up**, because nothing in the file says
+4. **Dropped files assume mm and Z-up**, because nothing in the file says
    otherwise. The status line says so every time. Use a catalog entry for
    anything headed to a machine.
-4. **DWG, SKP and RFA are not supported** and will not be — they have no browser
+5. **DWG, SKP and RFA are not supported** and will not be — they have no browser
    loader and need offline conversion. DXF is not supported either; three.js
    ships no loader for it.
 

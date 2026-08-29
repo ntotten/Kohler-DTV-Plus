@@ -10,12 +10,7 @@ import {
 } from './catalog/catalog';
 import type { CatalogEntry } from './catalog/types';
 import { computeMeshStats, estimatedMassGrams, volumeCm3, type MeshStats } from './core/meshStats';
-import {
-  exportFilename,
-  exportHeader,
-  readBinaryStlCount,
-  writeBinaryStl,
-} from './core/stl';
+import { exportFilename, exportHeader, readBinaryStlCount, writeBinaryStl } from './core/stl';
 import { repairMesh, summarizeRepair, type RepairResult } from './core/repair';
 import {
   decalQuad,
@@ -359,11 +354,7 @@ function renderStats(stats: MeshStats): void {
  * Repair report, shown alongside the measurements so the difference between the
  * two downloads is visible before either is chosen.
  */
-function renderRepairReport(
-  repair: RepairResult,
-  before: MeshStats,
-  after: MeshStats,
-): void {
+function renderRepairReport(repair: RepairResult, before: MeshStats, after: MeshStats): void {
   const { report } = repair;
   const panel = $('repair-report');
   const stats = $('repair-stats');
@@ -386,11 +377,7 @@ function renderRepairReport(
   if (report.collapsedEdges) {
     rows.push(['Seams collapsed', String(report.collapsedEdges)]);
   }
-  rows.push([
-    'Non-manifold',
-    String(report.nonManifoldEdges),
-    report.nonManifoldEdges > 0,
-  ]);
+  rows.push(['Non-manifold', String(report.nonManifoldEdges), report.nonManifoldEdges > 0]);
   // The number that decides whether the repair is safe to machine against.
   rows.push(['Envelope drift', `${drift.toFixed(4)} mm`, drift > 0.001]);
   if (after.closed) {
@@ -522,7 +509,10 @@ body.addEventListener('drop', (event) => {
 async function loadDroppedFile(file: File): Promise<void> {
   const format = detectFormat(file.name);
   if (!format) {
-    setStatus(`${file.name}: unrecognised extension. Supported: obj, stl, 3mf, gltf, glb, 3ds, ply.`, true);
+    setStatus(
+      `${file.name}: unrecognised extension. Supported: obj, stl, 3mf, gltf, glb, 3ds, ply.`,
+      true,
+    );
     return;
   }
 

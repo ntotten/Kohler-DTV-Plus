@@ -96,9 +96,7 @@ export default function App() {
             />
           )}
 
-          {screen === 'music' && (
-            <MusicScreen model={model} onHome={() => setScreen('home')} />
-          )}
+          {screen === 'music' && <MusicScreen model={model} onHome={() => setScreen('home')} />}
 
           {screen === 'settings' && (
             <SettingsScreen

@@ -164,7 +164,10 @@ describe('validation', () => {
   it('allows the same mismatch once contain is declared', () => {
     expect(() =>
       validateDecal(
-        clone({ fit: 'contain', image: { url: 'x.png', intrinsicWidth: 1800, intrinsicHeight: 1120 } }),
+        clone({
+          fit: 'contain',
+          image: { url: 'x.png', intrinsicWidth: 1800, intrinsicHeight: 1120 },
+        }),
       ),
     ).not.toThrow();
   });
@@ -178,7 +181,9 @@ describe('validation', () => {
       validateDecal(clone({ image: { url: 'x.svg', intrinsicWidth: inside, intrinsicHeight: h } })),
     ).not.toThrow();
     expect(() =>
-      validateDecal(clone({ image: { url: 'x.svg', intrinsicWidth: outside, intrinsicHeight: h } })),
+      validateDecal(
+        clone({ image: { url: 'x.svg', intrinsicWidth: outside, intrinsicHeight: h } }),
+      ),
     ).toThrow(DecalError);
   });
 
@@ -209,9 +214,9 @@ describe('validation', () => {
   });
 
   it('rejects duplicate ids in a set', () => {
-    expect(() =>
-      validateDecalSet({ decalsVersion: '1', decals: [FACEPLATE, clone({})] }),
-    ).toThrow(/duplicate/);
+    expect(() => validateDecalSet({ decalsVersion: '1', decals: [FACEPLATE, clone({})] })).toThrow(
+      /duplicate/,
+    );
   });
 });
 

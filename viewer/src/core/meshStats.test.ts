@@ -19,12 +19,18 @@ function box(w: number, h: number, d: number): { positions: Float32Array } {
     [0, h, d],
   ];
   const faces = [
-    [0, 3, 2], [0, 2, 1], // bottom (-Z)
-    [4, 5, 6], [4, 6, 7], // top (+Z)
-    [0, 1, 5], [0, 5, 4], // -Y
-    [2, 3, 7], [2, 7, 6], // +Y
-    [1, 2, 6], [1, 6, 5], // +X
-    [0, 4, 7], [0, 7, 3], // -X
+    [0, 3, 2],
+    [0, 2, 1], // bottom (-Z)
+    [4, 5, 6],
+    [4, 6, 7], // top (+Z)
+    [0, 1, 5],
+    [0, 5, 4], // -Y
+    [2, 3, 7],
+    [2, 7, 6], // +Y
+    [1, 2, 6],
+    [1, 6, 5], // +X
+    [0, 4, 7],
+    [0, 7, 3], // -X
   ];
   const positions = new Float32Array(faces.length * 9);
   faces.forEach((face, f) => {
@@ -137,7 +143,10 @@ describe('computeMeshStats — indexed input', () => {
   it('produces identical stats for indexed and expanded geometry', () => {
     const positions = new Float32Array([0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0]);
     const indices = new Uint32Array([0, 1, 2, 0, 2, 3]);
-    const indexed = computeMeshStats({ positions, indices }, { sourceUnit: 'mm', sourceUpAxis: 'z' });
+    const indexed = computeMeshStats(
+      { positions, indices },
+      { sourceUnit: 'mm', sourceUpAxis: 'z' },
+    );
     expect(indexed.triangleCount).toBe(2);
     expect(indexed.surfaceArea).toBeCloseTo(1, 6);
   });
