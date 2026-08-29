@@ -27,6 +27,7 @@
 
 pub mod pty;
 pub mod rig;
-
+pub mod steam;
 pub mod transcript;
+pub mod valve;
 pub mod wire;
