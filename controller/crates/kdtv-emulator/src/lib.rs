@@ -26,3 +26,5 @@
 )]
 
 pub mod pty;
+
+pub mod transcript;
