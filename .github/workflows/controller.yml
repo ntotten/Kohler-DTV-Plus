@@ -1,0 +1,122 @@
+# The replacement controller: format, lint, tests, the transmit gate, and the
+# Raspberry Pi cross-build.
+#
+# Every job here is also a line in controller/scripts/test.sh, in the same order,
+# so a green run locally means a green run here.
+#
+# No job in this workflow can reach real hardware. That is not a policy — every
+# wire fixture in the repository is tier [C], derived from third-party reverse
+# engineering and unverified against this installation, and the daemon's
+# transmit gate refuses to open a real serial port until Phase 1 capture
+# promotes them. The `gate` job asserts the gate is still closed, so it stays a
+# deliberate, reviewable act to open it rather than a flag someone flips.
+
+name: controller
+
+on:
+  push:
+    branches: [main]
+    paths: ["controller/**", ".github/workflows/controller.yml"]
+  pull_request:
+    paths: ["controller/**", ".github/workflows/controller.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: 1
+
+defaults:
+  run:
+    working-directory: controller
+
+jobs:
+  fmt:
+    name: rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # rustup reads controller/rust-toolchain.toml and installs the pinned
+      # toolchain, so there is no version to keep in step with here.
+      - run: cargo fmt --all --check
+
+  clippy:
+    name: clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: controller
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+  test:
+    name: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: controller
+      - run: cargo test --workspace --all-features
+      - name: documentation builds without broken links
+        run: cargo doc --workspace --no-deps --document-private-items
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  gate:
+    name: transmit gate is closed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: controller
+      - name: no fixture claims to have been captured from this hardware
+        # Phase 1 capture has not run. A fixture at tier [A] would let the gate
+        # open, so its appearance must break the build and be argued for in a
+        # pull request rather than merged quietly.
+        run: |
+          if grep -rql 'provenance *= *"captured"' fixtures/ 2>/dev/null; then
+            echo "::error::a fixture claims tier [A] provenance; Phase 1 capture has not happened"
+            exit 1
+          fi
+      - name: the gate's own tests
+        run: cargo test --package kdtv-proto gate
+
+  cross:
+    name: Raspberry Pi cross-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: controller
+          key: aarch64
+      - name: install the aarch64 cross-toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc-aarch64-linux-gnu
+      - run: rustup target add aarch64-unknown-linux-gnu
+      - run: ./scripts/build.sh --pi
+      - name: the systemd unit is valid
+        run: |
+          systemd-analyze verify deploy/kdtvd.service 2>&1 \
+            | grep -v 'is not executable' \
+            | tee /tmp/unit-check
+          # systemd-analyze reports problems on stderr and exits zero, so the
+          # absence of output is the assertion.
+          if [ -s /tmp/unit-check ]; then
+            echo "::error::systemd-analyze reported problems with the unit"
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kdtvd-aarch64
+          path: |
+            controller/target/aarch64-unknown-linux-gnu/release/kdtvd
+            controller/deploy/kdtvd.service
+          if-no-files-found: error

@@ -1,0 +1,27 @@
+# Repository-wide formatting. oxfmt owns the Markdown, TypeScript, CSS, YAML,
+# HTML and JSON; cargo fmt owns the Rust and is checked in the controller
+# workflow. See AGENT.md — formatting is mechanical, so it is checked rather
+# than discussed.
+
+name: format
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  oxfmt:
+    name: oxfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - run: npm install
+      - run: npm run format:check
