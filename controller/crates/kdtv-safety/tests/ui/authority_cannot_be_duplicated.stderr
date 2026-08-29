@@ -1,0 +1,11 @@
+error[E0599]: no method named `clone` found for struct `OperatorAck` in the current scope
+ --> tests/ui/authority_cannot_be_duplicated.rs:8:46
+  |
+8 |     let _ = OperatorAck::issue(CommandId(2)).clone();
+  |                                              ^^^^^ method not found in `OperatorAck`
+
+error[E0599]: no method named `clone` found for struct `StartAuthorization` in the current scope
+ --> tests/ui/authority_cannot_be_duplicated.rs:9:64
+  |
+9 |     let _ = StartAuthorization::issue(BootId(1), CommandId(1)).clone();
+  |                                                                ^^^^^ method not found in `StartAuthorization`

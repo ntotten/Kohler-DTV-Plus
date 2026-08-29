@@ -1,0 +1,10 @@
+error[E0624]: associated function `new` is private
+ --> tests/ui/open_grant_cannot_be_forged.rs:8:24
+  |
+8 |     let _ = OpenGrant::new(ZoneId::Zone1, CommandId(1), BootId(1));
+  |                        ^^^ private associated function
+  |
+ ::: src/grant.rs
+  |
+  |     pub(crate) fn new(zone: ZoneId, command: CommandId, boot: BootId) -> Self {
+  |     ------------------------------------------------------------------------- private associated function defined here

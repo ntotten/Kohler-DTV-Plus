@@ -1,0 +1,17 @@
+error[E0382]: use of moved value: `auth`
+  --> tests/ui/an_authorisation_is_spent_by_the_call.rs:17:11
+   |
+15 |     let auth = StartAuthorization::issue(BootId(1), CommandId(1));
+   |         ---- move occurs because `auth` has type `StartAuthorization`, which does not implement the `Copy` trait
+16 |     spend(auth);
+   |           ---- value moved here
+17 |     spend(auth);
+   |           ^^^^ value used here after move
+   |
+note: consider changing this parameter type in function `spend` to borrow instead if owning the value isn't necessary
+  --> tests/ui/an_authorisation_is_spent_by_the_call.rs:12:14
+   |
+12 | fn spend(_a: StartAuthorization) {}
+   |    -----     ^^^^^^^^^^^^^^^^^^ this parameter takes ownership of the value
+   |    |
+   |    in this function

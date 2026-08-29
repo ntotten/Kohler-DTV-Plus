@@ -1,0 +1,15 @@
+error[E0308]: mismatched types
+ --> tests/ui/no_arithmetic_between_encodings.rs:9:18
+  |
+9 |     let _ = c == f;
+  |             -    ^ expected `Cx2`, found `Fx2`
+  |             |
+  |             expected because this is `Cx2`
+
+error[E0308]: mismatched types
+  --> tests/ui/no_arithmetic_between_encodings.rs:10:17
+   |
+10 |     let _ = c < f;
+   |             -   ^ expected `Cx2`, found `Fx2`
+   |             |
+   |             expected because this is `Cx2`

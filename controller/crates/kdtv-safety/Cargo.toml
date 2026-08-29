@@ -22,5 +22,9 @@ smallvec = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
 
+[dev-dependencies]
+kdtv-telemetry = { workspace = true }
+trybuild = { workspace = true }
+
 [lints]
 workspace = true
