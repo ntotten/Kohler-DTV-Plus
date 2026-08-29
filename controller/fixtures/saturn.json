@@ -1,0 +1,288 @@
+[
+  {
+    "id": "saturn.address_allocate",
+    "link": { "zone": "zone1" },
+    "direction": "to_device",
+    "bytes": "aa550f3a020203b0",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Protocol Sequences, Address Discovery (4-Step), step 3 — DATA_LEN 2 from § Field Definitions, not the diagram's 1; unresolved [?]"
+      }
+    },
+    "decoded": { "address": 15, "control": 58, "data": "0203", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.address_clear",
+    "link": { "zone": "zone1" },
+    "direction": "to_device",
+    "bytes": "aa550f3a0103b3",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Annotated Packet Captures, Example 3: Address Clear Broadcast — checksum recomputed; the printed 0xAE is stale"
+      }
+    },
+    "decoded": { "address": 15, "control": 58, "data": "03", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.address_enquiry",
+    "link": { "zone": "zone1" },
+    "direction": "to_device",
+    "bytes": "aa550f3a0101b5",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Protocol Sequences, Address Discovery (4-Step), step 1 — derived from § Field Definitions because the diagram's DATA_LEN contradicts the bytes it prints; unresolved [?]"
+      }
+    },
+    "decoded": { "address": 15, "control": 58, "data": "01", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.all_off",
+    "link": { "zone": "zone2" },
+    "direction": "to_device",
+    "bytes": "aa55038702000074",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Control Bytes (Command Set), Write Commands — 0x87 with an empty bitmap; derived from § Field Definitions, no capture shows an all-off frame"
+      }
+    },
+    "decoded": { "address": 3, "control": 135, "data": "0000", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.pause",
+    "link": { "zone": "zone2" },
+    "direction": "to_device",
+    "bytes": "aa550399010261",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Control Bytes (Command Set), Write Commands — 0x99, with § Valve State Bits; state byte derived and unresolved [?]"
+      }
+    },
+    "decoded": { "address": 3, "control": 153, "data": "02", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.read_calibration",
+    "link": { "zone": "zone1" },
+    "direction": "to_device",
+    "bytes": "aa55031000ed",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Control Bytes (Command Set), Read Commands"
+      }
+    },
+    "decoded": { "address": 3, "control": 16, "data": "", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.read_configuration",
+    "link": { "zone": "zone1" },
+    "direction": "to_device",
+    "bytes": "aa55031500e8",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Control Bytes (Command Set), Read Commands"
+      }
+    },
+    "decoded": { "address": 3, "control": 21, "data": "", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.read_diagnostics",
+    "link": { "zone": "zone1" },
+    "direction": "to_device",
+    "bytes": "aa55035400a9",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Control Bytes (Command Set), Read Commands"
+      }
+    },
+    "decoded": { "address": 3, "control": 84, "data": "", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.read_extended_status",
+    "link": { "zone": "zone1" },
+    "direction": "to_device",
+    "bytes": "aa55034000bd",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Control Bytes (Command Set), Read Commands"
+      }
+    },
+    "decoded": { "address": 3, "control": 64, "data": "", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.read_faults",
+    "link": { "zone": "zone1" },
+    "direction": "to_device",
+    "bytes": "aa55030f00ee",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Control Bytes (Command Set), Read Commands"
+      }
+    },
+    "decoded": { "address": 3, "control": 15, "data": "", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.read_firmware_type",
+    "link": { "zone": "zone1" },
+    "direction": "to_device",
+    "bytes": "aa55030200fb",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Annotated Packet Captures, Example 1: Read Valve Firmware Type — checksum recomputed per § Checksum Calculation; the printed 0xA1 is stale"
+      }
+    },
+    "decoded": { "address": 3, "control": 2, "data": "", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.read_firmware_version",
+    "link": { "zone": "zone1" },
+    "direction": "to_device",
+    "bytes": "aa55030100fc",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Protocol Sequences, Read Firmware Version"
+      }
+    },
+    "decoded": { "address": 3, "control": 1, "data": "", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.read_flow",
+    "link": { "zone": "zone1" },
+    "direction": "to_device",
+    "bytes": "aa55030c00f1",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Control Bytes (Command Set), Read Commands"
+      }
+    },
+    "decoded": { "address": 3, "control": 12, "data": "", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.read_generic_outlets",
+    "link": { "zone": "zone1" },
+    "direction": "to_device",
+    "bytes": "aa55031600e7",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Control Bytes (Command Set), Read Commands"
+      }
+    },
+    "decoded": { "address": 3, "control": 22, "data": "", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.read_outlets",
+    "link": { "zone": "zone1" },
+    "direction": "to_device",
+    "bytes": "aa55030700f6",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Control Bytes (Command Set), Read Commands"
+      }
+    },
+    "decoded": { "address": 3, "control": 7, "data": "", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.read_serial_number",
+    "link": { "zone": "zone1" },
+    "direction": "to_device",
+    "bytes": "aa55031100ec",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Control Bytes (Command Set), Read Commands"
+      }
+    },
+    "decoded": { "address": 3, "control": 17, "data": "", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.read_temperature",
+    "link": { "zone": "zone1" },
+    "direction": "to_device",
+    "bytes": "aa55030b00f2",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Control Bytes (Command Set), Read Commands"
+      }
+    },
+    "decoded": { "address": 3, "control": 11, "data": "", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.response.allocate_ack",
+    "link": { "zone": "zone1" },
+    "direction": "from_device",
+    "bytes": "aa55003a00c6",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Protocol Sequences, Address Discovery (4-Step), step 4 — derived; unresolved [?]"
+      }
+    },
+    "decoded": { "address": 0, "control": 58, "data": "", "direction": "ValveToMaster" }
+  },
+  {
+    "id": "saturn.response.firmware_type",
+    "link": { "zone": "zone1" },
+    "direction": "from_device",
+    "bytes": "aa550002011edf",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Annotated Packet Captures, Example 1 — the valve's reply, and the worked case in § Checksum Calculation that proves the sync bytes are excluded"
+      }
+    },
+    "decoded": { "address": 0, "control": 2, "data": "1e", "direction": "ValveToMaster" }
+  },
+  {
+    "id": "saturn.resume",
+    "link": { "zone": "zone2" },
+    "direction": "to_device",
+    "bytes": "aa550399010063",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Control Bytes (Command Set), Write Commands — 0x99, with § Valve State Bits; state byte derived and unresolved [?]"
+      }
+    },
+    "decoded": { "address": 3, "control": 153, "data": "00", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.set_outlets",
+    "link": { "zone": "zone2" },
+    "direction": "to_device",
+    "bytes": "aa55038702040070",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Annotated Packet Captures, Example 2: Turn On Valve Outlet (Prompt 3)"
+      }
+    },
+    "decoded": { "address": 3, "control": 135, "data": "0400", "direction": "MasterToValve" }
+  },
+  {
+    "id": "saturn.set_temperature",
+    "link": { "zone": "zone1" },
+    "direction": "to_device",
+    "bytes": "aa55038b014c25",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/saturn-protocol.md",
+        "section": "§ Control Bytes (Command Set), Write Commands — 0x8B, with § Temperature Format; payload length derived and unresolved [?]"
+      }
+    },
+    "decoded": { "address": 3, "control": 139, "data": "4c", "direction": "MasterToValve" }
+  }
+]

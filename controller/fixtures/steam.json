@@ -1,0 +1,162 @@
+[
+  {
+    "id": "steam.address_opportunity",
+    "link": "steam",
+    "direction": "to_device",
+    "bytes": "88ff0005fc55",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/dtv-plus-protocol.md",
+        "section": "§ Annotated Packet Captures, Example 3: Device Discovery 3-Step, step 1"
+      }
+    },
+    "decoded": { "cmd": 5, "dest": 255, "direction": "MasterToDevice", "payload": "", "src": 0 }
+  },
+  {
+    "id": "steam.assign_address",
+    "link": "steam",
+    "direction": "to_device",
+    "bytes": "8800000703f655",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/dtv-plus-protocol.md",
+        "section": "§ Annotated Packet Captures, Example 3: Device Discovery 3-Step, step 3"
+      }
+    },
+    "decoded": { "cmd": 7, "dest": 0, "direction": "MasterToDevice", "payload": "03", "src": 0 }
+  },
+  {
+    "id": "steam.clear_faults",
+    "link": "steam",
+    "direction": "to_device",
+    "bytes": "8803003ac355",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/dtv-plus-protocol.md",
+        "section": "§ Command Set, Status and Control Commands — 0x3A"
+      }
+    },
+    "decoded": { "cmd": 58, "dest": 3, "direction": "MasterToDevice", "payload": "", "src": 0 }
+  },
+  {
+    "id": "steam.read_status",
+    "link": "steam",
+    "direction": "to_device",
+    "bytes": "88030030cd55",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/dtv-plus-protocol.md",
+        "section": "§ Annotated Packet Captures, Example 1: Get Steam Generator Status"
+      }
+    },
+    "decoded": { "cmd": 48, "dest": 3, "direction": "MasterToDevice", "payload": "", "src": 0 }
+  },
+  {
+    "id": "steam.response.dev_request_addr",
+    "link": "steam",
+    "direction": "from_device",
+    "bytes": "8800000605f555",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/dtv-plus-protocol.md",
+        "section": "§ Annotated Packet Captures, Example 3: Device Discovery 3-Step, step 2 — the device's half, which this master decodes and cannot encode"
+      }
+    },
+    "decoded": { "cmd": 6, "dest": 0, "direction": "DeviceToMaster", "payload": "05", "src": 0 }
+  },
+  {
+    "id": "steam.response.status",
+    "link": "steam",
+    "direction": "from_device",
+    "bytes": "88000331dcdc000000001455",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/dtv-plus-protocol.md",
+        "section": "§ Protocol Sequences, Get Device Status — the device's reply"
+      }
+    },
+    "decoded": {
+      "cmd": 49,
+      "dest": 0,
+      "direction": "DeviceToMaster",
+      "payload": "dcdc00000000",
+      "src": 3
+    }
+  },
+  {
+    "id": "steam.set_duration",
+    "link": "steam",
+    "direction": "to_device",
+    "bytes": "88030034dc000ae355",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/dtv-plus-protocol.md",
+        "section": "§ Protocol Sequences, Set Device Parameter — payload shape unresolved [?] against docs/replacement-controller/STEAM-ADAPTER.md § 7"
+      }
+    },
+    "decoded": {
+      "cmd": 52,
+      "dest": 3,
+      "direction": "MasterToDevice",
+      "payload": "dc000a",
+      "src": 0
+    }
+  },
+  {
+    "id": "steam.set_temperature",
+    "link": "steam",
+    "direction": "to_device",
+    "bytes": "88030034dc000ae355",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/dtv-plus-protocol.md",
+        "section": "§ Protocol Sequences, Set Device Parameter — payload shape unresolved [?] against docs/replacement-controller/STEAM-ADAPTER.md § 7"
+      }
+    },
+    "decoded": {
+      "cmd": 52,
+      "dest": 3,
+      "direction": "MasterToDevice",
+      "payload": "dc000a",
+      "src": 0
+    }
+  },
+  {
+    "id": "steam.start",
+    "link": "steam",
+    "direction": "to_device",
+    "bytes": "88030034dcff0ae455",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/dtv-plus-protocol.md",
+        "section": "§ Protocol Sequences, Set Device Parameter — payload shape unresolved [?] against docs/replacement-controller/STEAM-ADAPTER.md § 7"
+      }
+    },
+    "decoded": {
+      "cmd": 52,
+      "dest": 3,
+      "direction": "MasterToDevice",
+      "payload": "dcff0a",
+      "src": 0
+    }
+  },
+  {
+    "id": "steam.stop",
+    "link": "steam",
+    "direction": "to_device",
+    "bytes": "88030034dc000ae355",
+    "provenance": {
+      "documented": {
+        "source": "research/xagon0/docs/protocols/dtv-plus-protocol.md",
+        "section": "§ Protocol Sequences, Set Device Parameter — payload shape unresolved [?] against docs/replacement-controller/STEAM-ADAPTER.md § 7"
+      }
+    },
+    "decoded": {
+      "cmd": 52,
+      "dest": 3,
+      "direction": "MasterToDevice",
+      "payload": "dc000a",
+      "src": 0
+    }
+  }
+]

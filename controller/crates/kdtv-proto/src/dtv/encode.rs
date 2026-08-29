@@ -37,6 +37,7 @@ use crate::dtv::addr::{BROADCAST, DevAddr, MASTER, UNASSIGNED};
 use crate::dtv::command::opcode;
 use crate::dtv::frame::{EOF, MAX_FRAME, MAX_PAYLOAD, SOF, checksum, escape_into};
 use crate::dtv::steam::{ParamCodec, SET_PARAM_PAYLOAD_LEN, SET_PARAM_STATE_OFFSET, SteamOpState};
+use crate::gate::TransmitAuthority;
 use crate::saturn::{DiscoveryToken, LinkPhase};
 use core::fmt;
 use kdtv_units::{LinkKind, SteamMinutes, SteamSetpoint};
@@ -337,8 +338,12 @@ pub enum DtvEncodeDenied {
 ///
 /// The source address is always [`MASTER`] — this master has one identity and,
 /// unlike the Saturn buses, the sources do not disagree about it. `ADDR-01`.
-#[derive(Clone, Debug, Default)]
+/// No `Default`, deliberately. A derived `Default` would be a public
+/// constructor that bypasses the transmit gate, and the gate's whole claim is
+/// that there is no way to obtain an encoder without an authority.
+#[derive(Clone, Debug)]
 pub struct SteamEncoder {
+    auth: TransmitAuthority,
     codec: ParamCodec,
 }
 
@@ -348,17 +353,28 @@ impl SteamEncoder {
     /// zone is refused by [`DtvEncodeDenied::TokenForWrongLink`].
     pub const LINK: LinkKind = LinkKind::Steam;
 
+    /// **The first of the transmit gate's two boundaries**, exactly as on the
+    /// valve side — see [`crate::saturn::Encoder::new`] and [`crate::gate`].
     #[must_use]
-    pub const fn new() -> Self {
-        Self {
-            codec: ParamCodec::SteamBlock,
-        }
+    pub fn new(auth: &TransmitAuthority) -> Self {
+        Self::with_codec(auth, ParamCodec::SteamBlock)
     }
 
     /// Selects the `SET_DEV_PARAM` payload shape. `STEAM-07`.
     #[must_use]
-    pub const fn with_codec(codec: ParamCodec) -> Self {
-        Self { codec }
+    pub fn with_codec(auth: &TransmitAuthority, codec: ParamCodec) -> Self {
+        Self {
+            auth: auth.clone(),
+            codec,
+        }
+    }
+
+    /// The authority this encoder was built under. `kdtv-hal` reads
+    /// [`permits_real_bus_on`](TransmitAuthority::permits_real_bus_on) from it
+    /// before opening a serial backend for the steam link.
+    #[must_use]
+    pub const fn authority(&self) -> &TransmitAuthority {
+        &self.auth
     }
 
     #[must_use]
@@ -524,7 +540,14 @@ mod tests {
     use crate::dtv::decode::{DtvRxBuffer, decode, decode_frame};
     use crate::dtv::frame::ESC;
     use crate::dtv::steam::SteamStateByte;
+    use crate::fixtures::FixtureSet;
     use kdtv_units::Fx2;
+
+    /// Every encoder in these tests is built under the emulator scope, which is
+    /// the only scope today's tier [C] fixtures can grant. `crate::gate`.
+    fn auth() -> TransmitAuthority {
+        TransmitAuthority::emulator_only(FixtureSet::embedded())
+    }
 
     fn token() -> DiscoveryToken {
         DiscoveryToken::mint(LinkKind::Steam, LinkPhase::Discovery).unwrap()
@@ -587,7 +610,7 @@ mod tests {
     /// assigns.
     #[test]
     fn the_status_request_is_the_documented_frame() {
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         let f = e
             .encode(
                 DevAddr::REFERENCE,
@@ -604,7 +627,7 @@ mod tests {
     /// `STEAM-06`. `88 03 00 34 DC FF 0A E4 55` — 110 °F, on, ten minutes.
     #[test]
     fn the_start_frame_is_the_derived_fixture() {
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         let (temp, minutes) = default_pair();
         let f = e
             .encode(
@@ -636,7 +659,7 @@ mod tests {
 
     #[test]
     fn the_clear_fault_frame_is_the_derived_fixture() {
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         let f = e
             .encode(
                 DevAddr::REFERENCE,
@@ -651,7 +674,7 @@ mod tests {
     /// `STEAM-04`. The two discovery frames a master sends, byte for byte.
     #[test]
     fn the_master_side_discovery_frames_are_the_documented_ones() {
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         let t = token();
         let opp = e
             .encode(
@@ -755,7 +778,7 @@ mod tests {
     /// operation.
     #[test]
     fn no_denied_opcode_is_reachable() {
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         let t = token();
         let denied = denied_opcodes();
         let mut frames = 0u32;
@@ -800,7 +823,7 @@ mod tests {
     /// and never `0xCC`.
     #[test]
     fn no_encoded_frame_carries_power_clean_in_the_state_byte() {
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         let t = token();
         let mut writes = 0u32;
         for temp in every_setpoint() {
@@ -851,7 +874,7 @@ mod tests {
     /// request to a device at address `0x04`.
     #[test]
     fn zero_x_cc_can_be_a_checksum_and_that_is_why_the_scan_is_field_level() {
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         let f = e
             .encode(
                 DevAddr::new(0x04).unwrap(),
@@ -896,7 +919,7 @@ mod tests {
     /// fields — through both entry points.
     #[test]
     fn every_encoded_frame_decodes_back_to_its_own_fields() {
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         let t = token();
         let (temp, minutes) = default_pair();
         for op in every_op(temp, minutes) {
@@ -967,7 +990,7 @@ mod tests {
             assert!(!crate::dtv::frame::is_reserved(k.opcode()), "{k:?}");
         }
 
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         let t = token();
         let mut frames = 0u32;
         for temp in every_setpoint() {
@@ -1004,7 +1027,7 @@ mod tests {
     /// is no token to pass, and passing none is refused.
     #[test]
     fn discovery_requires_a_token_and_the_discovery_phase() {
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         for phase in [
             LinkPhase::Booting,
             LinkPhase::ReadyOff,
@@ -1046,7 +1069,7 @@ mod tests {
     #[test]
     fn a_saturn_token_does_not_authorise_a_dtv_discovery_frame() {
         use kdtv_units::ZoneId;
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         for zone in [ZoneId::Zone1, ZoneId::Zone2] {
             let wrong = DiscoveryToken::mint(LinkKind::Zone(zone), LinkPhase::Discovery).unwrap();
             let err = e
@@ -1072,7 +1095,7 @@ mod tests {
     /// Stopping is allowed in every phase. Starting is not.
     #[test]
     fn stop_is_never_gated_and_start_is() {
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         let (temp, minutes) = default_pair();
         for phase in [
             LinkPhase::Booting,
@@ -1113,7 +1136,7 @@ mod tests {
     /// Reads are free in every phase; clearing faults is not.
     #[test]
     fn a_status_read_is_free_and_a_fault_clear_is_narrowed() {
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         for phase in [
             LinkPhase::Booting,
             LinkPhase::Discovery,
@@ -1160,7 +1183,7 @@ mod tests {
         assert!(SteamMinutes::try_new(20).is_ok());
 
         // And nothing the encoder emits carries a zero duration.
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         for temp in every_setpoint() {
             for m in 1u8..=20 {
                 for op in [
@@ -1188,7 +1211,7 @@ mod tests {
     /// `ADDR-04`. The broadcast destination appears on exactly one operation.
     #[test]
     fn only_the_address_opportunity_broadcasts() {
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         let t = token();
         let (temp, minutes) = default_pair();
         for op in every_op(temp, minutes) {
@@ -1212,7 +1235,7 @@ mod tests {
     /// never from the device ID.
     #[test]
     fn the_destination_is_an_assigned_address_not_a_device_id() {
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         for a in DevAddr::ALL {
             let f = e
                 .encode(a, &SteamOp::ReadStatus, LinkPhase::ReadyOff, None)
@@ -1240,7 +1263,7 @@ mod tests {
     /// intent, recorded in [`SteamOpKind`], not on the wire.
     #[test]
     fn a_parameter_write_is_atomic_in_all_three_fields() {
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         let (temp, minutes) = default_pair();
         let a = e
             .encode(
@@ -1295,9 +1318,12 @@ mod tests {
 
     #[test]
     fn the_codec_selection_is_carried_on_the_encoder() {
-        let e = SteamEncoder::with_codec(ParamCodec::SteamBlock);
+        let e = SteamEncoder::with_codec(&auth(), ParamCodec::SteamBlock);
         assert_eq!(e.codec(), ParamCodec::SteamBlock);
-        assert_eq!(SteamEncoder::new().codec(), ParamCodec::default());
-        assert_eq!(SteamEncoder::default().link(), LinkKind::Steam);
+        assert_eq!(SteamEncoder::new(&auth()).codec(), ParamCodec::default());
+        assert_eq!(e.link(), LinkKind::Steam);
+        // No `Default` impl: a derived one would be a constructor that skips
+        // the transmit gate. This is the emulator scope and it stays that way.
+        assert!(!e.authority().permits_real_bus());
     }
 }

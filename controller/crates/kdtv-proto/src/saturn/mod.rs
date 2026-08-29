@@ -93,6 +93,8 @@ pub use timing::{BAUD, DATA_BITS, STOP_BITS, Timings};
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::fixtures::FixtureSet;
+    use crate::gate::TransmitAuthority;
     use kdtv_units::{Cx2, LinkKind, Slot, SlotSet, ValveSetpoint, ZoneId};
 
     fn zone2_encoder() -> Encoder {
@@ -105,7 +107,12 @@ mod tests {
             }),
         )
         .unwrap();
-        Encoder::new(LinkKind::Zone(ZoneId::Zone2), MasterAddr::Dtv, table)
+        Encoder::new(
+            &TransmitAuthority::emulator_only(FixtureSet::embedded()),
+            LinkKind::Zone(ZoneId::Zone2),
+            MasterAddr::Dtv,
+            table,
+        )
     }
 
     /// The round trip that proves the two halves agree: everything the encoder

@@ -16,6 +16,8 @@
     clippy::indexing_slicing
 )]
 
+use kdtv_proto::fixtures::FixtureSet;
+use kdtv_proto::gate::TransmitAuthority;
 use kdtv_proto::saturn::{
     Direction, Encoder, Expectation, FRAME_OVERHEAD, LinkPhase, MAX_DATA_LEN, MAX_FRAME,
     MasterAddr, OutletMapping, OutletTable, PrimaryFlags, RX_CAPACITY, RxBuffer, SYNC1, SYNC2,
@@ -23,6 +25,12 @@ use kdtv_proto::saturn::{
 };
 use kdtv_units::{Cx2, LinkKind, Slot, SlotSet, ValveSetpoint, ZoneId};
 use proptest::prelude::*;
+
+/// The emulator scope, which is the only scope today's tier [C] fixture set can
+/// grant. Without one there is no encoder at all — `kdtv_proto::gate`.
+fn auth() -> TransmitAuthority {
+    TransmitAuthority::emulator_only(FixtureSet::embedded())
+}
 
 fn zone1_encoder() -> Encoder {
     let table = OutletTable::new(
@@ -34,7 +42,12 @@ fn zone1_encoder() -> Encoder {
         }),
     )
     .unwrap();
-    Encoder::new(LinkKind::Zone(ZoneId::Zone1), MasterAddr::Dtv, table)
+    Encoder::new(
+        &auth(),
+        LinkKind::Zone(ZoneId::Zone1),
+        MasterAddr::Dtv,
+        table,
+    )
 }
 
 /// Assembles a frame from raw fields. Test-only: the encoder cannot be asked

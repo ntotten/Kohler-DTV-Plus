@@ -79,11 +79,12 @@ jobs:
         # Phase 1 capture has not run. A fixture at tier [A] would let the gate
         # open, so its appearance must break the build and be argued for in a
         # pull request rather than merged quietly.
-        run: |
-          if grep -rql 'provenance *= *"captured"' fixtures/ 2>/dev/null; then
-            echo "::error::a fixture claims tier [A] provenance; Phase 1 capture has not happened"
-            exit 1
-          fi
+        #
+        # This parses the fixture files rather than grepping them. The first
+        # version of this step grepped for TOML syntax against files that are
+        # JSON, so it matched nothing and reported success regardless of what
+        # the fixtures said.
+        run: cargo xtask gate-closed
       - name: the gate's own tests
         run: cargo test --package kdtv-proto gate
 

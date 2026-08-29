@@ -29,9 +29,17 @@ use kdtv_proto::dtv::{
     decode, decode_frame, escape_into, escaped_len, is_reserved, logical_sums_to_zero,
     unescape_into,
 };
+use kdtv_proto::fixtures::FixtureSet;
+use kdtv_proto::gate::TransmitAuthority;
 use kdtv_proto::saturn::LinkPhase;
 use kdtv_units::{Fx2, LinkKind, SteamMinutes, SteamSetpoint};
 use proptest::prelude::*;
+
+/// The emulator scope, which is the only scope today's tier [C] fixture set can
+/// grant. Without one there is no encoder at all — `kdtv_proto::gate`.
+fn auth() -> TransmitAuthority {
+    TransmitAuthority::emulator_only(FixtureSet::embedded())
+}
 
 /// Assembles a wire frame from raw fields. Test-only: the encoder cannot be
 /// asked for arbitrary field values, which is the whole point of the encoder.
@@ -226,10 +234,19 @@ proptest! {
 
     /// `FRAME-05`. Arbitrary line garbage in front of a frame does not lose it,
     /// as long as the garbage is not itself a decodable frame carrying the same
-    /// payload.
+    /// payload — **and does not end in an escape byte**.
+    ///
+    /// The exclusion is not a weakening to make a test pass; it is a property of
+    /// byte stuffing, pinned separately in
+    /// [`garbage_ending_in_an_escape_swallows_the_next_frames_sof`]. An escape
+    /// always consumes the byte after it, so a trailing `ESC` consumes the
+    /// following frame's `SOF`, and an `SOF` that has been escaped is by the
+    /// protocol's own rule not a frame start for the decoder to resync on. No
+    /// decoder can recover that frame; it is gone on the wire, not in software.
     #[test]
     fn garbage_before_a_frame_does_not_lose_it(
-        garbage in prop::collection::vec(any::<u8>(), 0..=24usize),
+        garbage in prop::collection::vec(any::<u8>(), 0..=24usize)
+            .prop_filter("a trailing ESC eats the next SOF", |g| g.last() != Some(&ESC)),
         cmd in any::<u8>(),
         payload in prop::collection::vec(any::<u8>(), 1..=8usize),
     ) {
@@ -303,7 +320,7 @@ proptest! {
         dest in dev_addr(),
         which in 0usize..6,
     ) {
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         let op = match which {
             0 => SteamOp::Start { temp, minutes },
             1 => SteamOp::Stop { temp, minutes },
@@ -344,7 +361,7 @@ proptest! {
             2 => SteamOp::SetTemperature { temp, minutes, state },
             _ => SteamOp::SetDuration { temp, minutes, state },
         };
-        let f = SteamEncoder::new()
+        let f = SteamEncoder::new(&auth())
             .encode(dest, &op, LinkPhase::Running, None)
             .unwrap();
         let d = decode_frame(f.bytes()).unwrap();
@@ -362,7 +379,7 @@ proptest! {
         minutes in minutes(),
         dest in dev_addr(),
     ) {
-        let f = SteamEncoder::new()
+        let f = SteamEncoder::new(&auth())
             .encode(
                 dest,
                 &SteamOp::Start { temp, minutes },
@@ -389,7 +406,7 @@ proptest! {
         use kdtv_proto::saturn::DiscoveryToken;
         use kdtv_units::ZoneId;
 
-        let e = SteamEncoder::new();
+        let e = SteamEncoder::new(&auth());
         let op = if opportunity {
             SteamOp::Discovery(DiscoveryStep::AddressOpportunity)
         } else {
@@ -408,4 +425,37 @@ proptest! {
         let out = e.encode(assign, &op, LinkPhase::Discovery, Some(&token));
         prop_assert_eq!(out.is_ok(), link == LinkKind::Steam);
     }
+}
+
+/// The counter-example excluded from
+/// [`garbage_before_a_frame_does_not_lose_it`], pinned so the exclusion is a
+/// recorded finding rather than a hole.
+///
+/// `88 AA` is `SOF` then `ESC`. The escape consumes the next byte, which is the
+/// real frame's `SOF`, so that `SOF` is escaped and the decoder — which resyncs
+/// on an *unescaped* `SOF`, `FRAME-05` — has nothing to resync on. The garbage
+/// frame runs on until the real frame's `EOF` terminates it, fails its checksum,
+/// and the real frame has already been eaten.
+///
+/// **This is inherent to byte stuffing, not a decoder defect.** It also means a
+/// single stray `0xAA` on the line costs the frame behind it, which is a thing
+/// to expect in a Phase 5 capture rather than to be surprised by: the symptom is
+/// one `BadChecksum` followed by one missing response, not a storm.
+#[test]
+fn garbage_ending_in_an_escape_swallows_the_next_frames_sof() {
+    let payload = [0x00u8];
+    let wire = wire_frame(0x03, 0x00, 0x00, &payload);
+
+    // Trailing ESC: the frame is lost.
+    let mut rx = DtvRxBuffer::new();
+    rx.extend(&[SOF, ESC]);
+    rx.extend(&wire);
+    assert!(!pull_until(&mut rx, &payload));
+
+    // The same garbage with one more byte after the escape, so the escape is
+    // spent on that byte instead: the frame survives.
+    let mut rx = DtvRxBuffer::new();
+    rx.extend(&[SOF, ESC, 0x00]);
+    rx.extend(&wire);
+    assert!(pull_until(&mut rx, &payload));
 }

@@ -31,6 +31,7 @@
 //!
 //! [`no_denied_control_byte_is_reachable`]: self#tests
 
+use crate::gate::TransmitAuthority;
 use crate::saturn::control::opcode;
 use crate::saturn::frame::{
     BROADCAST, FRAME_OVERHEAD, MAX_DATA, MAX_DATA_LEN, MAX_FRAME, MasterAddr, SYNC1, SYNC2,
@@ -456,19 +457,48 @@ pub enum EncodeDenied {
 /// is no path from an [`Encoder`] to a frame that is not a [`SaturnOp`].
 #[derive(Clone, Debug)]
 pub struct Encoder {
+    auth: TransmitAuthority,
     link: LinkKind,
     master: MasterAddr,
     outlets: OutletTable,
 }
 
 impl Encoder {
+    /// **The first of the transmit gate's two boundaries.**
+    ///
+    /// No [`TransmitAuthority`] means no encoder, and no encoder means no
+    /// [`SaturnFrame`] — the only type the link layer will transmit. Nothing to
+    /// send is a stronger property than nothing sent, which is why the
+    /// requirement is on construction rather than on
+    /// [`encode`](Encoder::encode).
+    ///
+    /// The authority is required in **both** scopes: an emulator run needs one
+    /// too, so the gate is exercised on every test rather than only on the path
+    /// nobody takes yet. What the scope changes is whether `kdtv-hal` will open
+    /// a real port for the frames — the second boundary. See [`crate::gate`].
     #[must_use]
-    pub const fn new(link: LinkKind, master: MasterAddr, outlets: OutletTable) -> Self {
+    pub fn new(
+        auth: &TransmitAuthority,
+        link: LinkKind,
+        master: MasterAddr,
+        outlets: OutletTable,
+    ) -> Self {
         Self {
+            auth: auth.clone(),
             link,
             master,
             outlets,
         }
+    }
+
+    /// The authority this encoder was built under.
+    ///
+    /// `kdtv-hal` reads
+    /// [`permits_real_bus_on`](TransmitAuthority::permits_real_bus_on) from it
+    /// before opening a serial backend for this link.
+    #[must_use]
+    pub const fn authority(&self) -> &TransmitAuthority {
+        &self.auth
     }
 
     #[must_use]
@@ -684,9 +714,16 @@ fn push(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::fixtures::FixtureSet;
     use crate::saturn::control::denied_control_bytes;
     use crate::saturn::outlets::OutletMapping;
     use kdtv_units::{Cx2, ZoneId};
+
+    /// Every encoder in these tests is built under the emulator scope, which is
+    /// the only scope today's tier [C] fixtures can grant. `crate::gate`.
+    fn auth() -> TransmitAuthority {
+        TransmitAuthority::emulator_only(FixtureSet::embedded())
+    }
 
     fn slot(n: u8) -> Slot {
         Slot::new(n).unwrap()
@@ -707,7 +744,12 @@ mod tests {
             }),
         )
         .unwrap();
-        Encoder::new(LinkKind::Zone(ZoneId::Zone1), MasterAddr::Dtv, table)
+        Encoder::new(
+            &auth(),
+            LinkKind::Zone(ZoneId::Zone1),
+            MasterAddr::Dtv,
+            table,
+        )
     }
 
     /// Zone 2: the three-port Prompt valve. Its first outlet is mask `0x04`.
@@ -721,7 +763,12 @@ mod tests {
             }),
         )
         .unwrap();
-        Encoder::new(LinkKind::Zone(ZoneId::Zone2), MasterAddr::Dtv, table)
+        Encoder::new(
+            &auth(),
+            LinkKind::Zone(ZoneId::Zone2),
+            MasterAddr::Dtv,
+            table,
+        )
     }
 
     fn token(link: LinkKind) -> DiscoveryToken {

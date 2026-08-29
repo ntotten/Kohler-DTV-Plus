@@ -123,8 +123,12 @@ mod tests {
         Cx2, Fx2, LinkKind, Slot, SlotSet, SteamMinutes, SteamSetpoint, ValveSetpoint, ZoneId,
     };
 
+    fn auth() -> crate::gate::TransmitAuthority {
+        crate::gate::TransmitAuthority::emulator_only(crate::fixtures::FixtureSet::embedded())
+    }
+
     fn steam_encoder() -> SteamEncoder {
-        SteamEncoder::new()
+        SteamEncoder::new(&auth())
     }
 
     fn zone2_encoder() -> saturn::Encoder {
@@ -137,7 +141,12 @@ mod tests {
             }),
         )
         .unwrap();
-        saturn::Encoder::new(LinkKind::Zone(ZoneId::Zone2), MasterAddr::Dtv, table)
+        saturn::Encoder::new(
+            &auth(),
+            LinkKind::Zone(ZoneId::Zone2),
+            MasterAddr::Dtv,
+            table,
+        )
     }
 
     /// The contradictions this module carries are all reachable from the module

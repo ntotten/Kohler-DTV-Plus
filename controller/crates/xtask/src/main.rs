@@ -6,6 +6,7 @@ use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand};
 
 mod audit;
+mod gate;
 mod reqs;
 
 #[derive(Parser, Debug)]
@@ -26,6 +27,11 @@ enum Command {
     /// can be expressed in the dependency graph. This checks them, and CI runs
     /// it on every change.
     AuditGraph,
+    /// Assert no fixture claims to have been captured from this hardware.
+    ///
+    /// The transmit gate cannot open while every fixture is tier [C]. This is
+    /// the same claim checked against the committed data rather than the code.
+    GateClosed,
     /// Report requirement coverage from requirements.toml.
     Reqs {
         /// Fail if a hard, software-verifiable requirement has no covering test.
@@ -41,6 +47,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
         Command::AuditGraph => audit::run(),
+        Command::GateClosed => gate::run(),
         Command::Reqs { strict, checklist } => reqs::run(strict, checklist.as_deref()),
     }
 }
