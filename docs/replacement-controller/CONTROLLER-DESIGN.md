@@ -2,10 +2,11 @@
 
 Status: design proposal; no valve traffic or water actuation has been performed.
 
-This plan makes a Raspberry Pi the active master for both installed valves,
-speaking Saturn to them directly. The K-99695 and wall interface become
-disconnected cold spares. Returning to Kohler is a deliberate power-off cable
-swap, not an automatic handoff.
+An open replacement master for the Kohler DTV+. A Raspberry Pi drives three
+isolated serial links: two Saturn valve buses and one DTV+ link to a steam
+adapter. The K-99695 and wall interface become disconnected cold spares.
+Returning to Kohler is a deliberate power-off cable swap, not an automatic
+handoff.
 
 ### Scope
 
@@ -17,21 +18,36 @@ Goals:
 
 Non-goals:
 
-- **A fix for [I1](../../INVESTIGATIONS.md#i1--the-shower-stops-mid-use).** The
-  leading hypothesis is a tankless minimum-flow cutout, outside the DTV+.
-  Phase 1's passive capture is a diagnostic for I1; the replacement master is
-  not a repair for it.
-- Improved controller stability. Every K-99695 lockup recorded here was caused
-  by concurrent HTTP sessions from this project
-  ([STORY-LOG.md](../../STORY-LOG.md), 2026-08-04 23:05). The K-99695 is not
-  known to be unreliable within its documented limits.
+- **A fix for [I1](../../INVESTIGATIONS.md#i1--the-shower-stops-mid-use).**
+  **I1 is resolved as of 2026-08-29: the cause was this project's own app
+  polling the K-99695 until it hung.** It was never a valve or plumbing fault,
+  and it is not a reason to build a replacement master.
+- Improved controller stability. Every K-99695 lockup recorded here — I1
+  included — was caused by HTTP clients from this project exceeding the
+  controller's documented limits ([STORY-LOG.md](../../STORY-LOG.md),
+  2026-08-04 23:05 and 2026-08-29 13:53). The K-99695 is not known to be
+  unreliable within those limits, and this design does not claim to improve on
+  it.
 
 The plan covers this installation specifically:
 
 - Zone 1: one six-port valve, firmware `0.12`, five configured outlets.
 - Zone 2: one three-port Prompt valve, firmware `0.14`, three configured
   outlets.
-- No steam, lighting, music, rain-panel, or other DTV+ peripherals are present.
+- Steam: one K-1737-K1 adapter on a DTV+ peripheral port.
+- Lighting, music and rain-panel are not implemented. Each would be another
+  DTV+ link and another device profile.
+
+**Steam is in scope.** A third link to a K-1737-K1 steam adapter, speaking DTV+.
+The generator behind the adapter is a self-contained appliance installed by a
+professional; we connect to the adapter and send it setpoints, the same
+relationship this design has with the valves. Spec in
+[HARDWARE-SPEC.md § 12](HARDWARE-SPEC.md), background in
+[STEAM-ADAPTER.md](STEAM-ADAPTER.md).
+
+Kohler's `WARNING` requiring a user interface inside the steam enclosure is
+**accepted as a recorded deviation**, operator decision 2026-08-29. It goes in
+the commissioning report.
 
 Keep the household-specific configuration backup outside this public
 repository.
@@ -47,46 +63,53 @@ Raspberry Pi through two packaged, isolated USB-to-RS-485 converters—one per
 valve. Never electrically join the original and replacement controllers.
 
 ```text
-                              wired Ethernet
-                                    |
-                         +----------v-----------+
-                         | Raspberry Pi 4       |
-                         | API, logs, Homebridge|
-                         +----------+-----------+
-                                USB|         |USB
-                     +-------------v-+     +-v-------------+
-                     | Waveshare USB |     | Waveshare USB |
-                     | TO RS485/422  |     | TO RS485/422  |
-                     | isolated      |     | isolated      |
-                     +--------+------+     +------+--------+
-                              |                   |
-                       RS-485 |                   | RS-485
-                         +----v---+           +---v------+
-                         | 6-port |           | 3-port  |
-                         | valve  |           | valve   |
-                         +--------+           +---------+
+                             wired Ethernet
+                                   |
+                     +-------------v--------------+
+                     | Raspberry Pi 4             |
+                     | API, logs, Homebridge      |
+                     +--+---------+---------+-----+
+                    USB |     USB |     USB |
+              +---------v-+ +-----v-----+ +-v---------+
+              | Waveshare | | Waveshare | | Waveshare |
+              | 23949     | | 23949     | | 23949     |
+              | isolated  | | isolated  | | isolated  |
+              +-----+-----+ +-----+-----+ +-----+-----+
+                    |             |             |
+             RS-485 |      RS-485 |      RS-485 |
+              +-----v----+  +-----v----+  +-----v------+
+              | 6-port   |  | 3-port   |  | steam      |
+              | valve    |  | valve    |  | adapter    |
+              | Saturn   |  | Saturn   |  | DTV+       |
+              +----------+  +----------+  +-----+------+
+                                                |
+                                          +-----v------+
+                                          | generator  |
+                                          | out of     |
+                                          | scope      |
+                                          +------------+
 
-K-99695 valve ports: disconnected, capped, and labeled
+K-99695 ports:      disconnected, capped, and labeled
 K-99695 controller: powered down after packet capture
 ```
 
 This is materially simpler than a dual-controller selector:
 
-- two isolated valve links instead of four;
+- three isolated links instead of six;
 - no bus selector relays, relay drivers, interlocks, or arbitration proxy;
 - no possibility of two masters transmitting on one valve bus;
 - fewer cable paths and failure states;
 - factory rollback remains possible with the original labeled cables.
 
-The selected interface is two Waveshare `USB TO RS485/422` converters, SKU
-`23949`. Each valve receives its own packaged isolation barrier, automatic
+The selected interface is three Waveshare `USB TO RS485/422` converters, SKU
+`23949` — one per link. Each receives its own packaged isolation barrier, automatic
 direction control, protection circuitry, screw terminals, selectable 120-ohm
 termination, USB cable, and DIN-rail enclosure.
 
 Waveshare's cheaper dual-channel SKU `27646` isolates its field side from USB
 and supports independent communication, but the manufacturer does not document
-channel-to-channel galvanic isolation. Two separate converters cost about $36
-total and avoid making that assumption.
+channel-to-channel galvanic isolation. Separate converters cost about $17 each
+and avoid making that assumption.
 
 This removes the Pico, transceiver evaluation boards, isolated DC/DC modules,
 external MCU watchdog, permanent custom PCB, and Pi-to-MCU protocol from the
@@ -141,8 +164,23 @@ Every other temperature in this system is the valve's own thermistor reading.
 Per [DISCLAIMER.md](../../DISCLAIMER.md), that is a self-report, not a
 measurement. The sensor has no actuation authority and cannot open an outlet.
 
-It is also the instrument required by
-[INVESTIGATIONS.md](../../INVESTIGATIONS.md) E5.
+It was also the instrument for [I1](../../INVESTIGATIONS.md#i1--the-shower-stops-mid-use)
+E5. **That experiment is closed** — I1 resolved on 2026-08-29 — so the sensor is
+justified on its own terms only: nothing else in this system measures water
+temperature independently of the valve.
+
+One PT1000 channel per zone, specified in
+[HARDWARE-SPEC.md § 7](HARDWARE-SPEC.md). Two limits are carried deliberately
+and must appear in the commissioning report:
+
+- **A surface clamp is not an immersion measurement.** It reads pipe wall, lags,
+  and reads low. Its offset is characterized against the Therma K probe at
+  commissioning, and every threshold is evaluated on the corrected value.
+- **The interlock covers only the instrumented outlet.** Continuous independent
+  coverage exists for each zone's default outlet. Every other outlet is verified
+  individually with the immersion probe at Phase 4 and is protected by the
+  setpoint clamp and fault monitoring, but has no continuous independent
+  measurement until further channels are fitted.
 
 ### Acceptance thresholds
 
@@ -202,65 +240,31 @@ Non-negotiable rules:
 11. Existing automated HTTP reads against the K-99695 remain disabled. After
     cutover, the K-99695 is powered down.
 
-## Hardware to buy and install
+## Hardware
 
-Current manufacturer-direct and approved-reseller purchase links are maintained
-in [SHOPPING-LIST.md](SHOPPING-LIST.md).
+The build is specified in [HARDWARE-SPEC.md](HARDWARE-SPEC.md): platform
+decision, per-subsystem specification, GPIO map, power budget, isolation and
+grounding policy, enclosure and labeling, bench acceptance tests, and the steam
+reservation. Parts, prices, and purchase links are in
+[SHOPPING-LIST.md](SHOPPING-LIST.md).
 
-### Buy now
+| Subsystem               | Choice                                                                                                      |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Compute                 | Raspberry Pi 4 Model B 2 GB, Rust service, passive cooling, hardware watchdog                               |
+| Valve links             | 2 × Waveshare `USB TO RS485/422` SKU `23949` — one isolated converter per valve                             |
+| Independent temperature | 2 × PT1000 Class A on MAX31865 over SPI, one per zone                                                       |
+| Timekeeping             | DS3231 RTC on I2C. NTP sync state is still logged with every wall-clock stamp                               |
+| Enclosure               | IP65 non-metallic, DIN rail, low-voltage only — no mains conductor enters it                                |
+| Steam                   | Reserved only: one USB port, rail space, a blanked gland. Gated — [HARDWARE-SPEC.md § 12](HARDWARE-SPEC.md) |
 
-| Qty | Component                 | Specific choice / requirement                                          | Purpose                                                                              |
-| --: | ------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-|   1 | Application computer      | Raspberry Pi 4 Model B, 2 GB                                           | Valve controller, local API, logs, and wired Ethernet.                               |
-|   1 | Pi power supply           | Official Raspberry Pi 15 W USB-C supply                                | Independent low-voltage power; never tap a valve supply.                             |
-|   2 | Storage cards             | 64 GB high-endurance microSD                                           | One installed and one imaged recovery spare.                                         |
-|   2 | Valve interfaces          | Waveshare `USB TO RS485/422`, SKU `23949`; one dedicated per valve     | Two separately isolated RS-485 links in DIN enclosures.                              |
-|   1 | Passive-capture interface | Physically receive-only isolated RS-485 front end                      | Capture the factory buses before the replacement transmits.                          |
-|   1 | Temperature instrument    | Calibrated fast-response immersion probe thermometer                   | Independently verify delivered water temperature at commissioning.                   |
-|   1 | Permanent outlet sensor   | Pi-readable temperature probe on outlet plumbing                       | Continuous independent temperature measurement; also serves E5.                      |
-|   1 | Electrical test set       | True-RMS meter; borrow an oscilloscope and isolated differential probe | Verify pins, polarity, idle bias, termination, and waveform without assuming labels. |
+No custom PCB. No mains work inside the enclosure. No relay, contactor, smart
+plug, or cord switch in either valve's mains path.
 
-References:
-
-- [Raspberry Pi 4 specifications](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/specifications/)
-- [Waveshare USB TO RS485/422](https://www.waveshare.com/usb-to-rs485-422.htm)
-- [Waveshare documentation](https://www.waveshare.com/wiki/USB_TO_RS485/422)
-
-### Permanent installation
-
-No custom controller PCB is required. Install the Pi and two packaged
-converters in a dry, serviceable enclosure with strain relief, labeled A/B test
-points, and removable adapter leads for the two factory cables. Each converter
-includes its USB cable and receives its isolated-side power from USB.
-
-Configure each unit for two-wire RS-485: its `TA` terminal is A+, `TB` is B-,
-and `RA`/`RB` are unused. Treat those labels as the converter-side convention;
-capture and verify the Kohler cable polarity before making an adapter lead.
-
-Leave both 120-ohm termination jumpers disabled until the factory topology has
-been measured. Connect each converter's `PE` signal-ground terminal only if the
-captured factory wiring and electrical review show that the reference conductor
-is required. Do not join the two field-side `PE` terminals. Valve line power
-remains in the original listed receptacles and wiring.
-
-Verify the USB bridge chip on arrival, and confirm the two converters report
-distinct USB serial numbers before installing either. Adapters in this class
-may ship with blank or duplicated serials; two identical ones make a `by-id`
-symlink resolve both zones onto the same device, which the start check does not
-catch because the path resolves. On a collision, bind by physical USB port path
-and label the ports.
-
-### Field-select after inspecting the installation
-
-Do not order these by assumption:
-
-| Component                         | Confirm first                                                                                                                                                |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| OEM mating connectors or pigtails | Photograph both ends, record keying and pin count, then verify A/B/ground continuity with all equipment unpowered.                                           |
-| Custom valve cables               | Prefer adapter leads that preserve the factory cables. Do not cut the only OEM cable.                                                                        |
-| RS-485 termination                | Measure the unpowered bus and capture the original waveform. Add only the termination present in the proven Kohler topology.                                 |
-| Manual valve-power disconnect     | Electrician confirms both valve nameplates, actual voltage, receptacles, branch circuits, and GFCI protection before selecting a directly acting disconnect. |
-| Replacement/donor valve           | Confirm K-number and revision from the installed label. A matching donor valve is preferred for bench testing.                                               |
+**Not orderable from documents.** Valve mating connectors, adapter-lead cable,
+termination and bias components, RTD clamp size, and the manual valve-power
+disconnects all depend on measurements taken in Phase 0 and Phase 1. Each is
+listed in [SHOPPING-LIST.md](SHOPPING-LIST.md) Group B against the measurement
+that closes it. None is ordered by assumption.
 
 Official valve references:
 
@@ -272,9 +276,10 @@ Official valve references:
 
 ### Pi controller service
 
-Run one small controller daemon on the Pi. Rust is preferred for the protocol
-and state-machine implementation, but the safety contract matters more than the
-language.
+Run one small controller daemon on the Pi, written in Rust. The platform
+decision — Linux on a Pi rather than a bare-metal MCU — is recorded in
+[HARDWARE-SPEC.md § 2](HARDWARE-SPEC.md), together with the condition that
+would overturn it. The safety contract matters more than the language.
 
 The two converters appear as separate USB serial interfaces. Bind logical zones
 to stable device paths using each adapter's identity or physical USB path, not
@@ -282,9 +287,12 @@ incidental `/dev/ttyUSB0` enumeration order. Label each adapter after mapping
 it. Refuse to start if both expected interfaces are not present and distinct.
 
 **Set the USB-serial latency timer to 1 ms** (`latency_timer`, and
-`ASYNC_LOW_LATENCY` where the driver offers it). The FTDI default is 16 ms,
-which exceeds the protocol's 20 ms echo timeout and is coarser than every
-deadline in the table below.
+`ASYNC_LOW_LATENCY` where the driver offers it), and refuse to start if it does
+not read back. The FTDI default is 16 ms, which adds up to that much delay to
+every transaction and quantizes arrival times too coarsely to measure jitter
+against the deadlines in the table below. `latency_timer` is FTDI-specific; if a
+unit ships with a different bridge, establish that driver's equivalent before
+the unit is used.
 
 ### Protocol parameters
 
@@ -389,6 +397,16 @@ Expose only constrained public operations:
 - `stop_all()`
 - `get_cached_state()`
 
+Steam, on the same pattern:
+
+- `steam_start(temperature_f, duration_minutes)`
+- `steam_set_temperature(temperature_f)`
+- `steam_set_duration(minutes)`
+- `steam_stop()`
+
+`stop_all()` stops steam as well as both valve zones. Power clean, deluge and
+spa are denied in the encoder — [HARDWARE-SPEC.md § 12](HARDWARE-SPEC.md).
+
 Homebridge and Worker status reads use the service cache. External callers
 cannot trigger an extra valve transaction or send a raw Saturn frame. Commands
 to the two valves are independently serialized, with at most one request
@@ -464,7 +482,7 @@ Capture one valve at a time with no HTTP polling or other automation:
 8. a 22-minute safe-temperature run to observe timer maintenance. The refresh is
    only accepted once ≥ 900 s have elapsed;
 9. orderly power cycle after the capture is saved and water is off;
-10. a run in the failing configuration, until it stops — see below.
+10. _withdrawn — see below._
 
 The capture front end must be physically unable to transmit: termination off,
 `DE` hard-strapped inactive, and no transmit conductor from the USB UART.
@@ -473,26 +491,26 @@ Timestamp at the capture device. Use a logic analyzer where timing is the
 finding; a 16 ms USB latency quantum does not resolve jitter on a 525 ms tick
 or a 320 ms deadline.
 
-### Scenario 10 — capture spanning a shutoff
+### Scenario 10 — withdrawn
 
-Serves E6 of [I1](../../INVESTIGATIONS.md#i1--the-shower-stops-mid-use). The
-shutoff is not visible to controller telemetry: water stops first and the
-K-99695 reports it roughly a minute later, through a timeout. A receive-only
-Saturn tap observes the valve's fault flags and state transitions directly.
+This scenario existed to catch an [I1](../../INVESTIGATIONS.md#i1--the-shower-stops-mid-use)
+shutoff mid-capture. **I1 was resolved on 2026-08-29** — the cause was this
+project's app polling the K-99695 until it hung — so there is no fault left to
+reproduce. Scenarios 1-9 are unaffected.
 
-Method: after the tap is validated on scenarios 1-9, run the failing
-configuration — handshower alone, matching the 2026-07-14 conditions — with the
-tap recording, until flow stops or the session reaches its limit.
+One optional variant remains, and it is **not recommended as part of this
+work**. I1's resolution rests on inference about _how_ the hang stops water: the
+partial-hang reading, where the controller's valve handling wedges while its UI
+and web server keep answering. A receive-only Saturn tap running across a
+deliberately induced hang would settle that directly, by showing whether the
+valve stops on its own communication-loss timeout or is commanded off.
 
-| Observation                                  | Discriminates                                                     |
-| -------------------------------------------- | ----------------------------------------------------------------- |
-| A valve fault frame precedes the stop        | Separates H0 from H4; the fault code identifies the cause         |
-| The valve stops with no fault and no command | Points to supply power or valve logic; excludes controller action |
-| No stop occurs                               | Constrains the reproduction conditions                            |
-
-**⚠️ Consent:** moves water. Operator present. Result to
-[STORY-LOG.md](../../STORY-LOG.md), verdict to
-[INVESTIGATIONS.md](../../INVESTIGATIONS.md).
+It is not recommended because inducing the hang means deliberately over-polling
+the controller, which [FIELD-NOTES.md](../../research/FIELD-NOTES.md) §1 records
+can take the system out for hours. The mechanism is already understood well
+enough to avoid; confirming the last step is not worth that. If it is ever run,
+it needs its own consent and its own entry in
+[STORY-LOG.md](../../STORY-LOG.md).
 
 ### Purge handling
 
@@ -601,7 +619,26 @@ temperature, and the K-99695's behaviour with a missing valve.
 Gate: every outlet passes temperature and stop testing, and the manual rollback
 drill succeeds.
 
-### Phase 5 — local soak and integration
+### Phase 5 — steam link
+
+- Meter a powered-down DTV+ peripheral port and photograph the connector; build
+  the adapter lead.
+- Bring up the DTV+ codec against the emulator, then against the adapter with
+  the generator's own control still able to stop it.
+- Verify the Fx2/Cx2 type split rejects a cross-encoding assignment.
+- Commission one session at the 110 °F default for the 10-minute default, with
+  the operator present.
+- Confirm `stop_all()` stops steam, and that a degraded DTV+ link commands
+  `steam_stop` before latching.
+- **Measure the hard case:** pull the DTV+ link mid-session and record what the
+  generator does. This is the steam equivalent of the Phase 3 valve fail-off
+  tests, and it is the only way the answer gets known.
+
+Gate: a steam session starts, holds setpoint, and stops on command and on timer.
+The hard-link-loss behaviour is measured and recorded, whatever it turns out to
+be.
+
+### Phase 6 — local soak and integration
 
 - Keep voice, cloud, Homebridge, and automatic routines disabled for a one-week
   local-only soak.
