@@ -419,6 +419,13 @@ pub enum EncodeDenied {
     #[error("configuration slot {0} is not configured on this valve")]
     UnconfiguredOutlet(Slot),
 
+    /// The outlet table rejected the lookup for a reason
+    /// [`OutletTable::new`] should already have caught. Unreachable for a table
+    /// built through that constructor, and carried rather than swallowed so a
+    /// mapping bug shows up as a named refusal instead of a wrong outlet.
+    #[error("outlet table: {0}")]
+    OutletTable(#[from] OutletError),
+
     /// A bitmap built for a different valve family. The tag on
     /// [`OutletBitmap`] exists for this check.
     #[error("bitmap is for a {bitmap} valve, this encoder drives a {encoder}")]
@@ -440,22 +447,6 @@ pub enum EncodeDenied {
         len: usize,
         max: u8,
     },
-}
-
-impl From<OutletError> for EncodeDenied {
-    fn from(e: OutletError) -> Self {
-        match e {
-            OutletError::UnconfiguredSlot(s) => Self::UnconfiguredOutlet(s),
-            other => Self::PayloadLength {
-                // An outlet table that fails at encode time after validating at
-                // build time is a bug, not a protocol condition; it surfaces as
-                // a refusal rather than a panic. The message carries the cause.
-                op: SaturnOpKind::SetOutlets,
-                len: usize::from(u8::from(!matches!(other, OutletError::UnconfiguredSlot(_)))),
-                max: MAX_DATA_LEN,
-            },
-        }
-    }
 }
 
 /// Builds Saturn frames for one link.
@@ -568,7 +559,14 @@ impl Encoder {
                 if flags.bits() & PrimaryFlags::UNDEFINED_BITS != 0 {
                     return Err(EncodeDenied::UndefinedFlagBits(flags.bits()));
                 }
-                let bitmap: OutletBitmap = self.outlets.bitmap(*slots)?;
+                let bitmap: OutletBitmap = self.outlets.bitmap(*slots).map_err(|e| match e {
+                    // The common case, and the one a caller can act on: the
+                    // operator asked for a slot this valve does not have.
+                    OutletError::UnconfiguredSlot(s) => EncodeDenied::UnconfiguredOutlet(s),
+                    // Everything else is caught when the table is built, so
+                    // reaching here means the table and the encoder disagree.
+                    other => EncodeDenied::OutletTable(other),
+                })?;
                 if bitmap.valve() != self.valve() {
                     return Err(EncodeDenied::ValveTypeMismatch {
                         bitmap: bitmap.valve(),
