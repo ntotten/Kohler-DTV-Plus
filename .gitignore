@@ -9,3 +9,10 @@ Thumbs.db
 
 # Root tooling install (oxfmt). The app and viewer ignore their own.
 node_modules/
+
+# Rust build output for the replacement controller (controller/).
+controller/target/
+controller/**/target/
+
+# Emulated-Pi and end-to-end harness scratch output.
+controller/.e2e/
