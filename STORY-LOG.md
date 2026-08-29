@@ -12,6 +12,91 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ## 2026-08-29
 
+### 23:02 — The replacement controller's software exists, and it cannot reach a valve
+
+The first substantial code for the replacement master is on a branch: a Rust
+workspace under `controller/`, with both wire protocols implemented, a test
+harness that needs no hardware, and CI.
+
+What is there: `kdtv-units` (the Cx2/Fx2 encoding split and every numeric
+bound), `kdtv-telemetry` (the log schema), `kdtv-proto` (both codecs and their
+allowlist encoders, ~9,700 lines, 199 tests), `kdtv-safety` (where water is
+authorised and where it is stopped), and the harness — virtual serial ports,
+a byte-accurate wire simulator, fault injection and a transcript oracle.
+
+**The transmit gate is the point of the whole exercise.** Every frame in the
+repository is tier `[C]`, and the daemon is built so that it cannot open a real
+serial port until Phase 1 capture promotes those fixtures to `[A]`. The gate is
+checked at two boundaries, not one: gating only the encoder would leave a real
+port open with a real `SerialStream` behind it. A CI job asserts the gate is
+still closed on every run, so opening it is a dated, reviewable act rather than
+a flag someone flips.
+
+**Why it matters:** the software can now be developed, tested and reviewed
+entirely without touching the shower, and the thing that keeps it away from the
+shower is a property of the build rather than a promise.
+
+### 23:02 — Four findings from writing the codecs
+
+Each of these came out of implementation disagreeing with a document.
+
+**No steam command this service can send needs byte stuffing.** A test asserted
+that some frame would carry an escaped checksum. It does not, and it never can:
+the reserved bytes are 85, 136 and 170, every payload field is clamped away from
+all three, and for `SET_DEV_PARAM` the covered sum only reaches `0x00..0x49` and
+`0xEB..0xFF`, so the three sums that would produce a reserved checksum sit in the
+gap. Confirmed by enumerating all 7,200 reachable frames. The consequence is a
+free diagnostic: **an escape byte in a transmit trace is evidence that something
+built a frame this encoder did not.**
+
+**Deriving a write opcode as `read | 0x80` would burn a valve's EEPROM.** The
+pattern holds for most of the Saturn table and breaks where it matters: `0x40` is
+read-extended-status, and `0x40 | 0x80` is `0xC0`, the calibration write. The
+encoder uses an explicit table and there is a test that spells out why.
+
+**Omitting a command variant does not deny power clean.** `0xCC` is not an
+opcode — it is a value of the operation-state byte inside `SET_DEV_PARAM`, which
+is a command this service legitimately sends. The denial had to move to the
+payload: the operation state is an enum with `Off` and `On` and no third
+variant.
+
+**The Saturn discovery frames in `saturn-protocol.md` are schematic, not
+literal.** Their printed `DATA_LEN` values disagree with the data bytes shown —
+`len=5` with three bytes, `len=1` with two. Anyone hard-coding them as golden
+frames would be transmitting a guess. They are encoded from the field
+definitions instead and marked unresolved.
+
+**For Kohler:** the two error-code tables this project holds — one from
+reverse-engineered firmware, one from the valve documentation — assign
+incompatible meanings to codes 0, 1, 3, 7, 35, 36, 60 and 71, including opposite
+senses for "no error". The implementation carries the raw byte and refuses to
+interpret it without being told which table applies. Which table a valve
+actually answers with is a question worth an authoritative answer.
+
+### 23:02 — A safety rule was nearly published as contested, by a keying bug
+
+The requirements register extracted from the design documents holds 474 entries,
+and seven of them state resolutions to questions the documents record as open.
+Marking those needed a key, and the first attempt keyed on requirement id alone.
+
+The ids collide badly: 88 of 348 distinct ids are reused across documents, and
+`SAFE-01` through `SAFE-04` appear five times each with unrelated meanings,
+because each document numbered its own requirements from one. Keying on id alone
+mis-marked two entries — one of them **"never transmit a steam timer duration of
+0 minutes, because 0 disables the generator's automatic shutoff"**, which is a
+real safety rule with no dispute attached to it at all.
+
+Re-keyed on `(document, id)`, which disambiguates every entry. The incident is
+recorded in the register's own header rather than quietly corrected, because the
+collision will catch the next reader too.
+
+**Why it matters:** a rule published as "disputed" is a rule someone feels free
+to implement against. The generator's automatic shutoff is the only backstop
+that survives this service dying, so that particular rule was the worst possible
+one to get wrong.
+
+## 2026-08-29
+
 ### 15:41 — `ADM4852`: the DTV+ peripheral link is RS-485, confirmed
 
 Close-up photographs of the adapter board name the transceiver. `IC2` is an
