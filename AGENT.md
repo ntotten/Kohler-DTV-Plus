@@ -4,8 +4,14 @@ Guidance for AI and human agents working in this repository.
 
 ## What this project is
 
-A replacement interface for a Kohler DTV+ shower whose K-99693 wall unit is
-disconnected, and an open investigation into why the shower stops mid-use.
+A replacement master for the Kohler DTV+: three isolated serial links — two
+Saturn valve buses and one DTV+ steam link — driven from a Raspberry Pi, plus
+the reverse engineering that makes it possible.
+
+It began alongside an investigation into why the shower stopped mid-use. That
+question is **closed** as of 2026-08-29 — the cause was this project's own app
+polling the controller until it hung
+([I1](INVESTIGATIONS.md#i1--the-shower-stops-mid-use)).
 
 It is also being documented publicly: the work is heading for a YouTube video on
 [@azab2c](https://www.youtube.com/@azab2c), and findings may be shared with
