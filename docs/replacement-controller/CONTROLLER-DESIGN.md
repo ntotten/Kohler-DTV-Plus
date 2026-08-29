@@ -105,14 +105,46 @@ cut valve power. The installation therefore needs:
 - accessible, clearly labeled manual power disconnects for both valve
   receptacles;
 - accessible hot and cold service shutoffs;
-- a posted emergency procedure;
+- a posted emergency procedure, which must state that a `WELDED` fault (35) is
+  a stuck mixing valve that **no controller can turn off** — the only remedy is
+  valve power removal and the hot and cold service shutoffs;
+- an independent outlet temperature measurement (see below);
 - measured proof during commissioning that each valve stops on controller
   communication loss and power loss.
 
+### One independent number
+
+Everything else in this design trusts the valve's own thermistor, which
+[DISCLAIMER.md](../../DISCLAIMER.md) explicitly says not to trust: the reported
+temperature is the device's self-report, not a measurement. The commissioning
+probe checks it once, at build time, and is then packed away.
+
+Install a permanent temperature sensor on the outlet plumbing, read by the Pi,
+logged with every session, and wired into the same `all-off` path as the valve's
+own fault flags. This is not the separate safety processor rejected above — it
+adds no actuation authority and cannot open anything. It is the only number in
+the system not self-reported by the thing being watched.
+
+It also happens to be the instrument
+[INVESTIGATIONS.md](../../INVESTIGATIONS.md) E5 has been waiting on:
+*"Confirming it needs a temperature sensor on the outlet, not a better poller"*
+(STORY-LOG, 2026-08-04 22:55). One part, two jobs.
+
+### The acceptance threshold, set in advance
+
 This design is acceptable only if commissioning proves that each valve closes
 reliably when Saturn traffic stops, the USB adapter is unplugged, the controller
-process is killed or wedged, and Pi power is removed. If that test fails or the
-stop latency is unacceptable, reject this architecture. Do not solve it by
+process is killed or wedged, and Pi power is removed.
+
+**Fail-off latency must be ≤ 10 seconds** from the last transmitted frame to
+observed flow stop, measured at the outlet, on every fault path in the Phase 3
+test list. Between 10 and 30 seconds the architecture is not rejected outright
+but does not proceed past Phase 3 without a written justification and a second
+opinion. Above 30 seconds, reject it.
+
+The number is written here, before the measurement, on purpose. A gate whose
+threshold is chosen after the result is not a gate — and the person running the
+test will be the person who wants it to pass. Do not solve a failing result by
 putting an unreviewed hobby relay in a valve's mains circuit.
 
 Non-negotiable rules:
@@ -124,19 +156,37 @@ Non-negotiable rules:
    service, or an AI system.
 4. Pi boot, service restart, and watchdog-reset state is `OFF`; no prior
    water-on state is restored.
-5. Loss of a valid response makes the service attempt `all-off`, close both
-   serial ports, and latch the affected zone unavailable. The physical safety
-   backstop is the valve's measured communication-loss shutdown.
-6. Custom control starts with a 109 °F user-facing limit. Saturn uses 0.5 °C
-   steps, so the on-wire ceiling is `Cx2 = 85` (42.5 °C / 108.5 °F), not the
-   next higher step.
+5. Loss of a valid response makes the service attempt `all-off` on the affected
+   zone, close *that zone's* serial port, and latch that zone unavailable. The
+   physical safety backstop is the valve's measured communication-loss shutdown.
+   **Escalation is scoped deliberately:** a link fault takes down one zone; only
+   a shared fault — the service process, the watchdog, the USB controller, or a
+   failed configuration check — takes down both. Dropping a running shower in
+   the healthy zone is itself a hazard, and is not the correct response to a
+   moved USB cable in the other one.
+6. Custom control is clamped at **both ends**. The user-facing ceiling starts at
+   109 °F; Saturn uses 0.5 °C steps, so the on-wire ceiling is `Cx2 = 85`
+   (42.5 °C / 108.5 °F), not the next higher step. The floor is `Cx2 = 60`
+   (30 °C / 86 °F), which is `MIN_SYS_VALVE_TEMP` — a setpoint below it is
+   rejected by the valve as error 3, *parameter out of range*, and under rule 9
+   that would latch a zone off over a low request. Clamp, do not discover.
 7. Custom sessions have a 20-minute hard limit. No keepalive may extend a
-   session automatically.
+   session automatically. This sits deliberately *below* the Prompt 3 valve's
+   own 1800-second hard stop, whose refresh is only accepted once ≥ 900 s have
+   elapsed. Never sending that refresh means the valve's own timer remains an
+   independent hardware backstop that fires even if the service is lying about
+   elapsed time.
 8. Calibration, arbitrary EEPROM writes, factory reset, bootloader, and valve
    firmware-update commands are absent from production firmware.
-9. A fault, invalid temperature, invalid outlet bitmap, checksum failure on a
-   write, or missed safety response causes `all-off` and latches the zone
-   unavailable until acknowledged.
+9. **Bad input and bad wire data are different failures and get different
+   responses.** A request that fails validation at the API boundary —
+   temperature outside the clamp, an unconfigured outlet bit, an unknown zone —
+   is rejected with an error to the caller and changes no valve state. Only
+   anomalies *on the wire* — a reported fault, a checksum failure on a write, a
+   malformed or out-of-range value in a valve response, or a missed safety
+   response — cause `all-off` and latch the zone unavailable until acknowledged.
+   Conflating the two means one bad Homebridge value takes a zone out of
+   service.
 10. AI, Homebridge, the Worker, and remote clients cannot send raw valve frames.
 11. Existing automated HTTP reads against the K-99695 remain disabled. After
     cutover, the K-99695 is powered down.
