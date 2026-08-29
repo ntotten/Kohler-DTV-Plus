@@ -698,12 +698,16 @@ supply from the bus rather than from the board it sits on, which only makes
 sense across an isolation barrier; the three `PC900V` optocouplers bridge to the
 generator-powered MCU domain.
 
-**New build requirement: a 12 V rail in the enclosure.** `R16`'s 1.2 kΩ in
-series cannot feed a 5 V part from 5 V, so `D7` shunt-regulates a higher bus
-rail and the 330 µF capacitor's 16 V rating points at **12 V** **[I]**. The
-Pi's 5 V USB-C supply cannot provide it. `D7`'s marking fixes the number and is
-the last measurement this interface needs; until then the rail is specified as
-"≈12 V, to be confirmed", and no steam lead is connected.
+**New build requirement: a 12 V rail in the enclosure.** The `ADM4852` is a 5 V
+part, `R16` is 1.2 kΩ in series, and the 330 µF capacitor's 16 V rating caps the
+bus — which leaves **12 V** as the only standard rail that fits **[I]**. `D7`
+carries no legible marking and is not needed to reach that.
+
+The Pi's 5 V USB-C supply cannot provide it, so a 12 V source joins the parts
+list. Confirm before committing to it: apply 12 V to pin 4 from a
+current-limited supply with ground on pin 3, and measure `IC2` pin 8. About 5 V
+confirms both the rail and the supply chain, and the current reading sizes the
+permanent supply.
 
 **Why our termination stays off.** At 9600 baud the bit period is 104 µs while
 25 ft of cable is ~38 ns one way — a ratio near 1:2700, so reflections settle

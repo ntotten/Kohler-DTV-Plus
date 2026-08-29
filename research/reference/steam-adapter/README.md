@@ -62,20 +62,20 @@ Five, not the three the installation guide describes:
 
 ## Silicon
 
-| Ref               | Observation                                                                                                                                                         |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| MCU               | LQFP-64, marking reads `D78F0_52` — Renesas/NEC µPD78F0xxx, 78K0/78K0R family                                                                                       |
-| `IC2`             | **`ADM4852`** — Analog Devices RS-485/RS-422 transceiver, **half duplex**, ⅛ unit load, slew-rate limited, 2.5 Mbps, 8-lead SOIC. Read off the part by the operator |
-| `U2`              | **`ATMLH920 16CM`** — Atmel **AT24C16** 2 KB I²C EEPROM, SOIC-8                                                                                                     |
-| `JACK1`           | 6-position modular jack — the generator port                                                                                                                        |
-| `C13`             | **Unpopulated** two-hole footprint beside `R27`, one pad on `A`, one on `B`                                                                                         |
-| (unlabelled)      | 330 µF 16 V electrolytic near `CN1`/`CN2`. Designator not read — it is **not** `C13`                                                                                |
-| `PT1` `PT2` `PT3` | Three Sharp **`PC900V`** high-speed logic-output optocouplers                                                                                                       |
-| `OSC1`            | 20.000 MHz crystal                                                                                                                                                  |
-| `IC3`             | TO-252 regulator                                                                                                                                                    |
-| `CN3`             | 6-pin header, silkscreened `TXD` `RXD` `RESET` `GND` `VCC` `CLK` — programming/debug                                                                                |
-| `P/CL`            | 2-pin jumper or test point. **[I]** Expands plausibly to "power clean"                                                                                              |
-| `LED1-3`          | On board, driving the lid indicators                                                                                                                                |
+| Ref               | Observation                                                                                                                                           |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MCU               | LQFP-64, marking reads `D78F0_52` — Renesas/NEC µPD78F0xxx, 78K0/78K0R family                                                                         |
+| `IC2`             | **`ADM4852ARZ`**, date code `#948` — Analog Devices RS-485/RS-422 transceiver, **half duplex**, ⅛ unit load, slew-rate limited, 2.5 Mbps, 8-lead SOIC |
+| `U2`              | **`ATMLH920 16CM`** — Atmel **AT24C16** 2 KB I²C EEPROM, SOIC-8                                                                                       |
+| `JACK1`           | 6-position modular jack — the generator port                                                                                                          |
+| `C13`             | **Unpopulated** two-hole footprint beside `R27`, one pad on `A`, one on `B`                                                                           |
+| (unlabelled)      | 330 µF 16 V electrolytic near `CN1`/`CN2`. Designator not read — it is **not** `C13`                                                                  |
+| `PT1` `PT2` `PT3` | Three Sharp **`PC900V`** high-speed logic-output optocouplers                                                                                         |
+| `OSC1`            | 20.000 MHz crystal                                                                                                                                    |
+| `IC3`             | TO-252 regulator                                                                                                                                      |
+| `CN3`             | 6-pin header, silkscreened `TXD` `RXD` `RESET` `GND` `VCC` `CLK` — programming/debug                                                                  |
+| `P/CL`            | 2-pin jumper or test point. **[I]** Expands plausibly to "power clean"                                                                                |
+| `LED1-3`          | On board, driving the lid indicators                                                                                                                  |
 
 ## The link is RS-485 — settled
 
@@ -280,9 +280,19 @@ never anomalous. Confirm the pads are empty.
       higher bus rail down. The 330 µF capacitor's 16 V rating points at
       **12 V** **[I]**.
 
-   **Outstanding: `D7`'s marking.** If it is a zener, its voltage fixes the rail
-   our master has to supply, and with `R16` it gives the adapter's current draw.
-   That is the last number needed to finish this interface.
+   **The bus rail is 12 V — derived, not read [I].** `D7` is a glass MELF with
+   a cathode band and no marking legible under a phone macro, but its value is
+   not needed. The `ADM4852` is a 5 V part, so `IC2` pin 8 sits at 5 V. `R16` is
+   1.2 kΩ in series, and the 330 µF capacitor's 16 V rating caps the bus below
+   16 V. A rail that clears 5 V by enough to drop usefully across 1.2 kΩ while
+   staying under 16 V leaves 12 V as the only standard candidate.
+
+   **Confirm on the bench before the link is built into anything.** Apply 12 V
+   to pin 4 from a current-limited supply, ground to pin 3, and measure `IC2`
+   pin 8. Around 5 V confirms the chain and the rail; the supply's current
+   reading gives the adapter's draw, which sizes the permanent supply. Nothing
+   else on the board is energised by this, and it is the first time this adapter
+   would ever be powered.
 
    Two earlier conclusions here — "not a supply, leave unlanded", then "very
    likely bus power" — were drawn ahead of the evidence and are kept rather than
