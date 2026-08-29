@@ -10,6 +10,148 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ---
 
+## 2026-08-29
+
+### 15:41 — `ADM4852`: the DTV+ peripheral link is RS-485, confirmed
+
+Close-up photographs of the adapter board name the transceiver. `IC2` is an
+**`ADM4852`** — Analog Devices, half-duplex RS-485/RS-422, ⅛ unit load,
+slew-rate limited, 8-lead SOIC.
+
+That closes the question this workstream opened with. **No Kohler document names
+the electrical standard for the DTV+ peripheral bus**, and the project has
+carried "probably RS-485" as inference since the scoping study. It is now tier
+[A], read off the part.
+
+Three details of the part chosen are worth keeping:
+
+| Property            | Value             | Implication                                                             |
+| ------------------- | ----------------- | ----------------------------------------------------------------------- |
+| Duplex              | Half              | Two wires, A and B. Not a four-wire RS-422 pair                         |
+| Receiver input load | ⅛ unit load       | Up to **256** nodes on one bus — built for a long daisy-chain           |
+| Driver              | Slew-rate limited | Slow edges for EMI and reflection tolerance. 9600 baud is far inside it |
+
+The three `PC900V` optocouplers now map exactly onto the transceiver's receiver
+output, driver input and tied enable — the textbook isolated half-duplex node,
+which is why there are precisely three.
+
+Also read off the board: `U2` is an Atmel **AT24C16** 2 KB I²C EEPROM, so the
+adapter keeps its own stored configuration; `JACK1` is a 6-position modular
+jack; and `C13`, a 330 µF 16 V bulk capacitor, sits beside `CN1`/`CN2`.
+
+**Why it matters:** a standard RS-485 converter is the right part for the steam
+link, which was the last thing in doubt about the hardware. One measurement
+remains — buzzing `CN1`/`CN2` against `IC2` pins 6, 7, 5 and 8 to name A, B, GND
+and any bus-supplied +V. That is a continuity check on an open, unpowered board.
+
+**For Kohler:** the DTV+ peripheral bus is RS-485 on a 4-pin polarized header,
+and no published Kohler document states either fact. Both belong in the spec
+sheet for anyone integrating with a DTV+ system.
+
+### 15:02 — The steam adapter is open, and it kills our modular-jack theory
+
+Nine photographs of the K-1737-K1 board, in
+[`research/reference/steam-adapter/`](research/reference/steam-adapter/). First
+tier [A] evidence about steam hardware in this project — everything before this
+was Kohler documents or third-party analysis.
+
+The lid label settles the port map with no inference, because one photograph
+catches the label and the connectors in the same frame:
+
+| Connector                  | Lid label                     |
+| -------------------------- | ----------------------------- |
+| 6-position modular jack    | `TO STEAM GENERATOR >`        |
+| Barrel jack                | `ROOM TEMP SENSOR >`          |
+| **4-pin polarized header** | `FROM DTV CONTROL >`          |
+| **4-pin polarized header** | `TO NEXT DEVICE > (OPTIONAL)` |
+
+**We had it backwards.** STEAM-ADAPTER.md §5 inferred that DTV+ peripheral ports
+are modular jacks carrying serial over patch cable, and concluded from that a
+screw-terminal converter "is not, on its own, plausibly sufficient". The modular
+jack is the **generator** port. The DTV+ side is a 4-pin header. The reasoning
+was traceable — Kohler's guide mentions a telephone-style extension cable, and
+the wall interface really does use RJ45 — but it attached that cable to the
+wrong end of the box.
+
+The board also reads as an opto-isolated RS-485 node: three Sharp `PC900V`
+optocouplers bridging a routing gap, next to an 8-pin SOIC whose marking begins
+`ADM`. Three optos is exactly driver-in, receiver-out, driver-enable. The optos
+and that SOIC sit on the `CN1`/`CN2` side; the modular jack sits with the MCU
+and the 20 MHz crystal. **[I]** So the isolated RS-485 interface is the DTV+
+side and the generator link is not isolated — which is the sensible way round,
+given the DTV+ bus runs 25 ft and daisy-chains while the generator crossover
+cable is 10 inches.
+
+Also on the board: a Renesas/NEC µPD78F0xxx MCU in LQFP-64, a `CN3` header
+silkscreened `TXD RXD RESET GND VCC CLK`, a 2-pin pad marked `P/CL`, and five
+lid indicators rather than the three the installation guide describes —
+`GEN TEST`, `TEMP SENSOR`, `DATA LINK`, `CHK SYS`, `OK`.
+
+**Why it matters:** the two questions blocking a steam lead no longer need the
+K-99695 at all. A magnifier on `IC2` and a continuity meter on `CN1`/`CN2` close
+both, on an open board with no power applied. It also means a standard
+screw-terminal RS-485 converter probably is the right part after all.
+
+**For Kohler:** nothing here is a fault report — it is a note that the DTV+
+peripheral connector is a 4-pin polarized header, which no published Kohler
+document we could find states, and which installers and integrators would
+benefit from having in the spec sheet.
+
+### 13:53 — I1 is solved, and this project caused it
+
+The shower stopping mid-use was our own app. It polled the controller often
+enough to hang it; the valve stopped, and the controller carried on reporting
+"running" until a timeout caught up about a minute later. Operator
+determination, recorded in [I1](INVESTIGATIONS.md#i1--the-shower-stops-mid-use).
+
+Every piece of this was already in the repository, written down separately and
+never joined up:
+
+- [FIELD-NOTES.md](research/FIELD-NOTES.md) §1 — polling faster than 15 s idle /
+  5 s active locks the controller up, sometimes for hours. Two HTTP sessions
+  maximum.
+- 2026-08-04 23:05 and 23:10 below — the egress log caught a hang caused by two
+  copies of our own proxy, and showed that a hang makes `values.cgi` report a
+  connected valve as `dis`.
+- I1's own confounder note, written 2026-07-26, recorded that a browser was open
+  on the controller's web page during the recorded shutoff — and then discounted
+  it as unable to explain earlier events.
+
+That last one is the mistake worth naming. The confounder was identified,
+written down, and reasoned away, because it was treated as "a browser tab"
+rather than as "extra HTTP clients, of which our app is one". A month of
+investigation then ranked hypotheses using telemetry gathered by the thing
+causing the fault.
+
+The tankless minimum-flow hypothesis (H0) led for a month and is dead. It was a
+good hypothesis — it explained why turning the overhead off and leaving the
+handshower alone preceded a shutoff by 3.5 minutes — and it was wrong. E1, E2,
+E3, E4, E5, E7 and E10 are all closed unrun.
+
+One prior conclusion survives, with its scope corrected. H5, "controller
+crash-and-reboot", was excluded because the controller stayed responsive
+throughout the recorded shutoff. That was right about a _reboot_. A hang that
+wedges valve handling while the UI and web server keep answering fits the
+recorded signature exactly — water stops first, the display still says running,
+nothing reaches the on-board log, reconciliation about a minute later by
+timeout. That reading is inference; nobody has captured a trace of it.
+
+**Why it matters:** the replacement-controller work was never predicated on
+fixing I1 — [CONTROLLER-DESIGN.md](docs/replacement-controller/CONTROLLER-DESIGN.md)
+lists it as an explicit non-goal — but the diagnostic scenario built to catch a
+shutoff mid-capture is no longer needed, and the design's claim that the K-99695
+is not unreliable within its documented limits now covers this fault too.
+
+**For Kohler:** the K-99695 hangs under HTTP polling above its documented
+tolerance, and the hang is not silent-safe. Water stops, but the controller's
+own state, its display, and `values.cgi` continue to report a running shower for
+roughly a minute, and nothing is written to the on-board error log. During the
+hang `values.cgi` returns a short payload that reports a connected valve as
+disconnected. A client that hits the controller too hard therefore gets a
+running shower turned off underneath it with no error surfaced anywhere.
+
+---
+
 ## 2026-08-04
 
 ### 23:10 — The egress log's first capture caught a controller hang, and explained the `values.cgi` blip
