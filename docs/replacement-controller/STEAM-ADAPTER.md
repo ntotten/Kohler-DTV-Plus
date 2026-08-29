@@ -14,30 +14,27 @@ Saturn valve buses.
 
 ---
 
-## Read this first
+## Safety position
 
 The valve design's safety argument does not transfer to steam.
 
-[CONTROLLER-DESIGN.md](CONTROLLER-DESIGN.md) is acceptable only because the
-**valve** owns mixing, over-temperature trips, and fail-closed behaviour — the
-replacement master is a messenger sending a setpoint to a device that protects
-itself. That claim is written down, sourced, and testable:
+[CONTROLLER-DESIGN.md](CONTROLLER-DESIGN.md) is acceptable because the valve
+owns mixing, over-temperature trips, and fail-closed behaviour; the replacement
+master sends a setpoint to a device that protects itself. That claim is sourced
+and testable —
 [valve-control.md § Safety Ownership](../devices/valve-control.md#safety-ownership).
 
-**The equivalent claim for steam is only partly established, and one piece of it
-points the wrong way.** Kohler's generator guides do document low-water,
-tank-high-limit and room-over-temperature protections inside the generator
-(§5), which is genuinely reassuring. But nothing says what the heating element
-does when the data link goes silent, nothing settles which timer stops a
-session, and Kohler states as a `WARNING` that **a user interface must be
-located inside the steam enclosure** — a requirement the replacement-controller
-plan breaks by design, since it powers the wall interface down.
+The equivalent claim for steam is partly established. Kohler documents
+low-water, tank-high-limit and room-over-temperature protections inside the
+generator (§6) **[K]**. Three gaps remain:
 
-Until those are closed, a replacement master driving steam is a 240 V appliance
-boiling water in a sealed room a person is standing in, commanded by an unlisted
-hobby controller over a protocol nobody here has ever seen on a wire.
+| Gap | Status |
+| --- | --- |
+| Heating-element behaviour when the data link goes silent | Not stated in any source |
+| Which timer ends a session | Contested — see §7 |
+| `WARNING`: "A user interface must be located within the steam enclosure" **[K]**, in two guides | Directly conflicts with the replacement plan, which powers the wall interface down at Phase 4 |
 
-Three specific reasons steam is a bigger hazard class than 109 °F water:
+Hazard comparison against the existing water design:
 
 | | Water (existing design) | Steam (this document) |
 | --- | --- | --- |
@@ -47,9 +44,9 @@ Three specific reasons steam is a bigger hazard class than 109 °F water:
 | Unattended cycles | None | Power clean runs **up to 45 minutes** at "extremely high" room temperature, discharging through the steam head, with no clean abort **[K]** |
 | Kohler's own requirement | Interface optional; the valve is the safety device | **"A user interface must be located within the steam enclosure"** — a `WARNING`, in two guides **[K]**. The replacement design powers that interface down |
 
-Consequence for the design: **steam must not be added to the replacement
-controller on the strength of this document.** This is a scoping study, not an
-approval. See [Cheapest next steps](#cheapest-next-steps).
+**Steam is not to be added to the replacement controller on the strength of this
+document.** It is a scoping study, not an approval. See
+[Cheapest next steps](#cheapest-next-steps).
 
 ---
 
@@ -105,7 +102,7 @@ meaning is unverified **[?]**.
 
 ---
 
-## 2. Q1 — Is the third link electrically another RS-485 port?
+## 2. Physical and electrical layer
 
 **Partial yes, with an unverified gap at the connector.**
 
@@ -140,14 +137,14 @@ What is **not** established:
 **Verdict, from the controller side alone:** *probably* yes, one more isolated
 USB-RS-485 converter at 9600 8N1.
 
-**But §4a revises this downward.** Kohler's own adapter documentation describes
+**But §5 revises this downward.** Kohler's own adapter documentation describes
 the field cabling as 25 ft of telephone-style modular cable, not a terminal
-block, and never names the electrical standard. Read §4a before treating a third
+block, and never names the electrical standard. Read §5 before treating a third
 converter as the answer.
 
 ---
 
-## 3. Q2 — How much new work is it, beyond one more serial port?
+## 3. Implementation scope
 
 **A whole second protocol stack. This is the largest single finding in this
 document.**
@@ -167,12 +164,12 @@ New work required, all tier **[C]** from
 | Byte stuffing | `0x88`, `0x55`, `0xAA` escaped by prefixing `0xAA`; SOF/EOF never escaped | Saturn has no escaping documented here |
 | Checksum | 2's complement of `DEST+SRC+CMD+payload`, verified by summing to `0x00` | Different from Saturn's |
 | Discovery | 3-step: `DEV_ADDRESS_OPP 0x05` broadcast → `DEV_REQUEST_ADDR 0x06` carrying the device ID → `DEV_ASSIGN_ADDR 0x07` | Address assignment, which the valve design permits only in `DISCOVERY` state with water off |
-| Addressing | Device ships at `0x00`; master assigns from `0x03–0x07`; `0xFF` broadcast | Steam's `0x05` is a **device ID**, not a bus address — see the contradiction in §9 |
+| Addressing | Device ships at `0x00`; master assigns from `0x03–0x07`; `0xFF` broadcast | Steam's `0x05` is a **device ID**, not a bus address — see the contradiction in §10 |
 | Command set | At minimum `GET_DEV_STATUS 0x30`, `STATUS_UPDATE 0x31`, `SET_DEV_PARAM 0x34`, `DEV_ACK 0x35`, `DEV_NAK 0x36`, `ERROR 0x37`, `CLEAR_FAULT_FLAGS 0x3A` | Everything else must be denied, per the valve design's allowlist rule |
 | Timing | Steam tick **150 ms** (vs 525 ms for valves), reply timeout 300 ms, echo window 150 ms | 3.5× the transaction rate of a valve bus |
 | Half-duplex | DE/RE handling and TX echo consumption | The Waveshare converter does direction automatically; echo still has to be discarded |
 | Steam payloads | Status decode (actual temp, desired temp, op state, timer min/sec, error flags) and the `SET_DEV_PARAM` write shape | [steam-generator.md](../../research/xagon0/docs/devices/steam-generator.md) |
-| Fx2 encoding | A second temperature encoding alongside Cx2, with conversion at the boundary | §6 |
+| Fx2 encoding | A second temperature encoding alongside Cx2, with conversion at the boundary | §7 |
 
 **[I]** Rough shape of the effort: the serial-port count goes 2 → 3, but the
 protocol implementations go 1 → 2, the fixture/emulator work roughly doubles,
@@ -200,7 +197,7 @@ contains real DTV+ discovery frames, but whether and when the baud changes is
 
 ---
 
-## 4. Q3 — Is the K-1737-K1 a bus device or a passive harness?
+## 4. The K-1737-K1 adapter
 
 **A device. An active, generator-powered module with three status LEDs, a
 terminated multi-drop port, and its own temperature sensor.** Not a cable.
@@ -322,9 +319,10 @@ connectors."
 
 ---
 
-## 4a. What this does to the electrical question
+## 5. Consequences for the electrical design
 
-The kit findings partly **overturn** the tidy answer in §2.
+Kohler's adapter documentation constrains the field cabling in a way the
+controller-side pinout table in §2 does not capture.
 
 **The controller-side link is a 25 ft cable into the "Digital Interface(s) and
 Optional Components" port group** — the same group the wall interface uses. And
@@ -400,10 +398,9 @@ installations above 6000 ft, because the fast-start coil must be disconnected.
 
 ---
 
-## 5. Q4 — What owns steam safety?
+## 6. Safety ownership
 
-**Mostly the generator, per Kohler's own guides — better news than this section
-originally assumed, with two important exceptions.**
+**Mostly the generator, per Kohler's own guides, with two exceptions.**
 
 The primary source is **1230487-2-E, "Installation and Care Guide — Steam
 Generator"**
@@ -424,7 +421,7 @@ and **1045789-5-C**
 | **Room over-temperature** | Error `0120`, "The temperature in the steam room has exceeded the maximum allowable level." Remedy: "Reset power to the steam generator and ventilate the steam room" |
 | **Session auto-shutoff** | Steam Spec Guide: "Auto Shutoff — Automatically shuts down after 20 minutes if not reactivated" |
 
-This closes unknowns that §10 originally listed as blocking. Dry-fire and
+This closes unknowns that §11 originally listed as blocking. Dry-fire and
 low-water protection **do** exist, in the generator, and Kohler documents them.
 
 **[I]** The `0120` room-over-temperature path is the important one for a
@@ -476,19 +473,18 @@ The valve column is sourced from
 | Fail-closed on comms loss | **Valve.** Comms loss times out and closes the valve; power loss closes the solenoids. "The failure direction is always OFF" **[C]** | **Unknown.** The documented behaviour is that the *controller* retries and then latches a permanent error **[C]**; error `0408` is "A communication error has occurred", remedied by a UI reset **[K]**. Neither says what the heating element does |
 | Session timeout | Prompt 3 valve has `PROMPT3_TIMEOUT_MAX` 1800 s in the **valve** **[C]** | **Contested.** Kohler documents a generator "Auto Shutoff… after 20 minutes if not reactivated" **[K]**; upstream describes a `steamOnTicker`/`steamTimerSetTime` pair where `0` disables shutoff **[C]**. Same timer or two? **[?]** |
 | In-room user interface | n/a | **Required by Kohler**, as a `WARNING`, in two separate guides **[K]** — see above |
-| Unattended maintenance cycle | n/a | **Power clean, up to 45 minutes, "Do not enter the steam room"** **[K]** — §7 |
+| Unattended maintenance cycle | n/a | **Power clean, up to 45 minutes, "Do not enter the steam room"** **[K]** — §8 |
 
-**[I]** Net assessment: the generator looks like a genuinely self-protecting
-appliance, which is the same architecture the valve design depends on, and that
-is the single biggest improvement over where this document started. Two gaps
-remain that are not closable by reading — what the heating element does when the
-bus goes silent, and which timer actually stops a session — and one
-non-technical blocker that no measurement can fix: Kohler requires a user
-interface in the enclosure.
+**[I]** Net assessment: the generator is documented as a self-protecting
+appliance, which is the architecture the valve design depends on. Two gaps are
+not closable by reading — what the heating element does when the bus goes
+silent, and which timer actually stops a session — and one blocker is not
+closable by measurement at all: Kohler requires a user interface in the
+enclosure.
 
 ---
 
-## 6. Q5 — Temperature and runtime limits, and their encodings
+## 7. Temperature and runtime limits
 
 ### Temperature: Fx2, not Cx2
 
@@ -522,7 +518,7 @@ error, not a magnitude error.
 | Maximum session duration | **20 minutes** | **[K][B]** | Guide p. 67 "The maximum set steam duration time is 20 minutes"; web UI input is `min="1" max="20"` and clamps on change |
 | Optional max-run-time cap | No Limit / 20 / 25 / 30 / 35 minutes; **disabled here** | **[B][A]** | `settings.html` dropdown; `max_steam_runtime_enable = 0` |
 | Firmware min setpoint | `MIN_STEAM_SETPOINT` given as Cx2 48 = 24 °C = 75 °F (Fx2 150) | **[C]** | [steam-generator.md](../../research/xagon0/docs/devices/steam-generator.md) |
-| Max pre-heat | 10 minutes **[C]** vs 20 minutes **[K]** — see §9 | **[?]** | |
+| Max pre-heat | 10 minutes **[C]** vs 20 minutes **[K]** — see §10 | **[?]** | |
 | **Generator's own limits** | Max allowable **125 °F (52 °C)**; min operating **90 °F (32 °C)**; min run time **10 min**; max time allowed **20 min**; ships preset to **113 °F for 15 min** | **[K]** | 1230489-2-C ([resources.kohler.com](https://resources.kohler.com/onlinecatalog/pdf/1230489_2.pdf)), 1045789-5-C ([techcomm.kohler.com](https://techcomm.kohler.com/techcomm/pdf/1045789-5.pdf)) |
 
 The generator's native limits and the DTV+ controller's limits are the **same
@@ -532,7 +528,7 @@ the architecture this design would want. It is not proof, because a shared
 number could equally be two independent implementations of one product
 requirement.
 
-Two things worth pulling out.
+Two constraints follow.
 
 **125 °F is not a firmware constant, it is a settings field.** The controller's
 own settings page renders Max Temperature as a bare `<input type="number">` with
@@ -570,7 +566,7 @@ specifically.
 
 ---
 
-## 7. Q6 — Power clean, and why `powerclean_check.cgi` is rated 3/5
+## 8. The power-clean cycle
 
 ### What the cycle is **[K]**
 
@@ -646,7 +642,7 @@ this system has never run steam, so 580 cannot be a live countdown, and Kohler's
 own illustration also shows 580. Recorded as an unexplained duplicate key, not
 as a decoded field.
 
-### The `powerclean_check.cgi` rating is wrong **[B]** — see §9
+### The `powerclean_check.cgi` rating is wrong **[B]** — see §10
 
 The controller's own shipped `settings.js` uses `powerclean_check.cgi` as a pure
 status read, polled once per second, and triggers the cycle through a completely
@@ -655,7 +651,7 @@ changes the repo's own safety table.
 
 ---
 
-## 8. Steam is not actually an independent third link **[K]**
+## 9. Steam is coupled to the valve buses **[K]**
 
 The valve design treats each zone as an isolated bus with its own state
 machine. Steam does not fit that model, because two documented features couple
@@ -684,11 +680,11 @@ production encoder already denies calibration and firmware commands.
 
 ---
 
-## 9. Contradictions found
+## 10. Contradictions found
 
 Recorded per [AGENT.md](../../AGENT.md) rule 5. Two of these are ours.
 
-### 9.1 `powerclean_check.cgi` is a read, not a trigger — **ours, and it matters**
+### 10.1 `powerclean_check.cgi` is a read, not a trigger — **ours**
 
 [PROTOCOL.md](../../PROTOCOL.md), [DISCLAIMER.md](../../DISCLAIMER.md) and
 [`app/server/cgi-safety.mjs`](../../app/server/cgi-safety.mjs) all say
@@ -709,22 +705,27 @@ and the controller's own shipped code contradicts it **[B]**:
   `update_value(const_steam_start_clean, 1)` — i.e.
   **`save_variable.cgi?index=60&value=1`**.
 
-**[I]** An endpoint the vendor polls at 1 Hz from its own UI is not plausibly a
-cycle trigger. The rating looks like it inherited an ambiguous word.
+**[I]** An endpoint the vendor polls at 1 Hz from its own UI is not a cycle
+trigger. The 3/5 rating appears to derive from the ambiguous upstream wording.
 
-**The consequence runs the other way, and it is not comfortable.**
-`save_variable.cgi` is rated 2/5 and **exposed as a `command`** in
-`cgi-safety.mjs`, with the note "indices 1-105. Only index 43 (volume) is used by
-this app" — but nothing in `app/server/` constrains the index. So the endpoint
-this repo blocks is a status read, and the endpoint that actually starts a
-45-minute unattended power-clean cycle is reachable through the proxy today.
+The consequence is in the other direction. `save_variable.cgi` is rated 2/5 and
+exposed as a `command` in `cgi-safety.mjs`, noted "indices 1-105. Only index 43
+(volume) is used by this app" — but no code in `app/server/` constrains the
+index. The endpoint this repo blocks is a status read; the endpoint that starts
+a 45-minute unattended power-clean cycle is reachable through the proxy.
 
-It is harmless on **this** system, because steam is `not_seen`. It would stop
-being harmless the moment a generator is installed. Flagging only; changing the
-safety table is out of scope for this note and belongs in
-[INVESTIGATIONS.md](../../INVESTIGATIONS.md).
+Inert on this system, because steam is `not_seen`. It becomes live if a
+generator is installed.
 
-### 9.2 Index 60 is an action, not a startup setting — **ours**
+**Verified 2026-08-29** against the mirrored shipped code:
+[`values.js:59`](../../research/controller-mirror/js/values.js) defines
+`const_steam_start_clean = 60`;
+[`settings.js:1275`](../../research/controller-mirror/js/settings.js) defines
+`run_power_clean()` calling `update_value(const_steam_start_clean, 1)`;
+`settings.js:1304` polls `powerclean_check.cgi` and re-schedules itself at
+1000 ms. The safety-table correction is tracked separately from this note.
+
+### 10.2 Index 60 is an action, not a startup setting — **ours**
 
 [save-variable-reference.md](../../research/xagon0/docs/web-interface/save-variable-reference.md)
 describes index 60 `steam_start_clean` as "Power-clean **on startup**, 0 = off,
@@ -733,7 +734,7 @@ imperative: the "Start Power Clean" button calls it with `1` and then re-polls
 status 500 ms later **[B]**. We follow the shipped code, per the same precedent
 as the massage-mode conflict in [PROTOCOL.md](../../PROTOCOL.md).
 
-### 9.3 Steam device ID `0x05` versus the assignable address range — **upstream**
+### 10.3 Steam device ID `0x05` versus the assignable address range — **upstream**
 
 [dtv-plus-protocol.md](../../research/xagon0/docs/protocols/dtv-plus-protocol.md)
 states devices ship at `0x00` and the master assigns addresses from
@@ -748,7 +749,7 @@ that the same document's discovery example is internally consistent (`DEV_REQUES
 carries `0x05` as the device *ID*, then `DEV_ASSIGN_ADDR` grants `0x03`) — it is
 only the status example that is wrong.
 
-### 9.4 Pre-heat: 10 minutes or 20?
+### 10.4 Pre-heat: 10 minutes or 20?
 
 `MAX_STEAM_PRE_HEAT_TIME` is given as **10 min** **[C]**
 ([timing-constants.md](../../research/xagon0/docs/control-logic/timing-constants.md),
@@ -759,7 +760,7 @@ counting down" **[K]** (p. 68). These may be different things — a firmware
 pre-heat cap versus a UI warm-up dialog timeout — but they are not reconciled.
 **[?]**
 
-### 9.5 Steam tick: 150 ms or 500 ms?
+### 10.5 Steam tick: 150 ms or 500 ms?
 
 `STEAM_TICK_TIME` is **150 ms** **[C]** and the system overview agrees. The DTV+
 protocol document's own timing table gives a generic "Port Tick — 500 ms — main
@@ -768,7 +769,7 @@ port carries 3.5× the transactions of a valve port, which is a real load
 question given [FIELD-NOTES.md § 1](../../research/FIELD-NOTES.md) on this
 system's sensitivity to polling.
 
-### 9.6 Devices per port: 1, 2, or 5?
+### 10.6 Devices per port: 1, 2, or 5?
 
 [timing-constants.md](../../research/xagon0/docs/control-logic/timing-constants.md)
 says max **1** non-valve device per port; [system-specification.md § 4](../system-specification.md)
@@ -777,44 +778,49 @@ says addresses `0x03–0x07` allow **5** per port. Unreconciled **[?]**. Irrelev
 for one steam generator on a dedicated converter, but it would matter for any
 attempt to share a bus.
 
-### 9.7 Retries: 4 or 5?
+### 10.7 Retries: 4 or 5?
 
 Steam recovery is documented as "retries the failed command up to **4** times"
 **[C]**, while `DEVICE_MAX_RETRIES` is **5** and the DTV+ protocol page says
 "retried up to **5** times". Minor, but it is exactly the kind of off-by-one that
 changes when a fault latches. **[?]**
 
-### 9.8 `MIN_STEAM_SETPOINT` is below the documented UI floor
+### 10.8 `MIN_STEAM_SETPOINT` is below the documented UI floor
 
 Upstream gives a firmware minimum equivalent to 75 °F **[C]**; Kohler documents
 the adjustable range as starting at 90 °F **[K]**. Both can be true — a firmware
-floor under a UI floor — but the web CGI path has no minimum at all (§6), so
+floor under a UI floor — but the web CGI path has no minimum at all (§7), so
 which one actually binds a `steam_on.cgi` call is **unknown**.
 
 ---
 
-## 10. What we do not know
+## 11. What we do not know
 
 Ordered by how much it would block the work.
 
+Kohler's generator and adapter guides answer what the kit contains, what
+connects to what, where the adapter draws power, the generator's mains
+requirements, what power clean does, and that low-water and high-limit
+protection exist. What they do not answer:
+
 | # | Unknown | Why it blocks |
 | --- | --- | --- |
-| 1 | **Where steam's fail-safe lives.** Over-temperature, dry-fire/low-water, and comms-loss behaviour of the generator itself | The entire safety argument. Without it there is no design |
-| 2 | **Whether `steamTimerSetTime` runs in the generator or the controller** | Decides whether a crashed master leaves a boiler running |
-| 3 | **What the K-1737-K1 physically is and what it connects to what** | Decides whether question 1 is even the right question |
-| 4 | **Whether the DTV+ port is signal-only or carries device power** | Decides the converter and cabling |
-| 5 | **The connector part number, keying, pin count, termination and idle bias on a DTV+ port** | Cannot build a lead |
-| 6 | **The real on-wire steam frames** — exact `SET_DEV_PARAM` payload shape, status field order and widths, discovery sequence | Cannot write an encoder from prose |
-| 7 | **Whether the generator speaks DTV+ natively or the adapter translates** | Decides whether the master talks to the adapter or through it |
-| 8 | **Steam generator mains requirements** — voltage, amperage, dedicated circuit, GFCI, drain and plumbing | Electrician and permit scope |
-| 9 | **What power clean actually does** — elevated temperature? drain? descale? — and whether it can be aborted safely mid-cycle | The 45-minute unattended cycle |
+| 1 | **What the heating element does when the data link goes silent.** Kohler documents error `0408` and a UI reset; nothing says the generator stops | The fail-closed claim, which is the whole basis of the valve design's safety case |
+| 2 | **Which timer actually ends a session** — the generator's documented 20-minute auto-shutoff **[K]**, or `steamTimerSetTime` where `0` disables shutoff **[C]** | Decides whether a crashed master leaves a boiler running |
+| 3 | **Whether the in-enclosure-interface WARNING can be satisfied at all** by a replacement controller, and if so how | Kohler states it as a safety requirement; the replacement plan powers that interface down. This is a *policy* blocker, not a measurement |
+| 4 | **The protocol on the adapter↔controller link.** No Kohler document names it. RS-485 is inference from "terminated multi-drop on telephone-style cable" | Decides whether a USB-RS-485 converter is even the right part |
+| 5 | **The modular connector's pin assignment**, pin count, termination and idle bias on a DTV+ peripheral port | Cannot build a lead |
+| 6 | **Whether the DTV+ port sources device power.** The adapter is generator-powered, so probably not — but the wall interface *is* controller-powered on a similar cable | Decides isolation and cabling |
+| 7 | **The real on-wire steam frames** — exact `SET_DEV_PARAM` payload shape, status field order and widths, discovery sequence | Cannot write an encoder from prose |
+| 8 | **Whether the generator speaks DTV+ natively or the adapter translates.** The adapter substitutes for the native keypad, which suggests the generator side is the *generator's* protocol and the adapter bridges **[I]** | Decides whether the master talks to the adapter or through it |
+| 9 | **Whether K-1737-K1 is the right kit for whichever generator is bought.** Kohler maps current Invigoration generators to K-5548-K1, not K-1737-K1 | Buying the wrong generator wastes the kit |
 | 10 | **Whether the 125 °F ceiling is enforced below the settings layer** | An installer field with no `min`/`max` is not a limit |
-| 11 | **How deluge is commanded on the wire**, and whether it is controller-side orchestration or a generator-initiated request | The cross-bus coupling in §8 |
-| 12 | **Everything in §9 marked [?]** | Implementation details that decide whether a link works at all |
+| 11 | **How deluge is commanded on the wire**, and whether it is controller-side orchestration or a generator-initiated request | The cross-bus coupling in §9 |
+| 12 | **Everything in §10 marked [?]** | Implementation details that decide whether a link works at all |
+| 13 | **Listing status.** No UL 499 / UL 1951 / ASME statement appeared in any fetchable Kohler PDF; they likely live on the rating label | The listing argument in [temperature-safety.md](../control-logic/temperature-safety.md) applies here with much higher stakes |
 
-None of this is resolvable by reading more. Items 1, 2, 6, 7 and 11 need a
-capture of a working steam installation; items 3, 4, 5 and 8 need the parts in
-hand or a Kohler document that does not appear to be public.
+Items 1, 2, 7, 8 and 11 need a capture of a working steam installation. Items 5,
+6 and 13 need the parts in hand. Items 3 and 9 need a conversation with Kohler.
 
 ---
 
@@ -824,18 +830,25 @@ Ordered cheapest first. Every one of these is read-only or off-hardware.
 
 | # | Step | Cost | Resolves |
 | --- | --- | --- | --- |
-| 1 | **Ask Kohler.** Support case **#07797183** is already open with Kohler engineering about controller documentation. Add three questions: what is in the K-1737-K1 box, what does it connect to what, and where does steam over-temperature / low-water protection live | Free; one email | Unknowns 1, 3, 7, and possibly 8 |
-| 2 | **Read US 9,777,470 B2 FIG. 14–15 and their description**, the steam figures of the DTV+ system patent | Free | May document the steam subsystem's architecture — this is the only first-party architecture text that exists ([patents.md](../patents.md)) |
-| 3 | **Pull the Kohler installation guide for whichever generator the adapter targets**, once #1 names it, and read its safety section for high-limit, low-water, session-timeout and listing statements | Free | Unknown 1, directly, from a primary source |
-| 4 | **Reconcile §9.1 in the repo's safety table.** Decide whether `powerclean_check.cgi` should be re-rated as a read, and whether `save_variable.cgi` should be index-restricted | Half a day of code | The live gap between what is blocked and what is reachable |
-| 5 | **Write a DTV+ codec against the vendored spec, with fixtures, offline.** Framing, stuffing, checksum, discovery, and the steam status/param payloads, plus a steam emulator | Days; no hardware | Turns unknown 6 from "unwritten" into "written but unverified", and produces the decoder needed to read any future capture |
-| 6 | **Capture the wall-interface link at controller boot** with the physically receive-only front end the valve design already specifies. The K-99693 is the only DTV+ speaker in this house, and it is connected and healthy. Capture at 9600 and 115200; expect a baud change | Existing hardware; no new parts | If discovery really is DTV+, this validates framing, stuffing, checksum and the 3-step handshake against real Kohler traffic — the parts steam shares with every other DTV+ device. Also settles §9.5 and §9.6 for at least one device |
-| 7 | **Photograph and meter an unused DTV+ port on the K-99695** (unpowered, continuity only), and photograph the connector | An hour | Unknowns 4 and 5, partially |
-| 8 | **Find someone with a working DTV+ steam installation** and ask for a receive-only capture, via the Tier 1 repos in [SOURCES.md](../../research/SOURCES.md) or the Homey/C4 threads | Free; low odds | Unknowns 1, 2, 6, 11 — the only route that does not require buying a generator |
+| 1 | **Photograph and meter an unused DTV+ peripheral port on the K-99695** — powered down, continuity only — and photograph the connector body and the K-99693's plug | An hour, no purchase | Unknowns 5 and 6. Also settles whether the modular-jack reading in §5 is right |
+| 2 | **Ask Kohler.** Support case **#07797183** is already open with Kohler engineering. Add four questions: is the K-1737-K1 link RS-485 and what is its pinout; what does the generator do when the data link goes silent; is the 20-minute shutoff in the generator or the controller; and can the in-enclosure-interface requirement be met other than with a K-99693 | Free; one email | Unknowns 1, 2, 3, 4 — the four that reading cannot close |
+| 3 | **Confirm generator/kit pairing before buying anything.** Kohler maps current Invigoration generators to K-5548-K1, not K-1737-K1 | Free | Unknown 9, before money is spent |
+| 4 | **Retrieve the two Kohler Assist wiring diagrams.** They are the documents most likely to show terminals on both the adapter and the generator, and the research could not fetch them — they sit behind a Salesforce login at [assist.kohler.com](https://assist.kohler.com/en/valves-shower-bath/DTV-and-Steam-Generator-Wiring-Diagrams). A Kohler account, or asking in case #07797183, may reach them | Free | Unknowns 4 and 5, from a primary source |
+| 5 | **Read US 9,777,470 B2 FIG. 14–15 and their description**, the steam figures of the DTV+ system patent | Free | May document the steam subsystem's architecture — the only first-party architecture text that exists ([patents.md](../patents.md)) |
+| 6 | **Reconcile §10.1 in the repo's safety table.** Decide whether `powerclean_check.cgi` should be re-rated as a read, and whether `save_variable.cgi` should be index-restricted | Half a day of code | The live gap between what is blocked and what is reachable |
+| 7 | **Capture the wall-interface link at controller boot** with the physically receive-only front end the valve design already specifies. The K-99693 is the only DTV+ speaker in this house, and it is connected and healthy. Capture at 9600 and 115200; expect a baud change | Existing hardware; no new parts | If discovery really is DTV+, this validates framing, stuffing, checksum and the 3-step handshake against real Kohler traffic — the parts steam shares with every other DTV+ device. Also settles §10.5 and §10.6 for at least one device |
+| 8 | **Write a DTV+ codec against the vendored spec, with fixtures, offline** — framing, stuffing, checksum, discovery, the steam status/param payloads, plus a steam emulator | Days; no hardware | Turns unknown 7 from "unwritten" into "written but unverified", and produces the decoder needed to read any future capture |
+| 9 | **Find someone with a working DTV+ steam installation** and ask for a receive-only capture, via the Tier 1 repos in [SOURCES.md](../../research/SOURCES.md) or the Homey/C4 threads. Odds are poor: no third-party work on this bus was found — see the GitHub code search result below | Free; low odds | Unknowns 1, 2, 7, 11 — the only route that does not require buying a generator |
 
 **Not recommended:** buying a steam generator to reverse engineer it. That
 inverts the project's economics and puts an unlisted controller in front of a
-mains boiler before any of unknowns 1, 2 or 6 are closed.
+240 V, 40–90 A, deliberately non-GFCI-protected boiler before unknowns 1, 2 and
+3 are closed.
+
+**Also not recommended:** treating steps 1–9 as a path to shipping steam. Even
+with all of them done, unknown 3 — Kohler's in-enclosure interface requirement —
+is a decision for the operator and an electrician, not something this project
+can engineer around.
 
 ---
 
@@ -846,7 +859,12 @@ mains boiler before any of unknowns 1, 2 or 6 are closed.
 | [`2026-08-22-idle-baseline/`](../../research/diagnostics/2026-08-22-idle-baseline/) | Every steam field this controller reports, and proof steam is `not_seen` | **[A]** |
 | [`research/controller-mirror/`](../../research/controller-mirror/) — `js/control.js`, `js/settings.js`, `js/values.js`, `control.html`, `settings.html` | The 1–20 minute duration clamp, the max-run-time options, the unbounded max-temp field, the power-clean trigger path, the spa/steam interlock | **[B]** |
 | Kohler User Guide **1241234-5-D**, [`research/reference/guide-text.txt`](../../research/reference/guide-text.txt) — pp. 38, 67–70 | The 90–125 °F range, the 20-minute session cap, the 600-minute / 45-minute power-clean cycle and its "stay out" warnings, deluge | **[K]** |
-| Kohler **K-99693-P** spec sheet, [`research/reference/K-99693-P_spec.pdf`](../../research/reference/K-99693-P_spec.pdf) | 125 °F ambient rating; "do not install above the steamhead of a steam unit" | **[K]** |
+| Kohler **K-99693-P** spec sheet, [`research/reference/K-99693-P_spec.pdf`](../../research/reference/K-99693-P_spec.pdf) | 125 °F ambient rating; "do not install above the steamhead of a steam unit"; the 25 ft RJ45 cable + coupler | **[K]** |
+| Kohler **1235393-2-C**, Installation and Care Guide — Steam Adapter Kit / Steam Head for DTV+ ([PDF](https://resources.kohler.com/onlinecatalog/pdf/1235393_2.pdf)) | The kit contents, topology, adhesive mounting, the three status LEDs, the terminator, generator-sourced power, the telephone-style cable, the in-enclosure interface WARNING, error 0408 | **[K]** |
+| Kohler **1230487-2-E**, Installation and Care Guide — Steam Generator ([PDF](https://resources.kohler.com/webassets/kpna/catalog/pdf/en/1230487_2.pdf)) | Mains service tables, dedicated circuit, "Circuit Breaker without GFCI", errors 0120 / 0140-A / 0140-B, fill shutoff, pressure relief, power clean flushing through the steam head | **[K]** |
+| Kohler **1230489-2-C** ([PDF](https://resources.kohler.com/onlinecatalog/pdf/1230489_2.pdf)) and **1045789-5-C** ([PDF](https://techcomm.kohler.com/techcomm/pdf/1045789-5.pdf)), Steam Control Kit guides | The generator's own 90–125 °F / 10–20 minute limits, 113 °F × 15 min factory preset, the 600-minute reminder, three-session grace then lockout, the 45-minute cycle and its WARNING | **[K]** |
+| Kohler **Steam Specification Guide**, form 22-3187-0822 ([PDF](https://resources.kohler.com/webassets/kpna/brochures/KOHLER_SteamSpecGuide.pdf)) | Generator-to-control-kit mapping, electrical service per model, "No GFCI should be hooked to this circuit", "Auto Shutoff… after 20 minutes" | **[K]** |
+| Kohler **1069333-1-C** (DTV II roughing-in, [PDF](https://resources.kohler.com/onlinecatalog/pdf/1069333_1.pdf)) and **1581267-2-B** (Digital Steam Adapter service instruction, 2025-09, [PDF](https://techcomm.kohler.com/techcomm/pdf/1581267-2.pdf)) | K-1737's generator compatibility list; the current harness naming and the DTV+/Anthem+ dual role | **[K]** |
 | [xagon0 `steam-generator.md`](../../research/xagon0/docs/devices/steam-generator.md) | Device ID `0x05`, operating states, Fx2, status/param payload shape, error bits, status codes, power-clean state `0xCC` | **[C]** |
 | [xagon0 `dtv-plus-protocol.md`](../../research/xagon0/docs/protocols/dtv-plus-protocol.md) | Framing, stuffing, checksum, discovery, addressing, command set, timing | **[C]** |
 | [xagon0 `timing-constants.md`](../../research/xagon0/docs/control-logic/timing-constants.md) | 150 ms steam tick, retry counts, pre-heat cap, port limits | **[C]** |
@@ -856,3 +874,26 @@ mains boiler before any of unknowns 1, 2 or 6 are closed.
 Kohler documents and supports none of the protocol material. The vendored
 xagon0 tree publishes **no license** — see
 [PROVENANCE.md](../../research/xagon0/PROVENANCE.md); it is reference-only.
+
+**Not obtainable**, recorded so nobody repeats the search:
+
+- Any spec or roughing-in sheet numbered for **K-1737-K1**. The conventional
+  `resources.kohler.com/webassets/kpna/catalog/pdf/en/K-1737-K1_spec_*.pdf` and
+  `K-1737_spec_*` paths both return **404**. Only the DTV II sheet exists.
+- The **kohler.com / us.kohler.com product pages** — two fetches timed out at
+  60 s, and a direct request returned **HTTP 403**. The marketing copy quoted in
+  §4 is search-index-sourced, not verified against the live page.
+- The two **Kohler Assist wiring diagrams** — hosted on
+  `globalkohler.my.salesforce.com`, both returned a Salesforce login page rather
+  than a PDF.
+- Adapter dimensions, weight, enclosure, voltage, current, connector type, pin
+  count; any statement of the wire protocol; any UL 499 / UL 1951 / ASME listing
+  statement; any IAPMO/UPC or ICC code text mandating steam-room timers or a
+  maximum temperature. The 20-minute and 125 °F figures are **Kohler's own
+  product limits**, and no primary code source was found tying them to a mandate.
+- Any **third-party reverse engineering of this bus at all.** A GitHub code
+  search for `steam_on.cgi`, `SteamOperationState`, `DT_W_Steam` and
+  `powerclean_check.cgi` matched exactly one repository: this project's own.
+- No Kohler product called a **"Steam Management Module" / SMM** appears in any
+  document found, despite DTV+ device ID `0x06` being labelled that way upstream
+  **[C]**. **[?]**
