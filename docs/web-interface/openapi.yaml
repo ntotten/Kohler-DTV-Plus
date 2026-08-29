@@ -1,0 +1,929 @@
+openapi: 3.0.3
+info:
+  title: Kohler DTV+ System Controller (K-99695-NA) — Local API
+  version: "0.0.3.89"
+  description: |
+    Reverse-engineered local-network API exposed by the Kohler DTV+ System
+    Controller Module. The controller runs MQX RTOS with the RTCS HTTP server
+    and exposes ~50 CGI endpoints plus a partial REST surface at /api/v1/.
+
+    **No authentication.** Every endpoint accepts unauthenticated GET/POST
+    from any host on the LAN. There is no API key, session, cookie, CSRF
+    token, or origin check.
+
+    **Rate-limit yourself.** The MQX network stack is fragile under
+    concurrent HTTP load. In practice, treat 1 request per second as the
+    maximum. Bursting causes the controller to become unresponsive,
+    requiring a power cycle.
+
+    **DESTRUCTIVE operations are clearly marked.** Several endpoints
+    actuate physical hardware (turn on the shower, lights, steam) or
+    destroy state (reset to factory). They execute on plain GET with
+    no confirmation.
+
+    **Sources for this spec:**
+      - Direct testing against a deployed K-99695 (firmware v0.0.3.89, ~Dec 2015 build)
+      - Reverse engineering by Tim Ellery (https://github.com/timelery/Kohler-DTV-Plus)
+      - Source review of the device's own settings.js (207KB) and service.js (57KB)
+      - Existing community libraries (niemyjski/kohler-python, dcmeglio/hubitat-kohlerdtv)
+
+    Endpoints with `x-tested: true` were exercised during testing and the
+    behavior is observed. Endpoints without that flag are inferred from
+    JS source and community RE, and may have undocumented parameters or
+    behavior.
+  contact:
+    name: Reverse-engineering reference
+    url: https://github.com/timelery/Kohler-DTV-Plus
+  license:
+    name: Independent reverse-engineering reference; not endorsed by Kohler
+
+servers:
+  - url: http://{controller_ip}
+    description: Direct LAN access to the controller (HTTP only — no TLS)
+    variables:
+      controller_ip:
+        default: 192.168.1.100
+        description: IP of the controller on your LAN
+
+tags:
+  - name: System
+    description: Read-only system identity and status
+  - name: Configuration
+    description: Read/write the device's configuration (data tables)
+  - name: HardwareControl
+    description: |
+      ⚠️ Endpoints that actuate physical hardware (water, lights, audio, steam).
+      Calling these turns things on or off in the user's bathroom in real time.
+  - name: Updates
+    description: Firmware update polling and file upload
+  - name: ErrorLogs
+    description: Read and clear controller / Konnect error logs
+  - name: Reset
+    description: |
+      ⚠️ Destructive operations — wipe configuration, users, or paired devices.
+  - name: Bluetooth
+    description: Bluetooth pairing keys and disconnection
+  - name: REST
+    description: Newer REST surface added alongside the CGIs
+  - name: Files
+    description: Filesystem listing and metadata
+  - name: Internal
+    description: Endpoints whose behavior is not documented or characterized
+
+paths:
+  ##############################################################################
+  # System
+  ##############################################################################
+
+  /serial.cgi:
+    get:
+      tags: [System]
+      summary: Device serial number
+      description: Returns the controller's serial number as plain text.
+      x-tested: false
+      responses:
+        "200":
+          description: Serial number string
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "12345678"
+
+  /mac.cgi:
+    get:
+      tags: [System]
+      summary: Device MAC address
+      description: Returns the controller's MAC address.
+      x-tested: false
+      responses:
+        "200":
+          description: MAC address as plain text
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "00:14:6F:00:00:00"
+
+  /system_info.cgi:
+    get:
+      tags: [System]
+      summary: System information dump
+      description: Returns a JSON document of system metadata.
+      x-tested: partial
+      responses:
+        "200":
+          description: System info object
+          content:
+            application/json:
+              schema:
+                type: object
+                description: |
+                  Full schema not characterized. Known to include device
+                  identification fields and configuration metadata.
+                additionalProperties: true
+
+  /values.cgi:
+    get:
+      tags: [System]
+      summary: Current variable values
+      description: |
+        Returns the current values of indexed device variables. The web UI
+        polls this periodically as part of its live state refresh.
+      x-tested: false
+      responses:
+        "200":
+          description: Values object (schema not characterized)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /landing_url.cgi:
+    get:
+      tags: [System]
+      summary: Initial UI redirect URL
+      description: |
+        Called by index.html on page load. Returns a JSON object with a `url`
+        field indicating the actual landing page (typically settings.html).
+      x-tested: false
+      responses:
+        "200":
+          description: Object with redirect target
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    example: "settings.html"
+
+  /languages.cgi:
+    get:
+      tags: [System]
+      summary: Supported language list
+      description: Returns the list of UI languages supported by the controller.
+      x-tested: false
+      responses:
+        "200":
+          description: Language list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /id_interface.cgi:
+    get:
+      tags: [System]
+      summary: Identify connected interface (purpose unclear)
+      description: |
+        Behavior not directly characterized. Likely returns information
+        about which UI display module is currently bound.
+      x-tested: false
+      responses:
+        "200":
+          description: Identification data
+          content:
+            application/octet-stream:
+              schema: { type: string }
+
+  /powerclean_check.cgi:
+    get:
+      tags: [System]
+      summary: Check power-clean state
+      description: |
+        Polled by the UI as a heartbeat. Returns the current power-clean
+        cycle state. Read-only; does NOT trigger a clean cycle.
+      x-tested: true
+      responses:
+        "200":
+          description: Power clean status
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  ##############################################################################
+  # Files
+  ##############################################################################
+
+  /files.cgi:
+    get:
+      tags: [Files]
+      summary: List filesystem contents
+      description: |
+        Returns a directory listing of the device's MFS filesystem (drive `a:\`).
+        Lists firmware images, configuration files, and backup directories.
+        No download CGI is exposed — this endpoint enumerates names only.
+      x-tested: true
+      responses:
+        "200":
+          description: |
+            Plain-text directory listing in MQX MFS format.
+            Backslashes denote subdirectories.
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: |
+                a:\
+                corys.txt    size 144 bytes
+                \images
+                    \.
+                    \..
+                    versions.txt    size 171 bytes
+                    dtvplus2_app_v0.0.3.89.S19    size 4715750 bytes
+                    ui_amulet_v0.1.3.72.S19    size 12992824 bytes
+                    dtvplus2_uiapp_v0.0.7.44.pack.tar    size 6440960 bytes
+                data_table.txt    size 10221 bytes
+                data_table_default.txt    size 10221 bytes
+
+  /files_available.cgi:
+    get:
+      tags: [Files]
+      summary: Available firmware images on this controller
+      description: |
+        Returns the firmware images currently installed in /images.
+        Field naming is consistent with the DTV+'s multi-processor
+        architecture (separate images for the main controller, the Amulet UI
+        module, and optional ColdFire / language / prompt modules).
+      x-tested: true
+      responses:
+        "200":
+          description: Installed firmware metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FilesAvailable"
+
+  ##############################################################################
+  # Configuration
+  ##############################################################################
+
+  /save_variable.cgi:
+    get:
+      tags: [Configuration]
+      summary: Set a single device variable by index
+      description: |
+        Sets one indexed variable to a value. Used by every form input
+        in the settings UI. Index space is opaque; refer to settings.js
+        for the constants used by the original UI.
+      x-tested: false
+      parameters:
+        - name: index
+          in: query
+          required: true
+          schema: { type: integer }
+          description: Variable index
+        - name: value
+          in: query
+          required: true
+          schema: { type: string }
+          description: New value (string-encoded; type depends on index)
+      responses:
+        "200":
+          description: Plain-text status
+          content:
+            text/plain: { schema: { type: string } }
+
+  /datatable.cgi:
+    get:
+      tags: [Configuration]
+      summary: Read/inspect the device's data table
+      description: |
+        Returns or operates on `data_table.txt`. Likely returns the table
+        contents but the exact format is not characterized.
+      x-tested: false
+      responses:
+        "200":
+          description: Data table contents
+          content:
+            text/plain: { schema: { type: string } }
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  /saveDT.cgi:
+    post:
+      tags: [Configuration]
+      summary: Save data table
+      description: |
+        Persists the in-memory data table to `data_table.txt` on flash.
+        ⚠️ Calling without a fully populated table risks corrupting config.
+      x-tested: false
+      x-destructive: false
+      responses:
+        "200":
+          description: Save result
+          content:
+            text/plain: { schema: { type: string } }
+
+  /saveUI.cgi:
+    post:
+      tags: [Configuration]
+      summary: Save UI configuration
+      description: Persists UI-related settings.
+      x-tested: false
+      responses:
+        "200":
+          description: Save result
+          content:
+            text/plain: { schema: { type: string } }
+
+  /save_default.cgi:
+    post:
+      tags: [Configuration]
+      summary: Save current state as the new default
+      description: |
+        Saves the current configuration as the "default" used by the
+        Reset to Default operation. ⚠️ This OVERWRITES the saved default.
+      x-tested: false
+      responses:
+        "200":
+          description: Save result
+
+  /edit_dt.cgi:
+    post:
+      tags: [Configuration]
+      summary: Edit the data table
+      description: |
+        Modifies entries in the data table. Parameters not characterized.
+      x-tested: false
+      responses:
+        "200":
+          description: Edit result
+
+  /clear_dt.cgi:
+    post:
+      tags: [Configuration]
+      summary: Clear data table entries
+      description: ⚠️ Wipes data table state.
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200":
+          description: Clear result
+
+  /set_device.cgi:
+    post:
+      tags: [Configuration]
+      summary: Set device configuration
+      description: |
+        Top-level device configuration setter. Parameters not characterized.
+      x-tested: false
+      responses:
+        "200":
+          description: Set result
+
+  /swapvalves.cgi:
+    post:
+      tags: [Configuration]
+      summary: Swap valve assignments
+      description: |
+        Swaps the configured order/assignment of the two valves. Visible
+        as the "Valve 1 / Valve 2 order" controls in the service page.
+      x-tested: false
+      responses:
+        "200":
+          description: Swap result
+
+  /change_user.cgi:
+    post:
+      tags: [Configuration]
+      summary: Change user profile
+      description: Switches or modifies a user profile. Not characterized.
+      x-tested: false
+      responses:
+        "200":
+          description: Change result
+
+  /hiding.cgi:
+    get:
+      tags: [Configuration]
+      summary: Hide / show UI elements (semantics unclear)
+      description: |
+        Behavior not characterized. Likely related to which controls
+        are visible in the consumer-facing UI.
+      x-tested: false
+      responses:
+        "200":
+          description: Hiding state
+          content: { application/json: { schema: { type: object, additionalProperties: true } } }
+
+  /sim_dev_values.cgi:
+    get:
+      tags: [Configuration]
+      summary: Simulated device values
+      description: |
+        Likely related to a simulator/test mode. Behavior not characterized.
+      x-tested: false
+      responses:
+        "200":
+          description: Simulated values
+
+  ##############################################################################
+  # Hardware control — ⚠️ ACTUATORS
+  ##############################################################################
+
+  /quick_shower.cgi:
+    get:
+      tags: [HardwareControl]
+      summary: ⚠️ Start a quick shower
+      description: Starts a "quick shower" cycle — turns on the shower.
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Result }
+
+  /start_user.cgi:
+    get:
+      tags: [HardwareControl]
+      summary: ⚠️ Start a user's preset shower
+      description: Begins a user's saved shower preset.
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Result }
+
+  /stop_user.cgi:
+    get:
+      tags: [HardwareControl]
+      summary: Stop the active user shower preset
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Result }
+
+  /stop_shower.cgi:
+    get:
+      tags: [HardwareControl]
+      summary: Stop the shower
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Result }
+
+  /light_on.cgi:
+    get:
+      tags: [HardwareControl]
+      summary: ⚠️ Turn on shower lighting
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Result }
+
+  /light_off.cgi:
+    get:
+      tags: [HardwareControl]
+      summary: Turn off shower lighting
+      x-tested: false
+      responses:
+        "200": { description: Result }
+
+  /music_on.cgi:
+    get:
+      tags: [HardwareControl]
+      summary: ⚠️ Turn on shower audio
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Result }
+
+  /music_off.cgi:
+    get:
+      tags: [HardwareControl]
+      summary: Turn off shower audio
+      x-tested: false
+      responses:
+        "200": { description: Result }
+
+  /steam_on.cgi:
+    get:
+      tags: [HardwareControl]
+      summary: ⚠️ Activate steam generator
+      description: Starts the steam generator. Hot, wet, expensive to run.
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Result }
+
+  /steam_off.cgi:
+    get:
+      tags: [HardwareControl]
+      summary: Deactivate steam generator
+      x-tested: false
+      responses:
+        "200": { description: Result }
+
+  /rain_on.cgi:
+    get:
+      tags: [HardwareControl]
+      summary: ⚠️ Activate rain shower head
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Result }
+
+  /rain_off.cgi:
+    get:
+      tags: [HardwareControl]
+      summary: Deactivate rain shower head
+      x-tested: false
+      responses:
+        "200": { description: Result }
+
+  /massage_toggle.cgi:
+    get:
+      tags: [HardwareControl]
+      summary: ⚠️ Toggle massage mode
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Result }
+
+  ##############################################################################
+  # Updates
+  ##############################################################################
+
+  /check_updates.cgi:
+    get:
+      tags: [Updates]
+      summary: Check for firmware updates
+      description: |
+        Triggers an update check against `pr0d3ct-upd.kohler.com`
+        (the configured update server). The update protocol is FTP — the
+        controller connects to port 21 on the resolved IP and pulls
+        `versions.txt`, then any updated `.S19` / `.tar` images.
+
+        **As of 2026, the configured update server is decommissioned**
+        (DNS resolves to IPs Kohler no longer owns; all ports closed).
+        Calls to this endpoint return success but the underlying FTP
+        connection silently fails.
+      x-tested: true
+      responses:
+        "200":
+          description: Update check kicked off (does not wait for completion)
+          content: { application/json: { schema: { type: object, additionalProperties: true } } }
+
+  /update_change.cgi:
+    post:
+      tags: [Updates]
+      summary: Modify update behavior
+      description: |
+        Behavior not characterized. Likely changes update channel or
+        target. ⚠️ Possibly destructive.
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Result }
+
+  /ftp_status.cgi:
+    get:
+      tags: [Updates]
+      summary: FTP update transfer status
+      description: |
+        Returns the controller's FTP-update client state. Includes the
+        size of every firmware image currently on disk and any
+        in-progress download counters.
+      x-tested: true
+      responses:
+        "200":
+          description: FTP status object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FtpStatus"
+
+  /fileupload.cgi:
+    post:
+      tags: [Updates]
+      summary: ⚠️ Upload a firmware image
+      description: |
+        Multipart file upload, served by the "Choose File / Upload" form
+        in service.html. Used by Kohler service technicians to push
+        firmware images directly. ⚠️ Uploaded files are unpacked and
+        applied; signature verification has not been observed.
+      x-tested: false
+      x-destructive: true
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                myfile:
+                  type: string
+                  format: binary
+      responses:
+        "200": { description: Upload result }
+
+  /unpack_bin.cgi:
+    post:
+      tags: [Updates]
+      summary: ⚠️ Unpack a binary archive
+      description: |
+        Unpacks an uploaded `.tar` archive into the device's filesystem.
+        Called as part of the firmware install flow. ⚠️ Risky to invoke
+        outside that flow.
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Unpack result }
+
+  ##############################################################################
+  # Error logs
+  ##############################################################################
+
+  /cerror_logs.cgi:
+    get:
+      tags: [ErrorLogs]
+      summary: Controller error log
+      description: |
+        Returns the controller's error log as plain text. Each line is
+        `[HH:MM.SS am/pm DD/MM/YYYY] CODE: SOURCE [DESCRIPTION]`.
+      x-tested: true
+      responses:
+        "200":
+          description: Plain-text error log
+          content:
+            text/plain:
+              schema: { type: string }
+              example: |
+                [05:05.52 p.m. 05/01/2026] 100:  UI Error
+                [04:17.15 p.m. 05/01/2026] 100:  Prompt3 Error
+
+  /kerror_logs.cgi:
+    get:
+      tags: [ErrorLogs]
+      summary: Konnect (cloud bridge) error log
+      description: |
+        Returns the K-97999 Konnect bridge error log. Empty if no Konnect
+        bridge is installed.
+      x-tested: true
+      responses:
+        "200":
+          description: Plain-text Konnect error log
+          content: { text/plain: { schema: { type: string } } }
+
+  /reset_cfault.cgi:
+    get:
+      tags: [ErrorLogs]
+      summary: Clear controller error log
+      description: Empties `/cerror_logs.cgi`'s contents.
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Result }
+
+  /reset_kfault.cgi:
+    get:
+      tags: [ErrorLogs]
+      summary: Clear Konnect error log
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Result }
+
+  /reset_fault.cgi:
+    get:
+      tags: [ErrorLogs]
+      summary: Clear faults (older alias)
+      description: |
+        Older alias also seen in timelery's RE notes. Likely equivalent to
+        `/reset_cfault.cgi` on this firmware version.
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Result }
+
+  ##############################################################################
+  # Reset / recovery — ⚠️ DESTRUCTIVE
+  ##############################################################################
+
+  /reset_factory.cgi:
+    get:
+      tags: [Reset]
+      summary: ⚠️⚠️⚠️ Factory reset
+      description: |
+        Wipes ALL configuration — installed valves, paired devices, user
+        profiles, network settings, error logs. Returns the controller
+        to factory state. **Cannot be undone.**
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Reset result }
+
+  /reset_default.cgi:
+    get:
+      tags: [Reset]
+      summary: ⚠️ Reset to saved default
+      description: |
+        Reverts configuration to whatever was last saved via
+        `/save_default.cgi`. Less destructive than factory reset but
+        still wipes any unsaved changes.
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Reset result }
+
+  /reset_users.cgi:
+    get:
+      tags: [Reset]
+      summary: ⚠️ Reset all user profiles
+      description: |
+        Removes all configured user profiles and their saved presets.
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Reset result }
+
+  /reset_user.cgi:
+    get:
+      tags: [Reset]
+      summary: ⚠️ Reset a single user profile
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Reset result }
+
+  /forget_devices.cgi:
+    get:
+      tags: [Reset]
+      summary: ⚠️ Forget all paired devices
+      description: |
+        Clears the list of paired Bluetooth devices and external modules.
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Result }
+
+  ##############################################################################
+  # Bluetooth
+  ##############################################################################
+
+  /BTKey.cgi:
+    get:
+      tags: [Bluetooth]
+      summary: Bluetooth pairing key
+      description: Read or set the Bluetooth pairing key. Not characterized.
+      x-tested: false
+      responses:
+        "200": { description: Result }
+
+  /BTPin.cgi:
+    get:
+      tags: [Bluetooth]
+      summary: Bluetooth PIN
+      x-tested: false
+      responses:
+        "200": { description: Result }
+
+  /bt_disconnect.cgi:
+    get:
+      tags: [Bluetooth]
+      summary: ⚠️ Disconnect Bluetooth devices
+      description: Disconnects any active Bluetooth-paired audio device.
+      x-tested: false
+      x-destructive: true
+      responses:
+        "200": { description: Result }
+
+  ##############################################################################
+  # REST API (newer surface, partial)
+  ##############################################################################
+
+  /api/v1/device/status:
+    get:
+      tags: [REST]
+      summary: Device status (newer REST surface)
+      description: |
+        Newer REST endpoint added alongside the CGIs. Documented in
+        timelery's RE notes but not extensively characterized.
+      x-tested: false
+      responses:
+        "200":
+          description: Device status JSON
+          content: { application/json: { schema: { type: object, additionalProperties: true } } }
+
+  ##############################################################################
+  # Internal / unclassified
+  ##############################################################################
+
+  /rpc.cgi:
+    post:
+      tags: [Internal]
+      summary: Generic RPC entry point (semantics unknown)
+      description: |
+        Exists in firmware but no JS in the public web UI calls it.
+        Possibly used by service-tool software. ⚠️ Avoid invoking
+        without understanding the protocol.
+      x-tested: false
+      responses:
+        "200": { description: Result }
+
+components:
+  schemas:
+    FilesAvailable:
+      type: object
+      description: |
+        Inventory of installed firmware images. The `*_size` fields are
+        human-readable strings ("4.497 MB"), not byte counts. The
+        `*_v…` fields are filenames.
+      properties:
+        dtv2_app:
+          type: string
+          description: Filename of the main controller firmware
+          example: "dtvplus2_app_v0.0.3.89.S19"
+        dtv2_app_size:
+          type: string
+          description: Human-readable size
+          example: "4.497 MB"
+        ui_amulet:
+          type: string
+          description: Filename of the Amulet UI firmware
+          example: "ui_amulet_v0.1.3.72.S19"
+        ui_amulet_size:
+          type: string
+          example: "12.390 MB"
+        ui_coldfire:
+          type: integer
+          description: 0 if no ColdFire UI module is installed; non-zero filename otherwise.
+          example: 0
+        ui_language:
+          type: integer
+          description: 0 if no language pack is installed.
+          example: 0
+        prompt2_eeprom:
+          type: integer
+          example: 0
+        prompt2_flash:
+          type: integer
+          example: 0
+        prompt3_eeprom:
+          type: integer
+          example: 0
+        prompt3_flash:
+          type: integer
+          example: 0
+        light_bridge:
+          type: integer
+          example: 0
+
+    FtpStatus:
+      type: object
+      description: |
+        Status of the controller's FTP update client. Field names
+        starting with `ftp_` reflect the controller's FTP-based update
+        protocol — this is how firmware was historically pulled from
+        `pr0d3ct-upd.kohler.com:21`.
+      properties:
+        value:
+          type: boolean
+        internet_status:
+          type: string
+          description: Internet reachability state (`"con"` for connected)
+          example: "con"
+        loc_upload_status:
+          type: boolean
+          description: Local-upload mode active
+        upload_enable:
+          type: boolean
+          description: Whether FTP upload mode is enabled
+        ftp_ctl_image_size:
+          type: integer
+          description: Size in bytes of the main controller image (`dtvplus2_app_*.S19`)
+          example: 4715750
+        ftp_ui_image_size:
+          type: integer
+          description: Size in bytes of the Amulet UI image
+          example: 12992824
+        ftp_ui_app_file:
+          type: integer
+          description: Size in bytes of the UI app tarball
+          example: 6440960
+        ftp_versions_file:
+          type: integer
+          description: Size in bytes of `versions.txt`
+          example: 171
+        ftp_lang_image_size: { type: integer, example: 0 }
+        ftp_coproc_image_size: { type: integer, example: 0 }
+        ftp_prompt3_flash_size: { type: integer, example: 0 }
+        ftp_prompt3_eeprom_size: { type: integer, example: 0 }
+        ftp_ui_rfs_file0: { type: integer, example: 0 }
+        ftp_ui_rfs_file1: { type: integer, example: 0 }
+        ftp_ui_rfs_file2: { type: integer, example: 0 }
+        ftp_ui_rfs_file3: { type: integer, example: 0 }
+        ftp_ui_rfs_file4: { type: integer, example: 0 }
+        ftp_ui_rfs_file5: { type: integer, example: 0 }
+        ftp_ui_rfs_file6: { type: integer, example: 0 }
+        ftp_ui_rfs_file7: { type: integer, example: 0 }
+        ftp_ui_lang_file: { type: integer, example: 0 }
+        ftp_ui_touch_file: { type: integer, example: 0 }
+        ftp_downloaded_size: { type: integer, example: 0 }
+        ftp_file_count: { type: integer, example: 0 }
+        ftp_current_file_count: { type: integer, example: 0 }
+        ftp_file_id: { type: integer, example: 0 }
+        ftp_download_error: { type: integer, example: 0 }

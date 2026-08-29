@@ -39,6 +39,7 @@ is the replacement input.
 | [AGENT.md](AGENT.md) / [CLAUDE.md](CLAUDE.md) | Contract for agents working here, including the story-log convention. |
 | [STORY-LOG.md](STORY-LOG.md) | Significant events and reversals, newest first. |
 | [INVESTIGATIONS.md](INVESTIGATIONS.md) | What we are still trying to find out, and the experiments queued to find it out. Includes the open investigation into the shower stopping mid-use. |
+| [docs/](docs/) | Controller reference — hardware, firmware update pipeline, CGI surface, security posture, and what firmware extraction would take. |
 | [research/SOURCES.md](research/SOURCES.md) | Monitoring index — where to sweep for new community findings. |
 | [research/FIELD-NOTES.md](research/FIELD-NOTES.md) | What breaks when you automate a DTV+ — failure reports from the community, sourced, with what we changed in response. |
 | [research/controller-mirror/](research/controller-mirror/) | Verbatim mirror of the controller's own web UI, plus live payload captures. |
