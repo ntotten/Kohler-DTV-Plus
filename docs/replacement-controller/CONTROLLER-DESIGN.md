@@ -2,10 +2,39 @@
 
 Status: design proposal; no valve traffic or water actuation has been performed.
 
-This plan replaces the unstable K-99695 controller as the active controller for
-both installed valves. The K-99695 and wall interface become disconnected cold
-spares. Returning to Kohler is a deliberate power-off cable swap, not an
-automatic handoff.
+This plan makes a Raspberry Pi the active master for both installed valves,
+speaking Saturn to them directly. The K-99695 and wall interface become
+disconnected cold spares. Returning to Kohler is a deliberate power-off cable
+swap, not an automatic handoff.
+
+### Why, stated honestly
+
+An earlier draft of this document called the K-99695 "unstable". That is not
+what this project's own record shows, and it is worth correcting in the place
+someone would read it. Every controller lockup observed here was self-inflicted:
+[STORY-LOG.md](../../STORY-LOG.md) 2026-08-04 23:05 traces both hangs to
+concurrent HTTP sessions of our own making, and notes that Kohler's own web page
+polls at the same interval without trouble. The K-99695 has been reliable when
+driven within its documented limits.
+
+The actual reasons:
+
+- **Control that does not depend on a $2013 touchscreen** in a wet wall, whose
+  connector already failed once and whose repair is a printed part with an open
+  question against it.
+- **Owning the protocol**, so behaviour is inspectable and changeable rather
+  than inferred from a CGI surface that omits, among other things, any measured
+  water temperature.
+- **Instrumenting the valve link**, which is the one place the open
+  investigation can actually be seen from.
+
+**This is not expected to fix
+[I1](../../INVESTIGATIONS.md#i1--the-shower-stops-mid-use).** The leading
+hypothesis for the mid-use shutoffs is a tankless heater minimum-flow cutout —
+outside the DTV+ entirely. Replacing the master would not change it. What this
+work does offer I1 is the passive capture in Phase 1, which can see the failure
+directly; that is a diagnostic benefit, not a repair, and it should not be
+described as one.
 
 The plan covers this installation specifically:
 
