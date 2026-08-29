@@ -15,8 +15,8 @@
 # setpoint ceiling, the session limit and the steam envelope are compiled in.
 
 profile = "bench"
-                                # bench permits PTY links and scaled session
-                                # timers; production refuses both.
+# bench permits PTY links and scaled session
+# timers; production refuses both.
 
 # ---------------------------------------------------------------- transmit gate
 #
@@ -54,7 +54,8 @@ scope = "emulator-only"
 
 [zones.zone1]
 port = "/dev/pts/PLACEHOLDER"
-valve = "dtv-6-port"            # "dtv-6-port" | "prompt-3-port"
+# One of "dtv-6-port" or "prompt-3-port".
+valve = "dtv-6-port"
 
 # The master address the valve answers. UNRESOLVED between 0x00 and 0x10 for the
 # Prompt 3: docs/devices/valve-control.md says a Prompt 3 always uses 0x10,
@@ -98,7 +99,8 @@ instrumented_slot = 1
 # send the adapter setpoints, the same relationship this service has with the
 # valves.
 [steam]
-enabled = true                  # the emulated adapter is always available
+# The emulated adapter is always available.
+enabled = true
 port = "/dev/pts/PLACEHOLDER"
 
 # Both unresolved in the sources, so both are configurable and neither is

@@ -10,9 +10,9 @@
 # Values here can only narrow the built-in safety bounds, never widen them. The
 # setpoint ceiling, the session limit and the steam envelope are compiled in.
 
-profile = "production"          # "production" | "bench"
-                                # bench permits PTY links and scaled session
-                                # timers; production refuses both.
+# "production" or "bench". Bench permits PTY links and scaled session timers;
+# production refuses both.
+profile = "production"
 
 # ---------------------------------------------------------------- transmit gate
 #
@@ -50,7 +50,8 @@ scope = "emulator-only"
 
 [zones.zone1]
 port = "/dev/serial/by-id/usb-Waveshare_USB_TO_RS485-if00-port0"
-valve = "dtv-6-port"            # "dtv-6-port" | "prompt-3-port"
+# One of "dtv-6-port" or "prompt-3-port".
+valve = "dtv-6-port"
 
 # The master address the valve answers. UNRESOLVED between 0x00 and 0x10 for the
 # Prompt 3: docs/devices/valve-control.md says a Prompt 3 always uses 0x10,
@@ -94,7 +95,8 @@ instrumented_slot = 1
 # send the adapter setpoints, the same relationship this service has with the
 # valves.
 [steam]
-enabled = false                 # until the adapter lead is built and metered
+# Until the adapter lead is built and metered.
+enabled = false
 port = "/dev/serial/by-id/usb-Waveshare_USB_TO_RS485-if02-port0"
 
 # Both unresolved in the sources, so both are configurable and neither is
