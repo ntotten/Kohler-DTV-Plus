@@ -1,0 +1,27 @@
+# The harness image build context. Without this the context is ~620 MB, almost
+# all of it Cargo build output and git history that the image never reads.
+
+# Cargo build output. The image builds its own.
+controller/target/
+controller/**/target/
+target/
+
+# Git history. The tests read the working tree, never the repository.
+.git/
+.github/
+
+# Node tooling. oxfmt runs on the developer machine and in its own CI job.
+node_modules/
+app/node_modules/
+viewer/node_modules/
+
+# Large reference material the tests do not read.
+Images/
+research/reference/guide-pages/
+cnc/
+viewer/
+
+# Scratch and editor state.
+.e2e/
+*.tmp
+.vscode/

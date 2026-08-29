@@ -16,3 +16,9 @@ controller/**/target/
 
 # Emulated-Pi and end-to-end harness scratch output.
 controller/.e2e/
+
+# A CA certificate for a development sandbox's TLS-intercepting proxy, copied
+# into the build context so the harness image can be built inside one. It is
+# environment material, specific to one machine and one session, and belongs in
+# no repository. The committed Dockerfile does not reference it.
+.ccr-ca.crt
