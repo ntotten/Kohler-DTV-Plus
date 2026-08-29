@@ -46,6 +46,13 @@ the manufacturer rather than a marketplace seller.
 |   2 | Waveshare `USB TO RS485/422`, SKU `23949`               | [Waveshare direct](https://www.waveshare.com/usb-to-rs485-422.htm)           | Use one separately isolated converter per valve.                   |
 |   2 | Included USB-A-to-USB-B cable, approximately 1.2 meters | [Included with SKU 23949](https://www.waveshare.com/wiki/USB_TO_RS485/422)   | One is included with each converter; order no duplicate USB cable. |
 
+Confirm on arrival that the two units report **distinct USB serial numbers**.
+Adapters in this class often ship with blank or duplicated serials, and two
+identical ones make a `by-id` symlink resolve both zones onto the same device —
+a failure the controller's "present and distinct" start check cannot catch,
+because the path does resolve. If they collide, bind by physical USB port path
+and label the ports.
+
 Each converter was listed at $17.99 when checked, or approximately $35.98 for
 both before shipping. Each includes isolated power and signal paths, automatic
 direction control, protection circuitry, screw terminals, selectable 120-ohm
@@ -56,6 +63,18 @@ channel-to-channel galvanic isolation. It is not selected because two separate
 converters provide one documented isolation barrier per valve for only about
 $18 more.
 
+## Independent temperature sensor
+
+Required by the design, not optional: a permanent outlet temperature sensor read
+by the Pi, so the installation has one number that is not the valve's own
+self-report. It is also the instrument
+[INVESTIGATIONS.md](../../INVESTIGATIONS.md) E5 needs.
+
+Select after the enclosure layout is known — the choice is between a clamp-on
+pipe probe and an inline fitting, and that depends on accessible pipe. Do not
+order it with the rest; the sensing element is cheap and the mounting decision
+is the whole cost.
+
 ## Passive capture equipment
 
 Do not connect either bidirectional adapter in parallel with the operating
@@ -63,6 +82,12 @@ K-99695 for packet capture. Select a professional isolated analyzer with a
 hardware listen-only mode or assemble a temporary isolated receiver whose
 driver enable is physically fixed inactive. Capture equipment is not part of
 the permanent controller and should not be ordered until that method is chosen.
+
+Prefer a device that timestamps in hardware. A USB-serial front end quantises
+arrival times at its latency-timer interval — 16 ms by default — which cannot
+resolve jitter on a 525 ms tick or a 320 ms response deadline. A logic analyzer
+on the differential pair, or an analyzer with hardware listen-only mode, gives
+timings that belong to the bus rather than to the adapter.
 
 ## Instruments
 
