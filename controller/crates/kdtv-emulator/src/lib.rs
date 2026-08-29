@@ -28,3 +28,4 @@
 pub mod pty;
 
 pub mod transcript;
+pub mod wire;
