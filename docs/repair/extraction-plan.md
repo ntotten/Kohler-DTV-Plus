@@ -42,14 +42,13 @@ sent: 8 (plus 3 pings, 2 TCP connect probes).
 ## What the target file is (and isn't)
 
 `a:\images\dtvplus2_app_v0.0.3.89.S19` (4,715,750 B ≈ ~2 MB binary) is the
-**complete application firmware**: MQX 3.8 kernel + RTCS + filesystem drivers
-
-- all Kohler application code (all tasks, bus drivers, CGI handlers),
-  statically linked into one RAM image (S3 records all ≥ `0x40500000`). It also
-  contains the **TFS web UI** — the docroot is compiled into this image, which
-  is why `/control.html` serves while `a:\` holds no web files (verified in
-  probes 4–5). Extracting this one file yields every byte of code that executes
-  on the controller.
+**complete application firmware**: MQX 3.8 kernel + RTCS + filesystem drivers +
+all Kohler application code (all tasks, bus drivers, CGI handlers), statically
+linked into one RAM image (S3 records all ≥ `0x40500000`). It also contains the
+**TFS web UI** — the docroot is compiled into this image, which is why
+`/control.html` serves while `a:\` holds no web files (verified in probes 4–5).
+Extracting this one file yields every byte of code that executes on the
+controller.
 
 Not in the file: the **bootloader** (internal flash of the MCF54416, plus a
 backup in NAND blocks 0–499 — does S19 CRC validation and carries the TFS
