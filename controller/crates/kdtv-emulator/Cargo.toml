@@ -1,0 +1,25 @@
+[package]
+name = "kdtv-emulator"
+description = "Device models, the byte-level wire simulator, simulated HAL and the end-to-end rig. Never a dependency of the daemon."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+kdtv-config = { workspace = true }
+kdtv-hal = { workspace = true }
+kdtv-proto = { workspace = true }
+kdtv-units = { workspace = true }
+nix = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+smallvec = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+
+[lints]
+workspace = true

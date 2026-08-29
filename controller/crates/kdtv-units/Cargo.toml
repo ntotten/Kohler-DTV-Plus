@@ -1,0 +1,19 @@
+[package]
+name = "kdtv-units"
+description = "Temperature encodings, safety bounds and shared identifiers for the DTV+ replacement controller"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+
+[lints]
+workspace = true
