@@ -11,6 +11,15 @@
 # It extracts the staged content to a temporary tree and checks that, so the
 # answer is about the commit that is actually about to be made.
 #
+# The temporary tree gets EVERY tracked `.rs` file at its index state, not just
+# the staged ones. rustfmt follows `mod` declarations: handed a `lib.rs`, it
+# reads the submodules too and fails outright if one is missing from the tree
+# around it. The first version of this script materialised the staged files one
+# at a time and checked each as it landed, so a `lib.rs` staged alongside two new
+# submodules was checked before either existed and the unresolvable `mod` was
+# reported as "unformatted". Populating the whole tree first removes both the
+# ordering dependency and the unstaged-sibling case.
+#
 source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 cd "$CONTROLLER_DIR/.."
 
@@ -23,18 +32,28 @@ fi
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
+# Every tracked .rs file at its index state — the staged ones because they are
+# what is being checked, the rest because a staged file may `mod` into them.
+git ls-files -z -- '*.rs' | xargs -0 --no-run-if-empty \
+  git checkout-index --prefix="$TMP/" --
+
 fail=0
 while IFS= read -r f; do
   [ -n "$f" ] || continue
-  mkdir -p "$TMP/$(dirname "$f")"
-  git show ":$f" > "$TMP/$f"
-  if ! rustfmt --edition 2024 --check "$TMP/$f" >/dev/null 2>&1; then
+  out=$(rustfmt --edition 2024 --check "$TMP/$f" 2>&1) && continue
+  # rustfmt exits non-zero both for "this differs from what I would emit" and
+  # for "I could not read this at all". They need different answers, so say
+  # which one happened rather than blaming formatting for a parse error.
+  if grep -q '^Error' <<< "$out"; then
+    warn "rustfmt could not process staged content: $f"
+    sed 's/^/       /' <<< "$out" >&2
+  else
     warn "staged content is unformatted: $f"
-    fail=1
   fi
+  fail=1
 done <<< "$STAGED"
 
 if [ "$fail" -ne 0 ]; then
-  die "run 'cargo fmt --all', re-stage, and try again"
+  die "fix the file(s) above, re-stage, and try again"
 fi
 say "staged Rust content is formatted ($(wc -l <<< "$STAGED") files)"

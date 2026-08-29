@@ -29,11 +29,21 @@ say "documentation builds without broken links"
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --document-private-items
 
 say "the transmit gate is closed in the committed tree"
-# Belt and braces around the gate's own unit tests: no fixture in the repository
-# may claim to be captured from this hardware until Phase 1 has actually run.
-if grep -rql 'provenance *= *"captured"' fixtures/ 2>/dev/null; then
-  die "a fixture claims tier [A] provenance. Phase 1 capture has not happened; \
-see docs/replacement-controller/CONTROLLER-DESIGN.md."
-fi
+# Phase 1 capture has not run. A fixture at tier [A] would let the gate open, so
+# its appearance must break the build and be argued for in a pull request rather
+# than merged quietly.
+#
+# This parses the fixtures. The first version of this check grepped for the TOML
+# spelling `provenance = "captured"` against files that are JSON, so it matched
+# nothing and reported success no matter what the fixtures said. It sat here
+# green and useless until the same mistake was caught in the CI workflow.
+cargo xtask gate-closed
+cargo test --package kdtv-proto gate
+
+say "the dependency graph still holds the three structural guarantees"
+cargo xtask audit-graph
+
+say "every requirement in the register is still accounted for"
+cargo xtask reqs
 
 say "all checks passed"
