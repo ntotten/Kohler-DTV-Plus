@@ -8,10 +8,15 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+# Deliberately no dependency on kdtv-config and none on kdtv-proto.
+#
+# Not an accident of what happened to be needed — it is the design. This crate is
+# sans-IO and holds no policy it did not receive: the resolved bounds arrive when
+# the kernel is built, so a safety decision cannot depend on how a file was
+# parsed. And it decides in terms of zones, links and temperatures, never wire
+# frames, so a change to a codec cannot change what stops water.
 [dependencies]
 kdtv-units = { workspace = true }
-kdtv-config = { workspace = true }
-kdtv-proto = { workspace = true }
 kdtv-telemetry = { workspace = true }
 smallvec = { workspace = true }
 thiserror = { workspace = true }
