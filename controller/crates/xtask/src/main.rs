@@ -31,6 +31,9 @@ enum Command {
         /// Fail if a hard, software-verifiable requirement has no covering test.
         #[arg(long)]
         strict: bool,
+        /// Also write the commissioning checklist to this path.
+        #[arg(long, value_name = "PATH")]
+        checklist: Option<std::path::PathBuf>,
     },
 }
 
@@ -38,7 +41,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
         Command::AuditGraph => audit::run(),
-        Command::Reqs { strict } => reqs::run(strict),
+        Command::Reqs { strict, checklist } => reqs::run(strict, checklist.as_deref()),
     }
 }
 

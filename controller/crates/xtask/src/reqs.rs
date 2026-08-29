@@ -30,6 +30,7 @@ struct Requirement {
     id: String,
     document: String,
     statement: String,
+    source: String,
     verification: String,
     hard: bool,
     #[serde(default)]
@@ -68,7 +69,7 @@ fn sanitise(s: &str) -> String {
         .collect()
 }
 
-pub(crate) fn run(strict: bool) -> Result<()> {
+pub(crate) fn run(strict: bool, checklist: Option<&Path>) -> Result<()> {
     let root = workspace_root()?;
     let path = root.join("requirements.toml");
     let text =
@@ -141,6 +142,16 @@ pub(crate) fn run(strict: bool) -> Result<()> {
         manual.len()
     );
 
+    if let Some(dest) = checklist {
+        let path = if dest.is_absolute() {
+            dest.to_path_buf()
+        } else {
+            root.join(dest)
+        };
+        write_checklist(&path, &manual)?;
+        println!("  wrote {}", path.display());
+    }
+
     let mut failures = collisions;
     if strict {
         for r in software
@@ -195,4 +206,73 @@ fn collect_test_names(root: &Path) -> Vec<String> {
         }
     }
     names
+}
+
+/// Write the commissioning checklist: every requirement that no test in this
+/// repository can prove.
+///
+/// This is the document Phase 3 and Phase 6 need anyway. Generating it from the
+/// register rather than writing it by hand means the two cannot drift, and it
+/// makes the absence of a test *visible* rather than silent — a requirement that
+/// needs a person with a thermometer is accounted for, not forgotten.
+fn write_checklist(path: &Path, manual: &[&Requirement]) -> Result<()> {
+    use std::fmt::Write as _;
+
+    let mut by_doc: BTreeMap<String, Vec<&Requirement>> = BTreeMap::new();
+    for r in manual {
+        by_doc
+            .entry(primary_document(&r.document))
+            .or_default()
+            .push(r);
+    }
+
+    let mut out = String::new();
+    out.push_str("# Commissioning checklist\n\n");
+    out.push_str("Generated from `controller/requirements.toml` by\n");
+    out.push_str("`cargo xtask reqs --checklist commissioning/CHECKLIST.md`.\n");
+    out.push_str("Do not edit by hand — edit the register and regenerate.\n\n");
+    out.push_str("Every requirement below is one **no test in this repository can prove**.\n");
+    out.push_str("They need hardware, a person, or both. Listing them here is what keeps\n");
+    out.push_str("their absence from the test suite accounted for rather than silent.\n\n");
+    out.push_str("Each line is a checkbox because that is how it gets used: printed, walked\n");
+    out.push_str("through, and signed. **Record the measured value** wherever a threshold is\n");
+    out.push_str("named — a tick against \"stops within the threshold\" is worth much less than\n");
+    out.push_str("the number that was actually observed.\n\n");
+    let _ = writeln!(out, "**{} items.**\n", manual.len());
+
+    for (doc, items) in &by_doc {
+        let _ = writeln!(out, "## {doc}\n");
+        for r in items {
+            let _ = writeln!(out, "- [ ] **{}** — {}", r.id, r.statement);
+            let _ = writeln!(out, "  - _Verify:_ {}", r.verification);
+            let _ = writeln!(out, "  - _Source:_ {}", r.source);
+            if let Some(d) = &r.disputed {
+                let _ = writeln!(out, "  - **Disputed:** {d}");
+            }
+        }
+        out.push('\n');
+    }
+
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).ok();
+    }
+    std::fs::write(path, out).with_context(|| format!("writing {}", path.display()))?;
+    Ok(())
+}
+
+/// The first document path a source cites.
+///
+/// Several register entries cite more than one document in a single string, and
+/// using the whole string as a grouping heading produces headings nobody can
+/// read. The first path is the one the requirement is really from.
+fn primary_document(document: &str) -> String {
+    document
+        .split([';', ','])
+        .next()
+        .unwrap_or(document)
+        .split_whitespace()
+        .find(|w| w.contains(".md"))
+        .unwrap_or(document)
+        .trim_matches(|c: char| !c.is_ascii_alphanumeric() && c != '/' && c != '.' && c != '-')
+        .to_owned()
 }
