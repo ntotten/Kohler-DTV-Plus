@@ -234,7 +234,8 @@ in [SHOPPING-LIST.md](SHOPPING-LIST.md).
 |   2 | Storage cards             | 64 GB high-endurance microSD                                       | One installed and one imaged recovery spare.                                         |
 |   2 | Valve interfaces          | Waveshare `USB TO RS485/422`, SKU `23949`; one dedicated per valve | Two separately isolated RS-485 links in DIN enclosures.                               |
 |   1 | Passive-capture interface | Physically receive-only isolated RS-485 front end                  | Capture the factory buses before the replacement transmits.                          |
-|   1 | Temperature instrument    | Calibrated fast-response immersion probe thermometer               | Independently verify delivered water temperature.                                    |
+|   1 | Temperature instrument    | Calibrated fast-response immersion probe thermometer               | Independently verify delivered water temperature at commissioning.                   |
+|   1 | Permanent outlet sensor   | Pi-readable temperature probe on outlet plumbing                   | The one number not self-reported by the valve; logged continuously. Also serves E5. |
 |   1 | Electrical test set       | True-RMS meter; borrow an oscilloscope and isolated differential probe | Verify pins, polarity, idle bias, termination, and waveform without assuming labels. |
 
 References:
@@ -452,7 +453,13 @@ The vendored reverse-engineering notes contradict themselves. Resolve these
 from receive-only captures, not guesses:
 
 1. Does the three-port valve use DTV+ master identity `0x00` or Prompt identity
-   `0x10` here?
+   `0x10` here? *[valve-control.md](../devices/valve-control.md) says a Prompt
+   3-Port always uses `0x10`;
+   [saturn-protocol.md](../../research/xagon0/docs/protocols/saturn-protocol.md)
+   says to always use `0x00` with DTV+ hardware — and its own worked example
+   shows a `0x1E` Prompt 3-Port answering to master `0x00`. That example is
+   evidence for `0x00`, but it is one third-party capture from unknown
+   hardware, and it is inference until ours says the same.*
 2. What exact discovery and address-allocation frames does each valve use?
 3. What are the exact all-off command and acknowledgement for each valve?
 4. Does K-99695 write one compound desired state or separate temperature,
@@ -462,21 +469,93 @@ from receive-only captures, not guesses:
 7. What fault frames are observable?
 8. Where are termination and idle bias applied?
 9. What are the verified A/B/ground pins and polarity?
+10. **What is the actual register/control-byte map?** The two vendored sources
+    contradict each other: `valve-control.md` puts both firmware info and
+    calibration read at `0x15`, while `saturn-protocol.md` puts configuration
+    at `0x15` and calibration at `0x10`. Questions 1-9 resolve the *frames*;
+    this one resolves the *numbering*, and an encoder built on the wrong map
+    can send a plausible frame to the wrong register.
+11. **Does the address-clear broadcast (`0x3A`/`0x03`) disturb calibration or
+    any other stored valve configuration?** The design permits address clear
+    during discovery. Zone 1 holds `v1_cal_code = 173` and zone 2 holds `160`;
+    both are recorded in the recovery baseline before any capture begins, and
+    both are re-read after the first discovery to confirm they survived.
+12. **Is automatic purge on or off?** FIELD-NOTES §3 records `auto_purge = 1`
+    and `auto_purge_enable = 1`; [system-specification.md](../system-specification.md)
+    records "automatic purge disabled". Both cannot be right, and the answer
+    changes what `start` and `stop` mean physically — see the purge note below.
 
 Capture one valve at a time with no HTTP polling or other automation:
 
 1. controller boot and discovery, water off;
 2. idle polling;
-3. start one outlet at 100 °F, stabilize, then stop;
+3. start one outlet at 100 °F, stabilize, then stop — **watching for purge**:
+   note whether water flows before the valve reports on, and whether it
+   continues after the stop command is acknowledged;
 4. smallest temperature adjustment;
 5. add and remove one outlet;
-6. pause and resume;
+6. pause and resume — and whether paused time counts against the runtime timer;
 7. normal stop;
-8. a 16-minute safe-temperature run to observe timer maintenance;
-9. orderly power cycle after the capture is saved and water is off.
+8. a **22-minute** safe-temperature run to observe timer maintenance. The
+   refresh is only accepted once ≥ 900 s have elapsed, so the original
+   16-minute run left about a minute of window to catch it in;
+9. orderly power cycle after the capture is saved and water is off;
+10. **a run in the failing configuration, until it fails.** See below.
 
 The capture front end must be physically unable to transmit: termination off,
 `DE` hard-strapped inactive, and no transmit conductor from the USB UART.
+
+Timestamp at the capture device, and prefer a logic-analyzer capture over
+USB-serial for anything where the timing is the finding: a 16 ms USB latency
+quantum cannot resolve jitter on a 525 ms tick or a 320 ms deadline.
+
+### Scenario 10: capture a real shutoff
+
+Everything above is the healthy path. This one is the reason the tap is worth
+building at all.
+
+[I1](../../INVESTIGATIONS.md#i1--the-shower-stops-mid-use) — the shower stops
+mid-use — has been open since July, and its central difficulty is that the
+failure is invisible to controller telemetry: the water stops first and the
+K-99695 finds out roughly a minute later, through a timeout. E6 has been queued
+behind that problem the whole time. A receive-only Saturn tap sits on the other
+side of it. It sees the valve's own fault flags and the exact frame at which
+state changes, without the controller's timeout in the way.
+
+Method: once the tap is proven on scenarios 1-9, run the configuration that
+fails — handshower alone, matching the 2026-07-14 conditions as closely as
+possible — with the tap recording, until it stops or a reasonable time passes.
+
+- **A valve fault frame precedes the stop:** the answer is in the valve or its
+  supply, and we have the code. H0 and H4 separate immediately.
+- **The valve stops with no fault and no command:** points hard at power or at
+  the valve's own logic, and rules out anything the controller did.
+- **Nothing stops:** also a result, and it constrains the conditions.
+
+Cost, once the tap exists: one shower. This is the strongest evidence anyone
+could hand Kohler about I1, and it needs no water actuation the operator would
+not otherwise perform.
+
+**⚠️ Consent:** moves water. Operator present. Record the result in
+[STORY-LOG.md](../../STORY-LOG.md) and the verdict in
+[INVESTIGATIONS.md](../../INVESTIGATIONS.md).
+
+### The purge question
+
+If automatic purge is enabled — and FIELD-NOTES §3 says it is on this
+controller, while [system-specification.md](../system-specification.md) says it
+is not — then water flows before the valve reports on, and possibly after the
+stop is acknowledged. That changes three things in this design:
+
+1. the state machine needs a purge state, and `get_cached_state()` must report
+   water-is-moving distinctly from valve-is-on;
+2. the Phase 3 and Phase 4 stop-latency measurements are measuring the wrong
+   edge unless purge is accounted for;
+3. "confirmed off" in the safe boot sequence means *flow has stopped*, not
+   *the valve acknowledged off*.
+
+Resolve it from the capture and from a fresh reading of the live controller
+before commissioning, not from either document.
 
 ## Delivery phases
 
@@ -490,6 +569,10 @@ The capture front end must be physically unable to transmit: termination off,
   valves quickly.
 - Label every cable at both ends before disconnecting anything.
 - Obtain or build two adapter leads so the original cables are not cut.
+- Record the recovery baseline: both valve calibration codes (`v1_cal_code = 173`,
+  zone 2 `160`), configured outlet slots and types, per-zone default and maximum
+  temperatures, and the purge and runtime settings. Capture is permitted to
+  broadcast address clear; the baseline is what proves nothing else moved.
 
 Gate: the factory topology can be restored from the labels in under five
 minutes with power off.
@@ -519,22 +602,52 @@ Gate: every injected failure ends in `OFF` without an unallowlisted write.
 
 ### Phase 3 — one-valve manual pilot
 
-Prefer a matching donor valve on a bench. If none is available:
+Prefer a matching donor valve on a bench. That path avoids the whole problem
+described next, and is worth real effort to obtain.
 
-1. Leave one valve connected to Kohler.
-2. Stop and remove power from the pilot valve.
-3. Disconnect only that valve's Kohler data cable and attach the custom cable.
-4. Restore valve power and commission at 100 °F on one outlet with an operator
-   present.
-5. Keep the first active session to two minutes.
+**The mixed state is the risk in this phase, and it is not the Pi.** Taking one
+valve off the K-99695 leaves the controller running with a valve missing from
+one of its two Saturn ports. Nobody knows what it does then. What we do know:
+it notices device detachment within seconds and logs it — that is how
+[I2](../../INVESTIGATIONS.md#i2--the-k-99693-interface-was-disconnected) was
+diagnosed — and FIELD-NOTES §4 is titled *"Experimenting with commands can leave
+the system stuck"*. Whether it retries discovery indefinitely, faults, or wedges
+the way it wedges under concurrent HTTP is unknown. The wall interface sharing
+that controller is the ~$2013 part that was just machined back into service.
+
+Two acceptable options. Choose one deliberately and record which:
+
+- **Preferred: power the K-99695 down for the whole pilot.** The household has
+  no shower during Phase 3. This is the honest cost of the pilot and it removes
+  the unknown entirely.
+- **Otherwise: treat the K-99695's reaction as an observed result, not a
+  background condition.** Before the pilot, predict what it will do. During it,
+  watch the controller error log and `values.cgi` for the detach and for
+  anything after it. Lock out zone 2 for the duration — nobody starts a shower
+  from the wall interface while a bench test is running on the other bus.
+
+Then:
+
+1. Stop and remove power from the pilot valve.
+2. Disconnect only that valve's Kohler data cable and attach the custom cable.
+3. Restore valve power and commission at 100 °F on one outlet, operator present
+   and **outside the spray path**, hand on the manual disconnect, independent
+   probe reading the outlet throughout.
+4. Keep the first active session to two minutes.
 
 Test process kill, forced process hang, Pi power loss, USB disconnect, Pi
 watchdog reset, A-wire open, B-wire open, bus short, and manual valve-power
 removal.
 
-Gate: every failure stops flow or reaches the valve's measured fail-off path,
-records a diagnostic reason, and requires a deliberate new start. Record stop
-latency and maximum physical temperature.
+Finish the phase by running the **full manual rollback drill** from the section
+below, timed, with one valve moved. Doing it here rather than first at Phase 4
+proves the five-minute claim from the Phase 0 gate while only one bus has
+changed and the cost of it going wrong is lowest.
+
+Gate: every failure stops flow or reaches the valve's measured fail-off path
+**within the 10-second threshold set above**, records a diagnostic reason, and
+requires a deliberate new start. Record stop latency per fault path and maximum
+physical temperature. Record what the K-99695 did about its missing valve.
 
 ### Phase 4 — second valve and all outlets
 
@@ -569,12 +682,22 @@ Gate: signed commissioning report and homeowner-visible emergency instructions.
 5. Reconnect each labeled OEM data cable to its original K-99695 valve port.
 6. Restore K-99695 and wall-interface power.
 7. Restore valve power.
-8. Wait for discovery and confirm both valves appear on the wall interface.
+8. Wait for discovery and confirm both valves appear — on the wall interface,
+   and independently in `values.cgi` (`valve_1_con_string` / `valve_2_con_string`
+   reading `conn`). Do not depend on the touchscreen alone: it is an
+   FDM-printed rear cover in a shower wall with an open question about whether
+   the repair holds, and the day it fails is exactly the day a rollback is
+   being attempted.
 9. Test one outlet per valve at 100 °F, then stop.
+10. Re-read the calibration codes and configured outlets against the Phase 0
+    recovery baseline. Rollback is not complete until the configuration matches
+    what was recorded, not merely until water flows.
 
 If water will not stop at any point: leave the shower, remove valve power, and
 close both hot and cold service shutoffs. Do not troubleshoot a continuing-flow
-or over-temperature event while standing in the shower.
+or over-temperature event while standing in the shower. A `WELDED` fault (35)
+is a mechanically stuck valve that no controller — ours or Kohler's — can close;
+the shutoffs are the only remedy, and the valve needs replacing.
 
 ## Proposed repository layout for implementation
 
