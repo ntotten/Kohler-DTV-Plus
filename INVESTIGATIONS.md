@@ -79,27 +79,80 @@ negative result you cannot describe is not an experiment — it is a hope.
 
 ## Index
 
-| #                                                         | Investigation                                     | Status                  | Leading hypothesis                                                           | Next action                |
-| --------------------------------------------------------- | ------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------- | -------------------------- |
-| [I1](#i1--the-shower-stops-mid-use)                       | The shower stops mid-use                          | **open**                | Tankless minimum-flow cutout → valve cannot reach setpoint → valve shuts off | E1 · high-flow shower      |
-| [I2](#i2--the-k-99693-interface-was-disconnected)         | The K-99693 interface was disconnected            | **resolved** 2026-07-29 | Sealed housing pulled the internal connector out                             | —                          |
-| [I3](#i3--valuescgi-intermittently-drops-a-healthy-valve) | `values.cgi` intermittently drops a healthy valve | **open**                | Truncated response, not a real dropout                                       | E7 · measure the rate      |
-| [I4](#i4--is-automatic-purge-on)                          | Is automatic purge on?                            | **open**                | Two of our own documents disagree; the live controller settles it            | E12 · re-read the setting  |
-| [I5](#i5--the-saturn-register-map-is-contradictory)       | The Saturn register map is contradictory          | **open**                | The vendored sources describe different register numbering                   | E13 · resolve from capture |
+| #                                                         | Investigation                                     | Status                  | Leading hypothesis                                                | Next action                |
+| --------------------------------------------------------- | ------------------------------------------------- | ----------------------- | ----------------------------------------------------------------- | -------------------------- |
+| [I1](#i1--the-shower-stops-mid-use)                       | The shower stops mid-use                          | **resolved** 2026-08-29 | This project's own app polled the controller until it hung        | —                          |
+| [I2](#i2--the-k-99693-interface-was-disconnected)         | The K-99693 interface was disconnected            | **resolved** 2026-07-29 | Sealed housing pulled the internal connector out                  | —                          |
+| [I3](#i3--valuescgi-intermittently-drops-a-healthy-valve) | `values.cgi` intermittently drops a healthy valve | **open**                | Truncated response, not a real dropout                            | E7 · measure the rate      |
+| [I4](#i4--is-automatic-purge-on)                          | Is automatic purge on?                            | **open**                | Two of our own documents disagree; the live controller settles it | E12 · re-read the setting  |
+| [I5](#i5--the-saturn-register-map-is-contradictory)       | The Saturn register map is contradictory          | **open**                | The vendored sources describe different register numbering        | E13 · resolve from capture |
 
 ---
 
 ## I1 — The shower stops mid-use
 
-**Status: open.** Leading hypothesis: **tankless heater minimum-flow cutout →
-valve cannot reach setpoint → valve shuts off.** The hypothesis has changed twice,
-both on 2026-07-26.
+**Status: resolved 2026-08-29.** **The cause was this project's own app polling
+the controller until it hung.** Operator-reported. Every hypothesis below —
+including the tankless minimum-flow cutout that led for a month — is superseded.
 
-| Revision    | Leading hypothesis                             | What changed it                                                                                                            |
-| ----------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Initial     | Failing K-99693 sending spurious stop commands | —                                                                                                                          |
-| 2nd         | Valve power loss or RS-485 comms loss          | Video: the controller still reports "running" for ~1 min after the water stops, so nothing commanded it                    |
-| **Current** | **Tankless minimum-flow cutout**               | Hot source is tankless; and valve errors never reach the controller's on-board log, so the empty log does not exclude them |
+The mechanism is one this repository had already documented in pieces without
+connecting them:
+
+| Piece                                                                                   | Where it was already recorded                                                                            |
+| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Polling faster than 15 s idle / 5 s active locks the controller up, sometimes for hours | [FIELD-NOTES.md](research/FIELD-NOTES.md) §1                                                             |
+| The controller tolerates only two concurrent HTTP sessions                              | [FIELD-NOTES.md](research/FIELD-NOTES.md) §1                                                             |
+| A hang produces a short `values.cgi` payload that reports a connected valve as `dis`    | [STORY-LOG.md](STORY-LOG.md) 2026-08-04 23:10, [I3](#i3--valuescgi-intermittently-drops-a-healthy-valve) |
+| Two copies of our own proxy can run at once and exhaust the session budget              | [STORY-LOG.md](STORY-LOG.md) 2026-08-04 23:05                                                            |
+
+**Why this went unrecognised for so long — and it is worth saying plainly.** The
+investigation ranked hypotheses by what the controller's telemetry showed, and
+the instrument doing the observing was the cause. The confounder was written
+down on 2026-07-26 and then discounted:
+
+> "During the 2026-07-14 recording the operator had a web browser open on the
+> controller's own web page… Unlikely to explain shutoffs that predate the
+> browser being connected."
+
+That reasoning treated the browser as the only extra client and did not carry the
+app itself into the same column.
+
+**Reconciling H5.** H5 (controller crash-and-reboot) was "effectively excluded"
+because the controller stayed responsive and displaying throughout the recorded
+shutoff. That exclusion was correct **for a reboot** and does not apply here: a
+hang that wedges the controller's valve/Saturn handling while its UI and HTTP
+tasks keep serving produces exactly the recorded signature — water stops first,
+the display still reads "running", nothing reaches the on-board log, and the
+controller reconciles about a minute later through a timeout. **[I]** That
+partial-hang reading is inference; it is the mechanism consistent with the
+evidence, not a measured trace of one.
+
+### Still to attach
+
+The conclusion is recorded on the operator's determination. Two things would
+ground it to this repository's own standard:
+
+- [ ] **The evidence that identified it** — which app version, what polling
+      behaviour, and what made the cause visible.
+- [ ] **Whether the app was running across the whole ~2-month symptom window.**
+      If some shutoffs predate it, they need a separate explanation; if not, this
+      accounts for all of them.
+
+Neither changes the conclusion. Both change how firmly it can be stated to
+Kohler.
+
+### Superseded hypothesis history
+
+| Revision     | Leading hypothesis                                  | What changed it                                                                                                            |
+| ------------ | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Initial      | Failing K-99693 sending spurious stop commands      | —                                                                                                                          |
+| 2nd          | Valve power loss or RS-485 comms loss               | Video: the controller still reports "running" for ~1 min after the water stops, so nothing commanded it                    |
+| 3rd          | Tankless minimum-flow cutout                        | Hot source is tankless; and valve errors never reach the controller's on-board log, so the empty log does not exclude them |
+| **Resolved** | **Our own app hung the controller by over-polling** | Operator determination, 2026-08-29                                                                                         |
+
+**Everything from here down is preserved as the record of how the question was
+worked, not as live guidance.** The experiments E1-E7 and E10 are closed: none
+needs to be run.
 
 ### Symptom
 
