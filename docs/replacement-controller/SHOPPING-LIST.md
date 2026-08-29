@@ -46,12 +46,11 @@ the manufacturer rather than a marketplace seller.
 |   2 | Waveshare `USB TO RS485/422`, SKU `23949`               | [Waveshare direct](https://www.waveshare.com/usb-to-rs485-422.htm)           | Use one separately isolated converter per valve.                   |
 |   2 | Included USB-A-to-USB-B cable, approximately 1.2 meters | [Included with SKU 23949](https://www.waveshare.com/wiki/USB_TO_RS485/422)   | One is included with each converter; order no duplicate USB cable. |
 
-Confirm on arrival that the two units report **distinct USB serial numbers**.
-Adapters in this class often ship with blank or duplicated serials, and two
-identical ones make a `by-id` symlink resolve both zones onto the same device —
-a failure the controller's "present and distinct" start check cannot catch,
-because the path does resolve. If they collide, bind by physical USB port path
-and label the ports.
+Confirm on arrival that the two units report distinct USB serial numbers.
+Adapters in this class may ship with blank or duplicated serials; two identical
+ones make a `by-id` symlink resolve both zones onto the same device, which the
+controller's start check does not catch because the path resolves. On a
+collision, bind by physical USB port path and label the ports.
 
 Each converter was listed at $17.99 when checked, or approximately $35.98 for
 both before shipping. Each includes isolated power and signal paths, automatic
@@ -65,15 +64,12 @@ $18 more.
 
 ## Independent temperature sensor
 
-Required by the design, not optional: a permanent outlet temperature sensor read
-by the Pi, so the installation has one number that is not the valve's own
-self-report. It is also the instrument
-[INVESTIGATIONS.md](../../INVESTIGATIONS.md) E5 needs.
+A permanent outlet temperature sensor read by the Pi, required by
+[CONTROLLER-DESIGN.md](CONTROLLER-DESIGN.md). Also the instrument required by
+[INVESTIGATIONS.md](../../INVESTIGATIONS.md) E5.
 
-Select after the enclosure layout is known — the choice is between a clamp-on
-pipe probe and an inline fitting, and that depends on accessible pipe. Do not
-order it with the rest; the sensing element is cheap and the mounting decision
-is the whole cost.
+Select after the enclosure layout is known: clamp-on pipe probe or inline
+fitting, depending on accessible pipe. Do not order with the rest.
 
 ## Passive capture equipment
 
@@ -83,11 +79,11 @@ hardware listen-only mode or assemble a temporary isolated receiver whose
 driver enable is physically fixed inactive. Capture equipment is not part of
 the permanent controller and should not be ordered until that method is chosen.
 
-Prefer a device that timestamps in hardware. A USB-serial front end quantises
-arrival times at its latency-timer interval — 16 ms by default — which cannot
-resolve jitter on a 525 ms tick or a 320 ms response deadline. A logic analyzer
-on the differential pair, or an analyzer with hardware listen-only mode, gives
-timings that belong to the bus rather than to the adapter.
+Select a device that timestamps in hardware. A USB-serial front end quantises
+arrival times at its latency-timer interval, 16 ms by default, which does not
+resolve jitter on a 525 ms tick or a 320 ms response deadline. Use a logic
+analyzer on the differential pair or an analyzer with hardware listen-only
+mode.
 
 ## Instruments
 
