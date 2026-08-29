@@ -87,6 +87,22 @@ jobs:
       - name: the gate's own tests
         run: cargo test --package kdtv-proto gate
 
+  audit:
+    name: dependency graph and requirements
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: controller
+      # Three guarantees of this design are properties of the dependency graph
+      # rather than of any one type: the shipped binary cannot reach the
+      # emulator that builds malformed frames, no API handler can name a wire
+      # frame type, and no HTTP client is linkable into the daemon — which is
+      # how a poller against the K-99695 would regrow.
+      - run: cargo xtask audit-graph
+      - run: cargo xtask reqs
+
   cross:
     name: Raspberry Pi cross-build
     runs-on: ubuntu-latest
