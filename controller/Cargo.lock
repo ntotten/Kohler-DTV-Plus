@@ -715,6 +715,7 @@ dependencies = [
 name = "kdtv-emulator"
 version = "0.1.0"
 dependencies = [
+ "kdtv-units",
  "nix 0.31.3",
  "thiserror",
 ]

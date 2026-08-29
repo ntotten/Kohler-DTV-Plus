@@ -12,6 +12,7 @@ publish = false
 # models, the simulated HAL and the end-to-end rig land; declaring them early
 # couples this crate's build to crates it does not yet call.
 [dependencies]
+kdtv-units = { workspace = true }
 nix = { workspace = true, features = ["fs", "term", "poll"] }
 thiserror = { workspace = true }
 

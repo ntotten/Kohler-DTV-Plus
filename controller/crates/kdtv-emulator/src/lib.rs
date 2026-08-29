@@ -26,6 +26,7 @@
 )]
 
 pub mod pty;
+pub mod rig;
 
 pub mod transcript;
 pub mod wire;
