@@ -1,8 +1,9 @@
 # controller — the replacement master
 
 The Rust service that replaces the K-99695 as the master of this DTV+ system. It
-runs on a Raspberry Pi 4 and drives three isolated serial links: two Saturn valve
-buses and one DTV+ link to a K-1737-K1 steam adapter.
+runs on a Raspberry Pi 4 and drives the two Saturn valve buses over isolated
+serial links. A complete DTV+ steam stack is aboard but dormant — steam is out
+of scope of the plan (`docs/DECISIONS.md` D12).
 
 The design it implements is [docs/DESIGN.md](docs/DESIGN.md); the build it runs
 on is [docs/HARDWARE.md](docs/HARDWARE.md); the order the work happens in is

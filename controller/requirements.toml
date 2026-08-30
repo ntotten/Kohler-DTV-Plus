@@ -456,7 +456,7 @@ document = "controller/docs/DESIGN.md"
 area = "public API/steam"
 statement = "`stop_all()` stops steam as well as both valve zones."
 source = "controller/docs/DESIGN.md § Software design → public operations"
-verification = "emulator e2e; manual commissioning in Phase 5"
+verification = "emulator e2e"
 hard = true
 
 [[requirement]]
@@ -874,7 +874,7 @@ hard = true
 id = "PH3-01"
 document = "controller/docs/DESIGN.md"
 area = "phase 3 gate"
-statement = "Commission the one-valve pilot at 100 °F on one outlet with the operator present and outside the spray path, hand on the manual disconnect, and the Therma K probe reading the outlet throughout."
+statement = "Commission the one-valve pilot at 100 °F on one outlet with the operator present and a thermometer on the outlet."
 source = "controller/docs/DESIGN.md § Delivery phases → Phase 3 procedure (3)"
 verification = "manual commissioning"
 hard = true
@@ -919,7 +919,7 @@ hard = true
 id = "PH4-01"
 document = "controller/docs/DESIGN.md"
 area = "phase 4 gate"
-statement = "Verify every configured outlet independently with the calibrated thermometer, then run one zone at a time and then both zones at 100 °F."
+statement = "Verify every configured outlet independently with a thermometer, then run one zone at a time and then both zones at 100 °F."
 source = "controller/docs/DESIGN.md § Delivery phases → Phase 4"
 verification = "manual commissioning"
 hard = true
@@ -930,51 +930,6 @@ document = "controller/docs/DESIGN.md"
 area = "phase 4 gate"
 statement = "Phase 4 closes only when every outlet passes temperature and stop testing and the manual rollback drill succeeds."
 source = "controller/docs/DESIGN.md § Delivery phases → Phase 4 gate"
-verification = "manual commissioning"
-hard = true
-
-[[requirement]]
-id = "PH5-01"
-document = "controller/docs/DESIGN.md"
-area = "phase 5 gate/steam"
-statement = "Bring up the DTV+ codec against the emulator first, then against the adapter with the generator's own control still able to stop it."
-source = "controller/docs/DESIGN.md § Delivery phases → Phase 5"
-verification = "emulator e2e then manual commissioning"
-hard = true
-
-[[requirement]]
-id = "PH5-02"
-document = "controller/docs/DESIGN.md"
-area = "phase 5 gate/steam"
-statement = "Verify the Fx2/Cx2 type split rejects a cross-encoding assignment."
-source = "controller/docs/DESIGN.md § Delivery phases → Phase 5"
-verification = "unit: type-level test asserting an Fx2 value cannot be assigned where Cx2 is required and vice versa"
-hard = true
-
-[[requirement]]
-id = "PH5-03"
-document = "controller/docs/DESIGN.md"
-area = "phase 5 gate/steam"
-statement = "Commission one steam session at the 110 °F default for the 10-minute default with the operator present."
-source = "controller/docs/DESIGN.md § Delivery phases → Phase 5"
-verification = "manual commissioning"
-hard = true
-
-[[requirement]]
-id = "PH5-04"
-document = "controller/docs/DESIGN.md"
-area = "phase 5 gate/steam"
-statement = "Confirm that `stop_all()` stops steam and that a degraded DTV+ link commands `steam_stop` before latching."
-source = "controller/docs/DESIGN.md § Delivery phases → Phase 5"
-verification = "emulator e2e for the degraded-link ordering; manual commissioning to confirm"
-hard = true
-
-[[requirement]]
-id = "PH5-05"
-document = "controller/docs/DESIGN.md"
-area = "phase 5 gate/steam"
-statement = "Measure the hard case by pulling the DTV+ link mid-session and recording what the generator does; Phase 5 closes only when a steam session starts, holds setpoint, stops on command and on timer, and the hard-link-loss behaviour is measured and recorded whatever it turns out to be."
-source = "controller/docs/DESIGN.md § Delivery phases → Phase 5 gate"
 verification = "manual commissioning"
 hard = true
 
@@ -1018,7 +973,7 @@ hard = true
 id = "PH6-05"
 document = "controller/docs/DESIGN.md"
 area = "phase 6 gate"
-statement = "Phase 6 closes only with a signed commissioning report and homeowner-visible emergency instructions."
+statement = "Phase 6 closes only when the commissioning record is complete."
 source = "controller/docs/DESIGN.md § Delivery phases → Phase 6 gate"
 verification = "not-testable-in-software"
 hard = true
@@ -1045,8 +1000,8 @@ hard = false
 id = "WELD-01"
 document = "controller/docs/DESIGN.md"
 area = "emergency/faults"
-statement = "State in the posted emergency procedure, and surface in software, that a `WELDED` fault (35) is a mechanically stuck mixing valve that no controller can turn off; the only remedy is valve power removal and the hot and cold service shutoffs."
-source = "controller/docs/DESIGN.md § Safety boundary and § Manual rollback to Kohler"
+statement = "Surface in software that a `WELDED` fault (35) is a mechanically stuck mixing valve that no controller can turn off; the remedy is removing valve power."
+source = "controller/docs/DESIGN.md § Safety boundary"
 verification = "unit: fault-code 35 renders the correct operator message; not-testable-in-software for the physical remedy"
 hard = true
 
@@ -1451,7 +1406,7 @@ hard = true
 id = "PWR-05"
 document = "controller/docs/HARDWARE.md"
 area = "Power and isolation"
-statement = "Stay inside the power budget: total ≈ 6.6 W against a 15.3 W supply, and worst-case downstream USB draw of 600 mA across three converters, inside the Pi 4's documented USB budget."
+statement = "Stay inside the power budget: total ≈ 5.6 W against a 15.3 W supply, and worst-case downstream USB draw of 400 mA across two converters, inside the Pi 4's documented USB budget."
 source = "controller/docs/HARDWARE.md §9 'Budget'"
 tier = "V"
 verification = "not-testable-in-software; manual measurement"
@@ -1662,87 +1617,19 @@ hard = true
 disputed = "steam-generator.md says SET_DEV_PARAM expects no explicit response. Requiring an acknowledgement before latching assumes one exists."
 
 [[requirement]]
-id = "STEAM-19"
-document = "controller/docs/HARDWARE.md"
-area = "Steam link — link loss"
-statement = "Make no assumption about the hard-loss case (USB gone, cable pulled, service dead, Pi unpowered): a dead process enforces no session limit, so steam falls entirely to the generator's own behaviour, which is not yet measured."
-source = "controller/docs/HARDWARE.md §12 'Losing the DTV+ link'"
-verification = "not-testable-in-software; Phase 5 measurement"
-hard = true
-
-[[requirement]]
 id = "STEAM-20"
 document = "controller/docs/HARDWARE.md"
 area = "Steam link — link loss"
-statement = "Enforce the service's own session limit for the degraded case, and assume the worst for the hard case until Phase 5 measures what the generator does when the DTV+ link drops mid-session."
+statement = "Enforce the service's own session limit on the steam link, and assume nothing about the hard-loss case: a dead process enforces no limit."
 source = "controller/docs/HARDWARE.md §12 'Losing the DTV+ link' closing paragraphs"
 verification = "unit (session timer) plus manual commissioning (Phase 5)"
-hard = true
-
-[[requirement]]
-id = "STEAM-21"
-document = "controller/docs/HARDWARE.md"
-area = "Steam link — hardware"
-statement = "Give the steam link its own Waveshare SKU 23949 converter on a Pi USB 2.0 port with its own isolation barrier, and never join its field-side PE to either valve's."
-source = "controller/docs/HARDWARE.md §12 'Hardware' table"
-verification = "not-testable-in-software; manual commissioning"
-hard = true
-
-[[requirement]]
-id = "STEAM-22"
-document = "controller/docs/HARDWARE.md"
-area = "Steam link — hardware"
-statement = "Wire the adapter lead as four conductors: connector B/A/GND (pins 1/2/3) to the converter's TB/TA/PE, plus pin 4 to a +V rail supplied by our master; pin 3 GND is mandatory on this link, unlike the valve links."
-source = "controller/docs/HARDWARE.md §12 'Before the connector can be built' — pinout table and the Ground row"
-tier = "A"
-verification = "not-testable-in-software; manual commissioning"
-hard = true
-
-[[requirement]]
-id = "STEAM-23"
-document = "controller/docs/HARDWARE.md"
-area = "Steam link — hardware"
-statement = "Leave our converter's termination jumper off on the steam link: the adapter is already terminated (114 Ω measured across pins 1 and 2, R27), and a second terminator halves the bus to 60 Ω (40 Ω with a chained second adapter), below the 54 Ω RS-485 drivers are specified against."
-source = "controller/docs/HARDWARE.md §12 'Before the connector can be built' — Termination row and 'Why our termination stays off'"
-tier = "A"
-verification = "not-testable-in-software; bench measurement"
-hard = true
-
-[[requirement]]
-id = "STEAM-24"
-document = "controller/docs/HARDWARE.md"
-area = "Steam link — hardware"
-statement = "Add a 12 V rail to the enclosure to drive adapter pin 4, and confirm it before committing: apply 12 V to pin 4 from a current-limited supply with ground on pin 3 and measure IC2 pin 8 — about 5 V confirms the rail and the supply chain, and the current reading sizes the permanent supply."
-source = "controller/docs/HARDWARE.md §12 'New build requirement: a 12 V rail in the enclosure'"
-tier = "I"
-verification = "manual commissioning (bench measurement)"
-hard = false
-
-[[requirement]]
-id = "STEAM-25"
-document = "controller/docs/HARDWARE.md"
-area = "Steam link — scope"
-statement = "Treat the generator and everything behind the adapter as out of scope; the generator owns its own safety envelope (low water/dry fire 0140-A, tank high-limit 0140-B, automatic fill shutoff, ¾″ pressure relief, room over-temperature 0120, session auto-shutoff) and this controller only sends setpoints."
-source = "controller/docs/HARDWARE.md §12 preamble and 'Out of scope'"
-tier = "K"
-verification = "not-testable-in-software"
-hard = true
-
-[[requirement]]
-id = "STEAM-26"
-document = "controller/docs/HARDWARE.md"
-area = "Steam link — deviation"
-statement = "Record the in-enclosure user-interface deviation in the commissioning report: Kohler's WARNING requires a user interface inside the steam enclosure, this design powers the K-99693 down at Phase 4, and the operator accepted the deviation on 2026-08-29."
-source = "controller/docs/HARDWARE.md §12 'The in-enclosure interface requirement'"
-tier = "K"
-verification = "manual commissioning (report entry)"
 hard = true
 
 [[requirement]]
 id = "TEST-01"
 document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
-statement = "Run all bench acceptance checks with all three converters on the Pi and nothing attached to the field side (Phase 2)."
+statement = "Run all bench acceptance checks with both converters on the Pi and nothing attached to the field side (Phase 2)."
 source = "controller/docs/HARDWARE.md §13 preamble"
 verification = "manual commissioning"
 hard = true
@@ -1841,7 +1728,7 @@ hard = false
 id = "TEST-14"
 document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
-statement = "Check 11: every label present and correct, and the emergency card in the lid."
+statement = "Check 11: every label present and correct."
 source = "controller/docs/HARDWARE.md §13 table row 11; §10 'Labelling and test points'"
 verification = "manual commissioning (visual)"
 hard = false
@@ -1853,15 +1740,6 @@ area = "Bench acceptance (§13)"
 statement = "Add two steam checks against the DTV+ emulator: a Cx2 value must be rejected by the steam encoder, and an Fx2 value must be rejected by the valve encoder; the §12 type split should make both uncompilable and the checks confirm it."
 source = "controller/docs/HARDWARE.md §13 closing paragraph"
 verification = "unit (compile-fail test) plus emulator e2e"
-hard = true
-
-[[requirement]]
-id = "TEST-16"
-document = "controller/docs/HARDWARE.md"
-area = "Emergency documentation"
-statement = "State on the lid card that a WELDED fault (35) is a mechanically stuck mixing valve that no controller can close; the only remedy is removing valve power and closing the hot and cold service shutoffs."
-source = "controller/docs/HARDWARE.md §10 (paragraph after the labelling table)"
-verification = "manual commissioning; the software must not present fault 35 as controller-recoverable"
 hard = true
 
 [[requirement]]
@@ -1914,7 +1792,7 @@ id = "OPEN-02"
 document = "controller/docs/HARDWARE.md"
 area = "Open items (§15)"
 statement = "Resolve the Saturn response timeout — 320 ms or 400 ms — from the Phase 1 capture (I5) before fixing decoder deadlines."
-source = "controller/docs/HARDWARE.md §15 row 7"
+source = "controller/docs/HARDWARE.md §15 row 6"
 tier = "?"
 verification = "manual commissioning (Phase 1 capture); then unit constants"
 hard = false
@@ -1932,8 +1810,8 @@ hard = false
 id = "OPEN-04"
 document = "controller/docs/HARDWARE.md"
 area = "Open items (§15)"
-statement = "Do not order field cabling by assumption: valve model/nameplate, connector housing/keying/pin count, factory termination and idle bias, valve mains voltage/receptacles/circuits/GFCI, and DTV+ peripheral-port pinout each stay open until their named measurement closes them."
-source = "controller/docs/HARDWARE.md §15 rows 1, 2, 4, 5, 9; §11"
+statement = "Do not order field cabling by assumption: valve model/nameplate, connector housing/keying/pin count, and factory termination and idle bias each stay open until their named measurement closes them."
+source = "controller/docs/HARDWARE.md §15 rows 1, 2, 4; §11"
 verification = "manual commissioning"
 hard = true
 
@@ -1942,20 +1820,10 @@ id = "OPEN-05"
 document = "controller/docs/HARDWARE.md"
 area = "Open items (§15)"
 statement = "Record which FTDI part is fitted, FT232RL or FT232RNL; this blocks nothing but must be recorded."
-source = "controller/docs/HARDWARE.md §15 row 6; §5 'Configuration at assembly' item 4"
+source = "controller/docs/HARDWARE.md §15 row 5; §5 'Configuration at assembly' item 4"
 tier = "?"
 verification = "manual commissioning (inspection on arrival)"
 hard = false
-
-[[requirement]]
-id = "OPEN-06"
-document = "controller/docs/HARDWARE.md"
-area = "Open items (§15)"
-statement = "Measure at Phase 5 what the generator does when the DTV+ link drops mid-session (Kohler case #07797183 runs in parallel); until then the worst case is assumed."
-source = "controller/docs/HARDWARE.md §15 row 10; §12 'Losing the DTV+ link'"
-tier = "?"
-verification = "manual commissioning (Phase 5)"
-hard = true
 
 [[requirement]]
 id = "ARCH-01"
@@ -2904,26 +2772,6 @@ source = "research/xagon0/docs/protocols/dtv-plus-protocol.md § Multi-Port Supp
 tier = "C"
 verification = "unit (two port instances driven concurrently, assert isolation)"
 hard = false
-
-[[requirement]]
-id = "PHY-09"
-document = "controller/CLAUDE.md"
-area = "physical"
-statement = "Leave our end of the steam RS-485 link unterminated; the K-1737-K1 adapter already terminates the bus at approximately 114 ohm."
-source = "controller/CLAUDE.md § Settled — do not re-litigate; controller/docs/STEAM-ADAPTER.md §5"
-tier = "A"
-verification = "manual commissioning (resistance measurement)"
-hard = false
-
-[[requirement]]
-id = "PHY-10"
-document = "controller/CLAUDE.md"
-area = "physical"
-statement = "Connect signal ground on the steam link (not optional there, because the adapter's SMBJ28A clamps are unidirectional and remove the negative common-mode range) and drive pin 4 of the DTV+ header, which bus-powers the adapter's transceiver through R16."
-source = "controller/CLAUDE.md § Settled — do not re-litigate; controller/docs/STEAM-ADAPTER.md §5"
-tier = "A"
-verification = "manual commissioning"
-hard = true
 
 [[requirement]]
 id = "FRAME-01"

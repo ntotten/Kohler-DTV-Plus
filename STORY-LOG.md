@@ -12,6 +12,27 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ## 2026-08-30
 
+### 17:05 — The scope is pinned: a like-for-like swap, and steam is out
+
+Operator decision, after a review of the parts list. The plan is a controller
+that replaces the K-99695 driving the two valves that exist today — nothing
+added to the installation that the stock system does not have. Removed from
+the plan: the manual valve-power disconnects and every electrician work item,
+the posted emergency procedures and lid card, the instrument mandates, and the
+whole steam setup — third converter, 12 V rail, Phase 5, generator and
+installer material. The house has no steam generator; the DTV+ code written
+before the descope stays in the workspace, dormant and disabled, and the
+K-1737-K1 record stays in STEAM-ADAPTER.md for a future revisit.
+
+The shopping list was rewritten around the same principle the descope exposed:
+it now optimizes for wall-clock time — one order today, and a single follow-up
+for the valve connectors once the plugs are photographed, the only part that
+cannot be known from documents.
+
+**Why it matters:** the plan is now readable as what it is — a two-bus
+controller swap. Recorded as DECISIONS.md D12 so no future session re-raises
+any of it.
+
 ### 16:20 — The independent temperature sensor is removed from the plan
 
 Operator decision. The PT1000/MAX31865 outlet-temperature subsystem — two

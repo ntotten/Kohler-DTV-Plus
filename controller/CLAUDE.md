@@ -21,12 +21,15 @@ Measured hardware facts about the steam adapter live in
 [research/reference/steam-adapter/](../research/reference/steam-adapter/),
 not here. This directory cites them.
 
-## Three links, not two
+## The scope is the swap
 
-Two Saturn valve buses and one DTV+ steam link. Steam is a first-class part of
-the plan, not a future option. The generator behind the adapter is installed by
-a professional and is **out of scope** — do not reintroduce its mains
-requirements into these documents.
+This project replaces the K-99695 driving the two valves that exist today —
+nothing else. **Do not add installation equipment or requirements the stock
+system does not have** (disconnects, sensors, posted procedures, instrument
+mandates, electrician work items), and **do not raise steam**: the house has
+no generator, steam setup is out of scope, and the dormant DTV+ code the
+workspace carries is documented in [docs/HARDWARE.md § 12](docs/HARDWARE.md).
+Operator decision 2026-08-30 — [docs/DECISIONS.md D12](docs/DECISIONS.md).
 
 ## Settled — do not re-litigate
 
@@ -35,14 +38,11 @@ alternatives, the evidence, and what would reopen each — are
 [docs/DECISIONS.md](docs/DECISIONS.md). Reopen one only with new evidence, and
 record why there.
 
-| Decision                                    | Reason                                                                                                               |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Raspberry Pi + Rust, not a bare-metal MCU   | Every binding deadline is ≥150 ms; the valve owns safety, so master determinism buys nothing the failure model needs |
-| Three separate USB converters, not a HAT    | Waveshare's 2-CH HAT has one isolated supply and one digital isolator for both channels — one barrier, not two       |
-| Our RS-485 termination stays **off**        | At 9600 baud over 25 ft, cable delay is ~1:2700 of the bit period. The adapter already terminates at 114 Ω           |
-| Ground **connected** on the steam link only | Its `SMBJ28A` clamps are unidirectional, removing the negative common-mode range. Not optional there                 |
-| Pin 4 of the DTV+ bus is driven by us       | The adapter's transceiver is bus-powered through `R16`; without it the link never comes up                           |
-| Kohler's in-enclosure interface `WARNING`   | Accepted as a recorded deviation, operator decision 2026-08-29                                                       |
+| Decision                                     | Reason                                                                                                               |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Like-for-like scope; steam out of scope      | Operator decision 2026-08-30 — no added equipment, no steam setup. Do not re-raise. `D12`                            |
+| Raspberry Pi + Rust, not a bare-metal MCU    | Every binding deadline is ≥150 ms; the valve owns safety, so master determinism buys nothing the failure model needs |
+| Separate USB converters, never multi-channel | Every multi-channel candidate shares one isolation barrier between zones. `D3`                                       |
 
 ## Writing here
 

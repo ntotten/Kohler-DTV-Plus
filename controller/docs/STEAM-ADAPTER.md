@@ -1,9 +1,13 @@
-# Steam as a third link on the replacement controller
+# Steam: the K-1737-K1 adapter and the DTV+ protocol
 
-Reference material for the steam link specified in
-[HARDWARE.md § 12](HARDWARE.md): what Kohler publishes about the
-K-1737-K1 adapter, the DTV+ protocol it speaks, the limits it enforces, and
-where the published sources contradict each other.
+Reference material, not a plan. **Steam is out of scope of the build** —
+operator decision 2026-08-30,
+[DECISIONS.md](DECISIONS.md#d12--like-for-like-scope-no-added-equipment-no-steam-setup) —
+and this document is the record kept for a future revisit: what Kohler
+publishes about the K-1737-K1 adapter, the DTV+ protocol it speaks, the limits
+it enforces, where the published sources contradict each other, and what was
+measured on the opened adapter board. The dormant DTV+ code the workspace
+carries is documented in [HARDWARE.md § 12](HARDWARE.md).
 
 Nothing here has been tested against steam hardware. Everything is from Kohler
 documents **[K]**, the controller's own shipped code **[B]**, and third-party
@@ -809,6 +813,93 @@ Items 1, 2, 7, 8 and 11 need a capture of a working steam installation. Items 5,
 6 and 13 need the parts in hand. Items 3 and 9 need a conversation with Kohler.
 
 ---
+
+---
+
+## 12. Building the link, if it is ever wanted
+
+Moved here from the hardware specification when steam left the plan. All of it
+was measured or derived before the descope, and none of it is scheduled work.
+
+The adapter-side link is a **4-pin polarized header**, read directly off the
+adapter's own lid label **[A]** —
+[`research/reference/steam-adapter/`](../../research/reference/steam-adapter/).
+The adapter carries two identical headers, `FROM DTV CONTROL` and `TO NEXT
+DEVICE (OPTIONAL)`, so the bus is multi-drop with a daisy-chain out.
+
+**The link is RS-485 — settled.** The adapter's transceiver is an **`ADM4852`**
+**[A]**: half-duplex RS-485/RS-422, ⅛ unit load, slew-rate limited, 8-lead SOIC
+([Analog Devices](https://www.analog.com/en/products/adm4852.html)). Two wires,
+A and B. A standard converter is the correct part, and the three `PC900V`
+optocouplers map onto its receiver output, driver input and tied enable — the
+textbook isolated half-duplex node.
+
+⅛ unit load means up to 256 transceivers on the bus, and the driver is
+deliberately slew-limited. Both are the signature of a long multi-drop
+daisy-chain, which matches the adapter's own `TO NEXT DEVICE` header.
+
+**The connector pinout is measured [A]**, `CN1` and `CN2` in parallel:
+
+| Pin | Position                  | `IC2` pin | Signal                                     |
+| --- | ------------------------- | --------- | ------------------------------------------ |
+| 1   | Furthest from barrel jack | 7         | **`B`**                                    |
+| 2   |                           | 6         | **`A`**                                    |
+| 3   |                           | 5         | **`GND`**                                  |
+| 4   | Nearest the barrel jack   | —         | Not connected to `IC2`; not yet identified |
+
+Pin 1 is anchored physically: it is the end furthest from the barrel jack and
+nearest `IC2`. Both headers carry the same orientation.
+
+`B` before `A` — the reverse of the obvious guess, which is why it was metered.
+Either header can be the bus input, so the daisy-chain is plain multi-drop.
+
+The lead is three conductors: connector `B`/`A`/`GND` to the converter's
+`TB`/`TA`/`PE`, **plus pin 4 to a +V rail** — four conductors, not three.
+
+**Settled at the bench, board open and unpowered [A]:**
+
+| Item        | Finding                                                                                                                                                                                                                                                               |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pin 4       | **+V supplied by the master** **[A]** — enters `D9` (`M7`, 1N4007) on the anode, then `R16` (1.2 kΩ, measured) to `IC2` pin 8, with `D7` shunting the rail. The adapter's transceiver is bus-powered, so **our master must drive pin 4**; the lead is four conductors |
+| Termination | 114 Ω across pins 1 and 2, identical both polarities. `R27` is across the pair; the adapter is terminated. **Our converter's jumper stays off** — see below                                                                                                           |
+| Ground      | **Required.** `SMBJ28A` clamps are unidirectional, conducting from ~0.7 V forward, which removes the negative half of the ADM4852's −7 V…+12 V common-mode range at the adapter. Pin 3 must tie to the converter's `PE`                                               |
+
+Ground being mandatory is a departure from the valve links, where `PE` is
+connected only if measurement shows a reference conductor is needed. The
+converter is isolated, so this creates a shared reference without a loop back
+through the Pi, and this link's field ground is still never joined to another
+link's.
+
+**Carry forward:** if a second DTV+ peripheral is ever daisy-chained onto this
+link, it may expect power on pin 4, which our master would then have to supply.
+
+**The DTV+ side is galvanically isolated — closed.** The transceiver draws its
+supply from the bus rather than from the board it sits on, which only makes
+sense across an isolation barrier; the three `PC900V` optocouplers bridge to the
+generator-powered MCU domain.
+
+**New build requirement: a 12 V rail in the enclosure.** The `ADM4852` is a 5 V
+part, `R16` is 1.2 kΩ in series, and the 330 µF capacitor's 16 V rating caps the
+bus — which leaves **12 V** as the only standard rail that fits **[I]**. `D7`
+carries no legible marking and is not needed to reach that.
+
+The Pi's 5 V USB-C supply cannot provide it, so a 12 V source joins the parts
+list. Confirm before committing to it: apply 12 V to pin 4 from a
+current-limited supply with ground on pin 3, and measure `IC2` pin 8. About 5 V
+confirms both the rail and the supply chain, and the current reading sizes the
+permanent supply.
+
+**Why our termination stays off.** At 9600 baud the bit period is 104 µs while
+25 ft of cable is ~38 ns one way — a ratio near 1:2700, so reflections settle
+thousands of times over before a bit is sampled. The adapter's 120 Ω already
+supplies the DC load and damping; a second one halves the bus to 60 Ω for no
+gain, and a chained second adapter would reach 40 Ω, below the 54 Ω RS-485
+drivers are specified against.
+
+Procedure and results in
+[`research/reference/steam-adapter/README.md`](../../research/reference/steam-adapter/README.md).
+
+This replaces the earlier plan of metering an unused DTV+ port on the K-99695.
 
 ## Cheapest next steps
 

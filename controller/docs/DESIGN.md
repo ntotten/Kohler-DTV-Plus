@@ -6,9 +6,9 @@ This document is the current plan. What happens in what order is
 [BUILD-ORDER.md](BUILD-ORDER.md); options considered and not built are
 [DECISIONS.md](DECISIONS.md), not here.
 
-An open replacement master for the Kohler DTV+. A Raspberry Pi drives three
-isolated serial links: two Saturn valve buses and one DTV+ link to a steam
-adapter. The K-99695 and wall interface become disconnected cold spares.
+An open replacement master for the Kohler DTV+. A Raspberry Pi drives the two
+Saturn valve buses over isolated serial links. The K-99695 and wall interface
+become disconnected cold spares.
 Returning to Kohler is a deliberate power-off cable swap, not an automatic
 handoff.
 
@@ -25,20 +25,14 @@ The plan covers this installation specifically:
 - Zone 1: one six-port valve, firmware `0.12`, five configured outlets.
 - Zone 2: one three-port Prompt valve, firmware `0.14`, three configured
   outlets.
-- Steam: one K-1737-K1 adapter on a DTV+ peripheral port.
-- Lighting, music and rain-panel are not implemented. Each would be another
-  DTV+ link and another device profile.
+- Lighting, music, rain-panel and steam are not implemented and not planned.
 
-**Steam is in scope.** A third link to a K-1737-K1 steam adapter, speaking DTV+.
-The generator behind the adapter is a self-contained appliance installed by a
-professional; we connect to the adapter and send it setpoints, the same
-relationship this design has with the valves. Spec in
-[HARDWARE.md § 12](HARDWARE.md), background in
+**Steam is out of scope** — operator decision 2026-08-30, recorded in
+[DECISIONS.md](DECISIONS.md#d12--like-for-like-scope-no-added-equipment-no-steam-setup).
+The house has no steam generator. The DTV+ stack written before the descope
+stays in the codebase, dormant and disabled — [HARDWARE.md § 12](HARDWARE.md) —
+and the K-1737-K1 reference material stays in
 [STEAM-ADAPTER.md](STEAM-ADAPTER.md).
-
-Kohler's `WARNING` requiring a user interface inside the steam enclosure is
-**accepted as a recorded deviation**, operator decision 2026-08-29. It goes in
-the commissioning report.
 
 Keep the household-specific configuration backup outside this public
 repository.
@@ -59,33 +53,27 @@ valve. Never electrically join the original and replacement controllers.
                      +-------------v--------------+
                      | Raspberry Pi 4             |
                      | API, logs, Homebridge      |
-                     +--+---------+---------+-----+
-                    USB |     USB |     USB |
-              +---------v-+ +-----v-----+ +-v---------+
-              | Waveshare | | Waveshare | | Waveshare |
-              | 23949     | | 23949     | | 23949     |
-              | isolated  | | isolated  | | isolated  |
-              +-----+-----+ +-----+-----+ +-----+-----+
-                    |             |             |
-             RS-485 |      RS-485 |      RS-485 |
-              +-----v----+  +-----v----+  +-----v------+
-              | 6-port   |  | 3-port   |  | steam      |
-              | valve    |  | valve    |  | adapter    |
-              | Saturn   |  | Saturn   |  | DTV+       |
-              +----------+  +----------+  +-----+------+
-                                                |
-                                          +-----v------+
-                                          | generator  |
-                                          | out of     |
-                                          | scope      |
-                                          +------------+
+                     +--+---------+---------------+
+                    USB |     USB |
+              +---------v-+ +-----v-----+
+              | Waveshare | | Waveshare |
+              | 23949     | | 23949     |
+              | isolated  | | isolated  |
+              +-----+-----+ +-----+-----+
+                    |             |
+             RS-485 |      RS-485 |
+              +-----v----+  +-----v----+
+              | 6-port   |  | 3-port   |
+              | valve    |  | valve    |
+              | Saturn   |  | Saturn   |
+              +----------+  +----------+
 
 K-99695 ports:      disconnected, capped, and labeled
 K-99695 controller: powered down after packet capture
 ```
 
-The selected interface is three Waveshare `USB TO RS485/422` converters, SKU
-`23949` — one per link. Each receives its own packaged isolation barrier, automatic
+The selected interface is two Waveshare `USB TO RS485/422` converters, SKU
+`23949` — one per valve. Each receives its own packaged isolation barrier, automatic
 direction control, protection circuitry, screw terminals, selectable 120-ohm
 termination, USB cable, and DIN-rail enclosure. Only low-voltage adapter cables
 and enclosure wiring remain custom.
@@ -115,22 +103,14 @@ communication or power loss. See
 [Valve Control: Safety Ownership](../../docs/devices/valve-control.md#safety-ownership)
 and [Saturn Protocol](../../research/xagon0/docs/protocols/saturn-protocol.md).
 
-That makes a replacement master feasible. It does not make the modified system
-listed or certified. The official three-port specification identifies the
-shipped valve under ASSE/ASME/CSA plumbing standards and UL 1951. A licensed
-plumber and electrician should review the permanent installation.
+Nothing is added to the installation: the valves stay in their existing
+receptacles and circuits, and the safety case rests on the valve itself, proven
+by measurement — commissioning must show each valve stops on controller
+communication loss and power loss.
 
-The packaged adapter does not provide a separate safety processor or a way to
-cut valve power. The installation therefore needs:
-
-- accessible, clearly labeled manual power disconnects for both valve
-  receptacles;
-- accessible hot and cold service shutoffs;
-- a posted emergency procedure, which must state that a `WELDED` fault (35) is
-  a stuck mixing valve that **no controller can turn off** — the only remedy is
-  valve power removal and the hot and cold service shutoffs;
-- measured proof during commissioning that each valve stops on controller
-  communication loss and power loss.
+A `WELDED` fault (35) is a mechanically stuck mixing valve that no controller
+can close; the service surfaces it as exactly that, and the remedy is removing
+valve power.
 
 ### Acceptance thresholds
 
@@ -194,26 +174,23 @@ Non-negotiable rules:
 
 The build is specified in [HARDWARE.md](HARDWARE.md): platform
 decision, per-subsystem specification, GPIO map, power budget, isolation and
-grounding policy, enclosure and labeling, bench acceptance tests, and the steam
-reservation. Parts, prices, and purchase links are in
-[SHOPPING-LIST.md](SHOPPING-LIST.md).
+grounding policy, enclosure and labeling, and bench acceptance tests. Parts,
+prices, and purchase links are in [SHOPPING-LIST.md](SHOPPING-LIST.md).
 
-| Subsystem   | Choice                                                                                            |
-| ----------- | ------------------------------------------------------------------------------------------------- |
-| Compute     | Raspberry Pi 4 Model B 2 GB, Rust service, passive cooling, hardware watchdog                     |
-| Valve links | 2 × Waveshare `USB TO RS485/422` SKU `23949` — one isolated converter per valve                   |
-| Timekeeping | DS3231 RTC on I2C. NTP sync state is still logged with every wall-clock stamp                     |
-| Enclosure   | IP65 non-metallic, DIN rail, low-voltage only — no mains conductor enters it                      |
-| Steam       | Reserved only: one USB port, rail space, a blanked gland. Gated — [HARDWARE.md § 12](HARDWARE.md) |
+| Subsystem   | Choice                                                                          |
+| ----------- | ------------------------------------------------------------------------------- |
+| Compute     | Raspberry Pi 4 Model B 2 GB, Rust service, passive cooling, hardware watchdog   |
+| Valve links | 2 × Waveshare `USB TO RS485/422` SKU `23949` — one isolated converter per valve |
+| Timekeeping | DS3231 RTC on I2C. NTP sync state is still logged with every wall-clock stamp   |
+| Enclosure   | IP65 non-metallic, DIN rail, low-voltage only — no mains conductor enters it    |
 
 No custom PCB. No mains work inside the enclosure. No relay, contactor, smart
 plug, or cord switch in either valve's mains path.
 
-**Not orderable from documents.** Valve mating connectors, adapter-lead cable,
-termination and bias components, and the manual valve-power disconnects all
-depend on measurements taken in Phase 0 and Phase 1. Each is
-listed in [SHOPPING-LIST.md](SHOPPING-LIST.md) Group B against the measurement
-that closes it. None is ordered by assumption.
+**Not orderable from documents.** The valve mating connectors wait for the
+Phase 0 photographs, and any termination or bias component waits for the
+Phase 1 capture — most likely none is needed. Everything else is ordered up
+front; [SHOPPING-LIST.md](SHOPPING-LIST.md).
 
 Official valve references:
 
@@ -346,7 +323,8 @@ Expose only constrained public operations:
 - `stop_all()`
 - `get_cached_state()`
 
-Steam, on the same pattern:
+The dormant steam stack exposes the same pattern (out of scope; disabled in
+the deployed configuration):
 
 - `steam_start(temperature_f, duration_minutes)`
 - `steam_set_temperature(temperature_f)`
@@ -468,11 +446,7 @@ parallel — is [BUILD-ORDER.md](BUILD-ORDER.md).
 ### Phase 0 — survey and recovery
 
 - Revalidate the recovery backup and print the manual recovery instructions.
-- Photograph both valve nameplates, plugs, controller ports, connectors,
-  service shutoffs, and receptacles.
-- Verify both hot and cold shutoffs are accessible.
-- Have an electrician confirm GFCI protection and how to remove power from both
-  valves quickly.
+- Photograph both valve nameplates, plugs, controller ports, and connectors.
 - Label every cable at both ends before disconnecting anything.
 - Obtain or build two adapter leads so the original cables are not cut.
 - Record the recovery baseline: both valve calibration codes (`v1_cal_code = 173`,
@@ -531,8 +505,7 @@ Procedure:
 1. Stop and remove power from the pilot valve.
 2. Disconnect only that valve's Kohler data cable and attach the custom cable.
 3. Restore valve power. Commission at 100 °F on one outlet with the operator
-   present and outside the spray path, hand on the manual disconnect, and the
-   Therma K probe reading the outlet throughout.
+   present and a thermometer on the outlet.
 4. Limit the first active session to two minutes.
 
 Test process kill, forced process hang, Pi power loss, USB disconnect, Pi
@@ -550,7 +523,7 @@ temperature, and the K-99695's behaviour with a missing valve.
 ### Phase 4 — second valve and all outlets
 
 - Repeat Phase 3 for the other valve.
-- Verify every configured outlet independently with the calibrated thermometer.
+- Verify every configured outlet independently with a thermometer.
 - Run one zone at a time, then both zones, at 100 °F.
 - Confirm the original K-99695 cables are capped, labeled, and stored at the
   controller.
@@ -559,24 +532,11 @@ temperature, and the K-99695's behaviour with a missing valve.
 Gate: every outlet passes temperature and stop testing, and the manual rollback
 drill succeeds.
 
-### Phase 5 — steam link
+### Phase 5 — removed (steam)
 
-- Meter a powered-down DTV+ peripheral port and photograph the connector; build
-  the adapter lead.
-- Bring up the DTV+ codec against the emulator, then against the adapter with
-  the generator's own control still able to stop it.
-- Verify the Fx2/Cx2 type split rejects a cross-encoding assignment.
-- Commission one session at the 110 °F default for the 10-minute default, with
-  the operator present.
-- Confirm `stop_all()` stops steam, and that a degraded DTV+ link commands
-  `steam_stop` before latching.
-- **Measure the hard case:** pull the DTV+ link mid-session and record what the
-  generator does. This is the steam equivalent of the Phase 3 valve fail-off
-  tests, and it is the only way the answer gets known.
-
-Gate: a steam session starts, holds setpoint, and stops on command and on timer.
-The hard-link-loss behaviour is measured and recorded, whatever it turns out to
-be.
+Steam is out of scope — operator decision 2026-08-30,
+[DECISIONS.md](DECISIONS.md#d12--like-for-like-scope-no-added-equipment-no-steam-setup).
+The phase number is kept so later phases and their citations stay stable.
 
 ### Phase 6 — local soak and integration
 
@@ -588,7 +548,7 @@ be.
 - Keep automatic shower actuation disabled unless separately and explicitly
   approved.
 
-Gate: signed commissioning report and homeowner-visible emergency instructions.
+Gate: the commissioning record is complete.
 
 ## Manual rollback to Kohler
 
@@ -607,12 +567,6 @@ Gate: signed commissioning report and homeowner-visible emergency instructions.
 10. Re-read calibration codes and configured outlets against the Phase 0
     recovery baseline. Rollback is complete when the configuration matches the
     baseline, not when water flows.
-
-If water will not stop at any point: leave the shower, remove valve power, and
-close both hot and cold service shutoffs. Do not troubleshoot a continuing-flow
-or over-temperature event while standing in the shower. A `WELDED` fault (35)
-is a mechanically stuck valve that no controller can close; the shutoffs are the
-only remedy and the valve requires replacement.
 
 ## Captures and privacy
 

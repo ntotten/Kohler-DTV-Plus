@@ -50,9 +50,10 @@ once where it belongs, and move on.
 
 ## Where things stand
 
-- **The replacement controller covers three links**: two Saturn valve buses and
-  one DTV+ steam link. Steam is in scope; the generator behind the adapter is
-  not.
+- **The replacement controller drives the two Saturn valve buses**, and that is
+  the whole scope: a like-for-like replacement of the K-99695, with no added
+  installation equipment and no steam setup (operator decision 2026-08-30 —
+  [controller/docs/DECISIONS.md](controller/docs/DECISIONS.md) D12).
 - **[I3](INVESTIGATIONS.md#i3--valuescgi-intermittently-drops-a-healthy-valve),
   [I4](INVESTIGATIONS.md#i4--is-automatic-purge-on) and
   [I5](INVESTIGATIONS.md#i5--the-saturn-register-map-is-contradictory)** remain

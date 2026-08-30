@@ -13,7 +13,7 @@ through, and signed. **Record the measured value** wherever a threshold is
 named — a tick against "stops within the threshold" is worth much less than
 the number that was actually observed.
 
-**114 items.**
+**98 items.**
 
 ## AGENT.md
 
@@ -69,15 +69,6 @@ the number that was actually observed.
   - _Verify:_ not-testable-in-software (the budget counts HTTP clients outside this process, which no test here can observe); manual/operational; enforceable in-process only via a shared session/queue limiter
   - _Source:_ app/CLAUDE.md Hard limits table and 'The two-session budget is easy to blow without noticing'
 
-## controller/CLAUDE.md
-
-- [ ] **PHY-09** — Leave our end of the steam RS-485 link unterminated; the K-1737-K1 adapter already terminates the bus at approximately 114 ohm.
-  - _Verify:_ manual commissioning (resistance measurement)
-  - _Source:_ controller/CLAUDE.md § Settled — do not re-litigate; controller/docs/STEAM-ADAPTER.md §5
-- [ ] **PHY-10** — Connect signal ground on the steam link (not optional there, because the adapter's SMBJ28A clamps are unidirectional and remove the negative common-mode range) and drive pin 4 of the DTV+ header, which bus-powers the adapter's transceiver through R16.
-  - _Verify:_ manual commissioning
-  - _Source:_ controller/CLAUDE.md § Settled — do not re-litigate; controller/docs/STEAM-ADAPTER.md §5
-
 ## controller/docs/DESIGN.md
 
 - [ ] **SAFE-01** — The K-99695 and the replacement controller must never be connected to the same valve bus.
@@ -95,9 +86,6 @@ the number that was actually observed.
 - [ ] **BOOT-09** — If automatic purge is enabled (I4), 'confirmed off' in the safe boot sequence means flow has stopped, not that the valve acknowledged.
   - _Verify:_ manual commissioning; emulator e2e once purge behaviour is known
   - _Source:_ controller/docs/DESIGN.md § Purge handling (3)
-- [ ] **API-03** — `stop_all()` stops steam as well as both valve zones.
-  - _Verify:_ emulator e2e; manual commissioning in Phase 5
-  - _Source:_ controller/docs/DESIGN.md § Software design → public operations
 - [ ] **SER-01** — Bind logical zones to stable device paths using each adapter's identity or physical USB path, not incidental `/dev/ttyUSB0` enumeration order.
   - _Verify:_ unit on the resolver; manual commissioning with adapters re-plugged in a different order
   - _Source:_ controller/docs/DESIGN.md § Software design → Pi controller service
@@ -155,7 +143,7 @@ the number that was actually observed.
 - [ ] **PH2-03** — Run the Pi, adapters, watchdog, service, and emulator continuously for seven days.
   - _Verify:_ not-testable-in-software (seven-day soak on real hardware); manual soak
   - _Source:_ controller/docs/DESIGN.md § Delivery phases → Phase 2
-- [ ] **PH3-01** — Commission the one-valve pilot at 100 °F on one outlet with the operator present and outside the spray path, hand on the manual disconnect, and the Therma K probe reading the outlet throughout.
+- [ ] **PH3-01** — Commission the one-valve pilot at 100 °F on one outlet with the operator present and a thermometer on the outlet.
   - _Verify:_ manual commissioning
   - _Source:_ controller/docs/DESIGN.md § Delivery phases → Phase 3 procedure (3)
 - [ ] **PH3-02** — Limit the first active session to two minutes.
@@ -170,31 +158,19 @@ the number that was actually observed.
 - [ ] **PH3-05** — Record stop latency per fault path, maximum physical temperature, and the K-99695's behaviour with a missing valve, and run the full timed manual rollback drill before leaving Phase 3.
   - _Verify:_ manual commissioning
   - _Source:_ controller/docs/DESIGN.md § Delivery phases → Phase 3 gate
-- [ ] **PH4-01** — Verify every configured outlet independently with the calibrated thermometer, then run one zone at a time and then both zones at 100 °F.
+- [ ] **PH4-01** — Verify every configured outlet independently with a thermometer, then run one zone at a time and then both zones at 100 °F.
   - _Verify:_ manual commissioning
   - _Source:_ controller/docs/DESIGN.md § Delivery phases → Phase 4
 - [ ] **PH4-02** — Phase 4 closes only when every outlet passes temperature and stop testing and the manual rollback drill succeeds.
   - _Verify:_ manual commissioning
   - _Source:_ controller/docs/DESIGN.md § Delivery phases → Phase 4 gate
-- [ ] **PH5-01** — Bring up the DTV+ codec against the emulator first, then against the adapter with the generator's own control still able to stop it.
-  - _Verify:_ emulator e2e then manual commissioning
-  - _Source:_ controller/docs/DESIGN.md § Delivery phases → Phase 5
-- [ ] **PH5-03** — Commission one steam session at the 110 °F default for the 10-minute default with the operator present.
-  - _Verify:_ manual commissioning
-  - _Source:_ controller/docs/DESIGN.md § Delivery phases → Phase 5
-- [ ] **PH5-04** — Confirm that `stop_all()` stops steam and that a degraded DTV+ link commands `steam_stop` before latching.
-  - _Verify:_ emulator e2e for the degraded-link ordering; manual commissioning to confirm
-  - _Source:_ controller/docs/DESIGN.md § Delivery phases → Phase 5
-- [ ] **PH5-05** — Measure the hard case by pulling the DTV+ link mid-session and recording what the generator does; Phase 5 closes only when a steam session starts, holds setpoint, stops on command and on timer, and the hard-link-loss behaviour is measured and recorded whatever it turns out to be.
-  - _Verify:_ manual commissioning
-  - _Source:_ controller/docs/DESIGN.md § Delivery phases → Phase 5 gate
 - [ ] **PH6-01** — Keep voice, cloud, Homebridge, and automatic routines disabled for a one-week local-only soak.
   - _Verify:_ not-testable-in-software (one-week soak on real hardware); configuration check; manual soak
   - _Source:_ controller/docs/DESIGN.md § Delivery phases → Phase 6
 - [ ] **PH6-02** — Enable explicit Homebridge/Worker commands only after the soak has no unexplained reset, temperature, or bus event.
   - _Verify:_ not-testable-in-software (a person reads the soak logs and judges what counts as unexplained); log review after the soak
   - _Source:_ controller/docs/DESIGN.md § Delivery phases → Phase 6
-- [ ] **PH6-05** — Phase 6 closes only with a signed commissioning report and homeowner-visible emergency instructions.
+- [ ] **PH6-05** — Phase 6 closes only when the commissioning record is complete.
   - _Verify:_ not-testable-in-software
   - _Source:_ controller/docs/DESIGN.md § Delivery phases → Phase 6 gate
 - [ ] **RB-01** — Manual rollback begins by sending `stop_all` and verifying physical flow has stopped, and is complete only when the configuration matches the Phase 0 recovery baseline — not when water flows.
@@ -203,9 +179,9 @@ the number that was actually observed.
 - [ ] **RB-02** — Confirm both valves appear independently in `values.cgi` (`valve_1_con_string` / `valve_2_con_string` reading `conn`) and do not rely on the touchscreen alone.
   - _Verify:_ manual commissioning; read-only API check
   - _Source:_ controller/docs/DESIGN.md § Manual rollback to Kohler (8)
-- [ ] **WELD-01** — State in the posted emergency procedure, and surface in software, that a `WELDED` fault (35) is a mechanically stuck mixing valve that no controller can turn off; the only remedy is valve power removal and the hot and cold service shutoffs.
+- [ ] **WELD-01** — Surface in software that a `WELDED` fault (35) is a mechanically stuck mixing valve that no controller can turn off; the remedy is removing valve power.
   - _Verify:_ unit: fault-code 35 renders the correct operator message; not-testable-in-software for the physical remedy
-  - _Source:_ controller/docs/DESIGN.md § Safety boundary and § Manual rollback to Kohler
+  - _Source:_ controller/docs/DESIGN.md § Safety boundary
 - [ ] **OPS-08** — Keep the household-specific configuration backup outside this public repository.
   - _Verify:_ not-testable-in-software (a test cannot assert the absence of a file it cannot name); repository review
   - _Source:_ controller/docs/DESIGN.md § Scope
@@ -242,7 +218,7 @@ the number that was actually observed.
 - [ ] **PWR-03** — Add RS-485 termination only where the factory topology has it; ship with termination jumpers off on both valve converters until the factory bus is captured and measured.
   - _Verify:_ manual commissioning; bench check §13 item 4
   - _Source:_ controller/docs/HARDWARE.md §9 'Isolation policy' item 4; §5 'Configuration at assembly' item 2
-- [ ] **PWR-05** — Stay inside the power budget: total ≈ 6.6 W against a 15.3 W supply, and worst-case downstream USB draw of 600 mA across three converters, inside the Pi 4's documented USB budget.
+- [ ] **PWR-05** — Stay inside the power budget: total ≈ 5.6 W against a 15.3 W supply, and worst-case downstream USB draw of 400 mA across two converters, inside the Pi 4's documented USB budget.
   - _Verify:_ not-testable-in-software; manual measurement
   - _Source:_ controller/docs/HARDWARE.md §9 'Budget'
 - [ ] **PWR-06** — Enable the BCM2711 hardware watchdog and systemd RuntimeWatchdogSec/WatchdogSec; on a watchdog reset the service must boot to READY_OFF with no state restored.
@@ -254,31 +230,10 @@ the number that was actually observed.
 - [ ] **PWR-08** — Mount the root filesystem with journaling and write frame logs and session logs to a separate partition with bounded rotation.
   - _Verify:_ manual commissioning
   - _Source:_ controller/docs/HARDWARE.md §4 'Storage policy'
-- [ ] **STEAM-19** — Make no assumption about the hard-loss case (USB gone, cable pulled, service dead, Pi unpowered): a dead process enforces no session limit, so steam falls entirely to the generator's own behaviour, which is not yet measured.
-  - _Verify:_ not-testable-in-software; Phase 5 measurement
-  - _Source:_ controller/docs/HARDWARE.md §12 'Losing the DTV+ link'
-- [ ] **STEAM-20** — Enforce the service's own session limit for the degraded case, and assume the worst for the hard case until Phase 5 measures what the generator does when the DTV+ link drops mid-session.
+- [ ] **STEAM-20** — Enforce the service's own session limit on the steam link, and assume nothing about the hard-loss case: a dead process enforces no limit.
   - _Verify:_ unit (session timer) plus manual commissioning (Phase 5)
   - _Source:_ controller/docs/HARDWARE.md §12 'Losing the DTV+ link' closing paragraphs
-- [ ] **STEAM-21** — Give the steam link its own Waveshare SKU 23949 converter on a Pi USB 2.0 port with its own isolation barrier, and never join its field-side PE to either valve's.
-  - _Verify:_ not-testable-in-software; manual commissioning
-  - _Source:_ controller/docs/HARDWARE.md §12 'Hardware' table
-- [ ] **STEAM-22** — Wire the adapter lead as four conductors: connector B/A/GND (pins 1/2/3) to the converter's TB/TA/PE, plus pin 4 to a +V rail supplied by our master; pin 3 GND is mandatory on this link, unlike the valve links.
-  - _Verify:_ not-testable-in-software; manual commissioning
-  - _Source:_ controller/docs/HARDWARE.md §12 'Before the connector can be built' — pinout table and the Ground row
-- [ ] **STEAM-23** — Leave our converter's termination jumper off on the steam link: the adapter is already terminated (114 Ω measured across pins 1 and 2, R27), and a second terminator halves the bus to 60 Ω (40 Ω with a chained second adapter), below the 54 Ω RS-485 drivers are specified against.
-  - _Verify:_ not-testable-in-software; bench measurement
-  - _Source:_ controller/docs/HARDWARE.md §12 'Before the connector can be built' — Termination row and 'Why our termination stays off'
-- [ ] **STEAM-24** — Add a 12 V rail to the enclosure to drive adapter pin 4, and confirm it before committing: apply 12 V to pin 4 from a current-limited supply with ground on pin 3 and measure IC2 pin 8 — about 5 V confirms the rail and the supply chain, and the current reading sizes the permanent supply.
-  - _Verify:_ manual commissioning (bench measurement)
-  - _Source:_ controller/docs/HARDWARE.md §12 'New build requirement: a 12 V rail in the enclosure'
-- [ ] **STEAM-25** — Treat the generator and everything behind the adapter as out of scope; the generator owns its own safety envelope (low water/dry fire 0140-A, tank high-limit 0140-B, automatic fill shutoff, ¾″ pressure relief, room over-temperature 0120, session auto-shutoff) and this controller only sends setpoints.
-  - _Verify:_ not-testable-in-software
-  - _Source:_ controller/docs/HARDWARE.md §12 preamble and 'Out of scope'
-- [ ] **STEAM-26** — Record the in-enclosure user-interface deviation in the commissioning report: Kohler's WARNING requires a user interface inside the steam enclosure, this design powers the K-99693 down at Phase 4, and the operator accepted the deviation on 2026-08-29.
-  - _Verify:_ manual commissioning (report entry)
-  - _Source:_ controller/docs/HARDWARE.md §12 'The in-enclosure interface requirement'
-- [ ] **TEST-01** — Run all bench acceptance checks with all three converters on the Pi and nothing attached to the field side (Phase 2).
+- [ ] **TEST-01** — Run all bench acceptance checks with both converters on the Pi and nothing attached to the field side (Phase 2).
   - _Verify:_ manual commissioning
   - _Source:_ controller/docs/HARDWARE.md §13 preamble
 - [ ] **TEST-02** — Check 1: both converters enumerate with distinct USB serial numbers; pass requires two distinct IDs or documented port-path binding in use.
@@ -311,12 +266,9 @@ the number that was actually observed.
 - [ ] **TEST-13** — Check 10: enclosure interior ≤ 40 °C after 7 days sealed, logged from the Pi's own thermal sensor.
   - _Verify:_ manual commissioning (7-day soak, with the service logging Pi thermals)
   - _Source:_ controller/docs/HARDWARE.md §13 table row 10; §10 'Interior ambient'
-- [ ] **TEST-14** — Check 11: every label present and correct, and the emergency card in the lid.
+- [ ] **TEST-14** — Check 11: every label present and correct.
   - _Verify:_ manual commissioning (visual)
   - _Source:_ controller/docs/HARDWARE.md §13 table row 11; §10 'Labelling and test points'
-- [ ] **TEST-16** — State on the lid card that a WELDED fault (35) is a mechanically stuck mixing valve that no controller can close; the only remedy is removing valve power and closing the hot and cold service shutoffs.
-  - _Verify:_ manual commissioning; the software must not present fault 35 as controller-recoverable
-  - _Source:_ controller/docs/HARDWARE.md §10 (paragraph after the labelling table)
 - [ ] **EXCL-01** — Exclude any relay, contactor, smart plug or cord switch in valve mains — a failing stop latency is not solved with an unreviewed relay.
   - _Verify:_ not-testable-in-software; design review
   - _Source:_ controller/docs/HARDWARE.md §14 row 1
@@ -334,16 +286,13 @@ the number that was actually observed.
   - _Source:_ controller/docs/HARDWARE.md §15 row 3; §11 'Cable polarity'
 - [ ] **OPEN-02** — Resolve the Saturn response timeout — 320 ms or 400 ms — from the Phase 1 capture (I5) before fixing decoder deadlines.
   - _Verify:_ manual commissioning (Phase 1 capture); then unit constants
-  - _Source:_ controller/docs/HARDWARE.md §15 row 7
-- [ ] **OPEN-04** — Do not order field cabling by assumption: valve model/nameplate, connector housing/keying/pin count, factory termination and idle bias, valve mains voltage/receptacles/circuits/GFCI, and DTV+ peripheral-port pinout each stay open until their named measurement closes them.
+  - _Source:_ controller/docs/HARDWARE.md §15 row 6
+- [ ] **OPEN-04** — Do not order field cabling by assumption: valve model/nameplate, connector housing/keying/pin count, and factory termination and idle bias each stay open until their named measurement closes them.
   - _Verify:_ manual commissioning
-  - _Source:_ controller/docs/HARDWARE.md §15 rows 1, 2, 4, 5, 9; §11
+  - _Source:_ controller/docs/HARDWARE.md §15 rows 1, 2, 4; §11
 - [ ] **OPEN-05** — Record which FTDI part is fitted, FT232RL or FT232RNL; this blocks nothing but must be recorded.
   - _Verify:_ manual commissioning (inspection on arrival)
-  - _Source:_ controller/docs/HARDWARE.md §15 row 6; §5 'Configuration at assembly' item 4
-- [ ] **OPEN-06** — Measure at Phase 5 what the generator does when the DTV+ link drops mid-session (Kohler case #07797183 runs in parallel); until then the worst case is assumed.
-  - _Verify:_ manual commissioning (Phase 5)
-  - _Source:_ controller/docs/HARDWARE.md §15 row 10; §12 'Losing the DTV+ link'
+  - _Source:_ controller/docs/HARDWARE.md §15 row 5; §5 'Configuration at assembly' item 4
 - [ ] **ARCH-02** — If Phase 3 measures that a valve does not close on communication loss, the acceptance thresholds reject this architecture outright and a redesign — not a platform swap — is required.
   - _Verify:_ manual commissioning (Phase 3)
   - _Source:_ controller/docs/HARDWARE.md §2 (closing [I])

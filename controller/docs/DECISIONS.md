@@ -10,22 +10,23 @@ evidence, and record why here.
 
 ## Index
 
-| #                                                                  | Decision                                                                                      | Record                                                                    |
-| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| [D1](#d1--direct-cable-swap-not-a-dual-controller-selector)        | Direct cable swap, no dual-controller selector                                                | Below                                                                     |
-| [D2](#d2--raspberry-pi--rust-on-linux-not-a-bare-metal-mcu)        | Raspberry Pi + Rust on Linux, not an MCU                                                      | Below                                                                     |
-| [D3](#d3--three-single-channel-converters-not-a-dual-channel-part) | Three single-channel converters, no shared HAT                                                | Below                                                                     |
-| [D4](#d4--no-industrial-plc)                                       | No industrial PLC                                                                             | Below                                                                     |
-| [D5](#d5--steam-through-the-adapter-not-direct-to-the-generator)   | Steam through the adapter, not direct                                                         | Below                                                                     |
-| D6                                                                 | Our RS-485 termination stays **off** (steam)                                                  | [HARDWARE.md § 12](HARDWARE.md)                                           |
-| D7                                                                 | Signal ground **connected** on the steam link                                                 | [HARDWARE.md § 12](HARDWARE.md)                                           |
-| D8                                                                 | Pin 4 of the DTV+ bus is driven by us                                                         | [HARDWARE.md § 12](HARDWARE.md)                                           |
-| D9                                                                 | Kohler's in-enclosure interface `WARNING` — accepted deviation, operator decision 2026-08-29  | [HARDWARE.md § 12](HARDWARE.md); [STEAM-ADAPTER.md § 6](STEAM-ADAPTER.md) |
-| D10                                                                | No UPS on the Pi — power loss must reach the valves                                           | [HARDWARE.md § 4](HARDWARE.md)                                            |
-| D11                                                                | No relay, contactor, smart plug or cord switch in valve mains, and the rest of the exclusions | [HARDWARE.md § 14](HARDWARE.md)                                           |
-| [W1](#w1--proposed-repository-layout-superseded)                   | Proposed repository layout — superseded                                                       | Below                                                                     |
-| [W2](#w2--the-modular-jack-inference-superseded)                   | The modular-jack inference — superseded                                                       | [STEAM-ADAPTER.md § 5](STEAM-ADAPTER.md)                                  |
-| [W3](#w3--the-independent-temperature-sensor-removed)              | The independent temperature sensor — removed 2026-08-30                                       | Below                                                                     |
+| #                                                                  | Decision                                                                                      | Record                                    |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| [D1](#d1--direct-cable-swap-not-a-dual-controller-selector)        | Direct cable swap, no dual-controller selector                                                | Below                                     |
+| [D2](#d2--raspberry-pi--rust-on-linux-not-a-bare-metal-mcu)        | Raspberry Pi + Rust on Linux, not an MCU                                                      | Below                                     |
+| [D3](#d3--three-single-channel-converters-not-a-dual-channel-part) | Three single-channel converters, no shared HAT                                                | Below                                     |
+| [D4](#d4--no-industrial-plc)                                       | No industrial PLC                                                                             | Below                                     |
+| [D5](#d5--steam-through-the-adapter-not-direct-to-the-generator)   | Steam through the adapter, not direct _(moot — steam out of scope, D12)_                      | Below                                     |
+| D6                                                                 | Our RS-485 termination stays **off** (steam)                                                  | [STEAM-ADAPTER.md § 12](STEAM-ADAPTER.md) |
+| D7                                                                 | Signal ground **connected** on the steam link                                                 | [STEAM-ADAPTER.md § 12](STEAM-ADAPTER.md) |
+| D8                                                                 | Pin 4 of the DTV+ bus is driven by us                                                         | [STEAM-ADAPTER.md § 12](STEAM-ADAPTER.md) |
+| D9                                                                 | Kohler's in-enclosure interface `WARNING` — accepted deviation, operator decision 2026-08-29  | [STEAM-ADAPTER.md § 6](STEAM-ADAPTER.md)  |
+| D10                                                                | No UPS on the Pi — power loss must reach the valves                                           | [HARDWARE.md § 4](HARDWARE.md)            |
+| D11                                                                | No relay, contactor, smart plug or cord switch in valve mains, and the rest of the exclusions | [HARDWARE.md § 14](HARDWARE.md)           |
+| [W1](#w1--proposed-repository-layout-superseded)                   | Proposed repository layout — superseded                                                       | Below                                     |
+| [W2](#w2--the-modular-jack-inference-superseded)                   | The modular-jack inference — superseded                                                       | [STEAM-ADAPTER.md § 5](STEAM-ADAPTER.md)  |
+| [W3](#w3--the-independent-temperature-sensor-removed)              | The independent temperature sensor — removed 2026-08-30                                       | Below                                     |
+| [D12](#d12--like-for-like-scope-no-added-equipment-no-steam-setup) | Like-for-like scope: no added equipment, no steam setup — operator decision 2026-08-30        | Below                                     |
 
 D6–D11 are specifications with their evidence attached, so their records live
 in the spec; this index exists so nothing settled has to be rediscovered by
@@ -237,3 +238,37 @@ history if it is ever wanted back.
 **Would reopen it.** Evidence that the valve's thermistor self-report cannot be
 trusted — for example a Phase 3 or Phase 4 Therma K measurement that disagrees
 with the reported temperature beyond the sensor's tolerance.
+
+## D12 — Like-for-like scope: no added equipment, no steam setup
+
+**Operator decision, 2026-08-30. The project builds a controller that replaces
+the K-99695 driving the two valves that exist today — nothing else. Do not
+reintroduce any of the following into the plan, and do not re-raise them.**
+
+Removed from the plan by this decision:
+
+- **Manual valve-power disconnects** and every electrician work item — the
+  GFCI survey, the nameplate-gated mains work, the "licensed review" language.
+  The valves stay in their existing receptacles and circuits, untouched, the
+  same as under the K-99695.
+- **Posted emergency procedures**, the homeowner-visible instructions, and the
+  enclosure-lid emergency card. The service still surfaces a `WELDED` fault
+  (35) for what it is; that lives in software.
+- **Instrument mandates** — the NIST-traceable Therma K requirement and the
+  offset-characterisation ritual. A thermometer checks delivered water at
+  commissioning; which thermometer is not a requirement.
+- **The independent temperature sensor** — removed earlier the same day, [W3](#w3--the-independent-temperature-sensor-removed).
+- **The whole steam setup**: the third converter, the 12 V rail, the adapter
+  lead, Phase 5 commissioning, the generator/installer material, the kit
+  pairing advice, and the in-enclosure interface deviation ([D9](#index), now
+  moot). The house has no steam generator.
+
+What this does **not** remove: the controller's own safety behaviour (the
+clamps, boot-to-OFF, fail-off escalation, the transmit gate), the Phase 1–4
+capture and commissioning measurements, and the dormant DTV+ steam code, which
+was complete and tested before the descope and costs nothing to keep —
+[HARDWARE.md § 12](HARDWARE.md). The K-1737-K1 reference record stays in
+[STEAM-ADAPTER.md](STEAM-ADAPTER.md).
+
+**Would reopen it.** A steam generator actually being installed reopens the
+steam link, via [STEAM-ADAPTER.md § 12](STEAM-ADAPTER.md). Nothing else does.

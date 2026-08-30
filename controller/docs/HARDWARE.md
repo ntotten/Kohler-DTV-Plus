@@ -2,16 +2,14 @@
 
 Status: **build specification, revision A.** Not yet built.
 
-An open replacement master for the Kohler DTV+: three isolated serial links —
-two Saturn valve buses and one DTV+ steam link — driven from a Raspberry Pi.
-This specifies the unit described in
-[DESIGN.md](DESIGN.md). That document owns the
-architecture, the safety rules and the delivery phases; this one owns the
-hardware. Purchase links and prices are in
-[SHOPPING-LIST.md](SHOPPING-LIST.md), and the order in which parts are bought
-and phases run is [BUILD-ORDER.md](BUILD-ORDER.md). Steam is scoped in
-[STEAM-ADAPTER.md](STEAM-ADAPTER.md); §12 here carries only the hardware
-consequences.
+An open replacement master for the Kohler DTV+: two isolated Saturn valve
+links driven from a Raspberry Pi. This specifies the unit described in
+[DESIGN.md](DESIGN.md). That document owns the architecture, the safety rules
+and the delivery phases; this one owns the hardware. Purchase links and prices
+are in [SHOPPING-LIST.md](SHOPPING-LIST.md), and the order in which parts are
+bought and phases run is [BUILD-ORDER.md](BUILD-ORDER.md). §12 documents the
+dormant DTV+ steam stack the codebase carries; steam is otherwise out of
+scope.
 
 Evidence tiers follow [system-specification.md](../../docs/system-specification.md) —
 **[A]** ours/measured, **[B]** shipped code, **[K]** Kohler primary, **[C]**
@@ -26,15 +24,11 @@ from a manufacturer's own published page is marked **[V]** and linked.
 | ---- | ----------------- | ------ | -------- | -------- | --------- |
 | 1    | Valve, six-port   | RS-485 | Saturn   | Cx2      | §5        |
 | 2    | Valve, three-port | RS-485 | Saturn   | Cx2      | §5        |
-| 3    | Steam adapter     | RS-485 | DTV+     | Fx2      | §12       |
 
 Each link gets its own converter, its own isolation barrier, and its own state
-machine. Nothing is shared between them.
-
-The DTV+ controller supports two valve ports and eight peripheral ports; this
-design implements two valve links and one peripheral link, which covers the
-common single-steam installation. Adding a fourth link is another converter and
-another instance of the DTV+ stack.
+machine. Nothing is shared between them. The codebase also carries a dormant
+DTV+ steam stack — §12 — which is out of scope of this plan and drives no
+hardware.
 
 ### Reference configuration
 
@@ -83,36 +77,28 @@ this service moves at most a few hundred bytes per second.
   (PSU outside the      └──>|  Raspberry Pi 4 Model B, 2 GB         |
    enclosure)               |   Rust service · local API · journald |
                             |   BCM2711 hardware watchdog           |
-                            +---+-------+-------+-------+---+
-                            USB3|   USB3|   USB2|   I2C1|
-                                |       |       |       |
-                                |       |       |       +--> DS3231 RTC
-                                |       |       |            + CR1220 cell
+                            +---+-------+-------+---+
+                            USB3|   USB3|   I2C1|
                                 |       |       |
-          +---------------------+       |       +-----------------------+
-          |             +---------------+                               |
-          |             |                                               |
- +--------v--------+ +--v--------------+                     +----------v------+
- | Waveshare 23949 | | Waveshare 23949 |                     | Waveshare 23949 |
- | FT232R+SP485EEN | | (same part)     |                     | (same part)     |
- | isolated        | | isolated        |                     | isolated        |
- +--------+--------+ +--------+--------+                     +--------+--------+
-          | RS-485            | RS-485                                | RS-485
-  +-------v-------+   +-------v-------+                       +-------v--------+
-  | Valve link 1  |   | Valve link 2  |                       | Steam adapter  |
-  | 6-port        |   | 3-port Prompt |                       | K-1737-K1      |
-  | Saturn · Cx2  |   | Saturn · Cx2  |                       | DTV+ · Fx2     |
-  +---------------+   +---------------+                       +-------+--------+
-                                                                      |
-                                                              +-------v--------+
-                                                              | Steam generator|
-                                                              | self-contained,|
-                                                              | out of scope   |
-                                                              +----------------+
+                                |       |       +--> DS3231 RTC
+                                |       |            + CR1220 cell
+                                |       |
+          +---------------------+       |
+          |                             |
+ +--------v--------+           +--------v--------+
+ | Waveshare 23949 |           | Waveshare 23949 |
+ | FT232R+SP485EEN |           | (same part)     |
+ | isolated        |           | isolated        |
+ +--------+--------+           +--------+--------+
+          | RS-485                      | RS-485
+  +-------v-------+             +-------v-------+
+  | Valve link 1  |             | Valve link 2  |
+  | 6-port        |             | 3-port Prompt |
+  | Saturn · Cx2  |             | Saturn · Cx2  |
+  +---------------+             +---------------+
 
   K-99695 ports:     disconnected, capped, labeled
   K-99695 + K-99693: powered down after Phase 1 capture
-  Generator mains:   the installer's work, never this enclosure's
 ```
 
 Line power to both valves stays in the original listed receptacles and wiring.
@@ -270,7 +256,7 @@ No GPIO drives a relay, a contactor, or anything in a mains path.
 | DS3231              | < 0.1 W     | On 3V3                                   |
 | **Total**           | **≈ 6.6 W** | Supply is 15.3 W — better than 2× margin |
 
-Worst-case downstream USB draw is 600 mA across three converters, inside the
+Worst-case downstream USB draw is 400 mA across two converters, inside the
 Pi 4's documented total USB budget **[V]**.
 
 ### Isolation policy
@@ -287,51 +273,41 @@ Pi 4's documented total USB budget **[V]**.
 
 **No mains conductor enters this enclosure.** The Pi's USB-C supply plugs into
 an existing receptacle outside the box; only its low-voltage output cable
-passes through a gland. This keeps the build entirely low-voltage and removes
-any need for an electrician to sign off on the enclosure's internals.
-
-Mains work in this project is limited to what an electrician does outside the
-box: identify valve voltage, receptacles, branch circuits and GFCI
-arrangement, and fit the labelled manual valve-power disconnects that
-[DESIGN.md § Safety boundary](DESIGN.md) requires.
+passes through a gland. The build is entirely low-voltage, and this project
+does no mains work anywhere: the valves stay in their existing receptacles and
+circuits, untouched.
 
 ---
 
 ## 10. Enclosure, mechanical and environment
 
-| Requirement       | Specification                                                                  |
-| ----------------- | ------------------------------------------------------------------------------ |
-| Location          | Dry, serviceable, ventilated. **Not inside the bathroom wet zone**             |
-| Rating            | IP65 / NEMA 4X wall-mount, hinged or screw lid, non-metallic                   |
-| Internal size     | ≥ 300 × 200 × 150 mm, with a mounting plate                                    |
-| Rail              | 35 mm × 7.5 mm DIN, ≥ 200 mm usable length                                     |
-| Rail budget       | 3 × converter at 81.9 × 54.0 × 32.0 mm, plus terminal blocks                   |
-| Pi mounting       | DIN-rail carrier or plate standoffs, GPIO header accessible with the lid open  |
-| Breakout mounting | DS3231 on plate standoffs, not loose                                           |
-| Glands            | 1 × Pi USB-C power, 1 × Ethernet, 2 × valve field cable, 1 × steam field cable |
-| Interior ambient  | ≤ 40 °C, logged from the Pi's own thermal sensor through the seven-day soak    |
-| Strain relief     | Every cable, at the gland. No conductor takes tension at a screw terminal      |
+| Requirement       | Specification                                                                 |
+| ----------------- | ----------------------------------------------------------------------------- |
+| Location          | Dry, serviceable, ventilated. **Not inside the bathroom wet zone**            |
+| Rating            | IP65 / NEMA 4X wall-mount, hinged or screw lid, non-metallic                  |
+| Internal size     | ≥ 300 × 200 × 150 mm, with a mounting plate                                   |
+| Rail              | 35 mm × 7.5 mm DIN, ≥ 200 mm usable length                                    |
+| Rail budget       | 2 × converter at 81.9 × 54.0 × 32.0 mm, plus terminal blocks                  |
+| Pi mounting       | DIN-rail carrier or plate standoffs, GPIO header accessible with the lid open |
+| Breakout mounting | DS3231 on plate standoffs, not loose                                          |
+| Glands            | 1 × Pi USB-C power, 1 × Ethernet, 2 × valve field cable                       |
+| Interior ambient  | ≤ 40 °C, logged from the Pi's own thermal sensor through the seven-day soak   |
+| Strain relief     | Every cable, at the gland. No conductor takes tension at a screw terminal     |
 
 Size for one spare gland and ~55 mm of spare rail beyond this. Re-drilling a
 sealed enclosure in service is worse than buying a larger one now.
 
 ### Labelling and test points
 
-| Label                             | Applied to                                                      |
-| --------------------------------- | --------------------------------------------------------------- |
-| `ZONE 1 · 6-PORT`                 | Converter 1, its USB port, its field cable, both cable ends     |
-| `ZONE 2 · 3-PORT PROMPT`          | Converter 2, its USB port, its field cable, both cable ends     |
-| `STEAM · DTV+ · NOT COMMISSIONED` | Reserved USB port and gland                                     |
-| `A+` / `B−` / `PE`                | Each field terminal                                             |
-| `OEM — DO NOT CUT`                | Both original Kohler valve cables, at both ends                 |
-| Emergency card                    | Inside the lid: rollback steps, and the `WELDED` (35) procedure |
+| Label                    | Applied to                                                  |
+| ------------------------ | ----------------------------------------------------------- |
+| `ZONE 1 · 6-PORT`        | Converter 1, its USB port, its field cable, both cable ends |
+| `ZONE 2 · 3-PORT PROMPT` | Converter 2, its USB port, its field cable, both cable ends |
+| `A+` / `B−` / `PE`       | Each field terminal                                         |
+| `OEM — DO NOT CUT`       | Both original Kohler valve cables, at both ends             |
 
 Bring A/B test points out per zone as labelled, insulated posts so the bus can
 be metered without unlanding a conductor.
-
-The lid card must state that a `WELDED` fault (35) is a mechanically stuck
-mixing valve that **no controller can close** — the only remedy is removing
-valve power and closing the hot and cold service shutoffs.
 
 ---
 
@@ -347,7 +323,6 @@ that closes it. Ordering by assumption is prohibited by
 | Adapter lead conductor gauge, length  | Run length, gauge                             | Measure the installed run at Phase 0                                                        |
 | RS-485 termination and bias           | Whether the factory bus terminates, and where | Meter the unpowered bus; capture the original waveform in Phase 1                           |
 | Cable polarity                        | Which conductor is A+                         | Phase 1 capture. The `TA`/`TB` labels are the converter's convention, not Kohler's          |
-| Valve-power disconnect                | Valve voltage, receptacles, circuits, GFCI    | Electrician, after both nameplates are read                                                 |
 | Ferrules, glands, blocks, rail length | Final conductor gauges and layout             | Bench layout, after the above                                                               |
 
 **Adapter leads, not modified OEM cables.** The original Kohler cables are the
@@ -355,32 +330,19 @@ rollback path and are never cut.
 
 ---
 
-## 12. Subsystem E — the steam link
+## 12. The dormant DTV+ steam stack
 
-A third serial link, built to the same pattern as the two valve links: one
-dedicated isolated converter, one protocol stack, one state machine.
+**Steam is out of scope of this plan** — operator decision 2026-08-30,
+recorded in [DECISIONS.md](DECISIONS.md#d12--like-for-like-scope-no-added-equipment-no-steam-setup).
+The house has no steam generator and nothing here is bought, wired or
+commissioned for one.
 
-The generator is a self-contained appliance and protects itself: low water /
-dry fire (`0140-A`), tank high-limit (`0140-B`), automatic fill shutoff, a ¾″
-pressure relief valve, room over-temperature (`0120`), and a session
-auto-shutoff — all Kohler-documented **[K]**. The K-1737-K1 adapter replaces the
-native keypad as the control path. Same architecture as the valve links: the
-device owns its own safety, and this controller sends it setpoints.
-
-### Hardware
-
-| Item                | Specification                                                                                 |
-| ------------------- | --------------------------------------------------------------------------------------------- |
-| Converter           | 3rd Waveshare `USB TO RS485/422`, SKU `23949` — identical to the two valve links              |
-| Host port           | Pi USB 2.0; the remaining port stays spare                                                    |
-| Field cable         | Adapter to Pi. Kohler ships a 25 ft cable adapter-to-K-99695; ours replaces that run          |
-| Connector           | **4-pin polarized header**, labelled `FROM DTV CONTROL` **[A]**. Pin assignment to be metered |
-| Enclosure provision | Gland used, not blanked; ~55 mm of rail                                                       |
-| Power               | 1.0 W, budgeted in §9                                                                         |
-| Isolation           | Its own barrier. Its field-side `PE` is not joined to either valve's                          |
-
-Physically this is one more of a part already in the build. The work is the
-protocol, not the hardware.
+What remains is code that existed before the descope: a complete DTV+ codec,
+steam engine and emulator, exercised by the test suite and **disabled in the
+deployed configuration** (`steam.enabled = false`). This section documents what
+that dormant code enforces, because the requirement register cites it. The
+K-1737-K1 adapter reference material — including everything measured on the
+opened board — is [STEAM-ADAPTER.md](STEAM-ADAPTER.md).
 
 ### Protocol — DTV+, not Saturn
 
@@ -444,44 +406,6 @@ Power clean being denied on our side does not disable it — the generator
 tracks its own 600-minute cumulative counter and reminds through its own
 control **[K]**.
 
-### The in-enclosure interface requirement
-
-Kohler `WARNING`, in two guides: "A user interface must be located within the
-steam enclosure to allow temperature regulation and control of the steam flow"
-**[K]**. This design powers the K-99693 down at Phase 4.
-
-**Operator decision, 2026-08-29: accepted as a recorded deviation.** Kohler's
-stated purpose splits, and the halves land differently:
-
-- **Sensing** — "to allow the sensors to regulate the temperature" is served by
-  the K-1737-K1 kit's **own remote temperature sensor**, which wires to the
-  adapter rather than to the interface **[K]**. **[I]** Inference from Kohler's
-  description of the kit, not a statement Kohler makes.
-- **Control** — an in-room means to stop steam. The operator's position is that
-  removing power is the remedy they would actually use, and that a touchscreen
-  is the wrong instrument in an emergency.
-
-Recorded in the commissioning report. Full citations in
-[STEAM-ADAPTER.md § 6](STEAM-ADAPTER.md).
-
-### Why through the adapter and not straight to the generator
-
-**Decision: through the adapter.** DTV+ is documented **[C]**; the generator's
-native keypad protocol has no public analysis at all, and a direct connection
-inherits the room-temperature-sensor problem the kit already solves. The full
-comparison, and the two conditions that would reopen it, are
-[DECISIONS.md D5](DECISIONS.md#d5--steam-through-the-adapter-not-direct-to-the-generator).
-
-### Out of scope
-
-The generator and everything behind the adapter — its supply, its plumbing, its
-own controls — are installed by a professional and are not this project's
-concern. We connect to the adapter.
-
-Worth one line to the installer: Kohler maps current Invigoration generators to
-K-5548-K1 rather than K-1737-K1 **[K]**, so confirm the kit matches the
-generator chosen.
-
 ### Losing the DTV+ link
 
 Three links exist and only two are ours: Pi ↔ valve (Saturn), Pi ↔ adapter
@@ -495,114 +419,16 @@ Two cases, and they behave differently:
 | **Degraded but alive** — timeouts, NAKs, checksum failures, port still open | Transmit still works: command `steam_stop`, require acknowledgement, latch the link unavailable |
 | **Hard loss** — USB gone, cable pulled, service dead, Pi unpowered          | Nothing can be sent. Steam is entirely on the generator's own behaviour                         |
 
-The hard-loss case is where steam differs from the valves:
+The service enforces its own session limit for the degraded case.
 
-|                       | Valve links                                                                         | Steam link                    |
-| --------------------- | ----------------------------------------------------------------------------------- | ----------------------------- |
-| Backstop on hard loss | The valve's own communication-loss shutdown                                         | The generator's own behaviour |
-| Measured?             | **Yes** — Phase 3 tests every fault path against a pre-registered latency threshold | **Not yet**                   |
-
-A session limit inside the service is worth nothing in the hard-loss case,
-because a dead process enforces no limits. The generator's documented 20-minute
-auto-shutoff is the likely backstop, but sources disagree on whether that timer
-lives in the generator or the controller **[?]**.
-
-**So measure it, the same way the valve side is measured.** With an adapter and
-generator in place, pull the DTV+ link mid-session and record what happens. That
-is a Phase 5 commissioning number, not a question for a document. Kohler case
-**#07797183** carries the same question in parallel; whichever answers first,
-the measurement is what the commissioning report records.
-
-Until then the service assumes the worst on both counts: its own session limit
-for the degraded case, and no assumption at all about the hard case.
-
-### Before the connector can be built
-
-The adapter-side link is a **4-pin polarized header**, read directly off the
-adapter's own lid label **[A]** —
-[`research/reference/steam-adapter/`](../../research/reference/steam-adapter/).
-The adapter carries two identical headers, `FROM DTV CONTROL` and `TO NEXT
-DEVICE (OPTIONAL)`, so the bus is multi-drop with a daisy-chain out.
-
-**The link is RS-485 — settled.** The adapter's transceiver is an **`ADM4852`**
-**[A]**: half-duplex RS-485/RS-422, ⅛ unit load, slew-rate limited, 8-lead SOIC
-([Analog Devices](https://www.analog.com/en/products/adm4852.html)). Two wires,
-A and B. A standard converter is the correct part, and the three `PC900V`
-optocouplers map onto its receiver output, driver input and tied enable — the
-textbook isolated half-duplex node.
-
-⅛ unit load means up to 256 transceivers on the bus, and the driver is
-deliberately slew-limited. Both are the signature of a long multi-drop
-daisy-chain, which matches the adapter's own `TO NEXT DEVICE` header.
-
-**The connector pinout is measured [A]**, `CN1` and `CN2` in parallel:
-
-| Pin | Position                  | `IC2` pin | Signal                                     |
-| --- | ------------------------- | --------- | ------------------------------------------ |
-| 1   | Furthest from barrel jack | 7         | **`B`**                                    |
-| 2   |                           | 6         | **`A`**                                    |
-| 3   |                           | 5         | **`GND`**                                  |
-| 4   | Nearest the barrel jack   | —         | Not connected to `IC2`; not yet identified |
-
-Pin 1 is anchored physically: it is the end furthest from the barrel jack and
-nearest `IC2`. Both headers carry the same orientation.
-
-`B` before `A` — the reverse of the obvious guess, which is why it was metered.
-Either header can be the bus input, so the daisy-chain is plain multi-drop.
-
-The lead is three conductors: connector `B`/`A`/`GND` to the converter's
-`TB`/`TA`/`PE`, **plus pin 4 to a +V rail** — four conductors, not three.
-
-**Settled at the bench, board open and unpowered [A]:**
-
-| Item        | Finding                                                                                                                                                                                                                                                               |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Pin 4       | **+V supplied by the master** **[A]** — enters `D9` (`M7`, 1N4007) on the anode, then `R16` (1.2 kΩ, measured) to `IC2` pin 8, with `D7` shunting the rail. The adapter's transceiver is bus-powered, so **our master must drive pin 4**; the lead is four conductors |
-| Termination | 114 Ω across pins 1 and 2, identical both polarities. `R27` is across the pair; the adapter is terminated. **Our converter's jumper stays off** — see below                                                                                                           |
-| Ground      | **Required.** `SMBJ28A` clamps are unidirectional, conducting from ~0.7 V forward, which removes the negative half of the ADM4852's −7 V…+12 V common-mode range at the adapter. Pin 3 must tie to the converter's `PE`                                               |
-
-Ground being mandatory is a departure from the valve links, where `PE` is
-connected only if measurement shows a reference conductor is needed. The
-converter is isolated, so this creates a shared reference without a loop back
-through the Pi, and this link's field ground is still never joined to another
-link's.
-
-**Carry forward:** if a second DTV+ peripheral is ever daisy-chained onto this
-link, it may expect power on pin 4, which our master would then have to supply.
-
-**The DTV+ side is galvanically isolated — closed.** The transceiver draws its
-supply from the bus rather than from the board it sits on, which only makes
-sense across an isolation barrier; the three `PC900V` optocouplers bridge to the
-generator-powered MCU domain.
-
-**New build requirement: a 12 V rail in the enclosure.** The `ADM4852` is a 5 V
-part, `R16` is 1.2 kΩ in series, and the 330 µF capacitor's 16 V rating caps the
-bus — which leaves **12 V** as the only standard rail that fits **[I]**. `D7`
-carries no legible marking and is not needed to reach that.
-
-The Pi's 5 V USB-C supply cannot provide it, so a 12 V source joins the parts
-list. Confirm before committing to it: apply 12 V to pin 4 from a
-current-limited supply with ground on pin 3, and measure `IC2` pin 8. About 5 V
-confirms both the rail and the supply chain, and the current reading sizes the
-permanent supply.
-
-**Why our termination stays off.** At 9600 baud the bit period is 104 µs while
-25 ft of cable is ~38 ns one way — a ratio near 1:2700, so reflections settle
-thousands of times over before a bit is sampled. The adapter's 120 Ω already
-supplies the DC load and damping; a second one halves the bus to 60 Ω for no
-gain, and a chained second adapter would reach 40 Ω, below the 54 Ω RS-485
-drivers are specified against.
-
-Procedure and results in
-[`research/reference/steam-adapter/README.md`](../../research/reference/steam-adapter/README.md).
-
-This replaces the earlier plan of metering an unused DTV+ port on the K-99695.
+For the hard case it assumes nothing: a dead process enforces no limits, and
+what a generator does when this link goes silent has never been measured.
 
 ---
 
 ## 13. Bench acceptance — before anything is connected
 
-Run with all three converters on the Pi and **nothing attached to the field
+Run with both converters on the Pi and **nothing attached to the field
 side**. This is Phase 2 of
 [DESIGN.md](DESIGN.md); these are the hardware checks
 inside it.
@@ -619,7 +445,7 @@ inside it.
 | 8   | RTC holds time across a full power removal                     | Time correct on the next boot before NTP                                    |
 | 9   | Hardware watchdog fires on a forced service hang               | Pi resets; boots to `READY_OFF`, no state restored                          |
 | 10  | Enclosure interior ≤ 40 °C after 7 days sealed                 | Logged from the Pi's thermal sensor                                         |
-| 11  | Every label present and correct; emergency card in the lid     | Visual                                                                      |
+| 11  | Every label present and correct                                | Visual                                                                      |
 
 Checks 6 and 7 catch a wiring error capable of bridging two buses. Neither may
 be skipped.
@@ -649,15 +475,12 @@ it.
 
 ## 15. Open items
 
-| #   | Item                                                         | Closed by                                                                                    | Blocks                      |
-| --- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------- | --------------------------- |
-| 1   | Valve model numbers and nameplate data                       | Phase 0 photograph                                                                           | Connectors, mains work      |
-| 2   | Valve connector housing, keying, pin count                   | Phase 0 photograph and continuity check                                                      | Adapter leads               |
-| 3   | Cable polarity — which conductor is A+                       | Phase 1 capture                                                                              | First transmission          |
-| 4   | Factory termination and idle bias                            | Phase 1 capture and unpowered measurement                                                    | Termination jumpers         |
-| 5   | Valve mains voltage, receptacles, circuits, GFCI             | Electrician                                                                                  | Disconnect selection        |
-| 6   | Which FTDI part is fitted — `FT232RL` or `FT232RNL` **[?]**  | Inspection on arrival                                                                        | Nothing; record only        |
-| 7   | Saturn response timeout: 320 ms or 400 ms                    | Phase 1 capture — [I5](../../INVESTIGATIONS.md#i5--the-saturn-register-map-is-contradictory) | Decoder deadlines           |
-| 8   | Whether automatic purge is on                                | [I4](../../INVESTIGATIONS.md#i4--is-automatic-purge-on) — one read-only call                 | Stop-latency definition     |
-| 9   | DTV+ connector pinout on the peripheral port                 | Meter a powered-down port — §12                                                              | Steam adapter lead          |
-| 10  | What the generator does when the DTV+ link drops mid-session | **Measure it at Phase 5** — §12. Kohler case #07797183 in parallel                           | Nothing; worst case assumed |
+| #   | Item                                                        | Closed by                                                                                    | Blocks                  |
+| --- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------- |
+| 1   | Valve model numbers and nameplate data                      | Phase 0 photograph                                                                           | Connectors, mains work  |
+| 2   | Valve connector housing, keying, pin count                  | Phase 0 photograph and continuity check                                                      | Adapter leads           |
+| 3   | Cable polarity — which conductor is A+                      | Phase 1 capture                                                                              | First transmission      |
+| 4   | Factory termination and idle bias                           | Phase 1 capture and unpowered measurement                                                    | Termination jumpers     |
+| 5   | Which FTDI part is fitted — `FT232RL` or `FT232RNL` **[?]** | Inspection on arrival                                                                        | Nothing; record only    |
+| 6   | Saturn response timeout: 320 ms or 400 ms                   | Phase 1 capture — [I5](../../INVESTIGATIONS.md#i5--the-saturn-register-map-is-contradictory) | Decoder deadlines       |
+| 7   | Whether automatic purge is on                               | [I4](../../INVESTIGATIONS.md#i4--is-automatic-purge-on) — one read-only call                 | Stop-latency definition |
