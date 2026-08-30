@@ -374,7 +374,7 @@ proptest! {
     /// inside 90–125 °F on a whole degree, and a duration inside 1–20 minutes.
     /// The clamps live in the types, so this asserts the types were not bypassed.
     #[test]
-    fn req_hardware_spec_steam_11_req_steam_adapter_steam_19_every_emitted_setpoint_and_duration_is_inside_the_clamp(
+    fn req_hardware_steam_11_req_steam_adapter_steam_19_every_emitted_setpoint_and_duration_is_inside_the_clamp(
         temp in setpoint(),
         minutes in minutes(),
         dest in dev_addr(),

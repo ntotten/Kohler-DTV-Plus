@@ -3,9 +3,9 @@
 //! The interactive half of ring 3. `crates/kdtv-emulator/tests/e2e.rs` is the
 //! automated one, and both build their rig with [`kdtv_emulator::e2e`] rather
 //! than each assembling a daemon environment of its own: the credential, the
-//! probe files, the rendered configuration and the pseudo-terminal paths are
-//! all things `deploy/kdtvd.emulated.toml` has an opinion about, and two copies
-//! of that opinion would drift.
+//! rendered configuration and the pseudo-terminal paths are all things
+//! `deploy/kdtvd.emulated.toml` has an opinion about, and two copies of that
+//! opinion would drift.
 //!
 //! What this adds over the suite is the part a person wants: it prints where
 //! everything is, then streams the transcript — the actual bytes on each of the
@@ -178,15 +178,10 @@ fn announce(rig: &Rig, command: &DaemonCommand, mode: Mode) {
     println!("  api          http://{}", rig.api_addr());
     println!("  token        {}", rig.token_path().display());
     println!("  config       {}", rig.config_path().display());
-    println!("  probes       {}", rig.probe_dir().display());
     println!("  binary       {command}");
     println!(
         "\n  the transmit gate is closed: every fixture is tier [C], so only these \
-         pseudo-terminals can be opened."
-    );
-    println!(
-        "  write a Celsius reading into <probes>/zone1.degc to drive the independent \
-         temperature interlock.\n"
+         pseudo-terminals can be opened.\n"
     );
 }
 

@@ -473,7 +473,7 @@ mod tests {
     /// `CORRECTIONS.md` item 1, at the type level. Two variants, two bytes,
     /// and `0xCC` is not among them.
     #[test]
-    fn req_controller_design_deny_08_the_encodable_operation_states_are_off_and_on_only() {
+    fn req_design_deny_08_the_encodable_operation_states_are_off_and_on_only() {
         assert_eq!(SteamOpState::ALL.len(), 2);
         assert_eq!(SteamOpState::Off.wire(), 0x00);
         assert_eq!(SteamOpState::On.wire(), 0xFF);

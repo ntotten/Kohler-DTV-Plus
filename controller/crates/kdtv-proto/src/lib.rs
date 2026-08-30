@@ -176,7 +176,7 @@ mod tests {
     /// builds one of each frame the only way there is, and the two decoded
     /// types beside them, which have no route back.
     #[test]
-    fn req_controller_design_raw_01_the_only_route_to_a_frame_is_an_encoder_holding_an_authority() {
+    fn req_design_raw_01_the_only_route_to_a_frame_is_an_encoder_holding_an_authority() {
         use kdtv_units::{LinkKind, Slot, ZoneId};
 
         let auth = TransmitAuthority::emulator_only(FixtureSet::embedded());

@@ -75,7 +75,7 @@ impl<'a> tracing_subscriber::fmt::MakeWriter<'a> for LogSink {
 /// silently. `kdtv-service` implements `LOG-01` and `LOG-04` for what reaches
 /// it, and none of those ever do.
 #[test]
-fn req_controller_design_log_04() {
+fn req_design_log_04() {
     let sink = LogSink::default();
     let every_refusal = [
         ApiError::Unauthenticated("no API credential was presented"),

@@ -69,15 +69,6 @@ the number that was actually observed.
   - _Verify:_ not-testable-in-software (the budget counts HTTP clients outside this process, which no test here can observe); manual/operational; enforceable in-process only via a shared session/queue limiter
   - _Source:_ app/CLAUDE.md Hard limits table and 'The two-session budget is easy to blow without noticing'
 
-## docs/devices/valve-control.md
-
-- [ ] **TEMP-08** — Treat the reported temperature as the valve's own thermistor reading, not an independent measurement, and require a physical-thermometer verification of delivered temperature once at commissioning and after any calibration change.
-  - _Verify:_ manual commissioning
-  - _Source:_ docs/devices/valve-control.md — Safety Ownership item 4; research/xagon0/docs/control-logic/temperature-system.md — Safety Warning
-- [ ] **SAFE-04** — Record that a DIY master operating inside the documented envelope is functionally equivalent on paper but is not a listed installation — the valve's UL/CSA listing covers the assembly as shipped.
-  - _Verify:_ not-testable-in-software
-  - _Source:_ docs/devices/valve-control.md — Safety Ownership CRITICAL note
-
 ## controller/CLAUDE.md
 
 - [ ] **PHY-09** — Leave our end of the steam RS-485 link unterminated; the K-1737-K1 adapter already terminates the bus at approximately 114 ohm.
@@ -365,6 +356,15 @@ the number that was actually observed.
 - [ ] **LIMIT-03** — Do not treat the configured maximum temperature as a safety guarantee: on the shipped controller it is an unbounded settings field written to save_variable.cgi index 58 with no min or max attribute.
   - _Verify:_ not-testable-in-software; enforced by LIMIT-01's independent hard bound
   - _Source:_ controller/docs/STEAM-ADAPTER.md §7 ("125 F is not a firmware constant, it is a settings field"); DISCLAIMER.md
+
+## docs/devices/valve-control.md
+
+- [ ] **TEMP-08** — Treat the reported temperature as the valve's own thermistor reading, not an independent measurement, and require a physical-thermometer verification of delivered temperature once at commissioning and after any calibration change.
+  - _Verify:_ manual commissioning
+  - _Source:_ docs/devices/valve-control.md — Safety Ownership item 4; research/xagon0/docs/control-logic/temperature-system.md — Safety Warning
+- [ ] **SAFE-04** — Record that a DIY master operating inside the documented envelope is functionally equivalent on paper but is not a listed installation — the valve's UL/CSA listing covers the assembly as shipped.
+  - _Verify:_ not-testable-in-software
+  - _Source:_ docs/devices/valve-control.md — Safety Ownership CRITICAL note
 
 ## research/xagon0/PROVENANCE.md
 

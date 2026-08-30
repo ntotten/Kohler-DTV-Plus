@@ -508,8 +508,7 @@ fn each_link_polls_at_its_documented_cadence_and_no_faster() {
 /// pump interval are one transcript entry, and pairing entries would report the
 /// pipelining defect this test is named for as a single answered transaction.
 #[test]
-fn req_dtv_plus_protocol_time_03_req_controller_design_bus_01_only_one_transaction_is_in_flight_per_link()
- {
+fn req_dtv_plus_protocol_time_03_req_design_bus_01_only_one_transaction_is_in_flight_per_link() {
     let Some(command) = daemon_or_skip("in-flight") else {
         return;
     };
@@ -573,8 +572,7 @@ fn req_dtv_plus_protocol_time_03_req_controller_design_bus_01_only_one_transacti
 /// non-empty, and the frame-level check below is what says nothing was
 /// *commanded* on them.
 #[test]
-fn req_controller_design_svc_04_a_wire_fault_on_zone_1_stops_zone_1_and_leaves_zone_2_and_steam_alone()
- {
+fn req_design_svc_04_a_wire_fault_on_zone_1_stops_zone_1_and_leaves_zone_2_and_steam_alone() {
     let Some(command) = daemon_or_skip("scoping") else {
         return;
     };

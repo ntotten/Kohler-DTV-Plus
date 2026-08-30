@@ -384,7 +384,7 @@ mod tests {
     }
 
     #[test]
-    fn req_controller_design_id_01_an_authorisation_from_a_previous_boot_is_refused() {
+    fn req_design_id_01_an_authorisation_from_a_previous_boot_is_refused() {
         let mut k = kernel();
         k.mark_ready(LinkKind::Zone(ZoneId::Zone1));
         let d = k

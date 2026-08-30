@@ -453,7 +453,7 @@ const API_01_REQUESTS: [(&str, &str, &str, Option<&str>); 8] = [
 /// only because `cargo xtask reqs` matches on `fn req_` and does not see an
 /// `async fn`.
 #[test]
-fn req_controller_design_api_01() {
+fn req_design_api_01() {
     let listed: Vec<&str> = surface()
         .iter()
         .filter(|op| op.requirement == Requirement::Api01)
@@ -505,7 +505,7 @@ async fn seven_of_the_eight_api_01_operations_are_performed() {
 
 /// `API-02`: expose steam on the same pattern, with only these four.
 #[test]
-fn req_controller_design_api_02() {
+fn req_design_api_02() {
     let listed: Vec<&str> = surface()
         .iter()
         .filter(|op| op.requirement == Requirement::Api02)
@@ -659,7 +659,7 @@ async fn the_router_serves_no_method_the_table_did_not_declare() {
 /// is asserted here is the half that can be: the stream is `GET` only, and no
 /// request without a credential reaches any handler.
 #[tokio::test]
-async fn req_controller_design_svc_05() {
+async fn req_design_svc_05() {
     let rig = Rig::new();
     for op in surface() {
         let uri = op.path.replace("{zone}", "zone1");
@@ -891,7 +891,7 @@ fn the_start_authorisation_is_minted_in_exactly_one_place() {
 /// `BOOT-07`: a start is accepted only after a fresh authenticated session and
 /// an explicit user command — two steps, not one.
 #[tokio::test(start_paused = true)]
-async fn req_controller_design_boot_07() {
+async fn req_design_boot_07() {
     let rig = Rig::with_ttl(Duration::from_secs(900));
 
     // Step one and two in the same request: refused.
@@ -984,7 +984,7 @@ async fn the_session_a_command_was_issued_on_is_what_the_log_records() {
 
 /// `API-04`: `outlet_set` is configuration slot numbers, never a wire bitmap.
 #[tokio::test]
-async fn req_controller_design_api_04() {
+async fn req_design_api_04() {
     let rig = Rig::new();
     let session = rig.establish().await;
     let post = async |body: &str| {
@@ -1047,7 +1047,7 @@ async fn req_controller_design_api_04() {
 /// what catches a read that refreshes the cache by a round trip before serving
 /// it.
 #[tokio::test]
-async fn req_controller_design_api_06() {
+async fn req_design_api_06() {
     const READS: u64 = 2_000;
     let rig = Rig::new();
     for _ in 0..READS {
@@ -1212,7 +1212,7 @@ async fn every_steam_command_arrives_as_the_operation_it_names() {
 /// The authorisation carries this boot and this command, which is what the
 /// safety kernel checks before it mints a grant.
 #[tokio::test]
-async fn req_controller_design_id_01_a_start_authorisation_names_this_boot_and_this_command() {
+async fn req_design_id_01_a_start_authorisation_names_this_boot_and_this_command() {
     let rig = Rig::new();
     let session = rig.establish().await;
     let answer = rig
@@ -1599,7 +1599,7 @@ async fn an_unknown_field_is_a_refusal_not_a_shrug() {
 /// credential, a wrong credential, a start, a refusal and a status read. The
 /// token bytes appear in none of it.
 #[tokio::test]
-async fn req_controller_design_log_09() {
+async fn req_design_log_09() {
     let sink = LogSink::default();
     let collected = {
         let subscriber = tracing_subscriber::fmt()

@@ -202,7 +202,7 @@ mod tests {
     }
 
     #[test]
-    fn req_hardware_spec_time_01_a_transaction_note_reaches_the_stream_with_a_wall_stamp_and_its_sync_state()
+    fn req_hardware_time_01_a_transaction_note_reaches_the_stream_with_a_wall_stamp_and_its_sync_state()
      {
         let (rec, mut rx) = recorder(false);
         rec.note(

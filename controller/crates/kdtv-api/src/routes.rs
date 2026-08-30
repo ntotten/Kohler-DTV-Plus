@@ -23,7 +23,7 @@
 //! exists so the refusal is visible rather than reading as a deployment fault,
 //! but the operation is a name and not a capability, and `API-01` is
 //! `hard = true`. Recording it here, and in the test that asserts it
-//! (`req_controller_design_api_01`), is what stops the register reading
+//! (`req_design_api_01`), is what stops the register reading
 //! "covered" on the strength of eight matching strings.
 //!
 //! **This is also a behaviour change from the DTV+ this replacement stands in

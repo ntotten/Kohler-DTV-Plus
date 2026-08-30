@@ -225,8 +225,7 @@ fn is_all_off(frame: &[u8]) -> bool {
 // ------------------------------------------------------------------ boot
 
 #[tokio::test(start_paused = true)]
-async fn req_controller_design_boot_06_the_boot_sequence_probes_every_address_and_confirms_off_before_ready()
- {
+async fn req_design_boot_06_the_boot_sequence_probes_every_address_and_confirms_off_before_ready() {
     let harness = Harness::start();
     harness.boot().await;
 
@@ -831,7 +830,7 @@ async fn the_watchdog_is_petted_by_the_loop_that_services_the_links() {
 // ------------------------------------------------------------------ logging
 
 #[tokio::test(start_paused = true)]
-async fn req_controller_design_log_10_the_event_stream_carries_the_frames_and_the_stamps_the_log_requires()
+async fn req_design_log_05_req_design_log_02_the_event_stream_carries_the_frames_and_the_stamps_the_log_requires()
  {
     let harness = Harness::start();
     let mut events = harness.handle.subscribe();

@@ -374,7 +374,7 @@ impl Rig {
 // ------------------------------------------------------------ boot sequence
 
 #[test]
-fn req_controller_design_boot_01_req_controller_design_boot_05_the_boot_sequence_reaches_ready_off_without_transmitting_a_start()
+fn req_design_boot_01_req_design_boot_05_the_boot_sequence_reaches_ready_off_without_transmitting_a_start()
  {
     let mut r = Rig::new();
     r.boot();
@@ -443,8 +443,7 @@ fn discovery_probes_every_address_in_the_range_even_after_one_answers() {
 }
 
 #[test]
-fn req_controller_design_boot_08_a_valve_that_never_acknowledges_all_off_leaves_the_zone_unavailable()
- {
+fn req_design_boot_08_a_valve_that_never_acknowledges_all_off_leaves_the_zone_unavailable() {
     let mut r = Rig::new();
     r.boot_other();
 
@@ -719,7 +718,7 @@ fn a_multi_outlet_start_staggers_the_solenoids_five_hundred_milliseconds_apart()
 // ------------------------------------------------------------- the session
 
 #[test]
-fn req_controller_design_sess_01_a_session_expires_at_exactly_twelve_hundred_seconds() {
+fn req_design_sess_01_a_session_expires_at_exactly_twelve_hundred_seconds() {
     let mut r = Rig::new();
     r.boot();
     let began = r.now;
@@ -761,7 +760,7 @@ fn req_controller_design_sess_01_a_session_expires_at_exactly_twelve_hundred_sec
 }
 
 #[test]
-fn req_valve_control_timer_02_req_controller_design_sess_03_no_timer_refresh_is_emitted_over_a_twenty_two_minute_run()
+fn req_valve_control_timer_02_req_design_sess_03_no_timer_refresh_is_emitted_over_a_twenty_two_minute_run()
  {
     let mut r = Rig::new();
     r.boot();
@@ -813,7 +812,7 @@ fn req_valve_control_timer_02_req_controller_design_sess_03_no_timer_refresh_is_
 }
 
 #[test]
-fn req_controller_design_sess_02_pausing_does_not_buy_a_longer_session() {
+fn req_design_sess_02_pausing_does_not_buy_a_longer_session() {
     let mut r = Rig::new();
     r.boot();
     let began = r.now;
@@ -889,7 +888,7 @@ fn matrix_case(fault: impl FnOnce(&mut Rig)) -> Rig {
 }
 
 #[test]
-fn req_valve_control_safe_01_req_controller_design_valid_02_a_malformed_length_takes_the_zone_off_and_latches_it()
+fn req_valve_control_safe_01_req_design_valid_02_a_malformed_length_takes_the_zone_off_and_latches_it()
  {
     let r = matrix_case(|r| {
         // DATA_LEN 0x20 cannot fit the 20-byte frame maximum.
@@ -917,7 +916,7 @@ fn req_valve_control_safe_01_req_controller_design_valid_02_a_malformed_length_t
 }
 
 #[test]
-fn req_controller_design_valid_02_a_checksum_failure_on_a_write_is_its_own_event() {
+fn req_design_valid_02_a_checksum_failure_on_a_write_is_its_own_event() {
     let mut r = Rig::new();
     r.boot_other();
     r.boot();
@@ -1127,7 +1126,7 @@ fn overrunning_the_transaction_budget_is_a_link_fault_and_is_logged_as_one() {
 }
 
 #[test]
-fn req_valve_control_err_05_req_controller_design_valid_02_a_valve_fault_bitmap_takes_the_zone_off_and_latches_it()
+fn req_valve_control_err_05_req_design_valid_02_a_valve_fault_bitmap_takes_the_zone_off_and_latches_it()
  {
     let mut r = Rig::new();
     r.boot_other();
@@ -1163,8 +1162,7 @@ fn req_valve_control_err_05_req_controller_design_valid_02_a_valve_fault_bitmap_
 }
 
 #[test]
-fn req_controller_design_valid_02_a_temperature_the_valve_could_not_be_delivering_is_out_of_range()
-{
+fn req_design_valid_02_a_temperature_the_valve_could_not_be_delivering_is_out_of_range() {
     let mut r = Rig::new();
     r.boot_other();
     r.boot();
@@ -1201,7 +1199,7 @@ fn req_controller_design_valid_02_a_temperature_the_valve_could_not_be_deliverin
 }
 
 #[test]
-fn req_controller_design_safe_07_a_lost_port_takes_only_its_own_zone_down() {
+fn req_design_safe_07_a_lost_port_takes_only_its_own_zone_down() {
     let mut r = Rig::new();
     r.boot_other();
     r.boot();
@@ -1211,7 +1209,7 @@ fn req_controller_design_safe_07_a_lost_port_takes_only_its_own_zone_down() {
 }
 
 #[test]
-fn req_controller_design_safe_07_a_shared_fault_is_the_only_thing_that_reaches_both_zones() {
+fn req_design_safe_07_a_shared_fault_is_the_only_thing_that_reaches_both_zones() {
     let mut r = Rig::new();
     r.boot_other();
     r.boot();
@@ -1242,7 +1240,7 @@ fn req_controller_design_safe_07_a_shared_fault_is_the_only_thing_that_reaches_b
 }
 
 #[test]
-fn req_controller_design_valid_03_recovery_from_a_latch_is_never_automatic() {
+fn req_design_valid_03_recovery_from_a_latch_is_never_automatic() {
     let mut r = Rig::new();
     r.boot();
     r.feed(ZoneEvent::PortClosed);
@@ -1491,7 +1489,7 @@ fn a_generator_already_running_at_boot_is_commanded_off_before_ready() {
 }
 
 #[test]
-fn req_hardware_spec_steam_18_a_degraded_steam_link_stops_the_generator_before_it_latches() {
+fn req_hardware_steam_18_a_degraded_steam_link_stops_the_generator_before_it_latches() {
     let mut r = SteamRig::new();
     r.enrol();
 
@@ -1657,8 +1655,7 @@ fn req_steam_adapter_steam_20_a_steam_session_stops_at_its_own_limit() {
 }
 
 #[test]
-fn req_controller_design_boot_02_a_port_carrying_the_wrong_device_is_refused_rather_than_enrolled()
-{
+fn req_design_boot_02_a_port_carrying_the_wrong_device_is_refused_rather_than_enrolled() {
     let mut r = SteamRig::new();
     r.feed(SteamEvent::Tick);
     r.advance(Duration::from_millis(20));
