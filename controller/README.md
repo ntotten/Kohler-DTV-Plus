@@ -87,8 +87,7 @@ controller/
     kdtv-emulator    device models, wire simulator, e2e rig — never shipped
     xtask            repository automation
   fixtures/          golden frames, each with its provenance tier
-  scenarios/         end-to-end scenarios
-  deploy/            the systemd unit
+  deploy/            the systemd unit and the two configurations
   docker/            the harness image
   commissioning/     test scripts and signed reports
 ```
@@ -163,5 +162,14 @@ actually transmitted — not against its own reported state. A service that beli
 it is off while transmitting an open frame passes a state assertion and fails this
 one.
 
-Nothing in any test can open a valve, which is the same rule `npm test` follows in
-[app/](../app/).
+Ring 3 opens valves, and that is the point: they are models in the test process,
+behind pseudo-terminals. What no test can do is open a **real** one — the
+transmit gate refuses a serial port while every fixture is tier `[C]`, and ring 3
+asserts at the end of each run that the daemon opened pseudo-terminals and
+nothing else. That is the same rule `npm test` follows in [app/](../app/),
+stated as what it is rather than as "no test opens a valve", which stopped being
+true the day the emulator gained device models.
+
+The end-to-end suite skips, loudly, when `KDTV_E2E_DAEMON` is unset, so
+`cargo test --workspace` stays green on a machine that has not built the daemon.
+`./scripts/e2e.sh` sets it.

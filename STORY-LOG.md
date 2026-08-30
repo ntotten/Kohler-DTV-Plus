@@ -12,6 +12,42 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ## 2026-08-30
 
+### 06:21 — The replacement controller runs, against emulated hardware, in CI
+
+The real `kdtvd` binary now boots against two emulated Saturn valves and an
+emulated steam adapter over three pseudo-terminals, and does it on a GitHub
+runner as well as here. Seven end-to-end assertions, 38 seconds:
+
+- the documented boot sequence — discovery, identification, a confirmed all-off
+- the polling cadence, measured on the wire, and no faster
+- one transaction in flight per link
+- a wire fault on zone 1 stopping zone 1 and leaving zone 2 and steam untouched
+- the independent probe stopping water, both by reading hot and by going silent
+- `SIGTERM` putting an all-off on the wire _before_ the process is gone
+- the transmit gate still closed at the end of the run
+
+Every one is asserted against the transcript — the bytes the daemon actually
+transmitted — rather than against what the daemon says about itself. A service
+that believes it is off while transmitting an open frame passes a state
+assertion and fails this one.
+
+They were checked for vacuity rather than trusted: pointing `KDTV_E2E_DAEMON` at
+`/bin/true` makes all seven fail, including the gate assertion, which is the one
+most likely to pass because nothing happened.
+
+**Why it matters:** the whole system can now be exercised, including its failure
+paths, without touching the shower. Phase 2's gate is "every injected failure
+ends in `OFF` without an unallowlisted write", and there is finally something to
+run it against.
+
+**For Kohler:** the emulated valves are built from the same third-party
+documents the encoder is, so a green run is internal consistency between our
+decoder and our model — not evidence about a real valve. Where the sources
+disagree, both readings are plumbed and neither is chosen: the Prompt 3 master
+address, the Saturn retry count, the DTV+ tick, whether `SET_DEV_PARAM` is
+acknowledged, and which opcode carries a steam status reply. Those five are the
+questions a packet capture would settle.
+
 ### 00:31 — A marker for `!Clone` was really a marker for `!Send`
 
 The three authority types in `kdtv-safety` — `OpenGrant`, `StartAuthorization`,
