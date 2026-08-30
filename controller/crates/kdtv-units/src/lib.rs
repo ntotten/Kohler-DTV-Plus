@@ -44,5 +44,5 @@ pub use independent::{
     DIVERGENCE_LIMIT_C, OffsetCurve, RAW_TRIP_C, RTD_STARVATION, RawC, SCALD_C,
 };
 pub use session::{SessionDuration, SteamMinutes};
-pub use setpoint::{Bound, ClampError, ClampRecord, SteamSetpoint, ValveSetpoint};
+pub use setpoint::{Bound, ClampError, ClampRecord, FahrenheitError, SteamSetpoint, ValveSetpoint};
 pub use temp::{Cx2, Fx2, LossyCx2};

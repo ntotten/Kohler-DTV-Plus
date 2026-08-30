@@ -8,16 +8,28 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+# There is deliberately no `kdtv-proto`, `kdtv-safety` or `kdtv-engine` here.
+# `cargo xtask audit-graph` denies the direct edge to `kdtv-proto`, and the other
+# two are absent for the same reason: a handler that cannot name a wire frame or
+# reach the safety kernel cannot grow a route that sends one. The types this
+# crate does have to name are re-exported by `kdtv_service::surface`.
 [dependencies]
 kdtv-units = { workspace = true }
 kdtv-config = { workspace = true }
 kdtv-service = { workspace = true }
 kdtv-telemetry = { workspace = true }
 axum = { workspace = true }
-tokio = { workspace = true }
-tokio-stream = { workspace = true }
-tower = { workspace = true }
-tower-http = { workspace = true }
+# `net` and `rt` for the listener, `time` for the session clock and the shutdown
+# grace period, `fs` for the one credential read, `sync` for the event stream and
+# the shutdown announcement, `macros` for the `select!` that bounds the wait for
+# open connections.
+tokio = { workspace = true, features = ["net", "rt", "time", "fs", "sync", "macros"] }
+# `sync` is what provides `BroadcastStream`, which is the event stream.
+tokio-stream = { workspace = true, features = ["sync"] }
+# `util` for `ServiceExt::oneshot`, which is how the surface tests drive the
+# router without opening a socket.
+tower = { workspace = true, features = ["util"] }
+tower-http = { workspace = true, features = ["limit"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
@@ -26,6 +38,27 @@ subtle = { workspace = true }
 zeroize = { workspace = true }
 futures-util = { workspace = true }
 jiff = { workspace = true }
+
+[dev-dependencies]
+# `test-util` is what makes `tokio::time::pause()` available, so a session
+# time-to-live is exercised at its real constant in microseconds.
+tokio = { workspace = true, features = [
+  "net",
+  "rt",
+  "time",
+  "fs",
+  "sync",
+  "macros",
+  "test-util",
+  # The shutdown test holds a real event stream open over a real socket, which
+  # is the only way to see the deadlock this crate had.
+  "io-util",
+] }
+tempfile = { workspace = true }
+# Dev-only. `LOG-09` is asserted over what actually reaches the journal, which
+# means capturing `tracing` output rather than trusting that nothing was passed
+# to it.
+tracing-subscriber = { workspace = true }
 
 [lints]
 workspace = true

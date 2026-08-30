@@ -12,6 +12,24 @@ pub enum Bound {
     Step,
 }
 
+/// Why a Fahrenheit request could not become a valve setpoint.
+///
+/// Separate from [`ClampError`], which counts in `Cx2` raw units. A Fahrenheit
+/// request lands between representable points, so reporting it as an integer
+/// raw value would round the number in the message and could produce
+/// "85 is above the ceiling of 85" for a request of 108.6 °F.
+///
+/// Not `Eq`: the requested value is a float.
+#[derive(Copy, Clone, PartialEq, Debug, thiserror::Error)]
+pub enum FahrenheitError {
+    #[error("{requested} is not a temperature")]
+    NotATemperature { requested: f32 },
+    #[error("{requested:.1} °F is below the {floor:.1} °F floor")]
+    BelowFloor { requested: f32, floor: f32 },
+    #[error("{requested:.1} °F is above the {ceiling:.1} °F ceiling")]
+    AboveCeiling { requested: f32, ceiling: f32 },
+}
+
 #[derive(Copy, Clone, PartialEq, Eq, Debug, thiserror::Error)]
 pub enum ClampError {
     #[error("{requested} is below the floor of {floor}")]
@@ -93,6 +111,77 @@ impl ValveSetpoint {
             });
         }
         Ok(Self(c))
+    }
+
+    /// The API path from Fahrenheit. `API-01`.
+    ///
+    /// The public API speaks Fahrenheit; the valve speaks [`Cx2`]. This is the
+    /// only route between them, and it ends at [`ValveSetpoint::try_new`] like
+    /// every other accepted setpoint.
+    ///
+    /// # Rounding is down, toward cooler
+    ///
+    /// `Cx2` resolves 0.5 °C — about 0.9 °F — so a request in Fahrenheit
+    /// generally falls between two representable points. This returns the
+    /// **largest representable setpoint at or below the request**. Erring cool
+    /// costs comfort; erring warm costs skin, and water above 43 °C scalds
+    /// ([`crate::independent::SCALD_C`]). [`SteamSetpoint::clamped`] rounds a
+    /// half degree down for the same reason.
+    ///
+    /// # A request above the ceiling is refused, not rounded into it
+    ///
+    /// The bounds are checked **in Fahrenheit, against the request itself**,
+    /// before anything is rounded. Rounding first would turn 108.6 °F into
+    /// `Cx2` 85 and accept it as though the operator had asked for 108.5 —
+    /// which is exactly the silent acceptance [`ValveSetpoint::try_new`] exists
+    /// to refuse. So anything above [`ValveSetpoint::CEILING`]'s 108.5 °F or
+    /// below [`ValveSetpoint::FLOOR`]'s 86.0 °F is rejected to the caller and
+    /// no valve state changes.
+    ///
+    /// # The candidate is chosen by search, not by arithmetic
+    ///
+    /// The 26 setpoints in `FLOOR..=CEILING` are scanned and compared against
+    /// [`Cx2::fahrenheit`] — the same function that defines what a `Cx2` *is*
+    /// in Fahrenheit. That makes the round trip exact by construction rather
+    /// than by an epsilon: `from_fahrenheit(c.fahrenheit())` is `c` for every
+    /// `c` in range, which a divide-and-floor implementation does not give,
+    /// because `fahrenheit()` can land a few parts in `10^7` below the exact
+    /// value and drop a whole step.
+    ///
+    /// This is the compiled clamp only. A configuration may narrow it further,
+    /// and `kdtv_config::Bounds::valve_setpoint` is where that is applied.
+    pub fn from_fahrenheit(requested: f32) -> Result<Self, FahrenheitError> {
+        let floor = Self::FLOOR.fahrenheit();
+        let ceiling = Self::CEILING.fahrenheit();
+        if !requested.is_finite() {
+            return Err(FahrenheitError::NotATemperature { requested });
+        }
+        if requested < floor {
+            return Err(FahrenheitError::BelowFloor { requested, floor });
+        }
+        if requested > ceiling {
+            return Err(FahrenheitError::AboveCeiling { requested, ceiling });
+        }
+
+        let mut chosen = Self::FLOOR;
+        for raw in Self::FLOOR.raw()..=Self::CEILING.raw() {
+            let candidate = Cx2::from_raw(raw);
+            if candidate.fahrenheit() > requested {
+                break;
+            }
+            chosen = candidate;
+        }
+
+        match Self::try_new(chosen) {
+            Ok(v) => Ok(v),
+            // Unreachable: `chosen` is drawn from `FLOOR..=CEILING`. Written as
+            // a refusal rather than an `expect`, because the alternative to a
+            // refusal on this path is a panic in the water path.
+            Err(ClampError::BelowFloor { .. }) => {
+                Err(FahrenheitError::BelowFloor { requested, floor })
+            }
+            Err(_) => Err(FahrenheitError::AboveCeiling { requested, ceiling }),
+        }
     }
 
     /// The encoder path — defence in depth, below the API's own rejection.
@@ -279,6 +368,85 @@ mod tests {
     }
 
     #[test]
+    fn fahrenheit_lands_on_the_representable_point_at_or_below_the_request() {
+        // 100.0 F is 37.78 C. The step below it is 37.5 C — Cx2 75, 99.5 F.
+        let v = ValveSetpoint::from_fahrenheit(100.0).unwrap();
+        assert_eq!(v.wire(), Cx2::from_raw(75));
+        // 100.4 F is 38.0 C exactly, and is representable.
+        assert_eq!(
+            ValveSetpoint::from_fahrenheit(100.4).unwrap().wire(),
+            Cx2::from_raw(76)
+        );
+        // One notch under it stays on the cooler step.
+        assert_eq!(
+            ValveSetpoint::from_fahrenheit(100.39).unwrap().wire(),
+            Cx2::from_raw(75)
+        );
+    }
+
+    #[test]
+    fn fahrenheit_boundaries_are_the_clamp_boundaries() {
+        // The floor, exactly.
+        assert_eq!(
+            ValveSetpoint::from_fahrenheit(86.0).unwrap().wire(),
+            ValveSetpoint::FLOOR
+        );
+        // The ceiling, exactly.
+        assert_eq!(
+            ValveSetpoint::from_fahrenheit(108.5).unwrap().wire(),
+            ValveSetpoint::CEILING
+        );
+        // Just under the floor.
+        assert!(matches!(
+            ValveSetpoint::from_fahrenheit(85.9),
+            Err(FahrenheitError::BelowFloor { .. })
+        ));
+    }
+
+    /// The case the rounding rule exists to get right.
+    ///
+    /// 108.6 °F rounds *down* onto the ceiling. Accepting it would hand the
+    /// caller 108.5 °F while they asked for more than the clamp allows, which
+    /// is the silent acceptance `try_new` refuses on the `Cx2` path. It must
+    /// be refused here too.
+    #[test]
+    fn a_request_above_the_ceiling_is_refused_rather_than_rounded_into_it() {
+        for f in [108.51_f32, 108.6, 109.0, 109.4, 113.0, 120.0] {
+            let err = ValveSetpoint::from_fahrenheit(f)
+                .expect_err(&format!("{f} F is above the ceiling"));
+            assert!(
+                matches!(err, FahrenheitError::AboveCeiling { .. }),
+                "{f} F gave {err:?}"
+            );
+            // And the message says so in Fahrenheit, not in raw Cx2 units.
+            assert!(err.to_string().contains("108.5 °F"), "{err}");
+        }
+    }
+
+    #[test]
+    fn a_request_that_is_not_a_temperature_is_refused() {
+        for f in [f32::NAN, f32::INFINITY, f32::NEG_INFINITY] {
+            assert!(matches!(
+                ValveSetpoint::from_fahrenheit(f),
+                Err(FahrenheitError::NotATemperature { .. })
+            ));
+        }
+    }
+
+    /// The round trip is exact for every setpoint in range, which is the
+    /// property that makes a client able to read a temperature back and send it
+    /// again without drifting a step cooler each time.
+    #[test]
+    fn every_setpoint_survives_a_round_trip_through_fahrenheit() {
+        for raw in ValveSetpoint::FLOOR.raw()..=ValveSetpoint::CEILING.raw() {
+            let c = Cx2::from_raw(raw);
+            let back = ValveSetpoint::from_fahrenheit(c.fahrenheit())
+                .unwrap_or_else(|e| panic!("Cx2 {raw} came back as {e}"));
+            assert_eq!(back.wire(), c, "Cx2 {raw} did not round-trip");
+        }
+    }
+
+    #[test]
     fn steam_bounds_are_the_documented_numbers() {
         assert!((SteamSetpoint::FLOOR.fahrenheit() - 90.0).abs() < f32::EPSILON);
         assert!((SteamSetpoint::CEILING.fahrenheit() - 125.0).abs() < f32::EPSILON);
@@ -312,6 +480,17 @@ mod tests {
             proptest::prop_assert!(v.wire() >= SteamSetpoint::FLOOR);
             proptest::prop_assert!(v.wire() <= SteamSetpoint::CEILING);
             proptest::prop_assert!(v.wire().is_whole_degree());
+        }
+
+        /// Nothing a caller can ask for in Fahrenheit escapes the clamp, and
+        /// what comes back is never warmer than what was asked for.
+        #[test]
+        fn no_fahrenheit_request_escapes_the_valve_clamp(f in -1000.0f32..1000.0) {
+            if let Ok(v) = ValveSetpoint::from_fahrenheit(f) {
+                proptest::prop_assert!(v.wire() >= ValveSetpoint::FLOOR);
+                proptest::prop_assert!(v.wire() <= ValveSetpoint::CEILING);
+                proptest::prop_assert!(v.fahrenheit() <= f);
+            }
         }
 
         /// Accepting on the API path implies the encoder would not move it.
