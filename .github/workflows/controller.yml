@@ -86,34 +86,6 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: controller
-      - name: the USB serial bus has to be enumerable
-        # Not because anything here touches a converter. `kdtvd` resolves its
-        # ports through kdtv_hal::resolve::resolve_distinct, which enumerates
-        # /sys/bus/usb-serial/devices BEFORE it looks at what any link is bound
-        # to and treats a failure as fatal — so an all-pseudo-terminal bench
-        # configuration still refuses to start on a machine where no usbserial
-        # driver is loaded, which is every runner. Loading the module creates
-        # the (empty) directory and costs nothing else.
-        #
-        # The failure is tolerated because the rig synthesises the directory in
-        # a private mount namespace instead — and, since a hosted runner
-        # executes jobs as the unprivileged `runner` user and a bare `unshare
-        # --mount` needs real CAP_SYS_ADMIN, that fallback goes through a user
-        # namespace. Both routes are proved by SysfsShim::required before the
-        # rig opens anything, so a machine where neither works skips loudly
-        # rather than reporting a pass. What is NOT tolerated is the failure
-        # being invisible: it is printed, because it decides which of the two
-        # paths the whole job then depends on.
-        #
-        # The real fix is one line in kdtv-hal — enumerate lazily, or only for a
-        # binding that is not a PTY — and belongs there rather than here.
-        run: |
-          if sudo modprobe usbserial; then
-            echo "usbserial loaded; $(ls /sys/bus/usb-serial/devices | wc -l) device(s)"
-          else
-            echo "::notice::modprobe usbserial failed as $(id -un); the rig will \
-            synthesise /sys/bus/usb-serial/devices in a user + mount namespace"
-          fi
       - name: build the daemon the suite drives
         # scripts/e2e.sh builds it too. Doing it here as well keeps a build
         # failure legible as a build failure rather than as a suite that could

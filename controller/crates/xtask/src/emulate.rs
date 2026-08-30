@@ -27,9 +27,7 @@ use std::process::Command;
 use std::time::Duration;
 
 use anyhow::{Context, Result, bail};
-use kdtv_emulator::e2e::{
-    Daemon, DaemonCommand, Rig, RigOptions, SysfsShim, USB_SERIAL_DEVICES, controller_dir,
-};
+use kdtv_emulator::e2e::{Daemon, DaemonCommand, Rig, RigOptions, controller_dir};
 use kdtv_emulator::rig::all_links;
 use kdtv_emulator::transcript::Direction;
 use kdtv_units::LinkKind;
@@ -65,9 +63,8 @@ const REFRESH: Duration = Duration::from_millis(200);
 pub(crate) fn run(mode: Mode) -> Result<()> {
     let command = build(mode)?;
 
-    let rig = Rig::start("emulate", &RigOptions::default())
-        .context("assembling the emulated rig")
-        .map_err(annotate)?;
+    let rig =
+        Rig::start("emulate", &RigOptions::default()).context("assembling the emulated rig")?;
     announce(&rig, &command, mode);
 
     let mut daemon = Daemon::start(&rig, &command).context("starting the daemon")?;
@@ -132,14 +129,6 @@ pub(crate) fn run(mode: Mode) -> Result<()> {
     Ok(())
 }
 
-/// Make the one refusal a reader will actually hit say what to do about it.
-fn annotate(e: anyhow::Error) -> anyhow::Error {
-    e.context(format!(
-        "if this is about {USB_SERIAL_DEVICES}, the daemon's port resolver enumerates it \
-         before it looks at what any link is bound to; see kdtv_emulator::e2e::SysfsShim"
-    ))
-}
-
 /// Build the daemon this mode runs, and say how to invoke it.
 fn build(mode: Mode) -> Result<DaemonCommand> {
     let root = controller_dir();
@@ -191,12 +180,6 @@ fn announce(rig: &Rig, command: &DaemonCommand, mode: Mode) {
     println!("  config       {}", rig.config_path().display());
     println!("  probes       {}", rig.probe_dir().display());
     println!("  binary       {command}");
-    if *rig.sysfs_shim() != SysfsShim::NotNeeded {
-        println!(
-            "  sysfs        synthesised: {USB_SERIAL_DEVICES} is absent and the daemon's \
-             port resolver enumerates it unconditionally"
-        );
-    }
     println!(
         "\n  the transmit gate is closed: every fixture is tier [C], so only these \
          pseudo-terminals can be opened."

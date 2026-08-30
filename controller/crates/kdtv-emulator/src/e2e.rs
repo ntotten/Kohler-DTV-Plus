@@ -34,8 +34,15 @@
 //! 4. **A closed transmit gate**, which is a property of the build rather than
 //!    of anything here: every fixture is tier `[C]`, so the daemon may open a
 //!    pseudo-terminal and may not open a real serial port.
-//! 5. **An enumerable USB serial bus.** This one is not the daemon's intent and
-//!    is worked around rather than satisfied — see [`SysfsShim`].
+//!
+//! ~~5. **An enumerable USB serial bus.**~~ Superseded. `resolve_distinct` used
+//! to enumerate `/sys/bus/usb-serial/devices` before looking at what any link
+//! was bound to, so an all-pseudo-terminal configuration refused to start on
+//! every machine with no usbserial driver loaded. This rig carried a
+//! mount-namespace shim to synthesise the directory, with a user-namespace
+//! fallback for unprivileged runners. `kdtv-hal` now enumerates only when a
+//! link canonicalises outside `/dev/pts`, so there is nothing left to work
+//! around and the shim is gone.
 //!
 //! # Nothing in here reads a clock
 //!
@@ -154,18 +161,6 @@ pub enum RigError {
         context: String,
     },
 
-    /// The daemon's port resolver cannot enumerate the USB serial bus and the
-    /// rig cannot supply one. See [`SysfsShim`].
-    #[error(
-        "{USB_SERIAL_DEVICES} does not exist and the rig cannot synthesise it ({detail}).\n\
-         kdtv_hal::resolve::resolve_distinct enumerates that directory before it looks at \
-         what any link is bound to and treats a failure as fatal, so kdtvd refuses to start \
-         against pseudo-terminals on a machine with no usbserial driver loaded. That is a \
-         defect in kdtv-hal, not in this rig. Load the driver (`modprobe usbserial`), or run \
-         where mounting is permitted."
-    )]
-    NoUsbSerialBus { detail: String },
-
     /// The daemon exited while the rig was waiting for something.
     #[error("the daemon exited ({status}) while waiting for {what}\n{context}")]
     DaemonGone {
@@ -276,8 +271,8 @@ impl DaemonCommand {
     /// Returns the program and its arguments separately because that is what
     /// `Command` wants; an empty vector is impossible, since the daemon path is
     /// always in it.
-    fn argv(&self, shim: &SysfsShim) -> (PathBuf, Vec<String>) {
-        let mut all = shim.prefix();
+    fn argv(&self) -> (PathBuf, Vec<String>) {
+        let mut all: Vec<String> = Vec::new();
         all.extend(self.runner.iter().cloned());
         all.push(self.daemon.to_string_lossy().into_owned());
         match all.split_first() {
@@ -293,151 +288,6 @@ impl std::fmt::Display for DaemonCommand {
             write!(f, "{r} ")?;
         }
         write!(f, "{}", self.daemon.display())
-    }
-}
-
-/// What `kdtv_hal::RealSysfs` enumerates before it resolves any link.
-pub const USB_SERIAL_DEVICES: &str = "/sys/bus/usb-serial/devices";
-
-/// True when the daemon's own port resolver can enumerate the USB serial bus.
-///
-/// It has to, on every start, whatever the links are — see [`SysfsShim`].
-#[must_use]
-pub fn usb_serial_bus_is_enumerable() -> bool {
-    std::fs::read_dir(USB_SERIAL_DEVICES).is_ok()
-}
-
-/// How this rig gets past `kdtv_hal::resolve::resolve_distinct` on a machine
-/// with no USB serial driver loaded.
-///
-/// # The defect being worked around
-///
-/// `resolve_distinct` enumerates [`USB_SERIAL_DEVICES`] **before** it looks at
-/// what any link is bound to, and treats a failure as fatal
-/// (`ResolveError::Enumeration`). A pseudo-terminal is resolved a few lines
-/// later without consulting that list at all — the `/dev/pts` branch returns
-/// before the enumerated candidates are used — so an all-PTY bench
-/// configuration needs the enumeration only in order for it not to fail.
-///
-/// `/sys/bus/usb-serial` does not exist until a `usbserial` driver is loaded.
-/// On a developer machine with no converter plugged in, on a CI runner, and
-/// inside `docker/Dockerfile`'s harness, it is absent — so `kdtvd
-/// --config deploy/kdtvd.emulated.toml` fails with "cannot enumerate USB serial
-/// devices" on exactly the machines the emulated profile exists for.
-///
-/// **This is a bug in `kdtv-hal`, which this crate may not edit.** The fix is
-/// one line — enumerate lazily, or only when a binding is not a PTY — and it
-/// belongs there. Until then the rig supplies the directory rather than the
-/// suite going unrun.
-///
-/// # What the shim does
-///
-/// Nothing, when the bus is already enumerable. Otherwise it runs the daemon
-/// inside a private mount namespace with a `tmpfs` over `/sys/bus` holding an
-/// empty `usb-serial/devices`. The namespace is the daemon's alone: the host's
-/// `/sys` is untouched, and `/proc/<pid>/fd` — which the gate assertion reads —
-/// is unaffected, because only the mount namespace is unshared.
-///
-/// It needs `unshare(1)` and the privilege to mount. A bare `--mount` namespace
-/// needs real `CAP_SYS_ADMIN`, which **the user a GitHub-hosted runner executes
-/// jobs as does not have** — so the documented fallback would have been false
-/// for the machine it was written for. Adding `--user --map-root-user` gives
-/// the namespace its own user namespace, in which the caller is root and may
-/// mount a `tmpfs`; that is [`SysfsShim::UserMountNamespace`], and it is what an
-/// unprivileged runner uses. Where neither works, [`SysfsShim::required`] says
-/// so and the caller skips loudly rather than reporting a pass.
-///
-/// The user namespace maps only the invoking uid, so the daemon still runs as
-/// the invoking user outside it: the credential file it refuses to read unless
-/// it owns stays owned by it, `/proc/<pid>/fd` — which the gate assertion reads
-/// — is still readable from this process, and the loopback socket is in the
-/// same network namespace as before.
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub enum SysfsShim {
-    /// The bus enumerates. The daemon runs directly.
-    NotNeeded,
-    /// The daemon runs under `unshare(1)` with a synthetic `/sys/bus`.
-    MountNamespace,
-    /// The same, inside a user namespace, for a caller without `CAP_SYS_ADMIN`.
-    UserMountNamespace,
-}
-
-/// `sh -c` script for [`SysfsShim::MountNamespace`]. `$0` is a name, `$@` is the
-/// command; `exec` keeps the pid, so a `SIGTERM` to the child reaches `kdtvd`.
-const SHIM_SCRIPT: &str = "mount -t tmpfs none /sys/bus && mkdir -p /sys/bus/usb-serial/devices \
-                           && exec \"$@\"";
-
-impl SysfsShim {
-    /// Decide what this machine needs, proving it rather than assuming it.
-    ///
-    /// The namespace is actually created and the mount actually performed in a
-    /// throwaway child, because "unshare exists" and "this process may mount"
-    /// are different questions and only the second one matters.
-    pub fn required() -> Result<Self, RigError> {
-        if usb_serial_bus_is_enumerable() {
-            return Ok(Self::NotNeeded);
-        }
-        // Privileged first, so a root or CAP_SYS_ADMIN caller keeps the simpler
-        // namespace and its uid; the user namespace is the fallback for
-        // everyone else, which on a GitHub-hosted runner is everyone.
-        let mut why = Vec::new();
-        for candidate in [Self::MountNamespace, Self::UserMountNamespace] {
-            let mut args = candidate.unshare_args();
-            args.push("/bin/sh".to_owned());
-            args.push("-c".to_owned());
-            args.push(
-                "mount -t tmpfs none /sys/bus && mkdir -p /sys/bus/usb-serial/devices".to_owned(),
-            );
-            let probe = Command::new("unshare")
-                .args(&args)
-                .stdin(Stdio::null())
-                .stdout(Stdio::null())
-                .stderr(Stdio::null())
-                .status();
-            match probe {
-                Ok(status) if status.success() => return Ok(candidate),
-                Ok(status) => why.push(format!("`unshare {}` exited {status}", args.join(" "))),
-                Err(e) => why.push(format!("unshare(1) could not be run: {e}")),
-            }
-        }
-        Err(RigError::NoUsbSerialBus {
-            detail: why.join("; "),
-        })
-    }
-
-    /// The `unshare(1)` flags this shim needs, before the command.
-    fn unshare_args(&self) -> Vec<String> {
-        let flags: &[&str] = match self {
-            Self::NotNeeded => &[],
-            Self::MountNamespace => &["--mount", "--propagation", "private"],
-            Self::UserMountNamespace => &[
-                "--user",
-                "--map-root-user",
-                "--mount",
-                "--propagation",
-                "private",
-            ],
-        };
-        flags.iter().map(|s| (*s).to_owned()).collect()
-    }
-
-    /// The command prefix this shim adds, if any.
-    #[must_use]
-    fn prefix(&self) -> Vec<String> {
-        match self {
-            Self::NotNeeded => Vec::new(),
-            Self::MountNamespace | Self::UserMountNamespace => {
-                let mut all = vec!["unshare".to_owned()];
-                all.extend(self.unshare_args());
-                all.extend([
-                    "/bin/sh".to_owned(),
-                    "-c".to_owned(),
-                    SHIM_SCRIPT.to_owned(),
-                    "kdtv-e2e".to_owned(),
-                ]);
-                all
-            }
-        }
     }
 }
 
@@ -518,7 +368,7 @@ impl Daemon {
             .try_clone()
             .map_err(io_err("duplicating the daemon log handle"))?;
 
-        let (program, leading) = command.argv(rig.sysfs_shim());
+        let (program, leading) = command.argv();
         let child = Command::new(&program)
             .args(leading)
             .arg("--config")
@@ -764,7 +614,6 @@ pub struct Rig {
     timing: TimingConfig,
     gate: kdtv_config::TransmitGateConfig,
     valve_address: u8,
-    shim: SysfsShim,
     harness: RunningHarness,
     valves: BTreeMap<ZoneId, ValveHandle>,
     steam: SteamHandle,
@@ -803,7 +652,6 @@ impl Rig {
         let api = free_loopback_port()?;
         // Decided before anything is opened, so a machine that cannot run the
         // daemon at all says so before three pseudo-terminals exist.
-        let shim = SysfsShim::required()?;
 
         let address = ValveAddr::new(options.valve_address).unwrap_or(ValveAddr::ALL[0]);
         let zone1 = ValveHandle::new(
@@ -875,7 +723,6 @@ impl Rig {
             timing,
             gate,
             valve_address: address.get(),
-            shim,
             harness: harness.start_real_time(),
             valves,
             steam,
@@ -942,13 +789,6 @@ impl Rig {
                 response: self.timing.dtv().reply,
             },
         }
-    }
-
-    /// What this machine needs in order to get past the daemon's port
-    /// resolver. [`SysfsShim::NotNeeded`] everywhere the design assumed.
-    #[must_use]
-    pub const fn sysfs_shim(&self) -> &SysfsShim {
-        &self.shim
     }
 
     #[must_use]
@@ -1761,103 +1601,6 @@ directory = \".e2e/logs\"
         assert_eq!(key_of(""), None);
         // A table entry inside an array is not a top-level key.
         assert_eq!(key_of("{ slot = 1, status_index = 1 }"), None);
-    }
-
-    #[test]
-    fn a_runner_prefixes_the_daemon() {
-        let c = DaemonCommand::new(
-            PathBuf::from("/t/kdtvd"),
-            vec![
-                "qemu-aarch64-static".to_owned(),
-                "-L".to_owned(),
-                "/s".to_owned(),
-            ],
-        );
-        let (program, args) = c.argv(&SysfsShim::NotNeeded);
-        assert_eq!(program, PathBuf::from("qemu-aarch64-static"));
-        assert_eq!(
-            args,
-            vec!["-L".to_owned(), "/s".to_owned(), "/t/kdtvd".to_owned()]
-        );
-
-        let bare = DaemonCommand::new(PathBuf::from("/t/kdtvd"), Vec::new());
-        assert_eq!(
-            bare.argv(&SysfsShim::NotNeeded),
-            (PathBuf::from("/t/kdtvd"), Vec::new())
-        );
-
-        // The shim goes in front of the runner, not between it and the daemon:
-        // the namespace has to exist before qemu execs the guest binary.
-        let (program, args) = c.argv(&SysfsShim::MountNamespace);
-        assert_eq!(program, PathBuf::from("unshare"));
-        assert_eq!(args.first().map(String::as_str), Some("--mount"));
-        assert_eq!(args.last().map(String::as_str), Some("/t/kdtvd"));
-        assert!(
-            args.iter().any(|a| a == "qemu-aarch64-static"),
-            "the runner still runs the daemon: {args:?}"
-        );
-    }
-
-    /// The unprivileged fallback, which is the one a hosted CI runner takes.
-    ///
-    /// A bare `--mount` namespace needs real `CAP_SYS_ADMIN`. GitHub-hosted
-    /// runners execute jobs as the unprivileged `runner` user, and the only
-    /// other route the `e2e` job has — `sudo modprobe usbserial` — is allowed
-    /// to fail. So without `--user --map-root-user` the documented fallback is
-    /// false for the machine it was written for, and every test in the suite
-    /// panics in `Rig::start` with `NoUsbSerialBus`.
-    #[test]
-    fn the_unprivileged_shim_asks_for_a_user_namespace() {
-        let c = DaemonCommand::new(PathBuf::from("/t/kdtvd"), Vec::new());
-        let (program, args) = c.argv(&SysfsShim::UserMountNamespace);
-        assert_eq!(program, PathBuf::from("unshare"));
-        assert_eq!(
-            args.iter().take(2).map(String::as_str).collect::<Vec<_>>(),
-            vec!["--user", "--map-root-user"],
-            "the user namespace has to be requested before the mount namespace: {args:?}"
-        );
-        assert!(args.iter().any(|a| a == "--mount"), "{args:?}");
-        assert_eq!(args.last().map(String::as_str), Some("/t/kdtvd"));
-
-        // And the privileged variant does not ask for one, so a root caller
-        // keeps its own uid inside the namespace.
-        let (_, plain) = c.argv(&SysfsShim::MountNamespace);
-        assert!(!plain.iter().any(|a| a == "--user"), "{plain:?}");
-    }
-
-    /// Both shim variants really do produce the directory the daemon's port
-    /// resolver enumerates — on whatever machine this is running on, at least
-    /// one of them has to, or the suite cannot run here at all.
-    #[test]
-    fn the_shim_this_machine_needs_actually_works() {
-        match SysfsShim::required() {
-            Ok(SysfsShim::NotNeeded) => assert!(usb_serial_bus_is_enumerable()),
-            Ok(shim) => {
-                // `required` proved it by mounting in a throwaway child. Do it
-                // once more through the same prefix the daemon is given, and
-                // look at the result rather than at the exit code.
-                let mut argv = shim.prefix();
-                // Replace the `exec "$@"` script with one that reports.
-                let script = argv.len().checked_sub(2).expect("a script and a name");
-                argv[script] = format!(
-                    "mount -t tmpfs none /sys/bus \
-                     && mkdir -p {USB_SERIAL_DEVICES} \
-                     && ls -d {USB_SERIAL_DEVICES}"
-                );
-                let out = Command::new(&argv[0])
-                    .args(&argv[1..])
-                    .output()
-                    .expect("run the shim");
-                assert!(
-                    out.status.success()
-                        && String::from_utf8_lossy(&out.stdout).contains(USB_SERIAL_DEVICES),
-                    "{shim:?}: {:?} / {:?}",
-                    String::from_utf8_lossy(&out.stdout),
-                    String::from_utf8_lossy(&out.stderr)
-                );
-            }
-            Err(e) => panic!("no shim works here, so no end-to-end test can run: {e}"),
-        }
     }
 
     #[test]
