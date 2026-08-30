@@ -1,0 +1,98 @@
+# The replacement master for the Kohler DTV+.
+#
+# Install with controller/scripts/deploy.sh, which validates the configuration on
+# the target before it replaces anything.
+#
+# Two properties of this unit are load-bearing rather than tidy:
+#
+#   Restart=on-failure with no state restoration. The service always starts into
+#   its OFF boot sequence. A restart — for any reason, including a watchdog reset
+#   — never resumes a session. There is no persisted water state for it to
+#   resume, which is a property of the service, not of this file.
+#
+#   WatchdogSec with a heartbeat that is only sent while every link task is
+#   fresh. A wedged link stops the heartbeat, systemd kills the service, and the
+#   valves see their communication-loss condition. The watchdog supports recovery
+#   and diagnosis; it does not replace the valve's own fail-off, which is the
+#   physical backstop and is measured at commissioning rather than assumed here.
+
+[Unit]
+Description=Kohler DTV+ replacement master
+Documentation=https://github.com/ntotten/Kohler-DTV-Plus
+After=network-online.target time-sync.target
+Wants=network-online.target
+
+# Five failures in a minute stops the retry loop. A service that cannot start is
+# a service that is not opening valves; leaving it down is the safe direction,
+# and the failure is visible in `systemctl status` rather than buried in a
+# restart loop. These two keys belong to [Unit], not [Service].
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=notify
+NotifyAccess=main
+ExecStart=/usr/local/bin/kdtvd --config /etc/kdtvd/kdtvd.toml
+ExecReload=/bin/kill -HUP $MAINPID
+
+Restart=on-failure
+RestartSec=5s
+
+WatchdogSec=30s
+TimeoutStartSec=60s
+TimeoutStopSec=20s
+
+User=kdtvd
+Group=kdtvd
+# dialout for the USB serial converters; spi and i2c for the RTD amplifiers and
+# the real-time clock. No group here grants GPIO, because nothing in this design
+# drives a GPIO output — there is no relay, contactor or mains path under
+# software control.
+SupplementaryGroups=dialout spi i2c
+
+# The token file is the one secret this service reads.
+LoadCredential=api-token:/etc/kdtvd/api-token
+
+StateDirectory=kdtvd
+StateDirectoryMode=0700
+LogsDirectory=kdtvd
+LogsDirectoryMode=0750
+ConfigurationDirectory=kdtvd
+
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateUsers=false
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+ProtectProc=invisible
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources @obsolete @mount @swap @reboot
+CapabilityBoundingSet=
+AmbientCapabilities=
+# Read-write access to the serial converters and the two sensor buses, and
+# nothing else under /dev.
+DeviceAllow=char-ttyUSB rw
+DeviceAllow=char-spidev rw
+DeviceAllow=char-i2c-dev rw
+DevicePolicy=closed
+
+# Bounded, so a frame log cannot fill the card.
+LimitNOFILE=1024
+MemoryMax=256M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

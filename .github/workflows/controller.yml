@@ -1,0 +1,194 @@
+# The replacement controller: format, lint, tests, the end-to-end suite, the
+# transmit gate, and the Raspberry Pi cross-build.
+#
+# Every job here but `e2e` is also a line in controller/scripts/test.sh, in the
+# same order, so a green run locally means a green run here. `e2e` is
+# controller/scripts/e2e.sh, which is deliberately not part of that gate: it
+# starts a real process and waits on real deadlines, so it belongs beside the
+# fast checks rather than inside them.
+#
+# No job in this workflow can reach real hardware. That is not a policy — every
+# wire fixture in the repository is tier [C], derived from third-party reverse
+# engineering and unverified against this installation, and the daemon's
+# transmit gate refuses to open a real serial port until Phase 1 capture
+# promotes them. The `gate` job asserts the gate is still closed, so it stays a
+# deliberate, reviewable act to open it rather than a flag someone flips.
+
+name: controller
+
+on:
+  push:
+    branches: [main]
+    paths: ["controller/**", ".github/workflows/controller.yml"]
+  pull_request:
+    paths: ["controller/**", ".github/workflows/controller.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: 1
+
+defaults:
+  run:
+    working-directory: controller
+
+jobs:
+  fmt:
+    name: rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # rustup reads controller/rust-toolchain.toml and installs the pinned
+      # toolchain, so there is no version to keep in step with here.
+      - run: cargo fmt --all --check
+
+  clippy:
+    name: clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: controller
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+  test:
+    name: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: controller
+      - run: cargo test --workspace --all-features
+      - name: documentation builds without broken links
+        run: cargo doc --workspace --no-deps --document-private-items
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  e2e:
+    name: end-to-end (ring 3)
+    runs-on: ubuntu-latest
+    # The only job here that waits on real deadlines rather than on a compiler.
+    # A hung `cargo clippy` is not a thing; a hung end-to-end run is — and
+    # without a bound it holds a runner to the workflow limit and is *cancelled*
+    # rather than failed, so the `if: failure()` artifact step never runs and
+    # there is neither a log nor a transcript to read. Fifteen minutes against a
+    # ~35 s local run, and ~40 s under 150x CPU oversubscription, is enormous
+    # headroom for a bound whose whole job is to turn a hang into a red job.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: controller
+      - name: build the daemon the suite drives
+        # scripts/e2e.sh builds it too. Doing it here as well keeps a build
+        # failure legible as a build failure rather than as a suite that could
+        # not find a binary.
+        run: cargo build --package kdtvd
+      - name: the real daemon against emulated devices, over pseudo-terminals
+        # Native only. The --pi-sim variant runs the same suite against the
+        # ARM64 binary under qemu-user and is **not** run here: it needs a full
+        # release cross-build, which the `cross` job already performs and
+        # uploads, to exercise wire behaviour that does not depend on the
+        # architecture — and under qemu the daemon competes with the emulator
+        # for one runner CPU, which would make a marginal timing failure
+        # indistinguishable from a real one. scripts/e2e.sh is explicit that a
+        # flaky end-to-end test here is a bug and not weather, so it is run
+        # locally (./scripts/e2e.sh --pi-sim) before a deployment instead.
+        run: ./scripts/e2e.sh
+      - name: what the daemon said, when it failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-daemon-logs
+          path: controller/.e2e/*/daemon.log
+          if-no-files-found: ignore
+
+  gate:
+    name: transmit gate is closed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: controller
+      - name: no fixture claims to have been captured from this hardware
+        # Phase 1 capture has not run. A fixture at tier [A] would let the gate
+        # open, so its appearance must break the build and be argued for in a
+        # pull request rather than merged quietly.
+        #
+        # This parses the fixture files rather than grepping them. The first
+        # version of this step grepped for TOML syntax against files that are
+        # JSON, so it matched nothing and reported success regardless of what
+        # the fixtures said.
+        run: cargo xtask gate-closed
+      - name: the gate's own tests
+        run: cargo test --package kdtv-proto gate
+
+  audit:
+    name: dependency graph and requirements
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: controller
+      # Three guarantees of this design are properties of the dependency graph
+      # rather than of any one type: the shipped binary cannot reach the
+      # emulator that builds malformed frames, no API handler can name a wire
+      # frame type, and no HTTP client is linkable into the daemon — which is
+      # how a poller against the K-99695 would regrow.
+      - run: cargo xtask audit-graph
+      - run: cargo xtask reqs
+
+  cross:
+    name: Raspberry Pi cross-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: controller
+          key: aarch64
+      - name: install the aarch64 cross-toolchain
+        # libc6-dev-arm64-cross is not optional: it carries Scrt1.o and crti.o,
+        # the C runtime startup objects the linker needs. A local install pulls
+        # it in as a recommend, so leaving it out here failed only in CI.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc-aarch64-linux-gnu \
+            libc6-dev-arm64-cross
+      - run: rustup target add aarch64-unknown-linux-gnu
+      - run: ./scripts/build.sh --pi
+      - name: the systemd unit is valid
+        # systemd-analyze reports problems on stderr and exits zero, so the
+        # absence of output is the assertion. The one expected line is the
+        # missing binary: the unit points at the install path, and nothing is
+        # installed on a CI runner.
+        #
+        # The `|| true` matters. Steps run under `bash -eo pipefail`, and a
+        # `grep -v` that filters every line exits 1 — so without it this check
+        # failed exactly when the unit was clean.
+        run: |
+          problems=$(systemd-analyze verify deploy/kdtvd.service 2>&1 \
+            | grep -v 'is not executable' || true)
+          if [ -n "$problems" ]; then
+            echo "$problems"
+            echo "::error::systemd-analyze reported problems with the unit"
+            exit 1
+          fi
+          echo "unit verified"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kdtvd-aarch64
+          path: |
+            controller/target/aarch64-unknown-linux-gnu/release/kdtvd
+            controller/deploy/kdtvd.service
+          if-no-files-found: error

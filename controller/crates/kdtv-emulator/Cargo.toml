@@ -1,0 +1,31 @@
+[package]
+name = "kdtv-emulator"
+description = "Device models, the byte-level wire simulator, simulated HAL and the end-to-end rig. Never a dependency of the daemon."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+# Only what is actually used. The workspace crates get added back as the device
+# models, the simulated HAL and the end-to-end rig land; declaring them early
+# couples this crate's build to crates it does not yet call.
+#
+# `kdtv-config` and `kdtv-hal` arrived with `crate::e2e`: the rig writes the
+# daemon's configuration file and its probe files, and both are shapes those
+# crates own — `kdtv_config::port::PTY_PLACEHOLDER` is the literal being
+# substituted and `kdtv_hal::FileRtdChannel::path_for` names the probe file. A
+# rig that spelled either itself would drift from the thing it is driving.
+[dependencies]
+kdtv-config = { workspace = true }
+kdtv-hal = { workspace = true }
+kdtv-proto = { workspace = true }
+kdtv-units = { workspace = true }
+# `signal` is the end-to-end rig's SIGTERM: the shutdown path is the one the
+# suite has to exercise, and `std::process::Child` can only send SIGKILL.
+nix = { workspace = true, features = ["fs", "term", "poll", "signal"] }
+thiserror = { workspace = true }
+
+[lints]
+workspace = true

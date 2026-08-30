@@ -1,0 +1,13 @@
+# `Cx2::to_fx2` is the single Cx2 -> Fx2 conversion in the workspace
+# (HARDWARE-SPEC.md section 12). Calling it anywhere other than the steam
+# encoder re-opens the units hazard it exists to close: Fx2 220 is 110 F, and
+# read as Cx2 that same byte asks a valve for 110 C.
+disallowed-methods = [
+  { path = "kdtv_units::Cx2::to_fx2", reason = "convert only in kdtv_proto::dtv; see HARDWARE-SPEC.md section 12" },
+  { path = "std::time::Instant::now", reason = "take time as a parameter so state machines stay deterministic; use the Clock trait" },
+  { path = "std::time::SystemTime::now", reason = "wall clock must be paired with its NTP sync state; use Clock::wall" },
+]
+
+# Frame sizes are small and fixed; a large enum is preferable to a Box on the
+# hot path, but not an unbounded one.
+enum-variant-size-threshold = 256

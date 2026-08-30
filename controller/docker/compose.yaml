@@ -1,0 +1,42 @@
+# Two ways to drive the harness image.
+#
+#   docker compose -f controller/docker/compose.yaml run --rm e2e
+#   docker compose -f controller/docker/compose.yaml up emulated
+#
+# Neither service is privileged and neither maps a device. The links are PTY
+# pairs created inside the container.
+
+services:
+  # The end-to-end suite: the real daemon binary against emulated devices.
+  e2e:
+    build:
+      context: ../..
+      dockerfile: controller/docker/Dockerfile
+    command: ["./controller/scripts/e2e.sh"]
+    init: true
+
+  # The same rig, left running, with the local API published so a browser or the
+  # command-line client can drive it. Port 8443 is the daemon's local API.
+  emulated:
+    build:
+      context: ../..
+      dockerfile: controller/docker/Dockerfile
+    command: ["./controller/scripts/emulate.sh"]
+    init: true
+    ports:
+      - "127.0.0.1:8443:8443"
+    environment:
+      # The emulated rig mints its own API token at startup and prints it. This
+      # is a development convenience and has no production equivalent; the real
+      # service reads its token from a file the systemd unit supplies.
+      KDTV_EMULATED: "1"
+
+  # The ARM64 binary, executed under user-mode emulation. Catches what a native
+  # x86_64 run cannot: pointer width, alignment, and architecture-dependent
+  # behaviour in a dependency.
+  pi-sim:
+    build:
+      context: ../..
+      dockerfile: controller/docker/Dockerfile
+    command: ["./controller/scripts/e2e.sh", "--pi-sim"]
+    init: true

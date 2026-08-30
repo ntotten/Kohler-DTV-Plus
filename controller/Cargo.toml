@@ -1,0 +1,117 @@
+[workspace]
+resolver = "3"
+members = [
+  "crates/kdtv-units",
+  "crates/kdtv-proto",
+  "crates/kdtv-config",
+  "crates/kdtv-telemetry",
+  "crates/kdtv-hal",
+  "crates/kdtv-safety",
+  "crates/kdtv-engine",
+  "crates/kdtv-service",
+  "crates/kdtv-api",
+  "crates/kdtvd",
+  "crates/kdtv-emulator",
+  "crates/xtask",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94"
+license = "Apache-2.0"
+repository = "https://github.com/ntotten/Kohler-DTV-Plus"
+publish = false
+
+# Versions checked against the crates.io index on 2026-08-29, not from memory.
+[workspace.dependencies]
+kdtv-units = { path = "crates/kdtv-units" }
+kdtv-proto = { path = "crates/kdtv-proto" }
+kdtv-config = { path = "crates/kdtv-config" }
+kdtv-telemetry = { path = "crates/kdtv-telemetry" }
+kdtv-hal = { path = "crates/kdtv-hal" }
+kdtv-safety = { path = "crates/kdtv-safety" }
+kdtv-engine = { path = "crates/kdtv-engine" }
+kdtv-service = { path = "crates/kdtv-service" }
+kdtv-api = { path = "crates/kdtv-api" }
+kdtv-emulator = { path = "crates/kdtv-emulator" }
+
+anyhow = "1.0.104"
+arc-swap = "1.9.2"
+axum = "0.8.9"
+base64 = "0.23.1"
+bitflags = "2.13.1"
+bytes = "1.12.1"
+clap = { version = "4.6.6", features = ["derive", "env"] }
+futures-util = "0.3.34"
+heapless = "0.9.3"
+hex = "0.4.3"
+include_dir = "0.7.4"
+jiff = { version = "0.2.35", features = ["serde"] }
+libc = "0.2.189"
+nix = { version = "0.31.3", default-features = false }
+parking_lot = "0.12.5"
+reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls-tls"] }
+sd-notify = "0.5.0"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+sha2 = "0.11.0"
+smallvec = { version = "1.15.2", features = ["const_generics", "union"] }
+subtle = "2.6.1"
+thiserror = "2.0.20"
+tokio = "1.53.1"
+tokio-serial = "5.5.0"
+tokio-stream = "0.1.19"
+tokio-util = "0.7.19"
+toml = "1.1.4"
+tower = "0.5.3"
+tower-http = "0.7.0"
+tracing = "0.1.44"
+tracing-appender = "0.2.5"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
+zeroize = { version = "1.9.0", features = ["derive"] }
+
+# dev-dependencies
+embedded-hal-mock = "0.11.1"
+insta = "1.48.0"
+proptest = "1.11.0"
+rstest = "0.26.1"
+tempfile = "3.27.0"
+trybuild = "1.0.120"
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+missing_debug_implementations = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+unreachable_pub = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+# Denied outright: these are the shapes that hide a safety mistake.
+panic = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+indexing_slicing = "warn"
+float_cmp = "warn"
+as_conversions = "warn"
+cast_possible_truncation = "warn"
+cast_precision_loss = "warn"
+cast_sign_loss = "warn"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+
+[profile.release]
+opt-level = 2
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = "debuginfo"
+debug = 1
+
+[profile.dev]
+# The emulator ring-3 tests run the real binary; an unoptimised codec is still
+# far faster than 9600 baud, so dev is left alone.
+opt-level = 0

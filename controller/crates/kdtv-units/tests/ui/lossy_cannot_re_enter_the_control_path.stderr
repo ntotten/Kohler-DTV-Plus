@@ -1,0 +1,13 @@
+error[E0308]: mismatched types
+ --> tests/ui/lossy_cannot_re_enter_the_control_path.rs:8:36
+  |
+8 |     let _ = ValveSetpoint::try_new(back);
+  |             ---------------------- ^^^^ expected `Cx2`, found `LossyCx2`
+  |             |
+  |             arguments to this function are incorrect
+  |
+note: associated function defined here
+ --> src/setpoint.rs
+  |
+  |     pub fn try_new(c: Cx2) -> Result<Self, ClampError> {
+  |            ^^^^^^^

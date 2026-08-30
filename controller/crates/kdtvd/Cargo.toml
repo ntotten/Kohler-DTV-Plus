@@ -1,0 +1,51 @@
+[package]
+name = "kdtvd"
+description = "The replacement master daemon for the Kohler DTV+"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "kdtvd"
+path = "src/main.rs"
+
+# The run path landed, so `kdtv-service` (the composition root) and `kdtv-api`
+# (the HTTP surface) are here now. There is still no `kdtv-emulator` and no HTTP
+# client, and `cargo xtask audit-graph` asserts both: the emulator is the only
+# crate that can build arbitrary or malformed frames, and a daemon that cannot
+# link an HTTP client cannot regrow a poller against the K-99695.
+[dependencies]
+kdtv-api = { workspace = true }
+kdtv-config = { workspace = true }
+kdtv-service = { workspace = true }
+kdtv-hal = { workspace = true }
+kdtv-proto = { workspace = true }
+kdtv-telemetry = { workspace = true }
+kdtv-units = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+clap = { workspace = true }
+# `rt` for the runtime the whole service runs on, `macros` for `select!`,
+# `signal` for the SIGTERM that must stop water before the process exits, and
+# `time`/`sync`/`net` for the pieces the service and the API need under it.
+tokio = { workspace = true, features = ["rt", "macros", "time", "sync", "signal", "net"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+tokio = { workspace = true, features = [
+  "rt",
+  "macros",
+  "time",
+  "sync",
+  "signal",
+  "net",
+  "test-util",
+] }
+
+[lints]
+workspace = true

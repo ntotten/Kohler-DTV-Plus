@@ -1,0 +1,23 @@
+error[E0423]: cannot initialize a tuple struct which contains private fields
+ --> tests/ui/setpoints_have_no_public_constructor.rs:7:13
+  |
+7 |     let _ = ValveSetpoint(Cx2::from_raw(98));
+  |             ^^^^^^^^^^^^^
+  |
+note: constructor is not visible here due to private fields
+ --> src/setpoint.rs
+  |
+  | pub struct ValveSetpoint(Cx2);
+  |                          ^^^ private field
+
+error[E0423]: cannot initialize a tuple struct which contains private fields
+ --> tests/ui/setpoints_have_no_public_constructor.rs:8:13
+  |
+8 |     let _ = SteamSetpoint(Fx2::from_raw(255));
+  |             ^^^^^^^^^^^^^
+  |
+note: constructor is not visible here due to private fields
+ --> src/setpoint.rs
+  |
+  | pub struct SteamSetpoint(Fx2);
+  |                          ^^^ private field

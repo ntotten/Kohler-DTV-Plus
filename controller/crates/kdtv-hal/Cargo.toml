@@ -1,0 +1,34 @@
+[package]
+name = "kdtv-hal"
+description = "I/O traits and their Linux implementations: serial links, RTD channels, clock, watchdog, id store"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+kdtv-units = { workspace = true }
+kdtv-config = { workspace = true }
+kdtv-proto = { workspace = true }
+kdtv-telemetry = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["io-util", "net", "rt", "sync", "time"] }
+tokio-serial = { workspace = true }
+libc = { workspace = true }
+jiff = { workspace = true }
+sd-notify = { workspace = true }
+
+# There is deliberately no `rppal`, `gpiod` or `linux-embedded-hal` here. See
+# `rtd::NO_GPIO_OUTPUT` — nothing in this design drives a relay, a contactor or
+# anything in a mains path, and `cargo xtask audit-graph` bans those crates
+# workspace-wide. `tests::no_gpio_crate_is_a_dependency` reads this file back.
+
+[dev-dependencies]
+tempfile = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt", "test-util", "time"] }
+
+[lints]
+workspace = true
