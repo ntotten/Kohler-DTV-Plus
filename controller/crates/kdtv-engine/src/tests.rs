@@ -374,7 +374,8 @@ impl Rig {
 // ------------------------------------------------------------ boot sequence
 
 #[test]
-fn the_boot_sequence_reaches_ready_off_without_transmitting_a_start() {
+fn req_controller_design_boot_01_req_controller_design_boot_05_the_boot_sequence_reaches_ready_off_without_transmitting_a_start()
+ {
     let mut r = Rig::new();
     r.boot();
 
@@ -442,7 +443,8 @@ fn discovery_probes_every_address_in_the_range_even_after_one_answers() {
 }
 
 #[test]
-fn a_valve_that_never_acknowledges_all_off_leaves_the_zone_unavailable() {
+fn req_controller_design_boot_08_a_valve_that_never_acknowledges_all_off_leaves_the_zone_unavailable()
+ {
     let mut r = Rig::new();
     r.boot_other();
 
@@ -717,7 +719,7 @@ fn a_multi_outlet_start_staggers_the_solenoids_five_hundred_milliseconds_apart()
 // ------------------------------------------------------------- the session
 
 #[test]
-fn a_session_expires_at_exactly_twelve_hundred_seconds() {
+fn req_controller_design_sess_01_a_session_expires_at_exactly_twelve_hundred_seconds() {
     let mut r = Rig::new();
     r.boot();
     let began = r.now;
@@ -759,7 +761,7 @@ fn a_session_expires_at_exactly_twelve_hundred_seconds() {
 }
 
 #[test]
-fn no_timer_refresh_is_emitted_over_a_twenty_two_minute_run() {
+fn req_controller_design_sess_03_no_timer_refresh_is_emitted_over_a_twenty_two_minute_run() {
     let mut r = Rig::new();
     r.boot();
     // How many operations boot sent, not how many of them were writes: this is
@@ -810,7 +812,7 @@ fn no_timer_refresh_is_emitted_over_a_twenty_two_minute_run() {
 }
 
 #[test]
-fn pausing_does_not_buy_a_longer_session() {
+fn req_controller_design_sess_02_pausing_does_not_buy_a_longer_session() {
     let mut r = Rig::new();
     r.boot();
     let began = r.now;
@@ -1195,7 +1197,7 @@ fn a_temperature_the_valve_could_not_be_delivering_is_out_of_range() {
 }
 
 #[test]
-fn a_lost_port_takes_only_its_own_zone_down() {
+fn req_controller_design_safe_07_a_lost_port_takes_only_its_own_zone_down() {
     let mut r = Rig::new();
     r.boot_other();
     r.boot();
@@ -1205,7 +1207,7 @@ fn a_lost_port_takes_only_its_own_zone_down() {
 }
 
 #[test]
-fn a_shared_fault_is_the_only_thing_that_reaches_both_zones() {
+fn req_controller_design_safe_07_a_shared_fault_is_the_only_thing_that_reaches_both_zones() {
     let mut r = Rig::new();
     r.boot_other();
     r.boot();
@@ -1236,7 +1238,7 @@ fn a_shared_fault_is_the_only_thing_that_reaches_both_zones() {
 }
 
 #[test]
-fn recovery_from_a_latch_is_never_automatic() {
+fn req_controller_design_valid_03_recovery_from_a_latch_is_never_automatic() {
     let mut r = Rig::new();
     r.boot();
     r.feed(ZoneEvent::PortClosed);
@@ -1485,7 +1487,7 @@ fn a_generator_already_running_at_boot_is_commanded_off_before_ready() {
 }
 
 #[test]
-fn a_degraded_steam_link_stops_the_generator_before_it_latches() {
+fn req_hardware_spec_steam_18_a_degraded_steam_link_stops_the_generator_before_it_latches() {
     let mut r = SteamRig::new();
     r.enrol();
 
@@ -1562,7 +1564,8 @@ fn an_unacknowledged_stop_latches_anyway_and_every_retry_was_a_stop() {
 }
 
 #[test]
-fn every_documented_error_bit_stops_the_generator_and_every_combination_does_too() {
+fn req_steam_generator_steam_15_every_documented_error_bit_stops_the_generator_and_every_combination_does_too()
+ {
     // CORRECTIONS.md item 9: the bits are independent and can be set together.
     // An undocumented bit is a fault too — an error byte nobody wrote down is
     // not evidence of health.
@@ -1584,7 +1587,8 @@ fn every_documented_error_bit_stops_the_generator_and_every_combination_does_too
 }
 
 #[test]
-fn a_steam_start_carries_a_non_zero_duration_and_never_the_power_clean_byte() {
+fn req_steam_generator_steam_18_req_steam_adapter_steam_11_a_steam_start_carries_a_non_zero_duration_and_never_the_power_clean_byte()
+ {
     use kdtv_proto::FixtureSet;
     use kdtv_proto::dtv::{SET_PARAM_STATE_OFFSET, SteamEncoder};
     use kdtv_proto::gate::TransmitAuthority;
@@ -1625,7 +1629,7 @@ fn a_steam_start_carries_a_non_zero_duration_and_never_the_power_clean_byte() {
 }
 
 #[test]
-fn a_steam_session_stops_at_its_own_limit() {
+fn req_steam_adapter_steam_20_a_steam_session_stops_at_its_own_limit() {
     let mut r = SteamRig::new();
     r.enrol();
     let began = r.now;

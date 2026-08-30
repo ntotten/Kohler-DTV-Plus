@@ -537,7 +537,7 @@ mod tests {
 
     /// `STEAM-14`. Undocumented bits survive decoding and still mean fault.
     #[test]
-    fn undocumented_error_bits_are_preserved_and_are_faults() {
+    fn req_steam_generator_steam_14_undocumented_error_bits_are_preserved_and_are_faults() {
         for b in [0x01u8, 0x02, 0x10, 0x80] {
             let f = SteamErrorFlags::decode(b);
             assert_eq!(f.bits(), b, "0x{b:02X} lost its bit");

@@ -13,7 +13,7 @@
 //! flag or test harness can re-enable it.
 //!
 //! The full denied list is [`denied_control_bytes`](crate::saturn::denied_control_bytes),
-//! and [`no_denied_control_byte_is_reachable`] scans every frame this encoder
+//! and [`req_controller_design_deny_01_no_denied_control_byte_is_reachable`] scans every frame this encoder
 //! can produce to prove none of them appears.
 //!
 //! The corresponding **reads** — calibration `0x10` and configuration `0x15` —
@@ -29,7 +29,7 @@
 //! `0x8B` temperature payload length, the `0x99` pause state byte, and the whole
 //! discovery sequence, whose printed frames are schematic rather than literal.
 //!
-//! [`no_denied_control_byte_is_reachable`]: self#tests
+//! [`req_controller_design_deny_01_no_denied_control_byte_is_reachable`]: self#tests
 
 use crate::gate::TransmitAuthority;
 use crate::saturn::control::opcode;
@@ -197,9 +197,9 @@ impl SaturnOp {
     }
 
     /// The complete allowlist, as kinds. Compared against a literal list in
-    /// [`the_allowlist_is_exactly_these_twenty_operations`].
+    /// [`req_controller_design_deny_02_the_allowlist_is_exactly_these_twenty_operations`].
     ///
-    /// [`the_allowlist_is_exactly_these_twenty_operations`]: self#tests
+    /// [`req_controller_design_deny_02_the_allowlist_is_exactly_these_twenty_operations`]: self#tests
     pub const ALL: &'static [SaturnOpKind] = SaturnOpKind::ALL;
 }
 
@@ -1060,7 +1060,7 @@ mod tests {
 
     /// The enumeration test. Adding an operation must change this literal list.
     #[test]
-    fn the_allowlist_is_exactly_these_twenty_operations() {
+    fn req_controller_design_deny_02_the_allowlist_is_exactly_these_twenty_operations() {
         let expected = [
             SaturnOpKind::AllOff,
             SaturnOpKind::SetOutlets,
@@ -1125,7 +1125,7 @@ mod tests {
     /// have to be weakened until it proved nothing. The control byte is the
     /// field that selects the operation, and it is the field that matters.
     #[test]
-    fn no_denied_control_byte_is_reachable() {
+    fn req_controller_design_deny_01_no_denied_control_byte_is_reachable() {
         let denied = denied_control_bytes();
         let mut frames = 0u32;
         for (e, valve_slots) in [(zone1(), &[1u8, 2, 3, 4, 5][..]), (zone2(), &[1, 2, 3][..])] {
@@ -1174,7 +1174,8 @@ mod tests {
     /// The complement: the control bytes the allowlist *can* emit, as a set,
     /// disjoint from the denied set.
     #[test]
-    fn the_reachable_control_bytes_are_a_known_five() {
+    fn req_controller_design_deny_03_req_controller_design_deny_04_req_controller_design_deny_05_req_controller_design_deny_06_the_reachable_control_bytes_are_a_known_five()
+     {
         let mut reachable: Vec<u8> = SaturnOp::ALL.iter().map(|k| k.control_byte()).collect();
         reachable.sort_unstable();
         reachable.dedup();
@@ -1199,7 +1200,7 @@ mod tests {
     /// `DENY-09`. Address clear outside discovery has no spelling: there is no
     /// token to pass, and passing none is refused.
     #[test]
-    fn address_management_requires_a_token_and_the_discovery_phase() {
+    fn req_controller_design_deny_09_address_management_requires_a_token_and_the_discovery_phase() {
         let e = zone1();
         for phase in [
             LinkPhase::Booting,
@@ -1243,7 +1244,7 @@ mod tests {
 
     /// `PROTO-09`. Two buses, two tokens, no crossing.
     #[test]
-    fn a_token_is_not_transferable_between_links() {
+    fn req_hardware_spec_proto_09_a_token_is_not_transferable_between_links() {
         let e = zone1();
         let other = token(LinkKind::Zone(ZoneId::Zone2));
         let err = e
@@ -1333,7 +1334,7 @@ mod tests {
 
     /// `CLAMP-05`. An unconfigured slot is refused by name, not dropped.
     #[test]
-    fn an_unconfigured_slot_is_refused() {
+    fn req_controller_design_clamp_05_an_unconfigured_slot_is_refused() {
         let e = zone1();
         let err = e
             .encode(
@@ -1399,7 +1400,7 @@ mod tests {
     /// `TEMP-02` / `TEMP-03`. The clamp is in the type, so the encoder cannot
     /// emit a setpoint outside it — and the emitted byte is the clamped Cx2.
     #[test]
-    fn only_clamped_setpoints_can_be_encoded() {
+    fn req_controller_design_clamp_04_only_clamped_setpoints_can_be_encoded() {
         let e = zone1();
         let mut emitted = Vec::new();
         for raw in 0u8..=255 {

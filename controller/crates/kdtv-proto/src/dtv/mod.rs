@@ -227,7 +227,8 @@ mod tests {
     /// config file arrives as a number, and a number is what the type split
     /// cannot catch on its own.
     #[test]
-    fn a_valve_setpoint_and_a_steam_setpoint_reject_each_other_s_bytes() {
+    fn req_controller_design_ph5_02_req_hardware_spec_steam_08_a_valve_setpoint_and_a_steam_setpoint_reject_each_other_s_bytes()
+     {
         // The concrete hazard from HARDWARE-SPEC.md section 12: 110 F is Fx2
         // 220. Read as Cx2 the same byte asks a valve for 110 C — 2.2x the
         // valve's own hardware ceiling of Cx2 98 (49 C).
