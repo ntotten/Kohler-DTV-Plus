@@ -7,7 +7,7 @@
 //! hardware.** Every constant, opcode, payload layout, bitmask and timing figure
 //! below is tier `[C]` — third-party reverse engineering vendored from
 //! `research/xagon0/`, plus the local `docs/devices/valve-control.md` and
-//! `docs/replacement-controller/STEAM-ADAPTER.md`, which disagree with it in
+//! `controller/docs/STEAM-ADAPTER.md`, which disagree with it in
 //! several places. Nothing here is `[A]`.
 //!
 //! The DTV+ side is thinner still: **no DTV+ bus has ever been captured in this

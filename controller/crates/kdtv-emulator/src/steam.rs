@@ -69,7 +69,7 @@ pub enum WriteAck {
 /// it is.** `dtv-plus-protocol.md` § Device Discovery (3-Step) draws the
 /// handshake as broadcast, request, assign, with no fourth arrow and the note
 /// "Device now responds to address 0x03"; `STEAM-ADAPTER.md` § 168 and
-/// `HARDWARE-SPEC.md` § 498 repeat the three steps and no reply.
+/// `HARDWARE.md` § 498 repeat the three steps and no reply.
 /// `kdtv_engine::steam::SteamMachine::on_address_assigned` nonetheless refuses
 /// any answer that is not [`opcode::DEV_ACK`], and an adapter that follows the
 /// document is refused with "no device answered discovery" after its retry

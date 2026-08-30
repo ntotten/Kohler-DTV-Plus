@@ -8,7 +8,7 @@
 //!    with no `From`, no `Deref`, no shared trait and no arithmetic between them,
 //!    because the failure they prevent is not caught by range checking: Fx2 220
 //!    is 110 °F, and the same byte read as Cx2 asks a valve for 110 °C.
-//!    See `docs/replacement-controller/HARDWARE-SPEC.md` § 12.
+//!    See `controller/docs/HARDWARE.md` § 12.
 //!
 //! 2. **The numeric safety bounds.** [`ValveSetpoint`] and [`SteamSetpoint`] have
 //!    private fields, so a value outside the clamp cannot be constructed, let

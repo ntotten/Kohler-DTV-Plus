@@ -1,6 +1,6 @@
 //! Frame capture and session records.
 //!
-//! `CONTROLLER-DESIGN.md` requires "raw RX/TX frame bytes with monotonic and
+//! `DESIGN.md` requires "raw RX/TX frame bytes with monotonic and
 //! wall-clock timestamps" among the required logs. The frame log is also the
 //! oracle the end-to-end tests assert against: what the service *did* on the
 //! wire, rather than what it believes about itself. A service that reports

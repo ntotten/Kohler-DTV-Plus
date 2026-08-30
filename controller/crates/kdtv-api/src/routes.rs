@@ -6,7 +6,7 @@
 //! A route that is not in the table therefore cannot exist, which is a stronger
 //! statement than a test comparing two lists that could both be edited. The test
 //! that matters, in the crate's test module, compares the table against
-//! `CONTROLLER-DESIGN.md` § Software design verbatim.
+//! `DESIGN.md` § Software design verbatim.
 //!
 //! Twelve operations come from the design: eight valve (`API-01`) and four
 //! steam (`API-02`). The thirteenth entry is the event stream, which `SVC-05`
@@ -27,7 +27,7 @@
 //! "covered" on the strength of eight matching strings.
 //!
 //! **This is also a behaviour change from the DTV+ this replacement stands in
-//! for**, and `requirements.toml` and `CONTROLLER-DESIGN.md` do not record it.
+//! for**, and `requirements.toml` and `DESIGN.md` do not record it.
 //! They should.
 //!
 //! # What is deliberately absent
@@ -104,7 +104,7 @@ impl Requirement {
 pub struct Op {
     pub method: &'static str,
     pub path: &'static str,
-    /// The operation exactly as `CONTROLLER-DESIGN.md` spells it.
+    /// The operation exactly as `DESIGN.md` spells it.
     pub operation: &'static str,
     pub requirement: Requirement,
     /// True when this operation can open an outlet, raise a setpoint or extend
@@ -364,7 +364,7 @@ struct OutletsBody {
 
 /// The steam setpoint is an **integer** number of degrees Fahrenheit.
 ///
-/// The generator moves in 1 °F steps (`HARDWARE-SPEC.md` § 12) and `Fx2` cannot
+/// The generator moves in 1 °F steps (`HARDWARE.md` § 12) and `Fx2` cannot
 /// represent anything else that the encoder will emit. Typing the field as an
 /// integer refuses a half degree at the parser rather than rounding it
 /// somewhere later — denial by absence rather than by check.

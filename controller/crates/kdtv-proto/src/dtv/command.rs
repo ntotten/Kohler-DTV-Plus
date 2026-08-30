@@ -1,7 +1,7 @@
 //! The DTV+ opcode table, the allowlist, and the denied set.
 //!
 //! Tier `[C]`, from `research/xagon0/docs/protocols/dtv-plus-protocol.md`
-//! § Command Set, narrowed by `docs/replacement-controller/STEAM-ADAPTER.md`
+//! § Command Set, narrowed by `controller/docs/STEAM-ADAPTER.md`
 //! § 3.
 //!
 //! Nothing in this module can transmit. It exists so a capture can be read and

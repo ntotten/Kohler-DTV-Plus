@@ -1,6 +1,6 @@
 //! The log schema, and the guarantees the schema itself carries.
 //!
-//! `CONTROLLER-DESIGN.md` § Software design lists what must be recorded. Several
+//! `DESIGN.md` § Software design lists what must be recorded. Several
 //! of those requirements are easy to satisfy on the day and easy to lose six
 //! months later, so they are built into the types rather than left to the call
 //! sites:
@@ -59,7 +59,7 @@ pub enum RequestSource {
 
 /// The identifying fields every command carries into the log.
 ///
-/// All five are required. `CONTROLLER-DESIGN.md` asks for "Pi boot ID, service
+/// All five are required. `DESIGN.md` asks for "Pi boot ID, service
 /// boot ID, command ID, request source, and requested state"; making them
 /// non-`Option` fields is the whole mechanism — there is no builder to forget
 /// one and no default to fill one in.
@@ -79,7 +79,7 @@ pub struct CommandRecord {
 /// A rejection and a fault are different things and must not be conflated:
 /// a request that fails validation is refused to the caller and **no valve state
 /// changes**, whereas bad data on the wire escalates to all-off and a latch.
-/// `CONTROLLER-DESIGN.md` § Safety boundary rule 9 draws that line; this type
+/// `DESIGN.md` § Safety boundary rule 9 draws that line; this type
 /// is only ever the first of the two.
 #[derive(Clone, Debug, Serialize)]
 pub struct RejectionRecord {

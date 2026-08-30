@@ -44,7 +44,7 @@ pub enum PortPath {
     ById(PathBuf),
     /// A `/dev/serial/by-path/…` name — the physical USB port the converter is
     /// plugged into. Preferred over `by-id` when a converter ships a blank or
-    /// duplicated USB serial number, which `HARDWARE-SPEC.md` § 5 records as an
+    /// duplicated USB serial number, which `HARDWARE.md` § 5 records as an
     /// expected failure mode.
     ByPath(PathBuf),
     /// A pseudo-terminal. Bench profile only.

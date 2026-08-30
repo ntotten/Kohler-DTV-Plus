@@ -5,14 +5,15 @@ Status: **build specification, revision A.** Not yet built.
 An open replacement master for the Kohler DTV+: three isolated serial links —
 two Saturn valve buses and one DTV+ steam link — driven from a Raspberry Pi.
 This specifies the unit described in
-[CONTROLLER-DESIGN.md](CONTROLLER-DESIGN.md). That document owns the
+[DESIGN.md](DESIGN.md). That document owns the
 architecture, the safety rules and the delivery phases; this one owns the
 hardware. Purchase links and prices are in
-[SHOPPING-LIST.md](SHOPPING-LIST.md). Steam is scoped in
+[SHOPPING-LIST.md](SHOPPING-LIST.md), and the order in which parts are bought
+and phases run is [BUILD-ORDER.md](BUILD-ORDER.md). Steam is scoped in
 [STEAM-ADAPTER.md](STEAM-ADAPTER.md); §12 here carries only the hardware
 consequences.
 
-Evidence tiers follow [system-specification.md](../system-specification.md) —
+Evidence tiers follow [system-specification.md](../../docs/system-specification.md) —
 **[A]** ours/measured, **[B]** shipped code, **[K]** Kohler primary, **[C]**
 reverse-engineered, **[?]** unresolved, **[I]** inference. Component data cited
 from a manufacturer's own published page is marked **[V]** and linked.
@@ -55,37 +56,15 @@ ordering connectors or doing mains work — §11.
 **Raspberry Pi 4 Model B, 2 GB, running a Rust service on Linux. Not a
 microcontroller.**
 
-The alternative considered was a bare-metal MCU (RP2040/STM32, Rust via
-`embassy` or RTIC) driving RS-485 transceivers directly.
-
-| Criterion                    | Pi 4 + Linux                                                     | Bare-metal MCU                              | Decides        |
-| ---------------------------- | ---------------------------------------------------------------- | ------------------------------------------- | -------------- |
-| Language                     | Rust                                                             | Rust                                        | Neither        |
-| Tightest binding deadline    | 150 ms (steam tick); 320 ms Saturn message timeout               | same                                        | Pi — see below |
-| 20 ms echo timeout           | Not applicable — auto-direction converters present no local echo | Not applicable, same reason                 | Neither        |
-| Ethernet, local API          | On-board                                                         | Needs W5500/PHY + TCP + HTTP stack          | **Pi**         |
-| NTP-stamped logs, 7-day soak | `systemd`, journald, real filesystem                             | Needs external flash, log format, transport | **Pi**         |
-| Trusted computing base       | Large                                                            | Small                                       | **MCU**        |
-| Watchdog                     | BCM2711 hardware watchdog + `systemd` `WatchdogSec`              | On-die                                      | Neither        |
-
-**Why the deadlines do not favour an MCU.** Every figure that binds is ≥ 150 ms
-(§6). At 9600 baud a byte takes ~1.04 ms and a maximum 20-byte Saturn frame
-takes ~21 ms to clock out; the wire, not the scheduler, dominates. The only
-sub-100 ms number in the protocol is the 20 ms echo timeout, and
-[CONTROLLER-DESIGN.md](CONTROLLER-DESIGN.md) already establishes it does not
-apply to this build.
-
-**Why determinism is not a safety argument here.** The master is a protocol
-translator, not a safety controller.
-[valve-control.md § Safety Ownership](../devices/valve-control.md#safety-ownership)
-places mixing, the temperature envelope, over-temperature trips and
-fail-closed-on-comms-loss inside the valve **[C]**. A late frame produces a
-valve timeout and closure — the designed-for outcome, and the outcome Phase 3
-measures. An MCU would buy determinism the failure model does not need.
+Every deadline that binds is ≥ 150 ms (§6), the wire rather than the scheduler
+dominates at 9600 baud, and the valve — not the master — owns the safety
+envelope, so an MCU would buy determinism the failure model does not need. The
+full comparison against a bare-metal MCU, and the reasoning, are
+[DECISIONS.md D2](DECISIONS.md#d2--raspberry-pi--rust-on-linux-not-a-bare-metal-mcu).
 
 **[I]** An MCU becomes the right answer only if Phase 3 measures that a valve
 does **not** close on communication loss. In that case the acceptance
-thresholds in [CONTROLLER-DESIGN.md](CONTROLLER-DESIGN.md) reject this
+thresholds in [DESIGN.md](DESIGN.md) reject this
 architecture outright, and a redesign — not a platform swap — is required.
 
 **Pi 4 over Pi 5:** the enclosure is sealed and passively cooled (§10). The Pi 4
@@ -196,20 +175,10 @@ Waveshare `USB TO RS485/422`, SKU `23949`. All rows **[V]**, from the
 
 ### Why not a dual-channel part
 
-Both dual-channel candidates were rejected for the same reason, now with
-evidence:
-
-| Part                                                              | Isolation architecture                                                                                           | Verdict      |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------ |
-| Waveshare SKU `27646`, dual-channel USB                           | Manufacturer does not document channel-to-channel galvanic isolation                                             | Rejected     |
-| Waveshare `2-CH RS485 HAT`, SKU `17221` (SPI, SC16IS752 + SP3485) | Board carries **one** `B0505LS` isolated supply and **one** `π142M61` digital isolator for both channels **[V]** | Rejected     |
-| 2 × Waveshare SKU `23949`                                         | One complete isolation barrier per valve                                                                         | **Selected** |
-
-**[I]** The 2-CH HAT would otherwise be attractive — it removes USB entirely and
-mirrors Kohler's own architecture, which drives both valve ports from a
-TL16C752C SPI/FlexBus dual UART **[C]** ([hardware.md](../hardware.md)). It is
-rejected because a single barrier puts both zones on one isolated ground,
-which is the exact property that disqualified SKU `27646`.
+Both dual-channel candidates — Waveshare SKU `27646` and the `2-CH RS485 HAT`
+SKU `17221` — put both zones behind a single isolation barrier, which is the
+one property this design refuses. The evidence and the full comparison are
+[DECISIONS.md D3](DECISIONS.md#d3--three-single-channel-converters-not-a-dual-channel-part).
 
 ### The three USB failure modes and their mitigations
 
@@ -261,10 +230,8 @@ Byte time at 9600 8N1 is ~1.04 ms; a 20-byte frame occupies the wire ~21 ms.
 
 ## 7. Subsystem C — independent temperature measurement
 
-Required by [CONTROLLER-DESIGN.md § Independent temperature measurement](CONTROLLER-DESIGN.md).
-It was also the instrument for [I1](../../INVESTIGATIONS.md#i1--the-shower-stops-mid-use)
-E5, which closed unrun when I1 resolved on 2026-08-29. The sensor is required
-regardless: it is the only independent temperature measurement in the system.
+Required by [DESIGN.md § Independent temperature measurement](DESIGN.md): the
+sensor is the only independent temperature measurement in the system.
 
 Every other temperature in this system is the valve's own thermistor
 self-report. Per [DISCLAIMER.md](../../DISCLAIMER.md) that is not a
@@ -393,7 +360,7 @@ any need for an electrician to sign off on the enclosure's internals.
 Mains work in this project is limited to what an electrician does outside the
 box: identify valve voltage, receptacles, branch circuits and GFCI
 arrangement, and fit the labelled manual valve-power disconnects that
-[CONTROLLER-DESIGN.md § Safety boundary](CONTROLLER-DESIGN.md) requires.
+[DESIGN.md § Safety boundary](DESIGN.md) requires.
 
 ---
 
@@ -439,7 +406,7 @@ valve power and closing the hot and cold service shutoffs.
 
 These items cannot be finalised from documents. Each row names the measurement
 that closes it. Ordering by assumption is prohibited by
-[CONTROLLER-DESIGN.md § Field-select](CONTROLLER-DESIGN.md).
+[DESIGN.md § Hardware, "Not orderable from documents"](DESIGN.md).
 
 | Item                                  | What is unknown                               | Measurement that closes it                                                                  |
 | ------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------- |
@@ -567,33 +534,11 @@ Recorded in the commissioning report. Full citations in
 
 ### Why through the adapter and not straight to the generator
 
-Both are possible. The adapter wins on protocol, and it is not close.
-
-|                  | Via the adapter                                                                                                        | Direct to the generator                                                                                                                                               |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Protocol         | **DTV+, documented** — framing, stuffing, checksum, discovery, command set and steam payloads all written down **[C]** | The generator's native keypad protocol. **No public analysis exists** — Kohler publishes installation and homeowner guides only, and no teardown or capture was found |
-| Physical layer   | 4-pin header, opto-isolated RS-485 **[A][I]**                                                                          | 6-position modular jack, pinout and electrical standard unknown                                                                                                       |
-| Room temperature | The kit's remote sensor wires to the adapter                                                                           | **Ours to solve.** In a native install the sensor lives in the in-room keypad, so a direct connection has to supply what the generator expects                        |
-| Isolation        | Comes with the adapter                                                                                                 | Ours to add                                                                                                                                                           |
-| Cost             | Already owned                                                                                                          | —                                                                                                                                                                     |
-| Support          | Kohler's own topology; the installer wires it normally                                                                 | Unsupported                                                                                                                                                           |
-
-Going direct trades a documented protocol for an undocumented one and inherits
-the room-temperature problem. It buys one fewer box.
-
-**Decision: through the adapter.**
-
-Two things that would reopen it:
-
-- The adapter fails or becomes unobtainable.
-- The generator's installation guide, once a model is chosen, shows a simple
-  interface. Worth ten minutes of reading at that point, not before.
-
-**[I]** And if the native protocol is ever wanted, the cheapest route to it is
-the adapter itself: put the receive-only analyser on the modular cable between
-adapter and generator and record the adapter talking. That is a far better
-starting point than probing the generator blind — but it needs a generator to
-exist first.
+**Decision: through the adapter.** DTV+ is documented **[C]**; the generator's
+native keypad protocol has no public analysis at all, and a direct connection
+inherits the room-temperature-sensor problem the kit already solves. The full
+comparison, and the two conditions that would reopen it, are
+[DECISIONS.md D5](DECISIONS.md#d5--steam-through-the-adapter-not-direct-to-the-generator).
 
 ### Out of scope
 
@@ -727,7 +672,7 @@ This replaces the earlier plan of metering an unused DTV+ port on the K-99695.
 
 Run with all three converters on the Pi and **nothing attached to the field
 side**. This is Phase 2 of
-[CONTROLLER-DESIGN.md](CONTROLLER-DESIGN.md); these are the hardware checks
+[DESIGN.md](DESIGN.md); these are the hardware checks
 inside it.
 
 | #   | Check                                                                            | Pass criterion                                                              |

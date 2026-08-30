@@ -73,7 +73,7 @@ impl fmt::Display for LinkKind {
 /// A **configuration slot** number — the numbering the public API speaks.
 ///
 /// One of three numbering schemes that do not agree, and the only one that
-/// crosses this system's public boundary. See `CONTROLLER-DESIGN.md`
+/// crosses this system's public boundary. See `DESIGN.md`
 /// § Outlet index spaces:
 ///
 /// | Space | Where it appears |

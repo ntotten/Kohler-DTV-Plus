@@ -15,7 +15,7 @@
 //! third-party reverse engineering from
 //! `research/xagon0/docs/protocols/dtv-plus-protocol.md` and
 //! `research/xagon0/docs/devices/steam-generator.md` — narrowed by
-//! `docs/replacement-controller/STEAM-ADAPTER.md` and `HARDWARE-SPEC.md` § 12.
+//! `controller/docs/STEAM-ADAPTER.md` and `HARDWARE.md` § 12.
 //! Nothing is `[A]`.
 //!
 //! Where the sources disagree, this module carries both readings and decides
@@ -229,7 +229,7 @@ mod tests {
     #[test]
     fn req_controller_design_ph5_02_req_hardware_spec_steam_08_a_valve_setpoint_and_a_steam_setpoint_reject_each_other_s_bytes()
      {
-        // The concrete hazard from HARDWARE-SPEC.md section 12: 110 F is Fx2
+        // The concrete hazard from HARDWARE.md section 12: 110 F is Fx2
         // 220. Read as Cx2 the same byte asks a valve for 110 C — 2.2x the
         // valve's own hardware ceiling of Cx2 98 (49 C).
         let steam_default = SteamSetpoint::try_new(SteamSetpoint::FACTORY_DEFAULT).unwrap();

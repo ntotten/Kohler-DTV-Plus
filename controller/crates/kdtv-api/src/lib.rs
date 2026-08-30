@@ -2,7 +2,7 @@
 //!
 //! # The surface is closed
 //!
-//! `CONTROLLER-DESIGN.md` § Software design lists twelve public operations —
+//! `DESIGN.md` § Software design lists twelve public operations —
 //! eight for the valves (`API-01`) and four for steam (`API-02`) — and the
 //! router is built from a table that names exactly those, plus the event stream
 //! `SVC-05` requires. There is no route outside [`routes::surface`], because the

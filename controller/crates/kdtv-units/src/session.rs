@@ -6,14 +6,14 @@ use std::time::Duration;
 
 /// How long a water session may run.
 ///
-/// The hard limit is 20 minutes (`CONTROLLER-DESIGN.md` § Safety boundary rule
+/// The hard limit is 20 minutes (`DESIGN.md` § Safety boundary rule
 /// 7). It sits below the Prompt 3 valve's own 1800-second stop.
 ///
 /// **No keepalive may extend a session automatically.** There is no `extend`,
 /// no `refresh` and no setter on this type or on the deadline built from it.
 ///
 /// A note on the valve's own timer, because the sources disagree and it matters:
-/// `CONTROLLER-DESIGN.md` rule 7 says never sending the refresh "leaves the
+/// `DESIGN.md` rule 7 says never sending the refresh "leaves the
 /// valve's timer as an independent hardware backstop", while
 /// `research/xagon0/docs/protocols/saturn-protocol.md` § Prompt 3 Timeout says
 /// the counter "resets on any valid received command" — under which ordinary
@@ -69,7 +69,7 @@ pub enum SessionError {
 
 /// A steam session length, in whole minutes.
 ///
-/// 1 to 20 minutes, default 10 (`HARDWARE-SPEC.md` § 12, `[K][B]`).
+/// 1 to 20 minutes, default 10 (`HARDWARE.md` § 12, `[K][B]`).
 ///
 /// **Zero is not representable.** `steamTimerSetTime = 0` disables the
 /// generator's automatic shutoff and leaves it in manual control

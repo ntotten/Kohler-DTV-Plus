@@ -393,7 +393,7 @@ nothing reaches the on-board log, reconciliation about a minute later by
 timeout. That reading is inference; nobody has captured a trace of it.
 
 **Why it matters:** the replacement-controller work was never predicated on
-fixing I1 — [CONTROLLER-DESIGN.md](docs/replacement-controller/CONTROLLER-DESIGN.md)
+fixing I1 — [CONTROLLER-DESIGN.md](controller/docs/DESIGN.md)
 lists it as an explicit non-goal — but the diagnostic scenario built to catch a
 shutoff mid-capture is no longer needed, and the design's claim that the K-99695
 is not unreliable within its documented limits now covers this fault too.

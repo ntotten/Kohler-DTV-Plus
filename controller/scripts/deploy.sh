@@ -156,7 +156,7 @@ ssh "$TARGET_HOST" "journalctl -u kdtvd --no-pager --lines=50" || true
 if ! ssh "$TARGET_HOST" "[ -f '$ROLLBACK_BIN' ]"; then
   die "there is no previously installed binary to fall back to (first deploy). \
 Read the log above, and see the manual rollback procedure in \
-docs/replacement-controller/CONTROLLER-DESIGN.md."
+controller/docs/DESIGN.md."
 fi
 
 say "putting the previously installed binary back"
@@ -176,4 +176,4 @@ ssh "$TARGET_HOST" "journalctl -u kdtvd --no-pager --lines=50" || true
 die "the new binary failed to start, and so did the previous one. The service is \
 DOWN. Both logs are above — the second is from the binary that was running \
 before this deploy, so the cause is unlikely to be the binary. See the manual \
-rollback procedure in docs/replacement-controller/CONTROLLER-DESIGN.md."
+rollback procedure in controller/docs/DESIGN.md."

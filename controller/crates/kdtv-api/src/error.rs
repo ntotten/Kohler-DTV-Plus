@@ -1,7 +1,7 @@
 //! What a refused request looks like on the wire.
 //!
 //! A refusal here **transmits nothing and changes no valve state**. That is the
-//! line `CONTROLLER-DESIGN.md` § Safety boundary rule 9 draws between invalid
+//! line `DESIGN.md` § Safety boundary rule 9 draws between invalid
 //! input and invalid wire data: bad input is rejected to the caller, bad wire
 //! data escalates to all-off. Every variant below is the first of the two.
 //!
@@ -70,7 +70,7 @@ pub enum ApiError {
     NoCommandId(String),
 
     /// The requested route is not part of the API surface. `404`.
-    #[error("no such operation: the API exposes only the operations in CONTROLLER-DESIGN.md")]
+    #[error("no such operation: the API exposes only the operations in DESIGN.md")]
     NoSuchOperation,
 }
 

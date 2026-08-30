@@ -1,8 +1,8 @@
 //! The steam device profile: operation state, status payload, error bitmask.
 //!
 //! Tier `[C]`, from `research/xagon0/docs/devices/steam-generator.md`, narrowed
-//! by `docs/replacement-controller/STEAM-ADAPTER.md` § 7 and § 10 and
-//! `HARDWARE-SPEC.md` § 12.
+//! by `controller/docs/STEAM-ADAPTER.md` § 7 and § 10 and
+//! `HARDWARE.md` § 12.
 //!
 //! # Where the hazard actually is
 //!
@@ -586,7 +586,7 @@ mod tests {
         assert_eq!(s.payload(), [0xDC, 0xDC, 0x00, 0x00, 0x00, 0x00]);
 
         // Fx2 220 is 110.0 F. Read as Cx2 the same byte is 110 C — the hazard
-        // HARDWARE-SPEC.md section 12 exists for.
+        // HARDWARE.md section 12 exists for.
         assert!((s.desired.fahrenheit() - 110.0).abs() < f32::EPSILON);
     }
 

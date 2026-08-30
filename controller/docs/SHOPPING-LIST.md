@@ -1,8 +1,8 @@
 # Kohler replacement controller — final parts list
 
 Prices and stock checked **2026-08-29**. This is the purchasing companion to
-[HARDWARE-SPEC.md](HARDWARE-SPEC.md), which specifies why each part was chosen
-and how it is wired.
+[HARDWARE.md](HARDWARE.md), which specifies why each part was chosen and how it
+is wired. When each group is bought is [BUILD-ORDER.md](BUILD-ORDER.md).
 
 ## Purchasing policy
 
@@ -15,7 +15,7 @@ PiShop US for Raspberry Pi hardware, B&H as an authorized SanDisk dealer,
 Waveshare directly for the valve interfaces, Adafruit directly for the sensor
 and clock boards, and ThermoWorks and Fluke directly for instruments.
 
-Parts fall into five groups:
+Parts fall into six groups:
 
 | Group | Meaning                                                                    |
 | ----- | -------------------------------------------------------------------------- |
@@ -41,7 +41,7 @@ Parts fall into five groups:
 Subtotal **$80.75**. All three in stock when checked.
 
 The metal case is a passive heat spreader — no fan, per
-[HARDWARE-SPEC.md § 4](HARDWARE-SPEC.md). It mounts to the enclosure backplate
+[HARDWARE.md § 4](HARDWARE.md). It mounts to the enclosure backplate
 on standoffs with the GPIO header accessible.
 
 - [Raspberry Pi 4 Model B 2GB](https://www.pishop.us/product/raspberry-pi-4-model-b-2gb/)
@@ -74,7 +74,7 @@ jumper-selectable 120 Ω termination, `PE`/`TA`/`TB`/`RA`/`RB` screw terminals,
 each unit — **order no separate USB cable**.
 
 **One converter per link, never shared** — two valves and the steam adapter. Both dual-channel alternatives are
-rejected in [HARDWARE-SPEC.md § 5](HARDWARE-SPEC.md): SKU `27646` does not
+rejected in [HARDWARE.md § 5](HARDWARE.md): SKU `27646` does not
 document channel-to-channel isolation, and the `2-CH RS485 HAT` (SKU `17221`)
 carries a single `B0505LS` isolated supply and a single `π142M61` digital
 isolator for both channels.
@@ -128,7 +128,7 @@ Before shipping and tax, across four vendors.
 ## Group B — order after the Phase 0 survey
 
 Each row names the measurement that closes it. Ordering by assumption is
-prohibited by [CONTROLLER-DESIGN.md § Field-select](CONTROLLER-DESIGN.md).
+prohibited by [DESIGN.md § Hardware, "Not orderable from documents"](DESIGN.md).
 
 | Item                                    | Specification                                                      | Closed by                                             | Rough |
 | --------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------- | ----: |
@@ -163,7 +163,7 @@ Borrow or rent the oscilloscope and isolated differential probe. Do not buy a
 cheap marketplace probe for this job.
 
 The current limit on the supply is the point, not the voltage range.
-[HARDWARE-SPEC.md § 12](HARDWARE-SPEC.md) closes the DTV+ rail question by
+[HARDWARE.md § 12](HARDWARE.md) closes the DTV+ rail question by
 applying 12 V to pin 4 with ground on pin 3 and reading `IC2` pin 8 — into an
 adapter board whose working voltage is the thing being established. Set the
 limit low and raise it.
@@ -252,7 +252,7 @@ the open board.
 Getting Kohler's firmware off the K-99695 is a **separate track** from building
 a replacement master. Nothing here is needed to ship the controller, and nothing
 here is ordered until the board is photographed — see
-[repair/firmware-extraction.md](../repair/firmware-extraction.md), which ranks
+[repair/firmware-extraction.md](../../docs/repair/firmware-extraction.md), which ranks
 the two vectors and gates both on confirming the footprints against
 [`Images/KohlerBoardOverall.webp`](../../Images/KohlerBoardOverall.webp).
 
@@ -287,6 +287,6 @@ footprint confirmed populated. J904 is $10 and may answer the question outright.
 | Generic `MAX485`, `MAX3485`, TTL-to-RS485 modules     | Mostly unisolated; some assert the transmitter during boot                                                           |
 | Bidirectional USB-RS-485 adapters for passive capture | Automatic direction control is not physically receive-only                                                           |
 | Hobby relays, smart plugs, inline cord switches       | Never in either valve's mains path                                                                                   |
-| A UPS for the Pi                                      | Power loss must reach the valves; see [HARDWARE-SPEC.md § 4](HARDWARE-SPEC.md)                                       |
+| A UPS for the Pi                                      | Power loss must reach the valves; see [HARDWARE.md § 4](HARDWARE.md)                                                 |
 | Additional protection components                      | The packaged converter already includes isolation and transient protection; add nothing without an electrical review |
 | A PoE HAT                                             | Adds a second power path and a mains-adjacent module inside the enclosure                                            |

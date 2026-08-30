@@ -394,7 +394,7 @@ fn assert_refused(answer: &Answer, what: &str) {
 
 // ---------------------------------------------------------------- surface
 
-/// The eight valve operations, exactly as `CONTROLLER-DESIGN.md` § Software
+/// The eight valve operations, exactly as `DESIGN.md` § Software
 /// design → "Expose only constrained public operations" spells them.
 const DESIGN_VALVE_OPERATIONS: [&str; 8] = [
     "start(zone, outlet_set, temperature_f, duration_seconds)",
@@ -533,7 +533,7 @@ fn the_surface_is_exactly_the_design_lists_plus_the_svc_05_event_stream() {
     assert_eq!(
         unaccounted.len(),
         1,
-        "routes outside CONTROLLER-DESIGN.md: {unaccounted:#?}"
+        "routes outside DESIGN.md: {unaccounted:#?}"
     );
     let stream = unaccounted[0];
     assert_eq!(stream.requirement, Requirement::Svc05);

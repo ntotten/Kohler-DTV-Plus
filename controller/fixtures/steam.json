@@ -91,7 +91,7 @@
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/dtv-plus-protocol.md",
-        "section": "§ Protocol Sequences, Set Device Parameter — payload shape unresolved [?] against docs/replacement-controller/STEAM-ADAPTER.md § 7"
+        "section": "§ Protocol Sequences, Set Device Parameter — payload shape unresolved [?] against controller/docs/STEAM-ADAPTER.md § 7"
       }
     },
     "decoded": {
@@ -110,7 +110,7 @@
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/dtv-plus-protocol.md",
-        "section": "§ Protocol Sequences, Set Device Parameter — payload shape unresolved [?] against docs/replacement-controller/STEAM-ADAPTER.md § 7"
+        "section": "§ Protocol Sequences, Set Device Parameter — payload shape unresolved [?] against controller/docs/STEAM-ADAPTER.md § 7"
       }
     },
     "decoded": {
@@ -129,7 +129,7 @@
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/dtv-plus-protocol.md",
-        "section": "§ Protocol Sequences, Set Device Parameter — payload shape unresolved [?] against docs/replacement-controller/STEAM-ADAPTER.md § 7"
+        "section": "§ Protocol Sequences, Set Device Parameter — payload shape unresolved [?] against controller/docs/STEAM-ADAPTER.md § 7"
       }
     },
     "decoded": {
@@ -148,7 +148,7 @@
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/dtv-plus-protocol.md",
-        "section": "§ Protocol Sequences, Set Device Parameter — payload shape unresolved [?] against docs/replacement-controller/STEAM-ADAPTER.md § 7"
+        "section": "§ Protocol Sequences, Set Device Parameter — payload shape unresolved [?] against controller/docs/STEAM-ADAPTER.md § 7"
       }
     },
     "decoded": {

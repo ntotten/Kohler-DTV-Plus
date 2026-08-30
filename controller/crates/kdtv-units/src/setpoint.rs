@@ -85,7 +85,7 @@ impl ClampRecord {
 /// produce one. Every encoder that writes a temperature takes this type, not a
 /// bare [`Cx2`].
 ///
-/// Bounds, from `CONTROLLER-DESIGN.md` § Safety boundary rule 6:
+/// Bounds, from `DESIGN.md` § Safety boundary rule 6:
 ///
 /// | Bound | Value | Source |
 /// | --- | --- | --- |
@@ -247,7 +247,7 @@ impl ValveSetpoint {
 
 /// A steam temperature that has passed the clamp.
 ///
-/// Bounds from `HARDWARE-SPEC.md` § 12: 90 °F to 125 °F in 1 °F steps, factory
+/// Bounds from `HARDWARE.md` § 12: 90 °F to 125 °F in 1 °F steps, factory
 /// default 110 °F. These are the generator's own documented envelope `[K]`. The
 /// installer settings field `steam_max_temp` carries no `min`/`max` in the
 /// shipped web interface, so it is treated as configuration and can only narrow

@@ -39,8 +39,11 @@ open questions and queued experiments, [INVESTIGATIONS.md](../INVESTIGATIONS.md)
 | [devices/valve control](devices/valve-control.md)                                     | Valve behaviour, and which safety behaviour is owned by the valve rather than the controller                               |
 | [control-logic/temperature system](control-logic/temperature-system.md)               | Q-format conversions and safety limits                                                                                     |
 | [control-logic/temperature safety](control-logic/temperature-safety.md)               | Where the protection actually lives — valve-side, controller-side, and rules for any replacement master                    |
-| [replacement-controller/](replacement-controller/)                                    | Design and parts for a direct replacement controller                                                                       |
 | [state/](state/)                                                                      | Point-in-time assessments of the repository                                                                                |
+
+The replacement master's own documentation — design, hardware, build order,
+parts, decisions — lives with its implementation in
+[controller/docs/](../controller/docs/), not here.
 
 ## Provenance
 
