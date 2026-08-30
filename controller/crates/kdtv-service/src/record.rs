@@ -161,17 +161,21 @@ impl Recorder {
 
     /// A request this service refused before anything was transmitted.
     /// `LOG-04`.
+    ///
+    /// `reason` is why, `check` is which gate said so. Both reach the durable
+    /// record; the live stream carries the reason, because that is the field an
+    /// operator is shown and "safety kernel" is the same answer for a latched
+    /// zone, a stale boot token and an outlet the valve does not have. The
+    /// engine's own refusals publish their reason into the same field
+    /// (`crate::supervisor`), and one event type must not mean two things.
     pub fn rejection(&self, command: CommandId, reason: String, check: &'static str, at: Stamp) {
         self.emit(LogEvent::Rejected(Box::new(RejectionRecord {
             command,
-            reason,
+            reason: reason.clone(),
             check,
             at,
         })));
-        self.publish(ServiceEvent::Refused {
-            command,
-            reason: check.to_owned(),
-        });
+        self.publish(ServiceEvent::Refused { command, reason });
     }
 
     /// A serial, watchdog, USB or lifecycle event. `LOG-07`.
@@ -328,11 +332,22 @@ mod tests {
             "safety kernel",
             stamp(1),
         );
-        assert!(matches!(rx.try_recv(), Ok(ServiceEvent::Log(_))));
+        // The durable record keeps both: which gate refused, and why.
+        let ServiceEvent::Log(event) = rx.try_recv().unwrap() else {
+            panic!("expected a rejection record");
+        };
+        let LogEvent::Rejected(record) = *event else {
+            panic!("expected a rejection record");
+        };
+        assert_eq!(record.check, "safety kernel");
+        assert_eq!(record.reason, "the zone is cold");
+
+        // The live stream carries the reason. An operator shown the name of the
+        // check cannot tell a latched zone from a stale token. `LOG-04`.
         let ServiceEvent::Refused { command, reason } = rx.try_recv().unwrap() else {
             panic!("expected a refusal");
         };
         assert_eq!(command, CommandId(2));
-        assert_eq!(reason, "safety kernel");
+        assert_eq!(reason, "the zone is cold");
     }
 }

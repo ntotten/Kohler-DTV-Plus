@@ -252,10 +252,17 @@ mod tests {
         assert!(s.zone(ZoneId::Zone1).is_none());
     }
 
-    /// `LOG-09`. Nothing in this crate holds a credential, and the shape of the
-    /// snapshot is where that would first become visible if one ever arrived.
+    /// `LOG-09`, over the snapshot envelope only.
+    ///
+    /// [`ZoneCache`] and [`SteamCache`] have no public constructor, so nothing
+    /// here can build a populated snapshot; what this covers is the four fields
+    /// of [`SystemSnapshot`] itself. The same assertion over a real snapshot —
+    /// both zones, their engine caches, their kernel labels and an independent
+    /// reading — is in `crate::tests`, driven off the running supervisor, and
+    /// that is the one that would catch a credential-shaped field added to
+    /// [`ZoneStatus`].
     #[test]
-    fn a_serialised_snapshot_carries_no_credential_shaped_field() {
+    fn a_serialised_snapshot_envelope_carries_no_credential_shaped_field() {
         let json = serde_json::to_string(&snapshot()).unwrap();
         for word in ["token", "secret", "password", "credential", "pairing"] {
             assert!(!json.contains(word), "{word} appears in {json}");

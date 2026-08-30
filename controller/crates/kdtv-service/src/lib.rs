@@ -46,9 +46,14 @@
 //! # What is guaranteed here rather than checked
 //!
 //! - **One transaction in flight per link.** A [`Step`] carries at most one
-//!   `tx`, and a machine emits none while it has one outstanding. The Saturn
-//!   frame has no sender field, so a serialised bus is the only thing that
-//!   correlates a response with its request.
+//!   `tx`, and a machine emits none of its own while it has one outstanding.
+//!   The Saturn frame has no sender field, so a serialised bus is the only
+//!   thing that correlates a response with its request. The one exception is an
+//!   operator command, which *abandons* the outstanding transaction and sends
+//!   in its place — one frame still, but a second within the first one's
+//!   response window. That is the engine's design and it is why this crate
+//!   paces commands and discards the receive buffer when it happens; see
+//!   [`Supervisor`].
 //! - **A status read never causes a bus transaction.** [`ServiceHandle::snapshot`]
 //!   reads an [`arc_swap::ArcSwap`]. It sends nothing, touches no channel and
 //!   cannot reach a link. `API-06`; this is what keeps the replacement from

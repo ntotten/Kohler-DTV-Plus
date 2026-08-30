@@ -96,6 +96,17 @@ struct Harness {
 impl Harness {
     /// Start the service with a healthy valve on each bus.
     fn start() -> Self {
+        Self::build(false)
+    }
+
+    /// The same, with zone 1's independent temperature channel failing every
+    /// transfer from the first second — a broken chip select, or a ribbon that
+    /// was never seated.
+    fn start_with_a_dead_probe_on_zone1() -> Self {
+        Self::build(true)
+    }
+
+    fn build(dead_probe_on_zone1: bool) -> Self {
         let config = config();
         let clock = FakeClock::new();
         let watchdog = FakeWatchdog::new(Some(Duration::from_secs(10)));
@@ -124,7 +135,11 @@ impl Harness {
 
         let as_clock: Arc<dyn kdtv_hal::Clock> = clock;
         let as_watchdog: Arc<dyn kdtv_hal::Watchdog> = watchdog.clone();
-        let (rtd1, probe1) = FakeRtd::new(ZoneId::Zone1, Arc::clone(&as_clock), 38.0);
+        let (rtd1, probe1) = if dead_probe_on_zone1 {
+            FakeRtd::broken(ZoneId::Zone1, Arc::clone(&as_clock))
+        } else {
+            FakeRtd::new(ZoneId::Zone1, Arc::clone(&as_clock), 38.0)
+        };
         let (rtd2, probe2) = FakeRtd::new(ZoneId::Zone2, Arc::clone(&as_clock), 38.0);
 
         let started = assemble(
@@ -137,6 +152,8 @@ impl Harness {
                 watchdog: as_watchdog,
                 rtd: vec![Box::new(rtd1), Box::new(rtd2)],
             },
+            // No link factory ran, so there is no descriptor to record.
+            Vec::new(),
         )
         .expect("the committed configuration must assemble");
 
@@ -445,6 +462,7 @@ async fn a_lost_port_on_one_bus_latches_only_that_zone() {
     let harness = Harness::start();
     harness.boot().await;
 
+    let before = harness.watch1.frame_count();
     harness
         .zone1
         .push_read_error(LinkIoError::eof(LinkKind::Zone(ZoneId::Zone1)));
@@ -452,6 +470,73 @@ async fn a_lost_port_on_one_bus_latches_only_that_zone() {
 
     assert_eq!(harness.phase(ZoneId::Zone1), ZonePhaseKind::Unavailable);
     assert_eq!(harness.phase(ZoneId::Zone2), ZonePhaseKind::ReadyOff);
+
+    // The escalation for a lost port is all-off, close, latch — in that order,
+    // and the all-off is queued after the failure report that caused it. RS-485
+    // is two pairs: a receive failure does not prove the transmit direction has
+    // gone, so the stop is attempted rather than discarded. Asserting the phase
+    // alone let a version of this pass with nothing on the wire at all.
+    let recent: Vec<Vec<u8>> = harness.watch1.frames().into_iter().skip(before).collect();
+    assert!(
+        recent.iter().any(|f| is_all_off(f)),
+        "a lost port must still be told to close its outlets: {recent:02X?}"
+    );
+    assert!(harness.watch1.is_closed(), "and then the port closes");
+    harness.finish().await;
+}
+
+// ------------------------------------------------------------------ SAFE-05
+
+#[tokio::test(start_paused = true)]
+async fn a_probe_that_never_speaks_starves_the_zone_rather_than_being_waited_on_forever() {
+    let harness = Harness::start_with_a_dead_probe_on_zone1();
+    // Zone 1's channel errors on every transfer, so `RtdWatch` never gets a
+    // first sample and has nothing to measure a gap from. SAFE-05 is "if no RTD
+    // sample arrives for more than 5 s", and from boot that includes never.
+    harness
+        .settle(BOOT_TIME + kdtv_units::RTD_STARVATION + Duration::from_secs(1))
+        .await;
+
+    assert_eq!(
+        harness.phase(ZoneId::Zone1),
+        ZonePhaseKind::Unavailable,
+        "a zone with no independent temperature must not stay available: {:?}",
+        harness.snapshot()
+    );
+    assert_eq!(
+        harness.phase(ZoneId::Zone2),
+        ZonePhaseKind::ReadyOff,
+        "zone 2's own probe is healthy"
+    );
+    let snapshot = harness.snapshot();
+    let zone1 = snapshot.zone(ZoneId::Zone1).expect("zone 1 is configured");
+    assert!(zone1.independent.is_none(), "there was never a reading");
+    assert!(zone1.kernel.is_latched());
+    harness.finish().await;
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_start_is_refused_while_the_independent_channel_has_never_spoken() {
+    let harness = Harness::start_with_a_dead_probe_on_zone1();
+    // Inside the starvation window, so the zone has not latched yet: this is the
+    // gap between reaching ready-off and the probe being ruled out.
+    harness.settle(BOOT_TIME).await;
+    assert_eq!(harness.phase(ZoneId::Zone1), ZonePhaseKind::ReadyOff);
+
+    let before = harness.watch1.frame_count();
+    let error = harness
+        .start_zone1(CommandId(71))
+        .await
+        .expect_err("a zone with no independent reading must refuse");
+    assert!(
+        matches!(error, CommandError::NoIndependentReading(ZoneId::Zone1)),
+        "{error:?}"
+    );
+    assert_eq!(
+        harness.watch1.frame_count(),
+        before,
+        "a refusal transmits nothing"
+    );
     harness.finish().await;
 }
 
@@ -494,7 +579,10 @@ async fn a_start_opens_water_and_a_stop_closes_it() {
     assert_eq!(accepted, CommandId(11));
 
     // The setpoint is written first and the first outlet opens one stagger
-    // interval later, so the mixing valve is at temperature before flow.
+    // interval later. `[I]` — that this leaves the mixing valve at temperature
+    // before flow is the intent of the ordering, not something observed: the
+    // frame order is tier `[C]` and what the valve does with a setpoint write
+    // in the 500 ms before an outlet opens has never been measured here.
     harness.settle(Duration::from_millis(1_500)).await;
     let frames = harness.watch1.frames();
     let setpoint = frames
@@ -573,6 +661,113 @@ async fn an_authorisation_from_another_boot_cannot_open_water() {
     harness.finish().await;
 }
 
+#[tokio::test(start_paused = true)]
+async fn a_command_storm_cannot_set_the_rate_on_the_bus() {
+    let harness = Harness::start();
+    harness.boot().await;
+    harness
+        .start_zone1(CommandId(600))
+        .await
+        .expect("a start must be accepted");
+    harness.settle(Duration::from_millis(1_500)).await;
+    assert_eq!(harness.phase(ZoneId::Zone1), ZonePhaseKind::Running);
+    let before = harness.watch1.frame_count();
+
+    // Nothing between them lets simulated time pass, so every one of these
+    // arrives inside the response deadline of the one before. Each is a command
+    // the machine accepts, and the machine abandons whatever transaction was
+    // outstanding and sends in its place — so without a floor, the caller's rate
+    // is the bus's rate.
+    let mut accepted = 0_usize;
+    let mut paced = 0_usize;
+    for n in 0..64_u64 {
+        match harness
+            .handle
+            .zone(
+                ZoneId::Zone1,
+                OperatorCommand::SetTemperature {
+                    temp: ValveSetpoint::try_new(Cx2::from_raw(76)).expect("inside the clamp"),
+                    command: CommandId(601 + n),
+                },
+                operator(),
+            )
+            .await
+        {
+            Ok(_) => accepted += 1,
+            Err(CommandError::TooSoon { .. }) => paced += 1,
+            Err(other) => panic!("unexpected refusal {other:?}"),
+        }
+    }
+    assert!(paced > 0, "nothing paced the commands; {accepted} accepted");
+    let sent = harness.watch1.frame_count() - before;
+    assert!(
+        sent < 8,
+        "a command storm put {sent} frames on a bus specified for about two a second"
+    );
+    harness.finish().await;
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_stop_is_never_paced_out_of_the_way() {
+    let harness = Harness::start();
+    harness.boot().await;
+    harness
+        .start_zone1(CommandId(81))
+        .await
+        .expect("a start must be accepted");
+    harness.settle(Duration::from_millis(1_500)).await;
+    assert_eq!(harness.phase(ZoneId::Zone1), ZonePhaseKind::Running);
+
+    // Immediately after the start's own frames, with no time passing: the floor
+    // that refuses a second setpoint must not refuse the stop.
+    harness
+        .handle
+        .zone(
+            ZoneId::Zone1,
+            OperatorCommand::Stop {
+                command: CommandId(82),
+            },
+            operator(),
+        )
+        .await
+        .expect("closing a valve is never made to wait");
+    harness.settle(Duration::from_secs(2)).await;
+    assert!(harness.snapshot().all_off());
+    harness.finish().await;
+}
+
+#[tokio::test(start_paused = true)]
+async fn stop_all_reports_ok_only_because_a_link_actually_took_it() {
+    let harness = Harness::start();
+    harness.boot().await;
+
+    // Zone 1's valve goes quiet, so zone 1 spends its retry budget and latches:
+    // its port is closed and its machine refuses a stop, because there is
+    // nothing left to send one on. Zone 2 is healthy and takes it.
+    harness.zone1.adjust(|valve| valve.silent = true);
+    harness.settle(Duration::from_secs(6)).await;
+    assert_eq!(harness.phase(ZoneId::Zone1), ZonePhaseKind::Unavailable);
+    assert_eq!(harness.phase(ZoneId::Zone2), ZonePhaseKind::ReadyOff);
+
+    let before = harness.watch2.frame_count();
+    harness
+        .handle
+        .stop_all(CommandId(91), operator())
+        .await
+        .expect("one link refusing is not the shower failing to stop");
+    harness.settle(Duration::from_millis(600)).await;
+
+    // The `Ok` is only correct because something was sent. Under the old
+    // unconditional `Ok`, "commanded off" and "nothing left the service" were
+    // the same answer.
+    let recent: Vec<Vec<u8>> = harness.watch2.frames().into_iter().skip(before).collect();
+    assert!(
+        recent.iter().any(|f| is_all_off(f)),
+        "the stop must reach the link that accepted it: {recent:02X?}"
+    );
+    harness.finish().await;
+}
+
 // ------------------------------------------------------------------ shutdown
 
 #[tokio::test(start_paused = true)]
@@ -630,6 +825,43 @@ async fn a_valve_that_never_confirms_is_reported_rather_than_called_a_clean_stop
     // The stop still went out, repeatedly, and the port still closed.
     assert!(watch.frames().iter().any(|f| is_all_off(f)));
     assert!(watch.is_closed());
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_stop_during_the_boot_sequence_is_unconfirmed_and_says_which_kind_of_unconfirmed() {
+    let harness = Harness::start();
+    // Silent valves, and a shutdown while discovery is still probing. Nothing
+    // has acknowledged an all-off, so this service has no confirmation the
+    // valve is closed — a watchdog reset mid-session looks exactly like this,
+    // and reporting it as a clean stop would be a claim about a valve nobody
+    // has spoken to.
+    harness.zone1.adjust(|valve| valve.silent = true);
+    harness.zone2.adjust(|valve| valve.silent = true);
+    harness.settle(Duration::from_millis(10)).await;
+    assert_ne!(harness.phase(ZoneId::Zone1), ZonePhaseKind::ReadyOff);
+
+    let mut events = harness.handle.subscribe();
+    let outcome = harness.finish().await;
+    assert!(!outcome.is_confirmed(), "{outcome:?}");
+
+    // ...and the message distinguishes it from a valve that went quiet with
+    // water on, which is the case the same words used to cover.
+    let mut said_why = false;
+    loop {
+        match events.try_recv() {
+            Ok(event) => {
+                let json = serde_json::to_string(&event).expect("every event must serialise");
+                said_why |= json.contains("had not finished the boot sequence");
+            }
+            // A lag is a gap in the stream, not the end of it.
+            Err(tokio::sync::broadcast::error::TryRecvError::Lagged(_)) => {}
+            Err(_) => break,
+        }
+    }
+    assert!(
+        said_why,
+        "an unconfirmed stop during boot must say that is what it was"
+    );
 }
 
 #[tokio::test(start_paused = true)]
@@ -723,7 +955,17 @@ async fn the_event_stream_carries_the_frames_and_the_stamps_the_log_requires() {
     let mut saw_frame = false;
     let mut saw_temperature = false;
     let mut saw_state = false;
-    while let Ok(event) = events.try_recv() {
+    let mut saw_serial_opened = false;
+    loop {
+        let event = match events.try_recv() {
+            Ok(event) => event,
+            // A boot produces far more than the channel holds, so a subscriber
+            // that reads at the end has lagged. Skipping the gap rather than
+            // stopping at it is what makes the assertions below mean anything:
+            // a `break` here would have passed on an empty stream.
+            Err(tokio::sync::broadcast::error::TryRecvError::Lagged(_)) => continue,
+            Err(_) => break,
+        };
         let json = serde_json::to_string(&event).expect("every event must serialise");
         if json.contains("\"event\":\"frame\"") {
             saw_frame = true;
@@ -733,15 +975,49 @@ async fn the_event_stream_carries_the_frames_and_the_stamps_the_log_requires() {
             assert!(json.contains("wall_unix_s"), "{json}");
             assert!(json.contains("\"ntp\""), "{json}");
         }
-        saw_temperature |= json.contains("\"event\":\"temperature\"");
+        if json.contains("\"event\":\"temperature\"") {
+            saw_temperature = true;
+            // LOG-03 and LOG-10: both numbers, in the same record. The valve's
+            // own reading is a self-report and the probe's is a surface
+            // reading; either alone is not evidence.
+            assert!(json.contains("independent_raw_c"), "{json}");
+            assert!(json.contains("independent_corrected_c"), "{json}");
+            assert!(json.contains("valve_reported_c"), "{json}");
+        }
+        saw_serial_opened |= json.contains("serial_opened");
         saw_state |= json.starts_with("{\"state\":");
         // LOG-09: nothing credential-shaped ever reaches the stream.
         for word in ["token", "secret", "password", "credential"] {
             assert!(!json.contains(word), "{word} appeared in {json}");
         }
     }
+    // `LOG-09` over a snapshot that actually has something in it. The check in
+    // `crate::cache` serialises an empty one, which can only ever exercise the
+    // envelope; this one carries both zones, their engine caches, their kernel
+    // labels and an independent reading. Steam is `enabled = false` in the
+    // reference configuration, so `SteamStatus` is not covered here either.
+    let populated = harness.snapshot();
+    let json = serde_json::to_string(&*populated).expect("a snapshot must serialise");
+    assert!(json.contains("\"zone\":\"zone1\""), "{json}");
+    assert!(json.contains("independent"), "{json}");
+    assert!(
+        populated
+            .zone(ZoneId::Zone1)
+            .is_some_and(|z| z.independent.is_some()),
+        "the probe must have reported by now: {json}"
+    );
+    for word in ["token", "secret", "password", "credential", "pairing"] {
+        assert!(!json.contains(word), "{word} appears in {json}");
+    }
+
     assert!(saw_frame, "raw frame bytes must be recorded");
     assert!(saw_state, "the state stream must publish snapshots");
-    let _ = saw_temperature;
+    assert!(
+        saw_temperature,
+        "the independent temperature must reach the log beside the valve's own"
+    );
+    // Nothing was opened through a link factory in this harness, so there is no
+    // descriptor to record and no such event.
+    assert!(!saw_serial_opened);
     harness.finish().await;
 }

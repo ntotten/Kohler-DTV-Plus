@@ -69,6 +69,24 @@ pub enum CommandError {
     /// Steam is not configured on this system, so there is nothing to command.
     #[error("{0} is not configured on this service")]
     NoSuchLink(LinkKind),
+    /// A command arrived before the previous commanded transaction on that link
+    /// could finish. **Nothing was transmitted**; the caller may retry.
+    ///
+    /// `kdtv_engine::ZoneMachine` abandons an outstanding transaction when a
+    /// command arrives and sends the command in its place, which is right for
+    /// one command and wrong for a hundred a second: the bus correlates a
+    /// response with its request by there being one. `SVC-02` fixes this
+    /// service's own cadence, and `API-06` keeps status reads off the wire, but
+    /// nothing paced commands — which is `INVESTIGATIONS.md` I1 reached through
+    /// a different door. A stop is never refused this way while there is
+    /// anything to stop.
+    #[error("{link}: the previous command on this bus has not finished")]
+    TooSoon { link: LinkKind },
+    /// The zone's independent temperature channel has never produced a sample,
+    /// so the interlock that would catch a wrong valve thermistor is not there
+    /// to catch it. `SAFE-05`.
+    #[error("{0}: the independent temperature channel has never produced a sample")]
+    NoIndependentReading(ZoneId),
     /// A stop has already been commanded on every link and the service is
     /// waiting for the confirmations. Nothing new is accepted from here.
     #[error("the service is shutting down")]

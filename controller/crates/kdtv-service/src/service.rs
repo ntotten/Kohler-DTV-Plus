@@ -181,6 +181,8 @@ impl Service {
             };
             match factory.open(binding, authority).await {
                 Ok(port) => {
+                    // The structured record is written by the supervisor, which
+                    // is the first thing here that has a boot id and a clock.
                     tracing::info!(descriptor = %port.descriptor(), "opened");
                     opened.push((link, port));
                 }
@@ -191,14 +193,21 @@ impl Service {
             }
         }
 
+        // Kept so the boot record can name what was bound to what. `LOG-07`
+        // wants serial events in the log and the close of a port already
+        // produces one; the open produced only a `tracing` line with no boot ids
+        // and no NTP-paired stamp, which on a Pi with no RTC is the one record
+        // that could not be trusted or correlated.
+        let mut descriptors: Vec<(LinkKind, String)> = Vec::with_capacity(opened.len());
         let pipes = opened
             .into_iter()
             .map(|(link, port)| {
+                descriptors.push((link, port.descriptor().to_string()));
                 let pipe: Box<dyn Pipe> = Box::new(port);
                 (link, pipe)
             })
             .collect();
-        assemble(config, authority, pipes, ids, deps)
+        assemble(config, authority, pipes, ids, deps, descriptors)
     }
 }
 
@@ -218,6 +227,7 @@ pub(crate) fn assemble(
     pipes: Vec<(LinkKind, Box<dyn Pipe>)>,
     ids: &dyn IdStore,
     deps: Deps,
+    opened: Vec<(LinkKind, String)>,
 ) -> Result<Started, StartError> {
     // Identity first, and durable before anything is opened: every
     // authorisation to open water is bound to this boot id, so a restart has to
@@ -299,6 +309,7 @@ pub(crate) fn assemble(
         },
         pi_boot,
         shutdown_command,
+        opened,
     );
 
     Ok(Started {

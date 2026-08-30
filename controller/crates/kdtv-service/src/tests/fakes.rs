@@ -163,27 +163,57 @@ impl IdStore for FakeIds {
 
 // ---------------------------------------------------------------- rtd
 
+/// What a [`FakeRtd`] reports: a reading, or a transfer that failed.
+#[derive(Copy, Clone, Debug)]
+struct Dialled {
+    celsius: f32,
+    fault_bits: u8,
+    /// Every transfer fails. A broken chip select or an unplugged ribbon, which
+    /// produces no reading at all rather than a wrong one.
+    dead: bool,
+}
+
 /// A probe that reports whatever the test last dialled in.
 #[derive(Debug)]
 pub(crate) struct FakeRtd {
     zone: ZoneId,
     clock: Arc<dyn Clock>,
-    reading: Arc<Mutex<(f32, u8)>>,
+    reading: Arc<Mutex<Dialled>>,
 }
 
 /// The dial on a [`FakeRtd`], so a test can heat the pipe or break the probe.
 #[derive(Clone, Debug)]
-pub(crate) struct RtdDial(Arc<Mutex<(f32, u8)>>);
+pub(crate) struct RtdDial(Arc<Mutex<Dialled>>);
 
 impl RtdDial {
     pub(crate) fn set(&self, celsius: f32, fault_bits: u8) {
-        *self.0.lock().unwrap() = (celsius, fault_bits);
+        let mut dialled = self.0.lock().unwrap();
+        dialled.celsius = celsius;
+        dialled.fault_bits = fault_bits;
+        dialled.dead = false;
     }
 }
 
 impl FakeRtd {
     pub(crate) fn new(zone: ZoneId, clock: Arc<dyn Clock>, celsius: f32) -> (Self, RtdDial) {
-        let reading = Arc::new(Mutex::new((celsius, 0)));
+        Self::build(zone, clock, celsius, false)
+    }
+
+    /// A channel whose every transfer fails, from the first second of service
+    /// life. Nothing about it is a reading, so [`RtdWatch`] never has a last
+    /// sample to measure starvation from.
+    ///
+    /// [`RtdWatch`]: kdtv_safety::RtdWatch
+    pub(crate) fn broken(zone: ZoneId, clock: Arc<dyn Clock>) -> (Self, RtdDial) {
+        Self::build(zone, clock, 0.0, true)
+    }
+
+    fn build(zone: ZoneId, clock: Arc<dyn Clock>, celsius: f32, dead: bool) -> (Self, RtdDial) {
+        let reading = Arc::new(Mutex::new(Dialled {
+            celsius,
+            fault_bits: 0,
+            dead,
+        }));
         (
             Self {
                 zone,
@@ -202,13 +232,20 @@ impl RtdChannel for FakeRtd {
 
     fn sample(&mut self) -> BoxedFuture<'_, Result<RtdSample, RtdError>> {
         let zone = self.zone;
-        let (celsius, bits) = *self.reading.lock().unwrap();
+        let dialled = *self.reading.lock().unwrap();
         let at = self.clock.monotonic();
         Box::pin(async move {
+            if dialled.dead {
+                return Err(RtdError::Transfer {
+                    zone,
+                    chip_select: kdtv_hal::chip_select_for(zone),
+                    source: std::io::Error::from(std::io::ErrorKind::BrokenPipe),
+                });
+            }
             Ok(RtdSample {
                 zone,
-                raw: RawC(celsius),
-                fault: FaultRegister::from_bits(bits),
+                raw: RawC(dialled.celsius),
+                fault: FaultRegister::from_bits(dialled.fault_bits),
                 at,
             })
         })

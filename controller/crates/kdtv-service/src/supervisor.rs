@@ -9,6 +9,15 @@
 //! [`Step`] says to transmit, performs the kernel's
 //! [`Effect`]s in order, pets the watchdog and publishes the cache.
 //!
+//! A deadline that is already due is served **before** the wait rather than as
+//! one arm of it, alternating with it. The select is `biased` and the timer is
+//! its last arm, so an arm that is always ready — a link reporting failures
+//! faster than they can be consumed — would mean the timer was never polled:
+//! no tick, no response timeout, no session expiry, no probe-starvation check,
+//! and the watchdog petted throughout, because the loop really was completing
+//! passes. Everything that keeps water bounded is behind that deadline, so
+//! nothing else may be allowed to displace it indefinitely.
+//!
 //! # Answers to the five design questions
 //!
 //! **Runtime shape.** One supervisor task, plus a byte pump per link. The
@@ -50,11 +59,19 @@
 //!
 //! # One transaction in flight, per link
 //!
-//! A step carries at most one `tx` and a machine emits none while it has one
-//! outstanding, so the property is the engine's. What this module adds is the
-//! bookkeeping that tells a tick from a response timeout: `awaiting_until` is
-//! set when a frame is queued and cleared when the answer, the failure or the
-//! timeout is delivered.
+//! A step carries at most one `tx` and a machine emits none of its own while it
+//! has one outstanding, so for everything the engine generates the property is
+//! the engine's. What this module adds is the bookkeeping that tells a tick from
+//! a response timeout: `awaiting_until` is set when a frame is queued and
+//! cleared when the answer, the failure or the timeout is delivered.
+//!
+//! An **operator command** is the exception the engine makes deliberately:
+//! `ZoneMachine::on_command` abandons the outstanding transaction and sends in
+//! its place, so a command's frame can go out inside the previous frame's
+//! response window. Two consequences are this module's to handle, and both are
+//! below — the rate of commands would otherwise be the rate of frames
+//! (`Supervisor::refuse_zone_command`), and the abandoned transaction's reply
+//! must not be read as the replacement's (`apply_zone_step`).
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -76,7 +93,7 @@ use crate::cache::{
 };
 use crate::command::{Command, CommandError};
 use crate::event::{Lifecycle, ServiceEvent};
-use crate::port::{LinkReport, PortHandle};
+use crate::port::{LinkReport, PortHandle, Transmitted};
 use crate::record::Recorder;
 use crate::rtd::Sampled;
 
@@ -169,6 +186,10 @@ pub(crate) struct ZoneRuntime {
     awaiting_until: Option<Monotonic>,
     /// When the machine asked to be stepped again.
     wake_at: Option<Monotonic>,
+    /// When a frame this link transmitted last came from an operator command
+    /// rather than from the machine's own cadence. What
+    /// [`Supervisor::refuse_zone_command`] paces.
+    last_command_tx: Option<Monotonic>,
     frames_tx: u64,
     frames_rx: u64,
     /// The highest readings seen since the last session record. `LOG-08`.
@@ -203,6 +224,7 @@ impl ZoneRuntime {
             independent: None,
             awaiting_until: None,
             wake_at: Some(Monotonic::from_nanos(0)),
+            last_command_tx: None,
             frames_tx: 0,
             frames_rx: 0,
             max_valve_c: None,
@@ -215,16 +237,32 @@ impl ZoneRuntime {
 
     /// This service has **confirmation** the valve is closed.
     ///
-    /// `ReadyOff` is reached only through an acknowledged all-off, and `Cold`
-    /// has never transmitted a write, so nothing this service did opened
-    /// anything. `Unavailable` is deliberately **not** confirmed: a latch sends
-    /// an all-off and closes the port in the same step, so the acknowledgement
-    /// never arrives and nothing here knows what the valve did with it.
+    /// `ReadyOff` is the only phase that carries it, because it is reached only
+    /// through an acknowledged all-off. Everything else is a belief about what
+    /// this service did, not about what the valve did:
+    ///
+    /// - `Cold`, `Discovery` and `Identify` mean the boot sequence has not
+    ///   reached its confirmed all-off yet. Nothing this *instance* opened, but
+    ///   a previous instance or a watchdog reset can have left an outlet open,
+    ///   and the safe boot sequence reaches `READY_OFF` "only after both zones
+    ///   are confirmed off" for exactly that reason.
+    /// - `Unavailable` sends an all-off and closes the port in the same step, so
+    ///   the acknowledgement never arrives and nothing here knows what the valve
+    ///   did with it.
     fn confirmed_off(&self) -> bool {
+        matches!(self.machine.phase().kind(), ZonePhaseKind::ReadyOff)
+            && !self.machine.cached().water_moving
+    }
+
+    /// The boot sequence has not finished on this link.
+    ///
+    /// Not confirmation of anything — it is what tells an unconfirmed shutdown
+    /// during boot from one where a valve stopped answering with water on.
+    fn still_booting(&self) -> bool {
         matches!(
             self.machine.phase().kind(),
-            ZonePhaseKind::ReadyOff | ZonePhaseKind::Cold
-        ) && !self.machine.cached().water_moving
+            ZonePhaseKind::Cold | ZonePhaseKind::Discovery | ZonePhaseKind::Identify
+        )
     }
 
     /// Nothing more can be done for this link: it is confirmed off, or its port
@@ -252,6 +290,8 @@ pub(crate) struct SteamRuntime {
     pub(crate) timings: DtvTimings,
     awaiting_until: Option<Monotonic>,
     wake_at: Option<Monotonic>,
+    /// As [`ZoneRuntime::last_command_tx`].
+    last_command_tx: Option<Monotonic>,
     frames_tx: u64,
     frames_rx: u64,
     last_refusal: Option<SteamRefusal>,
@@ -272,6 +312,7 @@ impl SteamRuntime {
             timings,
             awaiting_until: None,
             wake_at: Some(Monotonic::from_nanos(0)),
+            last_command_tx: None,
             frames_tx: 0,
             frames_rx: 0,
             last_refusal: None,
@@ -280,10 +321,16 @@ impl SteamRuntime {
 
     /// On the same terms as [`ZoneRuntime::confirmed_off`].
     fn confirmed_off(&self) -> bool {
+        matches!(self.machine.phase().kind(), SteamPhaseKind::ReadyOff)
+            && !self.machine.cached().steaming
+    }
+
+    /// On the same terms as [`ZoneRuntime::still_booting`].
+    fn still_booting(&self) -> bool {
         matches!(
             self.machine.phase().kind(),
-            SteamPhaseKind::ReadyOff | SteamPhaseKind::Cold
-        ) && !self.machine.cached().steaming
+            SteamPhaseKind::Cold | SteamPhaseKind::Discovery
+        )
     }
 
     fn settled(&self) -> bool {
@@ -296,7 +343,13 @@ enum Woke {
     Report(Option<LinkReport>),
     Sample(Option<Sampled>),
     Command(Option<Command>),
-    Shutdown,
+    /// Someone asked the service to stop. `false` means nobody did: the last
+    /// [`crate::ShutdownTrigger`] was dropped, which resolves `changed()` with
+    /// an error. Draining is still the only correct answer — nothing can ask
+    /// again — but it is not a shutdown request and is not logged as one.
+    Shutdown {
+        requested: bool,
+    },
     Deadline,
 }
 
@@ -318,9 +371,20 @@ pub struct Supervisor {
     pub(crate) pi_boot: PiBootId,
     pub(crate) shutdown_command: CommandId,
     pub(crate) grace: Duration,
+    /// What was bound to each link, as the factory described it, for the one
+    /// record that says so. Empty when the caller assembled the loop from pipes
+    /// it built itself.
+    opened: Vec<(LinkKind, String)>,
     mode: Mode,
     /// Which of the loop's channels are still live.
     live: Live,
+    /// When the loop began, so that "this probe has never spoken" can be given
+    /// the same 5 s window as "this probe has stopped speaking".
+    started_at: Option<Monotonic>,
+    /// Which links had not finished the boot sequence when the drain began.
+    /// Recorded there rather than read at the end, because the drain's own stop
+    /// moves a booting machine into `ConfirmOff`.
+    booting_at_drain: Vec<LinkKind>,
     last_pet: Option<Monotonic>,
     last_published: Option<SystemSnapshot>,
     /// Guards the one recursive escalation path: an encoder refusal escalates
@@ -347,6 +411,7 @@ impl Supervisor {
         channels: SupervisorChannels,
         pi_boot: PiBootId,
         shutdown_command: CommandId,
+        opened: Vec<(LinkKind, String)>,
     ) -> Self {
         Self {
             kernel,
@@ -364,8 +429,11 @@ impl Supervisor {
             pi_boot,
             shutdown_command,
             grace: SHUTDOWN_GRACE,
+            opened,
             mode: Mode::Serving,
             live: Live::default(),
+            started_at: None,
+            booting_at_drain: Vec::new(),
             last_pet: None,
             last_published: None,
             escalating: false,
@@ -375,6 +443,11 @@ impl Supervisor {
     /// Run until the shutdown signal, then stop water and confirm it.
     pub async fn run(mut self) -> ShutdownOutcome {
         self.announce_start();
+        // True for exactly one pass after a deadline was served ahead of the
+        // select, so the two alternate. Without it a deadline that is
+        // permanently in the past would starve the channels the same way the
+        // channels used to starve the deadline.
+        let mut deadline_served = false;
         loop {
             let now = self.clock.monotonic();
             if let Mode::Draining { until } = self.mode
@@ -382,6 +455,23 @@ impl Supervisor {
             {
                 break;
             }
+
+            // A deadline that is already due is served before anything is
+            // waited on. The select below is `biased`, so an arm that is always
+            // ready — a pump reporting failures faster than they can be
+            // consumed, or a client keeping the command channel full — would
+            // otherwise mean the timer arm is never polled and `on_deadline`
+            // never runs: no tick, no response timeout, no session expiry and
+            // no probe-starvation check, with the watchdog petted throughout.
+            // Stepping the deadline first bounds all of them by one pass.
+            if !deadline_served && now >= self.next_wake(now) {
+                deadline_served = true;
+                self.on_deadline(now);
+                self.pet(now);
+                self.publish(now);
+                continue;
+            }
+            deadline_served = false;
 
             // A closed channel resolves immediately and forever, so each arm is
             // disabled once it has ended. Without that the loop would spin at
@@ -399,10 +489,9 @@ impl Supervisor {
                 report = self.reports.recv(), if reports => Woke::Report(report),
                 sample = self.samples.recv(), if samples => Woke::Sample(sample),
                 command = self.commands.recv(), if commands => Woke::Command(command),
-                changed = self.shutdown.changed(), if serving => {
-                    let _ = changed;
-                    Woke::Shutdown
-                }
+                changed = self.shutdown.changed(), if serving => Woke::Shutdown {
+                    requested: changed.is_ok(),
+                },
                 () = nap => Woke::Deadline,
             };
 
@@ -422,9 +511,18 @@ impl Supervisor {
                     self.begin_drain("the command channel closed", now);
                 }
                 Woke::Sample(None) => self.live.samples = false,
-                Woke::Shutdown => {
+                Woke::Shutdown { requested: true } => {
                     let reason = (*self.shutdown.borrow_and_update()).unwrap_or("shutdown");
                     self.begin_drain(reason, now);
+                }
+                // Nobody asked. Every trigger was dropped, so nobody ever can,
+                // and a service that cannot be stopped deliberately stops now —
+                // but the log says which of the two happened.
+                Woke::Shutdown { requested: false } => {
+                    self.begin_drain(
+                        "every shutdown trigger was dropped without being pulled",
+                        now,
+                    );
                 }
                 Woke::Deadline => self.on_deadline(now),
             }
@@ -438,6 +536,18 @@ impl Supervisor {
     fn announce_start(&mut self) {
         let now = self.clock.monotonic();
         let at = self.stamp(now);
+        self.started_at = Some(now);
+        for (link, descriptor) in self.opened.clone() {
+            // `LOG-07`. The bare `tracing` line the factory writes has no boot
+            // ids and no NTP-paired stamp, and the close of the same port
+            // produces both — so which device was bound to which link was the
+            // one thing the durable log could not answer.
+            self.recorder.platform(
+                PlatformEvent::SerialOpened,
+                format!("{link}: {descriptor}"),
+                at,
+            );
+        }
         if self.watchdog.interval().is_none() {
             // The hal reports no watchdog as `None` rather than pretending; a
             // production start without one is a deployment mistake, and this is
@@ -494,7 +604,15 @@ impl Supervisor {
     /// One event per link per pass. A deadline already in the past is stepped
     /// immediately and **not** caught up — two ticks in a pass would put two
     /// frames on a bus that correlates responses by there being one.
+    ///
+    /// Starvation is checked **first**, for the same reason. It is the only
+    /// other thing in this pass that can transmit, and what it transmits is an
+    /// all-off; going first means the all-off is the frame that goes out, and
+    /// the escalation's `ClosePort` then makes the tick that would have
+    /// followed it a no-op rather than a second frame on a bus mid-reply.
     fn on_deadline(&mut self, now: Monotonic) {
+        self.check_starvation(now);
+
         for index in 0..self.zones.len() {
             let Some(zone) = self.zones.get(index) else {
                 continue;
@@ -532,8 +650,6 @@ impl Supervisor {
             }
             self.drive_steam(event, now, None);
         }
-
-        self.check_starvation(now);
     }
 
     /// A loop that fell a whole tick behind is reported, not absorbed.
@@ -553,6 +669,16 @@ impl Supervisor {
     }
 
     /// The absence of a sample cannot announce itself, so it is checked here.
+    ///
+    /// A channel that has **never** produced a sample is starvation too.
+    /// [`RtdWatch::check_starvation`] measures from the last sample and returns
+    /// nothing while there has not been one, which is correct for that type and
+    /// leaves the case to its caller — `has_never_sampled` exists for exactly
+    /// this. `SAFE-05` says "if no RTD sample arrives for more than 5 s, command
+    /// all-off on that zone and latch the zone unavailable", and from boot that
+    /// includes never: a broken chip select, a swapped ribbon or a channel that
+    /// errors on every transfer would otherwise let the zone reach `ReadyOff`
+    /// and open water with the whole independent interlock silently absent.
     fn check_starvation(&mut self, now: Monotonic) {
         for index in 0..self.zones.len() {
             let Some(zone) = self.zones.get(index) else {
@@ -563,7 +689,16 @@ impl Supervisor {
             {
                 continue;
             }
-            let Some(event) = zone.watch.check_starvation(now) else {
+            let event = zone.watch.check_starvation(now).or_else(|| {
+                let since = self.started_at.map(|start| now.since(start))?;
+                (zone.watch.has_never_sampled() && since > kdtv_units::RTD_STARVATION).then_some(
+                    SafetyEvent::RtdStarved {
+                        zone: zone.zone,
+                        since,
+                    },
+                )
+            });
+            let Some(event) = event else {
                 continue;
             };
             if let Some(zone) = self.zones.get_mut(index) {
@@ -601,8 +736,16 @@ impl Supervisor {
                     at,
                 );
                 if terminal {
-                    self.close_port(link);
+                    // The escalation goes first. It is what produces the
+                    // all-off, and `PortHandle::transmit` drops a frame on a
+                    // port already marked closed — so closing here first was
+                    // the one place in this crate that inverted the
+                    // transmit-then-close order `apply_effect` exists to keep.
+                    // The escalation's own `Effect::ClosePort` does the close in
+                    // that order; the call below is the belt and braces for a
+                    // machine that did not escalate, and is idempotent.
                     self.drive_port_closed(link, now);
+                    self.close_port(link);
                 }
             }
             LinkReport::Closed { .. } => {
@@ -794,12 +937,40 @@ impl Supervisor {
     /// Hand a shared fault to every machine.
     ///
     /// The four [`kdtv_safety::FaultScope::Shared`] events are the only ones
-    /// whose effects name a link other than the one that raised them, and all
-    /// four are observed here rather than by a machine — a failed configuration
-    /// check, a missed watchdog, a lost USB controller, an internal failure. So
-    /// the fan-out is deliberate and lives here. Each machine applies only what
-    /// names its own link and writes its own log line, which is one line per
-    /// link and exactly what the log wants.
+    /// whose effects name a link other than the one that raised them, and none
+    /// of them can be observed by a machine, so the fan-out lives here. Each
+    /// machine applies only what names its own link and writes its own log
+    /// line, which is one line per link and exactly what the log wants.
+    ///
+    /// Only [`SafetyEvent::ServiceFailure`] is raised today. The other three are
+    /// unclaimed, and it is worth being exact about why rather than leaving them
+    /// looking accidental:
+    ///
+    /// - `ConfigCheckFailed` — configuration is validated in `kdtv-config` and
+    ///   the composition root refuses to start on it, so no running loop can
+    ///   observe one.
+    /// - `WatchdogMissed` — by definition the process that missed a pet cannot
+    ///   record it; `announce_start` logs the *absence* of a watchdog as a
+    ///   platform event, which is a different thing.
+    /// - `UsbControllerLost` — a terminal [`kdtv_hal::LinkIoError`] arrives per
+    ///   link, and this service escalates it per link as
+    ///   [`SafetyEvent::PortLost`]. In the reference configuration all three
+    ///   links are interfaces of one USB device, so an enumeration loss *is*
+    ///   shared — but that is a fact about one installation's wiring, not
+    ///   something a report on one link proves, and `SVC-01` requires a zone 1
+    ///   fault to leave zone 2 driving. The other links learn of it through
+    ///   their own next transaction. `[I]` — that a terminal error on one
+    ///   interface implies the others have gone is inference, and the service
+    ///   does not act on it.
+    ///
+    /// This is the one path that can put a second frame on a bus inside the same
+    /// loop pass as a poll: it is reached from
+    /// [`Supervisor::on_encode_denied`], which can fire on a zone that has
+    /// already transmitted in this pass, and the kernel's shared response
+    /// carries no `ClosePort` to suppress it. Accepted deliberately — the second
+    /// frame is the all-off, and it goes last, which is the ordering that gets
+    /// water stopped. Everything else that could double up is ordered so that it
+    /// cannot; see [`Supervisor::on_deadline`].
     fn escalate_shared(&mut self, event: &SafetyEvent, now: Monotonic) {
         for index in 0..self.zones.len() {
             self.drive_zone(index, ZoneEvent::Safety(event.clone()), now, None);
@@ -949,8 +1120,8 @@ impl Supervisor {
                 source,
                 reply,
             } => {
-                self.stop_all(command, &source, now);
-                let _ = reply.send(Ok(command));
+                let answer = self.stop_all(command, &source, now, true);
+                let _ = reply.send(answer);
             }
             Command::Acknowledge {
                 link,
@@ -962,6 +1133,73 @@ impl Supervisor {
                 let _ = reply.send(answer);
             }
         }
+    }
+
+    /// Pace commanded transmissions on one valve bus.
+    ///
+    /// `BUS-01` allows one transaction in flight per link, and the engine keeps
+    /// to it for everything it generates itself — but an operator command
+    /// abandons whatever was outstanding and sends in its place, so the *rate*
+    /// of commands is the rate of frames. Nothing else bounds it: `refuse_command`
+    /// gates on phase, `authorize_open` on authority, and a `ServiceHandle`
+    /// holder in a loop would put frames on a 9600-baud bus as fast as a tokio
+    /// task can call. The floor is the link's own response deadline from
+    /// `kdtv-proto`, never a number invented here: it is exactly how long the
+    /// previous commanded transaction has to be answered in.
+    ///
+    /// A `Stop` on a zone that is not already stopping is exempt. Closing a
+    /// valve is never made to wait, and a second stop while the first is
+    /// confirming adds nothing but a frame.
+    ///
+    /// `None` means the command may proceed. `Some` refuses it, having recorded
+    /// the reason (`LOG-04`); nothing was transmitted.
+    fn refuse_zone_command(
+        &self,
+        index: usize,
+        command: Option<&OperatorCommand>,
+        id: CommandId,
+        now: Monotonic,
+    ) -> Option<CommandError> {
+        let zone = self.zones.get(index)?;
+        let stopping_now = matches!(command, Some(OperatorCommand::Stop { .. }))
+            && !matches!(zone.machine.phase().kind(), ZonePhaseKind::ConfirmOff);
+        if stopping_now {
+            return None;
+        }
+        let last = zone.last_command_tx?;
+        if now.since(last) >= zone.timings.response {
+            return None;
+        }
+        let why = CommandError::TooSoon { link: zone.link };
+        self.recorder
+            .rejection(id, why.to_string(), "command pacing", self.stamp(now));
+        Some(why)
+    }
+
+    /// [`Supervisor::refuse_zone_command`] for the steam link, on its own reply
+    /// deadline. A stop is exempt while there is anything to stop.
+    fn refuse_steam_command(
+        &self,
+        command: &SteamCommand,
+        id: CommandId,
+        now: Monotonic,
+    ) -> Option<CommandError> {
+        let steam = self.steam.as_ref()?;
+        let stopping_now = matches!(command, SteamCommand::Stop { .. })
+            && matches!(steam.machine.phase().kind(), SteamPhaseKind::Running);
+        if stopping_now {
+            return None;
+        }
+        let last = steam.last_command_tx?;
+        if now.since(last) >= steam.timings.reply {
+            return None;
+        }
+        let why = CommandError::TooSoon {
+            link: LinkKind::Steam,
+        };
+        self.recorder
+            .rejection(id, why.to_string(), "command pacing", self.stamp(now));
+        Some(why)
     }
 
     fn start(
@@ -976,6 +1214,24 @@ impl Supervisor {
         let Some(index) = self.zone_index(zone) else {
             return Err(CommandError::NoSuchLink(LinkKind::Zone(zone)));
         };
+        if let Some(why) = self.refuse_zone_command(index, None, id, now) {
+            return Err(why);
+        }
+        // The independent channel is the only thing in this system that can
+        // contradict the valve's own thermistor. A channel that has never
+        // spoken has not been ruled out, and opening water behind one leaves
+        // every independent trip — the corrected trip, the raw backstop, the
+        // fault register and the divergence check — inert. `SAFE-05`.
+        if self
+            .zones
+            .get(index)
+            .is_some_and(|z| z.watch.has_never_sampled())
+        {
+            let why = CommandError::NoIndependentReading(zone);
+            self.recorder
+                .rejection(id, why.to_string(), "independent probe", self.stamp(now));
+            return Err(why);
+        }
         let grant = match self.kernel.authorize_open(request, authorization) {
             Ok(grant) => grant,
             Err(denial) => {
@@ -1021,6 +1277,9 @@ impl Supervisor {
         let Some(index) = self.zone_index(zone) else {
             return Err(CommandError::NoSuchLink(LinkKind::Zone(zone)));
         };
+        if let Some(why) = self.refuse_zone_command(index, Some(&command), id, now) {
+            return Err(why);
+        }
         if let Some(zone) = self.zones.get_mut(index) {
             zone.last_refusal = None;
         }
@@ -1041,6 +1300,9 @@ impl Supervisor {
         if self.steam.is_none() {
             return Err(CommandError::NoSuchLink(LinkKind::Steam));
         }
+        if let Some(why) = self.refuse_steam_command(&command, id, now) {
+            return Err(why);
+        }
         self.drive_steam(SteamEvent::Command(command), now, Some(source));
         match self.steam.as_ref().and_then(|s| s.last_refusal.clone()) {
             Some(refusal) => Err(CommandError::SteamRefused(refusal)),
@@ -1048,21 +1310,66 @@ impl Supervisor {
         }
     }
 
-    fn stop_all(&mut self, command: CommandId, source: &RequestSource, now: Monotonic) {
+    /// Stop every link, and say whether anything took it.
+    ///
+    /// The one operation an operator reaches for in an emergency used to answer
+    /// `Ok` unconditionally, so "both links commanded off" and "nothing was sent
+    /// on any link" were the same answer. A refusal on one link with another
+    /// still accepting is not a failure of `stop_all` — the shower is stopping —
+    /// so the error is reserved for the case where every link refused. Each
+    /// individual refusal reaches the log as the machine's own `Rejected` note
+    /// either way.
+    ///
+    /// `paced` applies [`Supervisor::refuse_zone_command`]. An operator's
+    /// `stop_all` is paced like any other command; the shutdown drain is not,
+    /// because its whole job is to command a stop on every link once.
+    fn stop_all(
+        &mut self,
+        command: CommandId,
+        source: &RequestSource,
+        now: Monotonic,
+        paced: bool,
+    ) -> Result<CommandId, CommandError> {
+        let stop = OperatorCommand::Stop { command };
+        let mut accepted = 0_usize;
+        let mut refused: Option<CommandError> = None;
         for index in 0..self.zones.len() {
-            self.drive_zone(
-                index,
-                ZoneEvent::Command(OperatorCommand::Stop { command }),
-                now,
-                Some(source),
-            );
+            if paced && let Some(why) = self.refuse_zone_command(index, Some(&stop), command, now) {
+                refused = refused.or(Some(why));
+                continue;
+            }
+            if let Some(zone) = self.zones.get_mut(index) {
+                zone.last_refusal = None;
+            }
+            self.drive_zone(index, ZoneEvent::Command(stop.clone()), now, Some(source));
+            match self.zones.get(index).and_then(|z| z.last_refusal.clone()) {
+                Some(refusal) => refused = refused.or(Some(CommandError::ZoneRefused(refusal))),
+                None => accepted = accepted.saturating_add(1),
+            }
         }
         if self.steam.is_some() {
-            self.drive_steam(
-                SteamEvent::Command(SteamCommand::Stop { command }),
-                now,
-                Some(source),
-            );
+            let stop = SteamCommand::Stop { command };
+            if let Some(why) = paced
+                .then(|| self.refuse_steam_command(&stop, command, now))
+                .flatten()
+            {
+                refused = refused.or(Some(why));
+            } else {
+                if let Some(steam) = self.steam.as_mut() {
+                    steam.last_refusal = None;
+                }
+                self.drive_steam(SteamEvent::Command(stop), now, Some(source));
+                match self.steam.as_ref().and_then(|s| s.last_refusal.clone()) {
+                    Some(refusal) => {
+                        refused = refused.or(Some(CommandError::SteamRefused(refusal)));
+                    }
+                    None => accepted = accepted.saturating_add(1),
+                }
+            }
+        }
+        match refused {
+            Some(why) if accepted == 0 => Err(why),
+            _ => Ok(command),
         }
     }
 
@@ -1113,6 +1420,7 @@ impl Supervisor {
         }
         let until = now.checked_add(self.grace).unwrap_or(now);
         self.mode = Mode::Draining { until };
+        self.booting_at_drain = self.still_booting();
         self.recorder.platform(
             PlatformEvent::ServiceStopping,
             format!("{reason}: commanding every link off"),
@@ -1126,7 +1434,10 @@ impl Supervisor {
         let source = RequestSource::Service {
             reason: "shutdown: stop water before exit",
         };
-        self.stop_all(command, &source, now);
+        // The answer is the outcome's business, not this function's: a link that
+        // refuses the stop is a link that never confirms itself off, and
+        // `unconfirmed` names it.
+        let _ = self.stop_all(command, &source, now, false);
     }
 
     /// Every link has either confirmed itself off or lost the port it would
@@ -1135,6 +1446,21 @@ impl Supervisor {
     fn all_settled(&self) -> bool {
         self.zones.iter().all(ZoneRuntime::settled)
             && self.steam.as_ref().is_none_or(SteamRuntime::settled)
+    }
+
+    /// The links whose boot sequence never finished. A subset of
+    /// [`Supervisor::unconfirmed`], and the reason it says what it says.
+    fn still_booting(&self) -> Vec<LinkKind> {
+        let mut out: Vec<LinkKind> = self
+            .zones
+            .iter()
+            .filter(|z| z.still_booting())
+            .map(|z| z.link)
+            .collect();
+        if self.steam.as_ref().is_some_and(SteamRuntime::still_booting) {
+            out.push(LinkKind::Steam);
+        }
+        out
     }
 
     fn unconfirmed(&self) -> Vec<LinkKind> {
@@ -1169,8 +1495,14 @@ impl Supervisor {
         }
         let _ = self.stop_samplers.send(true);
 
+        // Waited on the *pumps*, not on `is_open`: `PortHandle::close` clears
+        // that flag synchronously, so a loop keyed on it exited before it began
+        // and this wait did nothing. The orders queued by the last drain pass —
+        // an all-off, or a retried stop — are written by the pump after the
+        // close it is ordered behind, so returning here early meant the runtime
+        // dropped the pump with that frame still in its queue.
         let deadline = now.checked_add(CLOSE_GRACE).unwrap_or(now);
-        while self.any_port_open() {
+        while self.any_pump_running() {
             let nap = self.clock.sleep_until(deadline);
             let report = tokio::select! {
                 report = self.reports.recv() => report,
@@ -1200,10 +1532,32 @@ impl Supervisor {
                 });
             }
             ShutdownOutcome::UnconfirmedOff { links } => {
+                // A stop during the boot sequence is unconfirmed for a
+                // different reason from a valve that went quiet with water on,
+                // and the two must not read the same. Both are genuinely
+                // unconfirmed — the boot sequence exists because this service
+                // does not know what a valve is doing until it has been told —
+                // but only one of them means a session was interrupted.
+                let booting: Vec<String> = self
+                    .booting_at_drain
+                    .iter()
+                    .filter(|link| links.contains(link))
+                    .map(ToString::to_string)
+                    .collect();
+                let note = if booting.is_empty() {
+                    String::new()
+                } else {
+                    format!(
+                        " {} had not finished the boot sequence when the stop was commanded, so \
+                         this service had never established what that valve was doing; nothing it \
+                         opened is running.",
+                        booting.join(", ")
+                    )
+                };
                 let detail = format!(
                     "these links never confirmed themselves off within {} s: {}. The ports are \
                      closed; the valve's own communication-loss shutdown is what stops the water \
-                     now. Check the outlet before anyone uses the shower.",
+                     now. Check the outlet before anyone uses the shower.{note}",
                     self.grace.as_secs(),
                     links
                         .iter()
@@ -1224,9 +1578,9 @@ impl Supervisor {
         outcome
     }
 
-    fn any_port_open(&self) -> bool {
-        self.zones.iter().any(|z| z.port.is_open())
-            || self.steam.as_ref().is_some_and(|s| s.port.is_open())
+    fn any_pump_running(&self) -> bool {
+        self.zones.iter().any(|z| z.port.is_running())
+            || self.steam.as_ref().is_some_and(|s| s.port.is_running())
     }
 
     // ---- housekeeping ----------------------------------------------------
@@ -1386,8 +1740,36 @@ fn apply_zone_step(
     if step.tx.is_some() {
         match zone.machine.encode(&zone.encoder, step) {
             Some(Ok(frame)) => {
-                zone.port.transmit(frame.bytes().to_vec());
+                // A transmission while one was already outstanding is the
+                // engine abandoning that transaction and sending in its place —
+                // the only way it emits two. Whatever is in the receive buffer
+                // at this instant was therefore addressed to the frame that was
+                // just given up on, and cannot be an answer to one not yet on
+                // the wire. This service owns the buffer, so this is where it
+                // goes: leaving it would let the abandoned reply be decoded
+                // inside the replacement's response window and accepted as its
+                // acknowledgement, which for two operations sharing a control
+                // byte is indistinguishable. A reply already in flight is not
+                // reachable from here and stays with the engine's own late- and
+                // stale-response checks.
+                if zone.awaiting_until.is_some() {
+                    zone.rx.clear();
+                }
+                if zone.port.transmit(frame.bytes().to_vec()) == Transmitted::PumpGone {
+                    let link = zone.link;
+                    recorder.platform(
+                        PlatformEvent::SerialError,
+                        format!(
+                            "{link}: a frame was not queued because the byte pump for this link \
+                             has gone without closing the port"
+                        ),
+                        at,
+                    );
+                }
                 zone.awaiting_until = now.checked_add(zone.timings.response);
+                if source.is_some() {
+                    zone.last_command_tx = Some(now);
+                }
             }
             Some(Err(refused)) => denial = Some(refused.to_string()),
             None => {}
@@ -1442,8 +1824,25 @@ fn apply_steam_step(
     if let Some(op) = step.tx.as_ref() {
         match steam.machine.encode(&steam.encoder, step) {
             Some(Ok(frame)) => {
-                steam.port.transmit(frame.bytes().to_vec());
+                // As in [`apply_zone_step`].
+                if steam.awaiting_until.is_some() {
+                    steam.rx.clear();
+                }
+                if steam.port.transmit(frame.bytes().to_vec()) == Transmitted::PumpGone {
+                    recorder.platform(
+                        PlatformEvent::SerialError,
+                        format!(
+                            "{}: a frame was not queued because the byte pump for this link has \
+                             gone without closing the port",
+                            LinkKind::Steam
+                        ),
+                        at,
+                    );
+                }
                 steam.awaiting_until = now.checked_add(steam_wait(op, &steam.timings));
+                if source.is_some() {
+                    steam.last_command_tx = Some(now);
+                }
             }
             Some(Err(refused)) => denial = Some(refused.to_string()),
             None => {}
