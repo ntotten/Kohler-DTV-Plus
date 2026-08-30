@@ -90,6 +90,17 @@ written elsewhere and only reached this repository on 2026-08-29:
   [repair/recovery.md](repair/recovery.md), alongside the capture sets now in
   [research/diagnostics/](../research/diagnostics/).
 
+That working directory was **retired on 2026-08-30** and no longer exists.
+Everything in it was either already here — the three documents above are
+byte-identical apart from rewritten relative links — or was a vendored copy of
+something [research/reference-links.md](../research/reference-links.md) already
+cites: the xagon0 and aaronse trees, the Freescale MQX 3.8.1 mirror, the FCC
+exhibits, the patents, and Kohler's own spec sheets. Those copies were not
+brought across, because this repository
+[links rather than copies](../research/reference-links.md). Three paths into
+that tree survived the 2026-08-29 move as dangling references and were repointed
+at their upstream sources at the same time.
+
 Several of these predate the hardware work recorded in
 [INVESTIGATIONS.md](../INVESTIGATIONS.md) and cover the same ground from an
 earlier vantage point. Where two documents disagree, the one cited from

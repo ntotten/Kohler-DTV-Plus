@@ -7,13 +7,13 @@ analyzed/patched or a replacement controller built. Companion to
 about getting the code off it.
 
 > **Target anchor.** The subject of this document is exactly one device: the
-> **K-99695-NA system controller** (Kohler spec sheet:
-> `research/kohler-official/K-99695_spec_US-CA_Kohler_en.pdf`; board
-> PCB-0424-00-R04, ColdFire MCF54416CMJ256, MQX 3.8). The Konnect module
-> (K-97999, FCC N82-KOHLER029) and the cloud-module family in
-> `research/fcc/` are **sibling-product research only** — they are not
-> installed on this system and are not extraction targets; they were examined
-> for shared-credential patterns and as GPL-track evidence.
+> **K-99695-NA system controller** ([Kohler spec sheet](https://techcomm.kohler.com/techcomm/pdf/K-99695_spec_US-CA_Kohler_en.pdf);
+> board PCB-0424-00-R04, ColdFire MCF54416CMJ256, MQX 3.8). The Konnect module
+> (K-97999, FCC N82-KOHLER029) and the cloud-module family
+> ([the N82 filings](../../research/reference-links.md#fcc-public-exhibits))
+> are **sibling-product research only** — they are not installed on this system
+> and are not extraction targets; they were examined for shared-credential
+> patterns and as GPL-track evidence.
 
 **Request discipline (from the operator, binding):** strictly one request at a
 time, ~8 s gaps, `Connection: close`, `--http0.9` for `.cgi`. If the device
@@ -165,7 +165,8 @@ credential capture + intel only, not code exec.
 Grantee N82 (Kohler Co.) filings: **N82-KOHLER010** DTV+ Amplifier (2014);
 **N82-KOHLER021/-022** "UART/RS485 CLOUD MODULE" (2017); **N82-KOHLER032/-033**
 "UART/RS485 CLOUD MODULE" (2019); **N82-KOHLER029 "DTV Konnect Module"**
-(K-97999, 2019) — internal photos saved to `research/fcc/`: ARM-class SoC +
+(K-97999, 2019) — internal photos on the filing itself, at
+[fccid.io/N82-KOHLER029](https://fccid.io/N82-KOHLER029): ARM-class SoC +
 ISSI SDRAM + Kingston NAND + **microSD slot**, Wi-Fi by Laird-tested module.
 That is a Linux-class board (GPL-covered) with removable storage.
 No leaked credentials anywhere in the filings, manuals, S3 guesses
