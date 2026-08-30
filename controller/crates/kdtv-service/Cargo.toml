@@ -16,7 +16,11 @@ kdtv-safety = { workspace = true }
 kdtv-engine = { workspace = true }
 kdtv-hal = { workspace = true }
 kdtv-telemetry = { workspace = true }
-tokio = { workspace = true }
+# `rt` for the link and sampler tasks, `sync` for the command, report and event
+# channels, `time` for the deadline the engine asks to be woken on, `macros` for
+# the one `select!` that is the whole control loop, and `signal` for the SIGTERM
+# and SIGINT that must stop water before the process exits.
+tokio = { workspace = true, features = ["rt", "macros", "time", "sync", "signal"] }
 tokio-stream = { workspace = true }
 tokio-util = { workspace = true }
 thiserror = { workspace = true }
@@ -26,6 +30,19 @@ serde_json = { workspace = true }
 smallvec = { workspace = true }
 arc-swap = { workspace = true }
 jiff = { workspace = true }
+
+[dev-dependencies]
+# `test-util` is what makes `tokio::time::pause()` available, and that is what
+# lets a twenty-minute session and a full retry train run in microseconds
+# against the real supervisor rather than against a second copy of its logic.
+tokio = { workspace = true, features = [
+  "rt",
+  "macros",
+  "time",
+  "sync",
+  "signal",
+  "test-util",
+] }
 
 [lints]
 workspace = true
