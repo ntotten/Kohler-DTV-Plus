@@ -131,6 +131,18 @@ pub(crate) fn run(strict: bool, checklist: Option<&Path>) -> Result<()> {
         covered.len(),
         software.len()
     );
+    if covered.is_empty() && !software.is_empty() {
+        // Without this line the run ends "requirement coverage: ok", which reads
+        // as "the requirements are covered" rather than "nothing was checked".
+        // The convention is designed and unadopted: no test in the workspace is
+        // named `req_*` yet, so this tool currently proves only that the
+        // register itself is well-formed.
+        println!(
+            "  NOTE: no test in the workspace uses the `req_*` naming convention,\n\
+             \x20       so nothing below is a statement about requirement coverage.\n\
+             \x20       `cargo xtask reqs --strict` is the check that would fail."
+        );
+    }
 
     let manual: Vec<&Requirement> = register
         .requirement
