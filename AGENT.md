@@ -28,6 +28,9 @@ may be read by Kohler engineers and by a general audience.**
 1. **Never issue a CGI endpoint rated above 2/5.** The gate in
    [app/server/cgi-safety.mjs](app/server/cgi-safety.mjs) enforces this; do not
    weaken it. Widening the exposed surface must come with a recorded reason.
+   The same table constrains each exposed endpoint's **parameters** — a rating
+   describes an endpoint, not its arguments. Adding an accepted parameter or
+   value is a widening and needs the same recorded reason.
 2. **Never open a valve without explicit, in-the-moment operator consent.** This
    controls real water in a real bathroom. Read-only work needs no permission;
    anything that moves water needs asking, every time.

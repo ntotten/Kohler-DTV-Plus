@@ -57,6 +57,14 @@ anything that fails it:
 - **An endpoint must also be explicitly exposed**, as `read` or as `command`.
   Being rated `0/5` is not sufficient. The reachable surface is intentionally
   smaller than the safe surface.
+- **Every exposed endpoint declares the parameters it accepts**, and the values
+  each may take. A rating describes an endpoint, not its arguments — and
+  `save_variable.cgi` is one call that writes any of 105 persistent config
+  variables, `valve_max_temp` among them. Only index 43, the amplifier's volume,
+  is accepted. Anything else is refused with the same `403`. See
+  [PROTOCOL.md](PROTOCOL.md#save_variablecgi-is-a-write-anything) for what the
+  other indices do and [STORY-LOG.md](STORY-LOG.md) for how long they were
+  reachable.
 - **Commands are `POST` only**, so no link, prefetch, or address-bar mistake can
   fire one.
 - **The table self-checks at startup.** If an entry is ever exposed with a rating
@@ -100,7 +108,10 @@ These are properties of the controller, not preferences:
 
 - Confirm your maximum temperature limit on the controller's own settings pages
   and satisfy yourself it is safe for everyone who uses the shower. This app
-  clamps to that limit; it never raises it.
+  clamps to that limit; it never raises it. The write that would raise it —
+  `save_variable.cgi` index 39 — is refused by the proxy, so this holds for
+  anything that can reach the proxy, not only for the app's own UI. It was not
+  true before 2026-08-30.
 - Keep this on a trusted network. The controller has **no authentication** —
   anything that can reach it can run your shower.
 - Do not leave the shower able to start unattended.

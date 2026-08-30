@@ -11,7 +11,7 @@
  *   npm run selftest -- --api http://127.0.0.1:5180
  */
 import { kohlerGet, DEFAULT_HOST } from '../server/kohler-client.mjs';
-import { CGI, MAX_RISK, checkAccess, exposedEndpoints } from '../server/cgi-safety.mjs';
+import { CGI, MAX_RISK, checkAccess, checkParams, exposedEndpoints } from '../server/cgi-safety.mjs';
 
 const args = process.argv.slice(2);
 const apiBase = args.includes('--api') ? args[args.indexOf('--api') + 1] : null;
@@ -84,6 +84,48 @@ check('unknown endpoints are refused by default', () => {
   assert(!checkAccess('made_up.cgi', 'command').allowed, 'unknown endpoint allowed');
   assert(!checkAccess('', 'read').allowed, 'empty name allowed');
   return 'deny by default';
+});
+
+check('every exposed endpoint constrains its parameters', () => {
+  const loose = exposedEndpoints().filter((e) => !e.params);
+  assert(loose.length === 0, `no parameter policy: ${loose.map((e) => e.name).join(', ')}`);
+  return `${exposedEndpoints().length} endpoints, all constrained`;
+});
+
+// save_variable.cgi is a generic write to any of 105 persistent config
+// variables wearing a 2/5 rating earned by the one write this app makes. These
+// run offline, against the policy itself: proving the command path live would
+// mean sending a command, and this script never does.
+check('save_variable.cgi accepts index 43 and nothing else', () => {
+  assert(checkParams('save_variable.cgi', { index: 43, value: 50 }).allowed, 'index 43 refused');
+  const accepted = [];
+  for (let index = 1; index <= 105; index++) {
+    if (checkParams('save_variable.cgi', { index, value: 50 }).allowed) accepted.push(index);
+  }
+  assert(
+    accepted.length === 1 && accepted[0] === 43,
+    `accepted indices ${accepted.join(', ')}, expected 43 only`,
+  );
+  assert(!checkParams('save_variable.cgi', { value: 50 }).allowed, 'index may be omitted');
+  return 'index 43 (amplifier volume) only';
+});
+
+check('the temperature ceiling cannot be raised through the proxy', () => {
+  // Index 39 is valve_max_temp. DISCLAIMER.md states this app clamps to the
+  // configured limit and never raises it; this is what makes that true.
+  for (const index of [39, 41, 61, 62, 86, 88, 99]) {
+    const gate = checkParams('save_variable.cgi', { index, value: 120 });
+    assert(!gate.allowed, `save_variable index ${index} is writable`);
+    assert(gate.status === 403, `index ${index} refused with ${gate.status}, expected 403`);
+  }
+  return 'valve_max_temp, auto_purge, calibration, runtime, wifi all refused';
+});
+
+check('exposed reads take no parameters', () => {
+  for (const e of exposedEndpoints().filter((x) => x.expose === 'read')) {
+    assert(!checkParams(e.name, { index: 39 }).allowed, `${e.name} accepts arbitrary parameters`);
+  }
+  return 'query strings refused on every read endpoint';
 });
 
 // --------------------------------------------------------------- values.cgi
@@ -288,6 +330,21 @@ if (apiBase) {
   } catch (err) {
     failures.push('read allowlist');
     console.log(`  FAIL read allowlist — ${err.message}`);
+  }
+
+  // Proves the middleware actually consults the parameter policy, not just that
+  // the policy is correct. Deliberately on a 0/5 read: if this gate were broken
+  // the worst case is one harmless values.cgi fetch. The equivalent probe on the
+  // command path would be sending a command, which this script never does.
+  try {
+    const r = await hit('/api/read/values.cgi?index=39');
+    check('the proxy enforces the parameter policy, not just the ratings', () => {
+      assert(r.status === 403, `expected 403, got ${r.status}`);
+      return 'query string on a read endpoint refused';
+    });
+  } catch (err) {
+    failures.push('parameter policy');
+    console.log(`  FAIL parameter policy — ${err.message}`);
   }
 } else {
   console.log('\nproxy — skipped (pass --api http://127.0.0.1:5180 to include it)');

@@ -1,5 +1,5 @@
 import { kohlerGet, DEFAULT_HOST } from './kohler-client.mjs';
-import { checkAccess, exposedEndpoints, MAX_RISK } from './cgi-safety.mjs';
+import { checkAccess, checkParams, exposedEndpoints, MAX_RISK } from './cgi-safety.mjs';
 import { traceNote, traceLine } from './trace.mjs';
 
 function send(res, status, payload) {
@@ -154,6 +154,8 @@ export function createKohlerMiddleware({ host = DEFAULT_HOST } = {}) {
       }
 
       // --- The safety policy itself, so the UI and tests can show it. ------
+      // Ratings and the per-endpoint parameter policy both, since a rating on
+      // its own says nothing about what arguments an endpoint will take.
       if (url.pathname === '/api/safety') {
         return send(res, 200, { ok: true, maxRisk: MAX_RISK, exposed: exposedEndpoints() });
       }
@@ -161,11 +163,16 @@ export function createKohlerMiddleware({ host = DEFAULT_HOST } = {}) {
       // --- Raw read passthrough (diagnostics). ----------------------------
       if (url.pathname.startsWith('/api/read/')) {
         const name = url.pathname.slice('/api/read/'.length);
-        const gate = checkAccess(name, 'read');
-        if (!gate.allowed) {
-          return send(res, gate.status, { ok: false, error: gate.reason, risk: gate.risk });
+        const query = Object.fromEntries(url.searchParams);
+        // Two questions, two answers, same 403: may this endpoint be read at
+        // all, and may it be read with these arguments. Every read endpoint
+        // exposed here takes no parameters, so the second refuses all of them.
+        for (const gate of [checkAccess(name, 'read'), checkParams(name, query)]) {
+          if (!gate.allowed) {
+            return send(res, gate.status, { ok: false, error: gate.reason, risk: gate.risk });
+          }
         }
-        const r = await kohlerGet(name, Object.fromEntries(url.searchParams), { host });
+        const r = await kohlerGet(name, query, { host });
         return send(res, 200, { ok: true, name, json: r.json, body: r.json ? undefined : r.body });
       }
 
@@ -178,6 +185,14 @@ export function createKohlerMiddleware({ host = DEFAULT_HOST } = {}) {
           return send(res, gate.status, { ok: false, error: gate.reason, risk: gate.risk });
         }
         const params = await readBody(req);
+        // The risk rating covers the endpoint, not its arguments. Without this
+        // second gate save_variable.cgi is a write to any of 105 persistent
+        // config variables, valve_max_temp included, wearing a 2/5 rating
+        // earned by the one write this app actually makes.
+        const args = checkParams(name, params);
+        if (!args.allowed) {
+          return send(res, args.status, { ok: false, error: args.reason, risk: args.risk });
+        }
         const r = await kohlerGet(name, params, { host, timeout: 12000, retries: 1 });
         // Any command may have moved something values.cgi reports (save_variable
         // certainly does), so drop the cache rather than serve a stale view.
