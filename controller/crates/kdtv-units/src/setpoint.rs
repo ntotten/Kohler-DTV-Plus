@@ -370,7 +370,7 @@ mod tests {
     }
 
     #[test]
-    fn the_ceiling_sits_below_the_scald_threshold_plus_nothing() {
+    fn req_valve_control_temp_03_the_ceiling_sits_below_the_scald_threshold_plus_nothing() {
         // 42.5 C is below 43 C, which is where water begins to scald. The valve's
         // own ceiling of 49 C is far above it and is never used as a limit.
         assert!(ValveSetpoint::CEILING.celsius() < crate::independent::SCALD_C);
@@ -500,7 +500,7 @@ mod tests {
         /// The property the encoder relies on: whatever comes in, what goes out
         /// is inside the clamp. No input reaches the wire outside 60..=85.
         #[test]
-        fn req_controller_design_clamp_01_no_input_escapes_the_valve_clamp(raw in 0u8..=255) {
+        fn req_valve_control_temp_02_req_controller_design_clamp_01_no_input_escapes_the_valve_clamp(raw in 0u8..=255) {
             let (v, _) = ValveSetpoint::clamped(Cx2::from_raw(raw));
             proptest::prop_assert!(v.wire() >= ValveSetpoint::FLOOR);
             proptest::prop_assert!(v.wire() <= ValveSetpoint::CEILING);

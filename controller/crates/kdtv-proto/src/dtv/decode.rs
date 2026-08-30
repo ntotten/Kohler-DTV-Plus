@@ -703,7 +703,7 @@ mod tests {
     /// The echo hazard. This build's converters present no local echo, but the
     /// decoder must survive one that does. `CORRECTIONS.md` item 3.
     #[test]
-    fn echo_bleed_before_a_response_still_decodes() {
+    fn req_controller_design_proto_06_echo_bleed_before_a_response_still_decodes() {
         let mut bytes = STATUS_REQUEST.to_vec(); // our own transmission, echoed
         bytes.extend_from_slice(STATUS_RESPONSE);
         let mut rx = feed(&bytes);

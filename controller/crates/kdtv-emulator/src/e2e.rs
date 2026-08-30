@@ -1695,7 +1695,7 @@ directory = \".e2e/logs\"
     /// and one answered transaction. Measured between decoded frames it is two
     /// transmissions zero milliseconds apart, the second unanswered.
     #[test]
-    fn two_frames_in_one_pump_read_are_two_transactions_not_one() {
+    fn req_dtv_plus_protocol_time_03_two_frames_in_one_pump_read_are_two_transactions_not_one() {
         let mut burst = poll_frame();
         burst.extend_from_slice(&poll_frame());
         let mut t = Transcript::new();

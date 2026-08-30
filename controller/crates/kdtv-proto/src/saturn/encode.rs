@@ -13,7 +13,7 @@
 //! flag or test harness can re-enable it.
 //!
 //! The full denied list is [`denied_control_bytes`](crate::saturn::denied_control_bytes),
-//! and [`req_controller_design_deny_01_no_denied_control_byte_is_reachable`] scans every frame this encoder
+//! and [`req_saturn_protocol_safe_03_req_controller_design_deny_01_no_denied_control_byte_is_reachable`] scans every frame this encoder
 //! can produce to prove none of them appears.
 //!
 //! The corresponding **reads** — calibration `0x10` and configuration `0x15` —
@@ -29,7 +29,7 @@
 //! `0x8B` temperature payload length, the `0x99` pause state byte, and the whole
 //! discovery sequence, whose printed frames are schematic rather than literal.
 //!
-//! [`req_controller_design_deny_01_no_denied_control_byte_is_reachable`]: self#tests
+//! [`req_saturn_protocol_safe_03_req_controller_design_deny_01_no_denied_control_byte_is_reachable`]: self#tests
 
 use crate::gate::TransmitAuthority;
 use crate::saturn::control::opcode;
@@ -1125,7 +1125,8 @@ mod tests {
     /// have to be weakened until it proved nothing. The control byte is the
     /// field that selects the operation, and it is the field that matters.
     #[test]
-    fn req_controller_design_deny_01_no_denied_control_byte_is_reachable() {
+    fn req_saturn_protocol_safe_03_req_controller_design_deny_01_no_denied_control_byte_is_reachable()
+     {
         let denied = denied_control_bytes();
         let mut frames = 0u32;
         for (e, valve_slots) in [(zone1(), &[1u8, 2, 3, 4, 5][..]), (zone2(), &[1, 2, 3][..])] {

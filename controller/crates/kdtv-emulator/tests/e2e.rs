@@ -508,7 +508,8 @@ fn each_link_polls_at_its_documented_cadence_and_no_faster() {
 /// pump interval are one transcript entry, and pairing entries would report the
 /// pipelining defect this test is named for as a single answered transaction.
 #[test]
-fn only_one_transaction_is_in_flight_per_link() {
+fn req_dtv_plus_protocol_time_03_req_controller_design_bus_01_only_one_transaction_is_in_flight_per_link()
+ {
     let Some(command) = daemon_or_skip("in-flight") else {
         return;
     };
@@ -572,7 +573,8 @@ fn only_one_transaction_is_in_flight_per_link() {
 /// non-empty, and the frame-level check below is what says nothing was
 /// *commanded* on them.
 #[test]
-fn a_wire_fault_on_zone_1_stops_zone_1_and_leaves_zone_2_and_steam_alone() {
+fn req_controller_design_svc_04_a_wire_fault_on_zone_1_stops_zone_1_and_leaves_zone_2_and_steam_alone()
+ {
     let Some(command) = daemon_or_skip("scoping") else {
         return;
     };
@@ -678,7 +680,8 @@ fn a_wire_fault_on_zone_1_stops_zone_1_and_leaves_zone_2_and_steam_alone() {
 /// the budget here is bounded well under the divergence dwell, and that bound
 /// is the assertion.
 #[test]
-fn the_independent_probe_stops_water_when_it_reads_hot_and_when_it_stops_reading() {
+fn req_controller_design_temp_01_the_independent_probe_stops_water_when_it_reads_hot_and_when_it_stops_reading()
+ {
     let Some(command) = daemon_or_skip("probe") else {
         return;
     };

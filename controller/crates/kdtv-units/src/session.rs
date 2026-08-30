@@ -140,7 +140,8 @@ mod tests {
     }
 
     #[test]
-    fn req_controller_design_sess_03_the_hard_limit_sits_below_the_prompt_three_stop() {
+    fn req_valve_control_timer_05_req_controller_design_sess_03_the_hard_limit_sits_below_the_prompt_three_stop()
+     {
         // The valve's own stop is 1800 s. Ours must be strictly below it so the
         // service stops first even if the valve's timer never becomes a backstop.
         assert!(SessionDuration::HARD_LIMIT.as_secs() < 1800);
@@ -171,7 +172,7 @@ mod tests {
     }
 
     #[test]
-    fn steam_default_is_ten_minutes() {
+    fn req_hardware_spec_steam_11_steam_default_is_ten_minutes() {
         assert_eq!(SteamMinutes::default().wire(), 10);
         assert_eq!(
             SteamMinutes::DEFAULT.as_duration(),

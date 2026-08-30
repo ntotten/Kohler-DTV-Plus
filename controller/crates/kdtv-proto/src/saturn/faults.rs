@@ -407,7 +407,7 @@ mod tests {
     /// `ERR-02` / `CORRECTIONS.md` item 4. The load-bearing test: no byte, under
     /// either table, produces a disposition that says the valve is well.
     #[test]
-    fn no_error_byte_reports_health_under_either_table() {
+    fn req_saturn_protocol_err_02_no_error_byte_reports_health_under_either_table() {
         for table in [ErrorTable::SaturnProtocol, ErrorTable::ValveControl] {
             for b in 0u8..=255 {
                 let d = RawErrorByte(b).disposition(table);
@@ -453,7 +453,7 @@ mod tests {
     /// `ERR-06`. WELDED is unrecoverable under the table that names it, and the
     /// retry engine can see that without a string comparison.
     #[test]
-    fn welded_is_unrecoverable_and_never_retried() {
+    fn req_valve_control_err_06_welded_is_unrecoverable_and_never_retried() {
         let d = RawErrorByte(35).disposition(ErrorTable::ValveControl);
         assert!(matches!(d, FaultDisposition::Unrecoverable { .. }));
         assert!(!d.is_retryable());
@@ -519,7 +519,7 @@ mod tests {
 
     /// `ERR-04`. Exhaustive: 248 of 256 bytes are unknown to this table.
     #[test]
-    fn valve_control_table_maps_all_256_bytes_without_a_default() {
+    fn req_saturn_protocol_err_02_valve_control_table_maps_all_256_bytes_without_a_default() {
         let documented: &[u8] = &[0, 1, 3, 7, 35, 36, 60, 71];
         let mut unknown = 0u32;
         for b in 0u8..=255 {

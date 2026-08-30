@@ -761,7 +761,8 @@ fn req_controller_design_sess_01_a_session_expires_at_exactly_twelve_hundred_sec
 }
 
 #[test]
-fn req_controller_design_sess_03_no_timer_refresh_is_emitted_over_a_twenty_two_minute_run() {
+fn req_valve_control_timer_02_req_controller_design_sess_03_no_timer_refresh_is_emitted_over_a_twenty_two_minute_run()
+ {
     let mut r = Rig::new();
     r.boot();
     // How many operations boot sent, not how many of them were writes: this is
@@ -888,7 +889,8 @@ fn matrix_case(fault: impl FnOnce(&mut Rig)) -> Rig {
 }
 
 #[test]
-fn a_malformed_length_takes_the_zone_off_and_latches_it() {
+fn req_valve_control_safe_01_req_controller_design_valid_02_a_malformed_length_takes_the_zone_off_and_latches_it()
+ {
     let r = matrix_case(|r| {
         // DATA_LEN 0x20 cannot fit the 20-byte frame maximum.
         let mut rx = RxBuffer::new();
@@ -915,7 +917,7 @@ fn a_malformed_length_takes_the_zone_off_and_latches_it() {
 }
 
 #[test]
-fn a_checksum_failure_on_a_write_is_its_own_event() {
+fn req_controller_design_valid_02_a_checksum_failure_on_a_write_is_its_own_event() {
     let mut r = Rig::new();
     r.boot_other();
     r.boot();
@@ -1047,7 +1049,7 @@ fn a_partial_frame_never_completes_and_the_zone_latches_on_the_missing_response(
 }
 
 #[test]
-fn a_missing_response_exhausts_the_retry_budget_and_latches() {
+fn req_valve_control_safe_01_a_missing_response_exhausts_the_retry_budget_and_latches() {
     let mut r = Rig::new();
     r.boot_other();
     r.boot();
@@ -1125,7 +1127,8 @@ fn overrunning_the_transaction_budget_is_a_link_fault_and_is_logged_as_one() {
 }
 
 #[test]
-fn a_valve_fault_bitmap_takes_the_zone_off_and_latches_it() {
+fn req_valve_control_err_05_req_controller_design_valid_02_a_valve_fault_bitmap_takes_the_zone_off_and_latches_it()
+ {
     let mut r = Rig::new();
     r.boot_other();
     r.boot();
@@ -1160,7 +1163,8 @@ fn a_valve_fault_bitmap_takes_the_zone_off_and_latches_it() {
 }
 
 #[test]
-fn a_temperature_the_valve_could_not_be_delivering_is_out_of_range() {
+fn req_controller_design_valid_02_a_temperature_the_valve_could_not_be_delivering_is_out_of_range()
+{
     let mut r = Rig::new();
     r.boot_other();
     r.boot();
@@ -1653,7 +1657,8 @@ fn req_steam_adapter_steam_20_a_steam_session_stops_at_its_own_limit() {
 }
 
 #[test]
-fn a_port_carrying_the_wrong_device_is_refused_rather_than_enrolled() {
+fn req_controller_design_boot_02_a_port_carrying_the_wrong_device_is_refused_rather_than_enrolled()
+{
     let mut r = SteamRig::new();
     r.feed(SteamEvent::Tick);
     r.advance(Duration::from_millis(20));

@@ -271,7 +271,7 @@ mod tests {
 
     /// The refusal the read-back exists for.
     #[test]
-    fn a_latency_timer_that_does_not_stick_refuses_the_start() {
+    fn req_controller_design_ser_03_a_latency_timer_that_does_not_stick_refuses_the_start() {
         let (fs, bound) = bind("latency-stuck", &[(Z1, &format!("{W}-if00-port0"))]);
         let err = harden(&bound[0], &fs).unwrap_err();
         match err {

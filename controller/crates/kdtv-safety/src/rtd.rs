@@ -186,7 +186,7 @@ mod tests {
     }
 
     #[test]
-    fn two_seconds_over_the_corrected_trip_stops_the_zone() {
+    fn req_hardware_spec_safe_02_two_seconds_over_the_corrected_trip_stops_the_zone() {
         let mut w = watch();
         assert!(w.observe(sample(46.0, 0), true, None).is_empty());
         assert!(w.observe(sample(46.0, 1_900), true, None).is_empty());
@@ -213,7 +213,8 @@ mod tests {
     }
 
     #[test]
-    fn the_corrected_check_is_gated_on_the_outlet_but_the_raw_backstop_is_not() {
+    fn req_hardware_spec_safe_03_the_corrected_check_is_gated_on_the_outlet_but_the_raw_backstop_is_not()
+     {
         let mut w = watch();
         // Outlet closed: no corrected trip even after a long dwell.
         w.observe(sample(46.0, 0), false, None);
@@ -231,7 +232,7 @@ mod tests {
     }
 
     #[test]
-    fn a_faulted_amplifier_suppresses_every_other_judgement() {
+    fn req_hardware_spec_safe_04_a_faulted_amplifier_suppresses_every_other_judgement() {
         let mut w = watch();
         let out = w.observe(
             RtdSample {
@@ -254,7 +255,8 @@ mod tests {
     }
 
     #[test]
-    fn divergence_needs_ten_seconds_and_a_valve_reading_to_compare_against() {
+    fn req_hardware_spec_safe_06_divergence_needs_ten_seconds_and_a_valve_reading_to_compare_against()
+     {
         let mut w = watch();
         // No valve reading: nothing to diverge from.
         assert!(w.observe(sample(40.0, 0), true, None).is_empty());
@@ -277,7 +279,7 @@ mod tests {
     }
 
     #[test]
-    fn starvation_is_measured_from_the_last_sample() {
+    fn req_hardware_spec_safe_05_starvation_is_measured_from_the_last_sample() {
         let mut w = watch();
         assert!(w.has_never_sampled());
         w.observe(sample(38.0, 0), true, None);

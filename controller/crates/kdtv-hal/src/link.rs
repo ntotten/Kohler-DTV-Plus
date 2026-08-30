@@ -393,7 +393,7 @@ mod tests {
     const Z1: LinkKind = LinkKind::Zone(ZoneId::Zone1);
 
     #[test]
-    fn both_links_are_9600_8n1_from_the_protocol_constants() {
+    fn req_dtv_plus_protocol_cmd_06_both_links_are_9600_8n1_from_the_protocol_constants() {
         let saturn = LineSettings::for_link(Z1);
         let steam = LineSettings::for_link(LinkKind::Steam);
         assert_eq!(saturn.baud, kdtv_proto::saturn::BAUD);

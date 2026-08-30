@@ -473,7 +473,7 @@ mod tests {
     /// `CORRECTIONS.md` item 1, at the type level. Two variants, two bytes,
     /// and `0xCC` is not among them.
     #[test]
-    fn the_encodable_operation_states_are_off_and_on_only() {
+    fn req_controller_design_deny_08_the_encodable_operation_states_are_off_and_on_only() {
         assert_eq!(SteamOpState::ALL.len(), 2);
         assert_eq!(SteamOpState::Off.wire(), 0x00);
         assert_eq!(SteamOpState::On.wire(), 0xFF);
@@ -660,7 +660,7 @@ mod tests {
     /// `STEAM-ADAPTER.md` § 10.8. The firmware floor is decodable and is not a
     /// reachable setpoint.
     #[test]
-    fn an_out_of_policy_setpoint_decodes_and_is_flagged() {
+    fn req_steam_adapter_limit_04_an_out_of_policy_setpoint_decodes_and_is_flagged() {
         let low = SteamStatus::decode(&[0x96, FIRMWARE_MIN_SETPOINT_FX2, 0x00, 0, 0, 0]).unwrap();
         assert_eq!(low.desired.raw(), 150);
         assert!(!low.setpoint_is_in_policy());

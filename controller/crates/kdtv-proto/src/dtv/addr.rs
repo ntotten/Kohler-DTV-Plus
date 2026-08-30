@@ -232,7 +232,7 @@ mod tests {
     /// reference topology assigns is `0x03`, and the two are different types
     /// holding different numbers.
     #[test]
-    fn the_steam_device_id_is_not_the_steam_bus_address() {
+    fn req_steam_adapter_addr_05_the_steam_device_id_is_not_the_steam_bus_address() {
         assert_eq!(DeviceId::STEAM_GENERATOR.get(), 0x05);
         assert_eq!(DevAddr::REFERENCE.get(), 0x03);
         assert_ne!(DeviceId::STEAM_GENERATOR.get(), DevAddr::REFERENCE.get());

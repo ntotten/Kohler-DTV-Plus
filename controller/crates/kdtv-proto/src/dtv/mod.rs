@@ -165,7 +165,7 @@ mod tests {
     /// root under their documented names, so a reviewer can find them without
     /// reading the module tree.
     #[test]
-    fn the_public_surface_names_the_contradictions() {
+    fn req_saturn_protocol_err_01_the_public_surface_names_the_contradictions() {
         assert_eq!(SteamOp::ALL.len(), 8);
         assert_eq!(allowlisted_opcodes().len(), 7);
         assert_eq!(discovery_opcodes().len(), 3);
@@ -319,7 +319,7 @@ mod tests {
     /// frame types are different types, and the discovery token that authorises
     /// address management on one link is refused on the other.
     #[test]
-    fn nothing_on_the_steam_path_can_open_a_valve() {
+    fn req_hardware_spec_steam_15_nothing_on_the_steam_path_can_open_a_valve() {
         // SteamOp has no variant that resolves to a Saturn control byte, and no
         // Saturn opcode appears in the DTV+ reachable set.
         let steam_opcodes: Vec<u8> = SteamOp::ALL.iter().map(|k| k.opcode()).collect();
