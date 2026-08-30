@@ -10,6 +10,86 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ---
 
+## 2026-08-30
+
+### 00:31 — A marker for `!Clone` was really a marker for `!Send`
+
+The three authority types in `kdtv-safety` — `OpenGrant`, `StartAuthorization`,
+`OperatorAck` — each carried a `PhantomData<*const ()>` field, documented as "a
+`!Clone`, `!Copy` marker". It was not one. Every field of all three is already
+private and none derives `Clone`, so they were unforgeable and uncloneable
+without it; the compile-fail programs that prove this still pass with the field
+removed. What the raw pointer actually did was make the types `!Send` and
+`!Sync`.
+
+That surfaced as an architectural constraint nobody had chosen.
+`StartAuthorization` is minted by the API layer and consumed by the service, so
+it crosses a channel. `ZoneMachine` holds an `OpenGrant`, so every zone machine
+was `!Send` and all three link tasks would have been pinned to one thread — a
+runtime decision inherited from a comment that was describing the wrong
+mechanism.
+
+The test standing beside it asserted nothing:
+
+```rust
+fn assert_not_copy<T>() {}       // no bound on T
+assert_not_copy::<OpenGrant>();  // ...would also accept i32
+```
+
+It is replaced by one that can be written as a bound and would have caught this:
+the three authorities are `Send`. `!Clone` and `!Copy` have no stable spelling as
+a bound, so that claim stays where it can actually be made — in the compile-fail
+programs.
+
+**Why it matters:** a safety property expressed in the type system is only worth
+what the mechanism actually does. This one was costing a real design constraint
+while providing nothing, and the test that was supposed to guard it was a
+tautology.
+
+### 00:24 — Two verification scripts that were not verifying
+
+`scripts/test.sh` opens by claiming it runs the same checks as CI, in the same
+order, so that a green run locally means a green run there. It did not. It still
+carried a `grep` for the TOML spelling `provenance = "captured"` against fixture
+files that are JSON — the check that was replaced in the workflow after it was
+found to match nothing and report success regardless — and it never ran the
+dependency-graph audit or the requirements register at all. The local gate was
+weaker than the remote one in exactly the two places that guard the transmit
+gate and the architecture.
+
+`scripts/check-staged.sh` had a different failure: it reported correctly
+formatted files as unformatted. It materialised staged files into a temporary
+tree one at a time and checked each as it landed, and `rustfmt` follows `mod`
+declarations — so a `lib.rs` staged alongside two new submodules was checked
+before either existed, could not resolve the modules, and exited non-zero. The
+script read that as "unformatted" and advised running `cargo fmt`, which was a
+no-op. It now writes the whole index tree first and distinguishes "rustfmt could
+not read this" from "this differs from what rustfmt would emit".
+
+**Why it matters:** both scripts were green and both were lying, in opposite
+directions. A check that cannot fail and a check that fails for the wrong reason
+cost the same thing — you stop reading the output.
+
+### 00:05 — An hour of state-machine work destroyed, and most of it recovered
+
+Two agents were writing different crates in one working tree. To commit one
+cleanly, this session ran `git stash push -u` over the other's directory. That
+reverted a file the second agent was actively editing, and it spent the next
+three minutes rebuilding against a `lib.rs` that no longer declared its modules.
+Later, `zone.rs` — 64 KB, the whole valve state machine — vanished from disk
+entirely. It was recovered byte-for-byte from the stash; two tests did not
+survive.
+
+The agent's own account records the same class of event from the other side: its
+untracked files were wiped once by a `git clean` when another agent's commits
+landed on the tree.
+
+**Why it matters:** the tree is shared state and the git commands that tidy it
+are not read-only. Nothing here was lost to a bug in the code; it was lost to
+housekeeping. Untracked work now gets copied aside before any command that
+rewrites the tree touches it, and work is committed at each crate boundary
+rather than accumulated.
+
 ## 2026-08-29
 
 ### 23:02 — The replacement controller's software exists, and it cannot reach a valve
