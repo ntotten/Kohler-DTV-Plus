@@ -216,9 +216,7 @@ fn build_runtime() -> std::io::Result<tokio::runtime::Runtime> {
 
 /// Open the links, start the service, serve the API, and stop the water.
 async fn serve(cli: &Cli) -> Result<u8> {
-    use kdtv_hal::{
-        FileIdStore, LinuxClock, LinuxLinkFactory, RealSysfs, SystemdWatchdog, Watchdog as _,
-    };
+    use kdtv_hal::{FileIdStore, LinuxLinkFactory, RealSysfs, SystemdWatchdog, Watchdog as _};
     use kdtv_service::{Deps, Service, Started};
 
     // 1. Everything --check-only does. Nothing is opened until all five pass,
@@ -247,7 +245,7 @@ async fn serve(cli: &Cli) -> Result<u8> {
         );
     }
     let deps = Deps {
-        clock: Arc::new(LinuxClock::systemd()),
+        clock: Arc::clone(&checked.clock),
         watchdog,
         rtd: std::mem::take(&mut checked.rtd),
     };
@@ -400,17 +398,16 @@ impl CommandIds for DurableIds {
     }
 }
 
-/// The independent temperature channels. **This build has none.**
+/// The independent temperature channels.
 ///
-/// `kdtv-hal` ships no `RtdChannel` implementation: the MAX31865 driver has not
-/// been written. It cannot be written in this crate either — an SPI transfer
-/// needs either `unsafe`, which the workspace denies, or a driver crate, and
-/// `rppal` is banned from the daemon's dependency graph and `linux-embedded-hal`
-/// is deliberately absent from `kdtv-hal` (see `kdtv_hal::rtd::NO_GPIO_OUTPUT`).
-/// So this refuses, and says exactly what is missing.
+/// **On hardware this build has none.** `kdtv-hal` ships no `RtdChannel` for the
+/// MAX31865: an SPI transfer needs either `unsafe`, which the workspace denies,
+/// or a driver crate, and `rppal` is banned from the daemon's dependency graph
+/// while `linux-embedded-hal` is deliberately absent from `kdtv-hal` (see
+/// `kdtv_hal::rtd::NO_GPIO_OUTPUT`). So this refuses and says what is missing.
 ///
 /// **It refuses rather than returning a plausible number.** `kdtv-service`
-/// already declines to start a zone with no channel
+/// declines to start a zone with no channel
 /// (`kdtv_service::StartError::NoProbe`), because the interlock covers the
 /// instrumented outlet and nothing else covers it. A stub reading would satisfy
 /// that check while removing the only measurement in this system that is
@@ -418,10 +415,43 @@ impl CommandIds for DurableIds {
 /// channel exists (`LOG-10`: the sensor has no actuation authority and its only
 /// output is a safety event).
 ///
-/// The gap is `kdtv-hal`'s to close.
+/// **On a bench it reads files the harness writes.** `bench.probe_dir` names a
+/// directory, and `kdtv_hal::FileRtdChannel` reads a real number out of it, so
+/// an emulated run drives the same escalations hardware would: past the
+/// corrected trip, past the raw backstop, a gap past the starvation window, a
+/// fault register with bits in it. That key lives in the `[bench]` table, which
+/// `kdtv-config` refuses outright under `profile = "production"`, and there is
+/// no other key for it — so this cannot become the probe in a real bathroom.
+///
+/// The hardware gap is still `kdtv-hal`'s to close.
 fn rtd_channels(
     config: &kdtv_config::ValidatedConfig,
+    clock: &Arc<dyn kdtv_hal::Clock>,
 ) -> Result<Vec<Box<dyn kdtv_hal::RtdChannel>>> {
+    if let Some(dir) = config.bench_probe_dir() {
+        return kdtv_units::ZoneId::ALL
+            .iter()
+            .map(|zone| {
+                let ch = kdtv_hal::FileRtdChannel::new(*zone, dir, Arc::clone(clock));
+                // Read once here rather than discovering at the first sample
+                // that the harness never wrote the file. A zone whose probe
+                // never speaks does not start, and finding that out during
+                // validation is the difference between a refusal and a latch.
+                if !ch.path().is_file() {
+                    return Err(CheckFailure::Hardware(format!(
+                        "bench.probe_dir names {}, but {} does not exist. The harness \
+                         writes one file per zone before the daemon starts.",
+                        dir.display(),
+                        kdtv_hal::FileRtdChannel::path_for(dir, *zone).display()
+                    ))
+                    .into());
+                }
+                let boxed: Box<dyn kdtv_hal::RtdChannel> = Box::new(ch);
+                Ok(boxed)
+            })
+            .collect();
+    }
+
     let named: Vec<String> = kdtv_units::ZoneId::ALL
         .iter()
         .map(|zone| format!("{zone} on {}", config.sensor(*zone).chip_select()))
@@ -540,6 +570,10 @@ struct Checked {
     config: kdtv_config::ValidatedConfig,
     bindings: Vec<PortBinding>,
     authority: TransmitAuthority,
+    /// Built during validation and carried forward, so the run path uses the
+    /// clock the checks used. Two clocks would mean two monotonic origins, and
+    /// a sample stamped by one compared against a deadline from the other.
+    clock: Arc<dyn kdtv_hal::Clock>,
     /// The independent temperature channels, probed during validation because
     /// the run path cannot start a zone without them.
     rtd: Vec<Box<dyn kdtv_hal::RtdChannel>>,
@@ -552,6 +586,8 @@ struct Checked {
 /// then starts against.
 fn validate(path: &std::path::Path, how: Reporting) -> Result<Checked> {
     use kdtv_hal::{RealSysfs, bindings_of, resolve_distinct};
+
+    let clock: Arc<dyn kdtv_hal::Clock> = Arc::new(kdtv_hal::LinuxClock::systemd());
 
     how.say(&format!("config: {}", path.display()));
 
@@ -583,12 +619,13 @@ fn validate(path: &std::path::Path, how: Reporting) -> Result<Checked> {
         }
     };
 
-    let (authority, rtd) = check_beyond_the_devices(&config, how)?;
+    let (authority, rtd) = check_beyond_the_devices(&config, &clock, how)?;
 
     Ok(Checked {
         config,
         bindings,
         authority,
+        clock,
         rtd,
     })
 }
@@ -606,6 +643,7 @@ fn validate(path: &std::path::Path, how: Reporting) -> Result<Checked> {
 /// deployment can actually correct.
 fn check_beyond_the_devices(
     config: &kdtv_config::ValidatedConfig,
+    clock: &Arc<dyn kdtv_hal::Clock>,
     how: Reporting,
 ) -> Result<(TransmitAuthority, Vec<Box<dyn kdtv_hal::RtdChannel>>)> {
     // 3. The credential. Read and dropped: nothing here retains it, and
@@ -645,7 +683,7 @@ fn check_beyond_the_devices(
     // 5. The independent temperature channels. The run path cannot start a zone
     //    without one, so a pre-flight that does not ask for them reports
     //    success for a service that will not run.
-    let rtd = rtd_channels(config)?;
+    let rtd = rtd_channels(config, clock)?;
     how.say(&format!(
         "ok  {} independent temperature channel(s)",
         rtd.len()
@@ -763,6 +801,12 @@ fn gate_request(cfg: &kdtv_config::TransmitGateConfig) -> kdtv_proto::gate::Tran
 mod tests {
     use super::*;
 
+    /// A clock for the checks that take one. The real one reads systemd's
+    /// environment, which a test runner does not have.
+    fn test_clock() -> Arc<dyn kdtv_hal::Clock> {
+        Arc::new(kdtv_hal::LinuxClock::systemd())
+    }
+
     #[test]
     fn the_exit_codes_are_distinct() {
         // A deployment script branches on these, so two meaning the same thing
@@ -873,7 +917,7 @@ mod tests {
         let Some(config) = production_config() else {
             return;
         };
-        let err = rtd_channels(&config).expect_err("this build has no RTD channel");
+        let err = rtd_channels(&config, &test_clock()).expect_err("this build has no RTD channel");
         assert_eq!(
             err.downcast_ref::<CheckFailure>().map(CheckFailure::code),
             Some(exit::HARDWARE)
@@ -943,7 +987,7 @@ mod tests {
         let Some(config) = production_config_with(&token) else {
             return;
         };
-        let err = check_beyond_the_devices(&config, Reporting::Log)
+        let err = check_beyond_the_devices(&config, &test_clock(), Reporting::Log)
             .expect_err("this build has no independent temperature channel");
         assert_eq!(
             err.downcast_ref::<CheckFailure>().map(CheckFailure::code),
@@ -961,7 +1005,7 @@ mod tests {
         let Some(config) = production_config_with(&token) else {
             return;
         };
-        let err = check_beyond_the_devices(&config, Reporting::Log)
+        let err = check_beyond_the_devices(&config, &test_clock(), Reporting::Log)
             .expect_err("seven bytes is not a credential for something that runs a shower");
         assert_eq!(
             err.downcast_ref::<CheckFailure>().map(CheckFailure::code),
@@ -986,7 +1030,7 @@ mod tests {
             let Some(config) = production_config_with(&token) else {
                 return;
             };
-            let err = check_beyond_the_devices(&config, Reporting::Log)
+            let err = check_beyond_the_devices(&config, &test_clock(), Reporting::Log)
                 .expect_err("a credential the group can read must be refused");
             assert_eq!(
                 err.downcast_ref::<CheckFailure>().map(CheckFailure::code),

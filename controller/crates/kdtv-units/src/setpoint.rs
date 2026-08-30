@@ -19,14 +19,23 @@ pub enum Bound {
 /// raw value would round the number in the message and could produce
 /// "85 is above the ceiling of 85" for a request of 108.6 °F.
 ///
+/// ~~The requested value was formatted `{:.1}`.~~ Superseded: that reproduced
+/// the same defect one decimal place further down. A request of 108.51 °F is
+/// refused — correctly, the ceiling is checked before rounding — and rendered
+/// "108.5 °F is above the 108.5 °F ceiling", which reads to an operator as a
+/// system that cannot compare two numbers. The requested value is now printed
+/// to two places and the bound to one, because they are different kinds of
+/// number: one is what someone asked for and the other is a property of the
+/// `Cx2` encoding, which has nothing below a half degree Celsius.
+///
 /// Not `Eq`: the requested value is a float.
 #[derive(Copy, Clone, PartialEq, Debug, thiserror::Error)]
 pub enum FahrenheitError {
     #[error("{requested} is not a temperature")]
     NotATemperature { requested: f32 },
-    #[error("{requested:.1} °F is below the {floor:.1} °F floor")]
+    #[error("{requested:.2} °F is below the {floor:.1} °F floor")]
     BelowFloor { requested: f32, floor: f32 },
-    #[error("{requested:.1} °F is above the {ceiling:.1} °F ceiling")]
+    #[error("{requested:.2} °F is above the {ceiling:.1} °F ceiling")]
     AboveCeiling { requested: f32, ceiling: f32 },
 }
 
@@ -328,6 +337,28 @@ impl SteamSetpoint {
 
 #[cfg(test)]
 mod tests {
+    /// A refusal must not read as "108.5 is above 108.5".
+    ///
+    /// The requested value and the bound are rendered at different precisions
+    /// on purpose: a request just over the ceiling is refused before rounding,
+    /// so the two are genuinely different numbers and a message that showed
+    /// them as equal would look like a broken comparison rather than a refused
+    /// request.
+    #[test]
+    fn a_refusal_names_a_number_different_from_the_bound_it_refuses() {
+        let err = ValveSetpoint::from_fahrenheit(108.51).expect_err("above the ceiling");
+        let text = err.to_string();
+        assert!(text.contains("108.51"), "{text}");
+        assert!(
+            !text.contains("108.50 °F is above the 108.5"),
+            "the requested value must not render as the bound: {text}"
+        );
+
+        let low = ValveSetpoint::from_fahrenheit(85.99).expect_err("below the floor");
+        let text = low.to_string();
+        assert!(text.contains("85.99"), "{text}");
+    }
+
     use super::*;
 
     #[test]

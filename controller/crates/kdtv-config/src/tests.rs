@@ -584,9 +584,13 @@ fn a_commissioned_correction_curve_loads() {
 /// durations shrink, wire-class deadlines do not.
 #[test]
 fn a_bench_scale_shortens_sessions_and_leaves_the_bus_alone() {
+    // The committed bench file carries its own `[bench]` table, so this edits
+    // the scale in place. Prepending a second table — which this did until the
+    // file gained one — is a duplicate key, and the parse error names the key
+    // rather than the mistake.
     let text = std::fs::read_to_string(EMULATED_TOML).unwrap().replacen(
-        "profile = \"bench\"",
-        "profile = \"bench\"\n[bench]\nsession_scale = 0.01",
+        "session_scale = 1.0",
+        "session_scale = 0.01",
         1,
     );
     let c = ValidatedConfig::from_str_with(&text, Path::new(EMULATED_TOML), &bench_fs()).unwrap();
@@ -610,9 +614,13 @@ fn a_bench_scale_shortens_sessions_and_leaves_the_bus_alone() {
 
 #[test]
 fn a_scale_above_one_is_refused_even_on_the_bench() {
+    // The committed bench file carries its own `[bench]` table, so this edits
+    // the scale in place. Prepending a second table — which this did until the
+    // file gained one — is a duplicate key, and the parse error names the key
+    // rather than the mistake.
     let text = std::fs::read_to_string(EMULATED_TOML).unwrap().replacen(
-        "profile = \"bench\"",
-        "profile = \"bench\"\n[bench]\nsession_scale = 2.0",
+        "session_scale = 1.0",
+        "session_scale = 2.0",
         1,
     );
     let err =

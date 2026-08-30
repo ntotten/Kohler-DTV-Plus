@@ -125,6 +125,7 @@ pub struct ValidatedConfig {
     logging: LoggingConfig,
     bounds: Bounds,
     timing: TimingConfig,
+    bench_probe_dir: Option<PathBuf>,
 }
 
 impl ValidatedConfig {
@@ -155,12 +156,15 @@ impl ValidatedConfig {
         let profile = raw.profile;
 
         // --- time scaling -------------------------------------------------
-        let scale = match raw.bench {
-            None => SessionScale::UNSCALED,
+        let (scale, bench_probe_dir) = match raw.bench {
+            None => (SessionScale::UNSCALED, None),
             Some(_) if profile.is_production() => {
                 return Err(ConfigError::BenchTableUnderProduction);
             }
-            Some(b) => SessionScale::try_new(b.session_scale)?,
+            Some(b) => (
+                SessionScale::try_new(b.session_scale)?,
+                b.probe_dir.map(PathBuf::from),
+            ),
         };
 
         // --- zones --------------------------------------------------------
@@ -263,6 +267,7 @@ impl ValidatedConfig {
             logging,
             bounds,
             timing,
+            bench_probe_dir,
         })
     }
 
@@ -324,6 +329,33 @@ impl ValidatedConfig {
     #[must_use]
     pub const fn timing(&self) -> &TimingConfig {
         &self.timing
+    }
+
+    /// Where the harness writes each zone's independent temperature, if this is
+    /// a bench configuration that supplies one.
+    ///
+    /// # Why a file is allowed to be a safety input here, and only here
+    ///
+    /// The independent probe is the one measurement in this system that does
+    /// not come from the valve, and `kdtvd` refuses to start a zone without one
+    /// (`kdtv_service::StartError::NoProbe`). No `RtdChannel` for the MAX31865
+    /// exists yet, so on a bench there is nothing to read — and a stub that
+    /// returned a plausible number would satisfy the interlock while removing
+    /// the thing it interlocks on.
+    ///
+    /// This names a directory the harness writes real numbers into, so the
+    /// emulated run exercises the same escalation paths as hardware: a value
+    /// past the trip, a gap past the starvation window, a fault register. It
+    /// lives under `[bench]`, which [`ConfigError::BenchTableUnderProduction`]
+    /// refuses outright under `profile = "production"` — the same refusal that
+    /// keeps scaled session timers off a real bathroom. There is no key for it
+    /// outside that table, so a production file cannot name one.
+    ///
+    /// It is the same shape as the port placeholders: the bench configuration
+    /// names something the harness supplies, and production names hardware.
+    #[must_use]
+    pub fn bench_probe_dir(&self) -> Option<&Path> {
+        self.bench_probe_dir.as_deref()
     }
 
     /// The session limit, with the bench scale applied.

@@ -40,6 +40,10 @@ pub(crate) struct RawBench {
     /// Applied to session-class durations and to nothing else. See
     /// [`crate::timing`].
     pub(crate) session_scale: f64,
+    /// Where the harness writes each zone's independent temperature, in place
+    /// of a MAX31865 on the SPI bus. See
+    /// [`ValidatedConfig::bench_probe_dir`](crate::ValidatedConfig::bench_probe_dir).
+    pub(crate) probe_dir: Option<String>,
 }
 
 /// Optional narrowing of the compiled-in safety bounds. Every field may only

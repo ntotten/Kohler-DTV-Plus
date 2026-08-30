@@ -39,10 +39,13 @@
 //! temperatures.
 
 use std::fmt;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use kdtv_telemetry::Monotonic;
 use kdtv_units::{RawC, ZoneId};
 
+use crate::clock::Clock;
 use crate::link::BoxedFuture;
 
 /// A SPI chip select, as the kernel names it.
@@ -300,6 +303,118 @@ impl RtdError {
 mod tests {
     use super::*;
 
+    /// A clock whose only job is to stamp a sample.
+    #[derive(Debug)]
+    struct FixedClock;
+    impl Clock for FixedClock {
+        fn monotonic(&self) -> Monotonic {
+            Monotonic::from_nanos(1_000_000_000)
+        }
+        fn wall(&self) -> crate::clock::WallClock {
+            crate::clock::WallClock::new(
+                jiff::Timestamp::UNIX_EPOCH,
+                kdtv_telemetry::NtpSync::Unsynchronised,
+            )
+        }
+        fn sleep_until(&self, _deadline: Monotonic) -> BoxedFuture<'static, ()> {
+            Box::pin(async {})
+        }
+    }
+
+    fn probe(dir: &Path, contents: &str) -> FileRtdChannel {
+        let ch = FileRtdChannel::new(ZoneId::Zone1, dir, Arc::new(FixedClock));
+        std::fs::write(ch.path(), contents).expect("write the probe file");
+        ch
+    }
+
+    fn read(ch: &mut FileRtdChannel) -> Result<RtdSample, RtdError> {
+        futures_lite_block_on(ch.sample())
+    }
+
+    /// The channel's future does no I/O awaiting, so a minimal executor is
+    /// enough and the tests need no runtime.
+    fn futures_lite_block_on<T>(fut: BoxedFuture<'_, T>) -> T {
+        use std::task::{Context, Poll, Wake, Waker};
+        struct Noop;
+        impl Wake for Noop {
+            fn wake(self: Arc<Self>) {}
+        }
+        let waker = Waker::from(Arc::new(Noop));
+        let mut cx = Context::from_waker(&waker);
+        let mut fut = fut;
+        loop {
+            match fut.as_mut().poll(&mut cx) {
+                Poll::Ready(v) => return v,
+                Poll::Pending => std::hint::spin_loop(),
+            }
+        }
+    }
+
+    #[test]
+    fn a_bench_probe_reads_the_number_something_else_wrote() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut ch = probe(dir.path(), "38.5\n");
+        let s = read(&mut ch).expect("a written file reads");
+        assert!((s.raw.0 - 38.5).abs() < f32::EPSILON, "{:?}", s.raw);
+        assert!(s.fault.is_clear());
+        assert_eq!(s.zone, ZoneId::Zone1);
+    }
+
+    #[test]
+    fn a_fault_register_can_be_written_beside_the_reading() {
+        let dir = tempfile::tempdir().unwrap();
+        // An open probe reads low with a fault bit set — the case the module
+        // docs say no threshold would catch on the temperature alone.
+        let mut ch = probe(dir.path(), "12.0 0x04\n");
+        let s = read(&mut ch).expect("a written file reads");
+        assert!(!s.fault.is_clear());
+        assert!(s.fault.indicates_wiring_fault());
+    }
+
+    /// An absent or unreadable file is a failed transfer, not a missing sample.
+    ///
+    /// The distinction is five seconds: a `Transfer` error escalates on the next
+    /// pass, and a silently absent sample would look like starvation and take
+    /// `RTD_STARVATION` to be noticed.
+    #[test]
+    fn a_missing_or_malformed_probe_file_is_a_failed_transfer() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut absent = FileRtdChannel::new(ZoneId::Zone1, dir.path(), Arc::new(FixedClock));
+        assert!(matches!(
+            read(&mut absent),
+            Err(RtdError::Transfer {
+                zone: ZoneId::Zone1,
+                ..
+            })
+        ));
+
+        for bad in ["", "warm", "NaN", "38.5 0xZZ"] {
+            let mut ch = probe(dir.path(), bad);
+            assert!(
+                matches!(read(&mut ch), Err(RtdError::Transfer { .. })),
+                "{bad:?} must not parse"
+            );
+        }
+    }
+
+    /// The file is named for the zone, and two zones never share one.
+    #[test]
+    fn each_zone_reads_its_own_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let one = FileRtdChannel::path_for(dir.path(), ZoneId::Zone1);
+        let two = FileRtdChannel::path_for(dir.path(), ZoneId::Zone2);
+        assert_ne!(one, two);
+    }
+
+    /// A bench channel still reports the chip select its zone is wired to, so a
+    /// log line from an emulated run reads the same as one from hardware.
+    #[test]
+    fn a_bench_probe_still_answers_on_its_zones_chip_select() {
+        let dir = tempfile::tempdir().unwrap();
+        let ch = FileRtdChannel::new(ZoneId::Zone2, dir.path(), Arc::new(FixedClock));
+        assert_eq!(ch.chip_select(), chip_select_for(ZoneId::Zone2));
+    }
+
     #[test]
     fn the_mapping_covers_every_zone_exactly_once_with_distinct_chip_selects() {
         assert_eq!(CS_FOR_ZONE.len(), ZoneId::ALL.len());
@@ -395,5 +510,140 @@ mod tests {
         };
         assert_eq!(s.raw.0, 38.5);
         assert!(s.fault.is_clear());
+    }
+}
+
+/// An independent temperature channel that reads a file.
+///
+/// # Why this exists
+///
+/// No `RtdChannel` for the MAX31865 has been written: an SPI transfer needs
+/// either `unsafe`, which this workspace denies, or a driver crate that is
+/// deliberately absent from this one's graph. So on a bench there is nothing to
+/// read — and `kdtv-service` refuses to start a zone with no channel, because
+/// the interlock covers the instrumented outlet and nothing else covers it.
+///
+/// A stub returning a plausible number would satisfy that check while removing
+/// the only measurement in the system that does not come from the valve, which
+/// is the entire point of the channel. This reads a real number that something
+/// else wrote, so the emulated daemon exercises the same escalation paths as
+/// hardware would: a value past the corrected trip, a value past the raw
+/// backstop, a gap past the starvation window, a fault register with bits in it.
+///
+/// # It cannot reach a real bathroom
+///
+/// The only route to one is
+/// [`ValidatedConfig::bench_probe_dir`](kdtv_config::ValidatedConfig::bench_probe_dir),
+/// which reads a key in the `[bench]` table, and a `[bench]` table under
+/// `profile = "production"` is refused outright by `kdtv-config`. There is no
+/// other key for it. Denial by absence, as with the port placeholders.
+///
+/// # The file format
+///
+/// One line: a Celsius reading, optionally followed by whitespace and a
+/// hexadecimal fault register.
+///
+/// ```text
+/// 38.5
+/// 38.5 0x04
+/// ```
+///
+/// An unreadable or unparseable file is [`RtdError::Transfer`] — the same error
+/// a failed SPI transfer produces, because to everything above this it is the
+/// same condition: the channel did not answer. It is deliberately *not*
+/// silently treated as a missing sample, which would look like starvation and
+/// would take five seconds to escalate instead of one.
+#[derive(Debug)]
+pub struct FileRtdChannel {
+    zone: ZoneId,
+    path: PathBuf,
+    clock: Arc<dyn Clock>,
+}
+
+impl FileRtdChannel {
+    /// The file this channel reads for `zone`, under `dir`.
+    ///
+    /// Named for the zone rather than the chip select, because a bench has no
+    /// SPI bus and naming it after one would invite the mistake the chip-select
+    /// check exists to catch.
+    #[must_use]
+    pub fn path_for(dir: &Path, zone: ZoneId) -> PathBuf {
+        dir.join(format!("{zone}.degc"))
+    }
+
+    #[must_use]
+    pub fn new(zone: ZoneId, dir: &Path, clock: Arc<dyn Clock>) -> Self {
+        Self {
+            zone,
+            path: Self::path_for(dir, zone),
+            clock,
+        }
+    }
+
+    /// The file this channel reads. The harness writes it.
+    #[must_use]
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
+    fn parse(text: &str) -> Result<(RawC, FaultRegister), std::io::Error> {
+        let mut parts = text.split_whitespace();
+        let celsius: f32 = parts
+            .next()
+            .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidData, "empty"))?
+            .parse()
+            .map_err(|e| {
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("not a Celsius reading: {e}"),
+                )
+            })?;
+        if !celsius.is_finite() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "not a temperature",
+            ));
+        }
+        let fault = match parts.next() {
+            None => FaultRegister::default(),
+            Some(bits) => {
+                let hex = bits.strip_prefix("0x").unwrap_or(bits);
+                FaultRegister::from_bits(u8::from_str_radix(hex, 16).map_err(|e| {
+                    std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        format!("not a fault register: {e}"),
+                    )
+                })?)
+            }
+        };
+        Ok((RawC(celsius), fault))
+    }
+}
+
+impl RtdChannel for FileRtdChannel {
+    fn zone(&self) -> ZoneId {
+        self.zone
+    }
+
+    fn sample(&mut self) -> BoxedFuture<'_, Result<RtdSample, RtdError>> {
+        Box::pin(async move {
+            let text =
+                std::fs::read_to_string(&self.path).map_err(|source| RtdError::Transfer {
+                    zone: self.zone,
+                    chip_select: self.chip_select(),
+                    source,
+                })?;
+            let (raw, fault) = Self::parse(&text).map_err(|source| RtdError::Transfer {
+                zone: self.zone,
+                chip_select: self.chip_select(),
+                source,
+            })?;
+            Ok(RtdSample {
+                zone: self.zone,
+                raw,
+                fault,
+                at: self.clock.monotonic(),
+            })
+        })
     }
 }

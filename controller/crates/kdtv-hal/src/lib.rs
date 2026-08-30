@@ -79,8 +79,8 @@ pub use resolve::{
     BridgeKind, PortBinding, ResolveError, ResolvedPort, UsbIdentity, bindings_of, resolve_distinct,
 };
 pub use rtd::{
-    CS_FOR_ZONE, ChipSelect, EXPANSION_CS, FaultRegister, NO_GPIO_OUTPUT, RtdChannel, RtdError,
-    RtdSample, chip_select_for,
+    CS_FOR_ZONE, ChipSelect, EXPANSION_CS, FaultRegister, FileRtdChannel, NO_GPIO_OUTPUT,
+    RtdChannel, RtdError, RtdSample, chip_select_for,
 };
 pub use sysfs::{DirSysfs, RealSysfs, SysfsView, TtyCandidate};
 pub use watchdog::{SystemdWatchdog, Watchdog};
