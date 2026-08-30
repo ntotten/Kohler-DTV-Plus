@@ -72,7 +72,9 @@ pub use ids::{FileIdStore, IdError, IdStore, RESERVATION_BLOCK};
 pub use latency::{
     FTDI_DEFAULT_LATENCY_MS, Hardened, LowLatencyFlag, REQUIRED_LATENCY_MS, harden, harden_all,
 };
-pub use link::{Backend, BoxedFuture, LineSettings, Link, LinkDescriptor, LinkIoError};
+pub use link::{
+    Backend, BoxedFuture, EmulatedBackend, LineSettings, Link, LinkDescriptor, LinkIoError,
+};
 pub use resolve::{
     BridgeKind, PortBinding, ResolveError, ResolvedPort, UsbIdentity, bindings_of, resolve_distinct,
 };

@@ -132,7 +132,70 @@ pub struct LinkDescriptor {
     authority: crate::factory::AuthorityRecord,
 }
 
+/// The backends an out-of-crate [`Link`] may describe itself as.
+///
+/// There is no `Serial` variant, and that is the whole mechanism. A descriptor
+/// naming a real bus can only come from [`LinuxLinkFactory`](crate::LinuxLinkFactory),
+/// which reached it through [`permit_open`](crate::permit_open) with a real
+/// device resolved, hardened and read back. Denial by absence, as everywhere
+/// else in this workspace: an emulator cannot claim to be a converter because
+/// there is no way to spell it.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub enum EmulatedBackend {
+    /// A pseudo-terminal, the other end of which is an emulated device.
+    Pty,
+    /// An in-process pipe.
+    Loopback,
+}
+
+impl EmulatedBackend {
+    #[must_use]
+    pub const fn backend(self) -> Backend {
+        match self {
+            Self::Pty => Backend::Pty,
+            Self::Loopback => Backend::Loopback,
+        }
+    }
+}
+
 impl LinkDescriptor {
+    /// Describe a link that is not a real bus, so that [`Link`] can be
+    /// implemented outside this crate.
+    ///
+    /// [`Link`]'s own documentation says it is object-safe "so that the same
+    /// engine drives a real converter, a pseudo-terminal and the emulator's
+    /// pipe", and [`Backend::Loopback`] is documented as having no
+    /// implementation here — but `LinkDescriptor`'s only constructor was
+    /// crate-private, and `Link::descriptor` returns one. So the trait could not
+    /// in fact be implemented anywhere but here, and `kdtv-service` had to route
+    /// its tests around a `Link` it could not fake. This is that gap closed.
+    ///
+    /// It still routes through [`permit_open`](crate::permit_open), which is the
+    /// workspace's single gate decision, so a backend that ever becomes gated is
+    /// gated here too without this function being revisited.
+    ///
+    /// # Errors
+    ///
+    /// [`OpenError`](crate::OpenError) when the gate refuses this backend on
+    /// this link.
+    pub fn emulated(
+        link: LinkKind,
+        backend: EmulatedBackend,
+        device: PathBuf,
+        node: String,
+        authority: &kdtv_proto::gate::TransmitAuthority,
+    ) -> Result<Self, crate::OpenError> {
+        crate::permit_open(backend.backend(), link, authority)?;
+        Ok(Self {
+            link,
+            backend: backend.backend(),
+            device,
+            line: LineSettings::for_link(link),
+            hardened: Hardened::Pty { node },
+            authority: crate::AuthorityRecord::of(authority),
+        })
+    }
+
     pub(crate) fn new(
         link: LinkKind,
         backend: Backend,
@@ -215,6 +278,15 @@ pub trait Link: Send + fmt::Debug + 'static {
     ///
     /// Never returns `Ok(0)`: end-of-file on a USB serial node means the
     /// converter has gone, which is [`LinkIoError::Disconnected`].
+    ///
+    /// **The returned future must be cancel-safe.** A caller that both reads and
+    /// writes one link selects over this future and a transmit order, and drops
+    /// it whenever the write wins — which on an idle bus is most passes. An
+    /// implementation that consumed bytes into an internal buffer and lost that
+    /// buffer on cancellation would drop frames silently, and nothing downstream
+    /// could tell that from a valve that did not answer. `tokio-serial` satisfies
+    /// this: one `poll_read` behind a readiness check, with no state between
+    /// polls.
     fn read<'a>(&'a mut self, buf: &'a mut [u8]) -> BoxedFuture<'a, Result<usize, LinkIoError>>;
 
     fn descriptor(&self) -> &LinkDescriptor;
