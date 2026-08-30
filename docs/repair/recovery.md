@@ -113,8 +113,8 @@ downgrade a replacement component merely to match this snapshot.
 From the repository root:
 
 ```sh
-jq empty diagnostics/kohler-dtv/2026-08-22-idle-baseline/*.json
-shasum -a 256 diagnostics/kohler-dtv/2026-08-22-idle-baseline/*.raw
+jq empty research/diagnostics/2026-08-22-idle-baseline/*.json
+shasum -a 256 research/diagnostics/2026-08-22-idle-baseline/*.raw
 ```
 
 Compare the results with `source_integrity` in `controller-config.json` and the

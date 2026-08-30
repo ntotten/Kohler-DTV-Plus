@@ -13,7 +13,7 @@ through, and signed. **Record the measured value** wherever a threshold is
 named — a tick against "stops within the threshold" is worth much less than
 the number that was actually observed.
 
-**118 items.**
+**126 items.**
 
 ## AGENT.md
 
@@ -38,6 +38,9 @@ the number that was actually observed.
 - [ ] **SAFE-06** — Do not treat 125 F / 51.7 C as a safe temperature bound: it is a product ceiling above the 43 C / 109 F scald threshold, and the steam hazard is whole-room air at that temperature with near-100% humidity.
   - _Verify:_ not-testable-in-software (documentation and UI-warning requirement)
   - _Source:_ CLAUDE.md § Quick orientation; docs/replacement-controller/STEAM-ADAPTER.md § Safety position
+- [ ] **SAFETY-03** — Never open a valve (move water) without explicit, in-the-moment operator consent, requested every time; read-only operations require no such consent.
+  - _Verify:_ not-testable-in-software (human-in-the-loop consent, as this entry already said); manual/commissioning verification, though a consent-gate function can be unit tested for refusing to proceed absent a consent flag
+  - _Source:_ CLAUDE.md 'Quick orientation'; AGENT.md 'Hard rules' #2
 
 ## DESIGN.md
 
@@ -59,6 +62,12 @@ the number that was actually observed.
 - [ ] **OPS-04** — Keep the controller on a trusted network — it has no authentication, so anything that can reach it can run the shower — and do not leave the shower able to start unattended.
   - _Verify:_ not-testable-in-software; deployment review
   - _Source:_ DISCLAIMER.md § Before you begin
+
+## app/CLAUDE.md
+
+- [ ] **POLL-02** — Never exceed 2 concurrent HTTP sessions to the controller, counting any other client on the LAN (the controller's own web UI, a second copy of this service from e.g. a hot-reload restart). The K-99693 RS-485 wall interface, if present, does not count against this budget.
+  - _Verify:_ not-testable-in-software (the budget counts HTTP clients outside this process, which no test here can observe); manual/operational; enforceable in-process only via a shared session/queue limiter
+  - _Source:_ app/CLAUDE.md Hard limits table and 'The two-session budget is easy to blow without noticing'
 
 ## docs/devices/valve-control.md
 
@@ -146,12 +155,21 @@ the number that was actually observed.
 - [ ] **PH0-03** — Phase 0 does not close until the factory topology can be restored from the labels in under five minutes with power off.
   - _Verify:_ not-testable-in-software; timed drill
   - _Source:_ docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 0 gate
-- [ ] **PH1-02** — The capture front end must be physically unable to transmit: termination off, `DE` hard-strapped inactive, and no transmit conductor from the USB UART.
+- [ ] **PH1-02** — The capture front end must be physically unable to transmit: termination off, `DE` hard-strapped inactive, `RE` hard-strapped asserted, and no transmit conductor from the USB UART.
   - _Verify:_ not-testable-in-software; hardware inspection
+  - _Source:_ docs/replacement-controller/CONTROLLER-DESIGN.md § Packet capture questions
+- [ ] **PH1-03** — Capture one valve at a time with no HTTP polling or other automation running.
+  - _Verify:_ not-testable-in-software (manual capture procedure, performed by a person at the bus); disable pollers in configuration
   - _Source:_ docs/replacement-controller/CONTROLLER-DESIGN.md § Packet capture questions
 - [ ] **PH1-04** — Timestamp at the capture device and use a logic analyzer where timing is the finding, because a 16 ms USB latency quantum does not resolve jitter on a 525 ms tick or a 320 ms deadline.
   - _Verify:_ manual commissioning
   - _Source:_ docs/replacement-controller/CONTROLLER-DESIGN.md § Packet capture questions
+- [ ] **PH1-06** — The capture tap must add neither termination nor fail-safe bias to the pair, which is already terminated and biased at the controller and the valve, and its stub must be inches rather than feet.
+  - _Verify:_ not-testable-in-software; hardware inspection of the tap before it is attached
+  - _Source:_ docs/replacement-controller/CONTROLLER-DESIGN.md § Packet capture questions
+- [ ] **PH2-03** — Run the Pi, adapters, watchdog, service, and emulator continuously for seven days.
+  - _Verify:_ not-testable-in-software (seven-day soak on real hardware); manual soak
+  - _Source:_ docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 2
 - [ ] **PH3-01** — Commission the one-valve pilot at 100 °F on one outlet with the operator present and outside the spray path, hand on the manual disconnect, and the independent probe reading the outlet throughout.
   - _Verify:_ manual commissioning
   - _Source:_ docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 3 procedure (3)
@@ -185,6 +203,12 @@ the number that was actually observed.
 - [ ] **PH5-05** — Measure the hard case by pulling the DTV+ link mid-session and recording what the generator does; Phase 5 closes only when a steam session starts, holds setpoint, stops on command and on timer, and the hard-link-loss behaviour is measured and recorded whatever it turns out to be.
   - _Verify:_ manual commissioning
   - _Source:_ docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 5 gate
+- [ ] **PH6-01** — Keep voice, cloud, Homebridge, and automatic routines disabled for a one-week local-only soak.
+  - _Verify:_ not-testable-in-software (one-week soak on real hardware); configuration check; manual soak
+  - _Source:_ docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 6
+- [ ] **PH6-02** — Enable explicit Homebridge/Worker commands only after the soak has no unexplained reset, temperature, or bus event.
+  - _Verify:_ not-testable-in-software (a person reads the soak logs and judges what counts as unexplained); log review after the soak
+  - _Source:_ docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 6
 - [ ] **PH6-05** — Phase 6 closes only with a signed commissioning report and homeowner-visible emergency instructions.
   - _Verify:_ not-testable-in-software
   - _Source:_ docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 6 gate
@@ -197,6 +221,9 @@ the number that was actually observed.
 - [ ] **WELD-01** — State in the posted emergency procedure, and surface in software, that a `WELDED` fault (35) is a mechanically stuck mixing valve that no controller can turn off; the only remedy is valve power removal and the hot and cold service shutoffs.
   - _Verify:_ unit: fault-code 35 renders the correct operator message; not-testable-in-software for the physical remedy
   - _Source:_ docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary and § Manual rollback to Kohler
+- [ ] **OPS-08** — Keep the household-specific configuration backup outside this public repository.
+  - _Verify:_ not-testable-in-software (a test cannot assert the absence of a file it cannot name); repository review
+  - _Source:_ docs/replacement-controller/CONTROLLER-DESIGN.md § Scope
 - [ ] **OPS-09** — Do not describe the K-99695 as unreliable or frame the replacement as a fix for I1 or as improved controller stability; every recorded lockup came from this project's own HTTP clients exceeding documented limits.
   - _Verify:_ not-testable-in-software; documentation review
   - _Source:_ docs/replacement-controller/CONTROLLER-DESIGN.md § Scope → Non-goals; CLAUDE.md Where things stand

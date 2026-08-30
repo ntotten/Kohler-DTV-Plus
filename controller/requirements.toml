@@ -838,7 +838,7 @@ hard = true
 id = "PH1-02"
 document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
 area = "phase 1 gate"
-statement = "The capture front end must be physically unable to transmit: termination off, `DE` hard-strapped inactive, and no transmit conductor from the USB UART."
+statement = "The capture front end must be physically unable to transmit: termination off, `DE` hard-strapped inactive, `RE` hard-strapped asserted, and no transmit conductor from the USB UART."
 source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Packet capture questions"
 verification = "not-testable-in-software; hardware inspection"
 hard = true
@@ -868,6 +868,15 @@ area = "phase 1 gate"
 statement = "Phase 1 closes only when repeated captures decode without checksum errors and produce the same state transitions."
 source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 1 gate"
 verification = "unit: replay captures through the decoder and diff state transitions"
+hard = true
+
+[[requirement]]
+id = "PH1-06"
+document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+area = "phase 1 gate"
+statement = "The capture tap must add neither termination nor fail-safe bias to the pair, which is already terminated and biased at the controller and the valve, and its stub must be inches rather than feet."
+source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Packet capture questions"
+verification = "not-testable-in-software; hardware inspection of the tap before it is attached"
 hard = true
 
 [[requirement]]

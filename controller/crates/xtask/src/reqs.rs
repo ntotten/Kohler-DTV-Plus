@@ -359,6 +359,17 @@ fn write_checklist(path: &Path, manual: &[&Requirement]) -> Result<()> {
         out.push('\n');
     }
 
+    // The loop separates groups with a blank line, which leaves one at the end
+    // of the file. `oxfmt` formats Markdown, including this file, and strips it.
+    // Without this trim the two tools disagree by exactly one line forever:
+    // `cargo xtask reqs --checklist` then `npm run format` is a diff, and a
+    // freshly generated checklist fails `npm run format:check`. Generating a
+    // file the formatter would rewrite means it can never be both current and
+    // formatted, so the generator emits the formatted form.
+    while out.ends_with("\n\n") {
+        out.pop();
+    }
+
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).ok();
     }
