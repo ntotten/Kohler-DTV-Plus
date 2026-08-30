@@ -107,6 +107,7 @@ complete, separate isolation barrier for each of the three buses.
 | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------ |
 | Waveshare SKU `27646`, dual-channel USB                           | Manufacturer does not document channel-to-channel galvanic isolation                                             | Rejected     |
 | Waveshare `2-CH RS485 HAT`, SKU `17221` (SPI, SC16IS752 + SP3485) | Board carries **one** `B0505LS` isolated supply and **one** `π142M61` digital isolator for both channels **[V]** | Rejected     |
+| Waveshare `USB TO 4CH RS485 (B)` (CH344L)                         | Manufacturer states USB↔RS485 isolation with **no isolation between the four RS485 channels** **[V]**            | Rejected     |
 | 3 × Waveshare SKU `23949`                                         | One complete isolation barrier per link                                                                          | **Selected** |
 
 **[I]** The 2-CH HAT would otherwise be attractive — it removes USB entirely and
@@ -118,8 +119,20 @@ isolate its field side from USB and supports independent communication, but the
 manufacturer does not document channel-to-channel galvanic isolation; separate
 converters cost about $17 each and avoid making that assumption.
 
+The 4-channel part (checked 2026-08-30,
+[Waveshare wiki](https://www.waveshare.com/wiki/USB_TO_4CH_RS485_%28B%29)) fails the
+same way, and this time the manufacturer says so directly: "the USB and four
+RS485 interfaces are isolated, but there is no isolation between the four RS485
+interfaces" **[V]**. All three field grounds would share one isolated domain —
+and the steam link's ground tie is mandatory (D7), which would join it to both
+valve buses, the exact thing the isolation policy forbids. It would also put
+all three links behind one USB device and one CH344L bridge — a single failure
+taking every link down, and a non-FTDI bridge whose low-latency equivalent
+would have to be established before use ([HARDWARE.md § 5](HARDWARE.md)). At
+3 × ~$17 for the single-channel units, the saving is roughly nothing.
+
 **Would reopen it.** Manufacturer documentation establishing true
-channel-to-channel galvanic isolation on a dual-channel part — and even then,
+channel-to-channel galvanic isolation on a multi-channel part — and even then,
 the saving is about $17.
 
 ## D4 — No industrial PLC
