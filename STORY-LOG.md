@@ -10,6 +10,81 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ---
 
+## 2026-08-30
+
+### 13:20 — The safety gate rated endpoints and never looked at their arguments
+
+`save_variable.cgi` has been exposed as a 2/5 command since the proxy was
+written on 07-26. The rating is defensible for the one thing this app uses it
+for: writing the amplifier's stored volume, index 43. The table even said so —
+*"Only index 43 (volume) is used by this app."*
+
+That note described [app/src/api/client.ts](app/src/api/client.ts). It did not
+describe the proxy, which read the request body and passed it to the controller
+verbatim. `save_variable.cgi` is one call that writes any of **105** persistent
+configuration variables, and nothing checked which one. Anything that could
+reach the local proxy could write all of them:
+
+| Index | Variable | What it does |
+| --- | --- | --- |
+| 39 | `valve_max_temp` | The maximum temperature the valve will deliver |
+| 41 | `valve_auto_purge` | The cold-water purge the UI reads run state from |
+| 61, 62 | `six_port_calibration_valve1/2` | Factory calibration — moves real water temperature away from the setpoint |
+| 86, 88 | `wifi_password`, `wifi_SSID` | Network credentials |
+| 99 | `max_valve_runtime` | How long the valve may run before shutting off |
+
+Index 39 is the one that stings. [DISCLAIMER.md](DISCLAIMER.md) tells operators
+this app "clamps to that limit; it never raises it", and the UI does clamp — to
+`max_temp`, read live from the controller. But `max_temp` *is* index 39. The
+clamp was being applied against a number the same proxy would happily rewrite.
+The promise held for the app's own screens and not for the proxy underneath
+them, which is the part reachable from anywhere on the network.
+
+The fix is a parameter allowlist in the same table, so the whole policy stays in
+one auditable place: every exposed endpoint now declares which parameters it
+accepts and what values each may take, checked right after the risk check and
+refused with the same `403`. `save_variable.cgi` accepts `index=43` and nothing
+else, and `index` is required — omitting it would otherwise hand the controller
+whatever it defaults to. The startup self-check throws if an exposed endpoint
+has no parameter policy at all, so the next generic endpoint cannot arrive the
+way this one did. `GET /api/safety` publishes the policy alongside the ratings.
+
+Checking the rest of the exposed surface, as the same review demanded, found no
+second hole — but `quick_shower.cgi`, `start_user.cgi`, `steam_on.cgi`,
+`rain_on.cgi`, `music_on.cgi` and `light_on.cgi` were all unconstrained too, and
+all six now carry the bounds from the controller's own UI. The five exposed read
+endpoints take no parameters and now say so.
+
+Nothing was ever written by this. No index other than 43 was ever sent — the
+only caller in the codebase is `setVolume`. This was found by reading the gate
+against the repository's own documents, not by anything going wrong, which is
+the good version of finding it.
+
+Two things worth saying plainly. The note in the table was not wrong so much as
+it was answering a different question than the one a reader would ask of a
+safety gate; "only 43 is used" and "only 43 is possible" are one word apart and
+five weeks of exposure apart. And the gate had a startup self-check, a live
+self-test and a unit-test file specifically guarding it — all three checked that
+the *ratings* held, because that was the model. A model that omits something
+does not fail loudly; it just never asks.
+
+**Why it matters:** a risk rating describes an endpoint. It says nothing about
+that endpoint's arguments, and one of these endpoints is a generic write. The
+safety ceiling was doing less work than every document in this repository said
+it was.
+
+**For Kohler:** `save_variable.cgi` on the DTV+ controller is an unauthenticated
+generic write to all 105 persistent configuration variables through a single
+endpoint, reachable by anything on the LAN. There is no privilege separation
+between setting the amplifier volume (index 43) and raising the valve's maximum
+temperature (index 39) or overwriting its six-port calibration (61, 62) — the
+same GET, one number apart. On this system the configured `max_temp` is 113 °F,
+already above the 109 °F scald threshold, and index 39 can raise it further.
+Anyone integrating with this controller is one typo'd constant from writing a
+calibration code.
+
+---
+
 ## 2026-08-04
 
 ### 23:10 — The egress log's first capture caught a controller hang, and explained the `values.cgi` blip

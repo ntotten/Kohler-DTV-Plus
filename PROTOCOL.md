@@ -42,6 +42,12 @@ Ratings use the 0-5 scale in [DISCLAIMER.md](DISCLAIMER.md). This repo enforces
 a ceiling of **2/5** in [app/server/cgi-safety.mjs](app/server/cgi-safety.mjs);
 that file is the authoritative table and rates ~50 endpoints.
 
+A rating describes an endpoint, not its arguments, so the same table also
+declares the **parameters** each exposed endpoint accepts and the values each
+may take. Anything not named is refused with the same `403`. The parameter
+names and ranges below are the controller's own, read from its web UI
+([research/controller-mirror/js/](research/controller-mirror/js/)).
+
 ### Read
 
 | Endpoint | Risk | Returns |
@@ -69,7 +75,36 @@ All are `GET` with query parameters. A successful command returns `:)`.
 | `light_off.cgi` | 1/5 | `module` |
 | `rain_on.cgi` | 1/5 | `mode=1&color=…` (hue 0-360, `-1` white) or `mode=2&effect=…` (0-7) |
 | `rain_off.cgi` | 1/5 | — |
-| `save_variable.cgi` | 2/5 | `index` (1-105), `value` — persistent config write; see [index table](research/controller-mirror/js/values.js) |
+| `save_variable.cgi` | 2/5 | `index` (1-105), `value` — persistent config write; see [index table](research/controller-mirror/js/values.js). **This proxy accepts index 43 only** — see below. |
+
+### `save_variable.cgi` is a write-anything
+
+The rating is the endpoint's, and the endpoint is generic: one call writes any
+of 105 persistent configuration variables. Rated against the write this app
+makes — the amplifier's stored volume, index 43 — it is a 2/5. Rated against
+what it *can* write it is not, and the indices differ enormously in consequence:
+
+| Index | Variable | Consequence |
+| --- | --- | --- |
+| 39 | `valve_max_temp` | Raises the maximum temperature the valve will deliver |
+| 41 | `valve_auto_purge` | Turns the cold-water purge on or off |
+| 61, 62 | `six_port_calibration_valve1/2` | Factory calibration; wrong values move real water temperature away from the setpoint |
+| 86, 88 | `wifi_password`, `wifi_SSID` | Network credentials |
+| 99 | `max_valve_runtime` | Maximum runtime before the valve shuts off |
+
+So the proxy allowlists the parameter as well as the endpoint: `index` must be
+`43` and must be present, `value` must be 0-100. The other 104 indices are
+refused before a packet leaves the machine. This is the constraint that makes
+DISCLAIMER.md's "clamps to that limit; it never raises it" true of the proxy and
+not only of the UI.
+
+The vendored docs disagree on the spelling — `index`/`value` in
+[cgi-endpoints.md](research/xagon0/docs/web-interface/cgi-endpoints.md),
+`idx`/`val` in
+[temperature-system.md](research/xagon0/docs/control-logic/temperature-system.md).
+The controller's own JavaScript uses `index`/`value`, and the gate refuses every
+name it does not recognise, so the question does not have to be settled on live
+hardware to be safe. **Unverified either way on this unit.**
 
 ### Do not call
 

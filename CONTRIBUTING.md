@@ -14,6 +14,13 @@ the unit permanently.
 - **Never raise the CGI safety ceiling above 2/5.** The gate in
   [app/server/cgi-safety.mjs](app/server/cgi-safety.mjs) enforces it. Widening
   the exposed surface needs a recorded reason in the pull request.
+- **Every exposed endpoint declares the parameters it accepts.** The gate throws
+  at startup if one does not, because a rating covers an endpoint and not its
+  arguments — `save_variable.cgi` sat rated 2/5 from 2026-07-26 to 2026-08-30
+  while accepting writes to all 105 config variables. Adding a parameter to an allowlist widens
+  the exposed surface and needs a recorded reason like any other widening;
+  narrowing one deserves the same note, so the next reader knows it was a
+  decision rather than an oversight.
 - **Nothing in a test may open a valve.** `npm test` runs without hardware;
   `npm run selftest` is strictly read-only against a live controller.
 - **Do not raise the polling rate.** 15 s idle / 5 s active. Faster has locked
