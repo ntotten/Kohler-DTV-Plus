@@ -1,6 +1,6 @@
 //! A wrapper that cannot be printed.
 //!
-//! `CONTROLLER-DESIGN.md`: "No credential, access token, or pairing data belongs
+//! `DESIGN.md`: "No credential, access token, or pairing data belongs
 //! in these logs." A rule like that survives exactly as long as the person who
 //! remembers it. Wrapping the value makes it structural: `Redacted<T>` prints
 //! `[redacted]` in `Debug` and serialises as `"[redacted]"`, so neither a

@@ -12,6 +12,51 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ## 2026-08-30
 
+### 17:05 — The scope is pinned: a like-for-like swap, and steam is out
+
+Operator decision, after a review of the parts list. The plan is a controller
+that replaces the K-99695 driving the two valves that exist today — nothing
+added to the installation that the stock system does not have. Removed from
+the plan: the manual valve-power disconnects and every electrician work item,
+the posted emergency procedures and lid card, the instrument mandates, and the
+whole steam setup — third converter, 12 V rail, Phase 5, generator and
+installer material. The house has no steam generator; the DTV+ code written
+before the descope stays in the workspace, dormant and disabled, and the
+K-1737-K1 record stays in STEAM-ADAPTER.md for a future revisit.
+
+The shopping list was rewritten around the same principle the descope exposed:
+it now optimizes for wall-clock time — one order today, and a single follow-up
+for the valve connectors once the plugs are photographed, the only part that
+cannot be known from documents.
+
+**Why it matters:** the plan is now readable as what it is — a two-bus
+controller swap. Recorded as DECISIONS.md D12 so no future session re-raises
+any of it.
+
+### 16:20 — The independent temperature sensor is removed from the plan
+
+Operator decision. The PT1000/MAX31865 outlet-temperature subsystem — two
+surface-clamp probes, the SPI amplifiers, the correction curve, the
+over-temperature/fault/starvation/divergence latches, and the rule that a zone
+does not start until its channel has spoken — is out: removed from the design
+documents, the shopping list (~$130 and the build's only soldering), the
+deploy configurations, the requirements register (22 requirements), and the
+Rust workspace, where it was fully implemented and tested.
+
+The reasoning is recorded in
+[controller/docs/DECISIONS.md W3](controller/docs/DECISIONS.md): the stock
+system runs with no independent measurement at all, the valve owns the safety
+envelope, and the safety case rests on the setpoint clamps, the Phase 3
+fail-off measurements and the Therma K verification of every outlet — none of
+which involve the permanent sensor. Its only authority was an `all-off`
+through the same valve it was second-guessing.
+
+**Why it matters:** the build loses its only analog subsystem and its only
+soldering; the daemon's production start path no longer refuses
+unconditionally for want of an RTD driver that was never written. The whole
+implementation is one revert away in git history if evidence ever says the
+valve's self-report cannot be trusted.
+
 ### 13:28 — The requirements convention was never adopted because it could not be
 
 `cargo xtask reqs` has always reported `0/356`, and the note in `reqs.rs` read
@@ -393,7 +438,7 @@ nothing reaches the on-board log, reconciliation about a minute later by
 timeout. That reading is inference; nobody has captured a trace of it.
 
 **Why it matters:** the replacement-controller work was never predicated on
-fixing I1 — [CONTROLLER-DESIGN.md](docs/replacement-controller/CONTROLLER-DESIGN.md)
+fixing I1 — [CONTROLLER-DESIGN.md](controller/docs/DESIGN.md)
 lists it as an explicit non-goal — but the diagnostic scenario built to catch a
 shutoff mid-capture is no longer needed, and the design's claim that the K-99695
 is not unreliable within its documented limits now covers this fault too.

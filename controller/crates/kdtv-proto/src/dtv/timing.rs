@@ -25,7 +25,7 @@
 //!
 //! `dtv-plus-protocol.md` § Timing Parameters lists `RS485 Echo Timeout` =
 //! 150 ms and its port state machine has a `WAIT_ECHO` state.
-//! `HARDWARE-SPEC.md` § 6 already marks the DTV+ echo timeout **n/a**. The stock
+//! `HARDWARE.md` § 6 already marks the DTV+ echo timeout **n/a**. The stock
 //! master waits for its own transmission to return on the half-duplex bus; the
 //! converters chosen for this build (Waveshare `USB TO RS485/422`, SKU 23949)
 //! have automatic direction control and present **no local echo at all**, so
@@ -42,7 +42,7 @@
 //!
 //! That non-applicability is a property of the selected part. **If the converter
 //! is ever substituted for one with local echo, the 150 ms echo figure comes back
-//! into force and the platform decision in `HARDWARE-SPEC.md` § 2 must be
+//! into force and the platform decision in `HARDWARE.md` § 2 must be
 //! revisited.**
 
 use core::time::Duration;

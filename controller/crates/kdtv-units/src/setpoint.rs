@@ -85,7 +85,7 @@ impl ClampRecord {
 /// produce one. Every encoder that writes a temperature takes this type, not a
 /// bare [`Cx2`].
 ///
-/// Bounds, from `CONTROLLER-DESIGN.md` § Safety boundary rule 6:
+/// Bounds, from `DESIGN.md` § Safety boundary rule 6:
 ///
 /// | Bound | Value | Source |
 /// | --- | --- | --- |
@@ -133,9 +133,9 @@ impl ValveSetpoint {
     /// `Cx2` resolves 0.5 °C — about 0.9 °F — so a request in Fahrenheit
     /// generally falls between two representable points. This returns the
     /// **largest representable setpoint at or below the request**. Erring cool
-    /// costs comfort; erring warm costs skin, and water above 43 °C scalds
-    /// ([`crate::independent::SCALD_C`]). [`SteamSetpoint::clamped`] rounds a
-    /// half degree down for the same reason.
+    /// costs comfort; erring warm costs skin, and water above 43 °C scalds.
+    /// [`SteamSetpoint::clamped`] rounds a half degree down for the same
+    /// reason.
     ///
     /// # A request above the ceiling is refused, not rounded into it
     ///
@@ -247,7 +247,7 @@ impl ValveSetpoint {
 
 /// A steam temperature that has passed the clamp.
 ///
-/// Bounds from `HARDWARE-SPEC.md` § 12: 90 °F to 125 °F in 1 °F steps, factory
+/// Bounds from `HARDWARE.md` § 12: 90 °F to 125 °F in 1 °F steps, factory
 /// default 110 °F. These are the generator's own documented envelope `[K]`. The
 /// installer settings field `steam_max_temp` carries no `min`/`max` in the
 /// shipped web interface, so it is treated as configuration and can only narrow
@@ -362,8 +362,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn req_controller_design_clamp_02_req_controller_design_clamp_03_valve_bounds_are_the_documented_numbers()
-     {
+    fn req_design_clamp_02_req_design_clamp_03_valve_bounds_are_the_documented_numbers() {
         assert!((ValveSetpoint::FLOOR.celsius() - 30.0).abs() < f32::EPSILON);
         assert!((ValveSetpoint::CEILING.celsius() - 42.5).abs() < f32::EPSILON);
         assert!((ValveSetpoint::CEILING.fahrenheit() - 108.5).abs() < 0.01);
@@ -373,8 +372,9 @@ mod tests {
     fn req_valve_control_temp_03_the_ceiling_sits_below_the_scald_threshold_plus_nothing() {
         // 42.5 C is below 43 C, which is where water begins to scald. The valve's
         // own ceiling of 49 C is far above it and is never used as a limit.
-        assert!(ValveSetpoint::CEILING.celsius() < crate::independent::SCALD_C);
-        assert!(Cx2::MAX_WATER_TEMP.celsius() > crate::independent::SCALD_C);
+        const SCALD_C: f32 = 43.0;
+        assert!(ValveSetpoint::CEILING.celsius() < SCALD_C);
+        assert!(Cx2::MAX_WATER_TEMP.celsius() > SCALD_C);
     }
 
     #[test]
@@ -500,14 +500,14 @@ mod tests {
         /// The property the encoder relies on: whatever comes in, what goes out
         /// is inside the clamp. No input reaches the wire outside 60..=85.
         #[test]
-        fn req_valve_control_temp_02_req_controller_design_clamp_01_no_input_escapes_the_valve_clamp(raw in 0u8..=255) {
+        fn req_valve_control_temp_02_req_design_clamp_01_no_input_escapes_the_valve_clamp(raw in 0u8..=255) {
             let (v, _) = ValveSetpoint::clamped(Cx2::from_raw(raw));
             proptest::prop_assert!(v.wire() >= ValveSetpoint::FLOOR);
             proptest::prop_assert!(v.wire() <= ValveSetpoint::CEILING);
         }
 
         #[test]
-        fn req_hardware_spec_steam_09_no_input_escapes_the_steam_clamp(raw in 0u8..=255) {
+        fn req_hardware_steam_09_no_input_escapes_the_steam_clamp(raw in 0u8..=255) {
             let (v, _) = SteamSetpoint::clamped(Fx2::from_raw(raw));
             proptest::prop_assert!(v.wire() >= SteamSetpoint::FLOOR);
             proptest::prop_assert!(v.wire() <= SteamSetpoint::CEILING);

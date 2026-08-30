@@ -11,11 +11,7 @@
 //!    serial backend is refused unless that link's fixtures are captured and its
 //!    bus polarity attested. With today's evidence base — every fixture tier
 //!    `[C]` — that refusal is the expected outcome and not a fault.
-//! 3. **Probes.** Each zone's configured chip select is checked against the
-//!    constant in `kdtv-hal`. A swapped pair reads the other zone's pipe and
-//!    reports it as this one's, which no temperature check would catch, so a
-//!    disagreement refuses the start.
-//! 4. **Bounds.** The kernel is built from the resolved configuration bounds —
+//! 3. **Bounds.** The kernel is built from the resolved configuration bounds —
 //!    the tighter of the compiled-in constant and anything configured. Nothing
 //!    in a file can widen one.
 //!
@@ -34,14 +30,11 @@ use std::sync::Arc;
 
 use kdtv_config::ValidatedConfig;
 use kdtv_engine::{RetryBudget, SteamMachine, SteamSettings, ZoneMachine, ZoneSettings};
-use kdtv_hal::{
-    ChipSelect, Clock, IdError, IdStore, Link, LinkFactory, OpenError, PortBinding, RtdChannel,
-    RtdError, Watchdog,
-};
+use kdtv_hal::{Clock, IdError, IdStore, Link, LinkFactory, OpenError, PortBinding, Watchdog};
 use kdtv_proto::TransmitAuthority;
 use kdtv_proto::dtv::SteamEncoder;
 use kdtv_proto::saturn::Encoder;
-use kdtv_safety::{Bounds, RtdWatch, SafetyKernel};
+use kdtv_safety::{Bounds, SafetyKernel};
 use kdtv_telemetry::Stamp;
 use kdtv_units::{LinkKind, SessionDuration, ZoneId};
 use tokio::sync::{broadcast, mpsc, watch};
@@ -51,7 +44,6 @@ use crate::command::{COMMAND_CAPACITY, ServiceHandle};
 use crate::event::EVENT_CAPACITY;
 use crate::port::{self, LinkReport, Pipe};
 use crate::record::Recorder;
-use crate::rtd;
 use crate::supervisor::{SteamRuntime, Supervisor, SupervisorChannels, ZoneRuntime};
 
 /// How many link reports may queue before a pump waits.
@@ -60,9 +52,6 @@ use crate::supervisor::{SteamRuntime, Supervisor, SupervisorChannels, ZoneRuntim
 /// digits per second — so a pump never stalls on a supervisor that is busy for
 /// one pass.
 const REPORT_CAPACITY: usize = 256;
-
-/// How many independent samples may queue.
-const SAMPLE_CAPACITY: usize = 32;
 
 /// Why the service did not start.
 #[derive(Debug, thiserror::Error)]
@@ -80,16 +69,6 @@ pub enum StartError {
     /// valve is on which bus must not drive either of them.
     #[error("{0} has no resolved port binding")]
     Unbound(LinkKind),
-    /// A configured chip select disagrees with the constant. `kdtv-hal` says
-    /// why: a swapped pair reads the other zone's pipe and reports it as this
-    /// one's.
-    #[error("independent temperature: {0}")]
-    Rtd(#[from] RtdError),
-    /// A zone with no independent channel. The interlock covers the
-    /// instrumented outlet and nothing else covers it, so a zone without one
-    /// does not start.
-    #[error("{0} has no independent temperature channel")]
-    NoProbe(ZoneId),
 }
 
 /// The platform pieces the service needs and does not build.
@@ -100,8 +79,6 @@ pub enum StartError {
 pub struct Deps {
     pub clock: Arc<dyn Clock>,
     pub watchdog: Arc<dyn Watchdog>,
-    /// One channel per zone, in any order. Each names the zone it answers for.
-    pub rtd: Vec<Box<dyn RtdChannel>>,
 }
 
 /// What a successful start hands back.
@@ -258,7 +235,7 @@ pub(crate) fn assemble(
             session_cap,
             take_pipe(&mut pipes, LinkKind::Zone(id))?,
             &reports_tx,
-        )?);
+        ));
     }
     let steam = match config.steam() {
         None => None,
@@ -274,11 +251,6 @@ pub(crate) fn assemble(
         )),
     };
     drop(reports_tx);
-
-    let (samples_tx, samples) = mpsc::channel(SAMPLE_CAPACITY);
-    let (stop_samplers, stop_rx) = watch::channel(false);
-    spawn_samplers(deps.rtd, &deps.clock, &samples_tx, &stop_rx)?;
-    drop(samples_tx);
 
     let (commands_tx, commands) = mpsc::channel(COMMAND_CAPACITY);
     let (shutdown_tx, shutdown_rx) = watch::channel(None);
@@ -303,8 +275,6 @@ pub(crate) fn assemble(
         SupervisorChannels {
             commands,
             reports,
-            samples,
-            stop_samplers,
             shutdown: shutdown_rx,
         },
         pi_boot,
@@ -352,15 +322,9 @@ fn zone_runtime(
     session_cap: SessionDuration,
     pipe: Box<dyn Pipe>,
     reports: &mpsc::Sender<LinkReport>,
-) -> Result<ZoneRuntime, StartError> {
+) -> ZoneRuntime {
     let link = LinkKind::Zone(id);
     let zone_config = config.zone(id);
-    let sensor = config.sensor(id);
-    // A configuration may restate the chip-select mapping. It may not change it:
-    // a swapped pair reads the other zone's pipe and reports it as this one's,
-    // which no temperature check would catch.
-    ChipSelect::check(id, sensor.chip_select())?;
-
     let timings = config.timing().saturn();
     let settings = ZoneSettings {
         timings,
@@ -368,7 +332,7 @@ fn zone_runtime(
         session_cap,
         ..ZoneSettings::default()
     };
-    Ok(ZoneRuntime::new(
+    ZoneRuntime::new(
         id,
         ZoneMachine::new(zone_config, settings),
         Encoder::new(
@@ -380,31 +344,7 @@ fn zone_runtime(
         port::spawn(link, pipe, reports.clone()),
         zone_config.master(),
         timings,
-        RtdWatch::new(id, sensor.correction().clone()),
-    ))
-}
-
-/// One sampler per zone. A zone with no channel does not start: the interlock
-/// covers the instrumented outlet and nothing else covers it.
-fn spawn_samplers(
-    mut channels: Vec<Box<dyn RtdChannel>>,
-    clock: &Arc<dyn Clock>,
-    samples: &mpsc::Sender<crate::rtd::Sampled>,
-    stop: &watch::Receiver<bool>,
-) -> Result<(), StartError> {
-    for id in ZoneId::ALL {
-        let index = channels
-            .iter()
-            .position(|channel| channel.zone() == id)
-            .ok_or(StartError::NoProbe(id))?;
-        rtd::spawn(
-            channels.remove(index),
-            Arc::clone(clock),
-            samples.clone(),
-            stop.clone(),
-        );
-    }
-    Ok(())
+    )
 }
 
 #[cfg(test)]

@@ -42,21 +42,18 @@ once where it belongs, and move on.
 
 ## Directory guides
 
-| Directory                                                                       | Covers                                                    |
-| ------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| [app/](app/CLAUDE.md)                                                           | The HTTP client, its hard limits, the CGI safety gate     |
-| [docs/replacement-controller/](docs/replacement-controller/CLAUDE.md)           | The replacement master, and decisions not to re-litigate  |
-| [research/reference/steam-adapter/](research/reference/steam-adapter/CLAUDE.md) | How to probe the adapter board without repeating mistakes |
+| Directory                                                                       | Covers                                                                               |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [app/](app/CLAUDE.md)                                                           | The HTTP client, its hard limits, the CGI safety gate                                |
+| [controller/](controller/CLAUDE.md)                                             | The replacement master — Rust workspace, design docs, build order, settled decisions |
+| [research/reference/steam-adapter/](research/reference/steam-adapter/CLAUDE.md) | How to probe the adapter board without repeating mistakes                            |
 
 ## Where things stand
 
-- **[I1](INVESTIGATIONS.md#i1--the-shower-stops-mid-use) is resolved** as of
-  2026-08-29: our own app hung the controller. Do not describe the K-99695 as
-  unreliable — every lockup recorded here came from our clients exceeding its
-  documented limits.
-- **The replacement controller covers three links**: two Saturn valve buses and
-  one DTV+ steam link. Steam is in scope; the generator behind the adapter is
-  not.
+- **The replacement controller drives the two Saturn valve buses**, and that is
+  the whole scope: a like-for-like replacement of the K-99695, with no added
+  installation equipment and no steam setup (operator decision 2026-08-30 —
+  [controller/docs/DECISIONS.md](controller/docs/DECISIONS.md) D12).
 - **[I3](INVESTIGATIONS.md#i3--valuescgi-intermittently-drops-a-healthy-valve),
   [I4](INVESTIGATIONS.md#i4--is-automatic-purge-on) and
   [I5](INVESTIGATIONS.md#i5--the-saturn-register-map-is-contradictory)** remain

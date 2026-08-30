@@ -1,13 +1,13 @@
 # controller — the replacement master
 
 The Rust service that replaces the K-99695 as the master of this DTV+ system. It
-runs on a Raspberry Pi 4 and drives three isolated serial links: two Saturn valve
-buses and one DTV+ link to a K-1737-K1 steam adapter.
+runs on a Raspberry Pi 4 and drives the two Saturn valve buses over isolated
+serial links. A complete DTV+ steam stack is aboard but dormant — steam is out
+of scope of the plan (`docs/DECISIONS.md` D12).
 
-The design it implements is
-[docs/replacement-controller/CONTROLLER-DESIGN.md](../docs/replacement-controller/CONTROLLER-DESIGN.md);
-the build it runs on is
-[HARDWARE-SPEC.md](../docs/replacement-controller/HARDWARE-SPEC.md). Read
+The design it implements is [docs/DESIGN.md](docs/DESIGN.md); the build it runs
+on is [docs/HARDWARE.md](docs/HARDWARE.md); the order the work happens in is
+[docs/BUILD-ORDER.md](docs/BUILD-ORDER.md). Read
 [DISCLAIMER.md](../DISCLAIMER.md) first — this controls real water at real
 temperatures.
 
@@ -86,6 +86,8 @@ controller/
     kdtvd            the daemon binary
     kdtv-emulator    device models, wire simulator, e2e rig — never shipped
     xtask            repository automation
+  docs/              the design documents — build order, design, hardware,
+                     shopping list, decisions, steam reference
   fixtures/          golden frames, each with its provenance tier
   deploy/            the systemd unit and the two configurations
   docker/            the harness image
@@ -123,10 +125,6 @@ it, a partial escalation is not representable.
 watchdog, the USB controller, a failed configuration check — takes both. The
 scoping is an exhaustive match, so a new fault variant does not compile until its
 scope is decided.
-
-**The independent temperature sensor cannot open anything.** Its only output type
-is a safety event. Nothing in the workspace maps a sensor reading to an
-authorisation to open water.
 
 ## Contradictions carried deliberately
 

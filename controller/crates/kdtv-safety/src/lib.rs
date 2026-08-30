@@ -53,12 +53,10 @@ pub mod authority;
 pub mod event;
 pub mod grant;
 pub mod kernel;
-pub mod rtd;
 pub mod session;
 
 pub use authority::{IsLatched, ZoneAuthority};
 pub use event::{DegradeReason, Effect, FaultScope, FindingClass, LatchReason, SafetyEvent};
 pub use grant::{Denial, OpenGrant, OperatorAck, StartAuthorization, ValidatedStart};
 pub use kernel::{Bounds, LinkState, SafetyKernel};
-pub use rtd::{RtdSample, RtdWatch};
 pub use session::SessionDeadline;

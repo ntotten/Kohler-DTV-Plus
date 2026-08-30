@@ -76,10 +76,6 @@ outlets = [
   { slot = 5, status_index = 5, wire_outlet = 4, name = "bath filler" },
 ]
 
-# The outlet whose supply pipe carries the independent temperature probe.
-# Continuous independent coverage exists for this outlet only; every other
-# outlet is verified individually with an immersion probe at commissioning.
-instrumented_slot = 1
 
 [zones.zone2]
 port = "/dev/pts/PLACEHOLDER"
@@ -90,7 +86,6 @@ outlets = [
   { slot = 2, status_index = 2, wire_outlet = 2, name = "handshower" },
   { slot = 3, status_index = 3, wire_outlet = 3, name = "body spray" },
 ]
-instrumented_slot = 1
 
 # ------------------------------------------------------------------------ steam
 #
@@ -109,48 +104,16 @@ port = "/dev/pts/PLACEHOLDER"
 tick_ms = 150
 retries = 4
 
-# ------------------------------------------ independent temperature measurement
-#
-# PT1000 on a MAX31865, one channel per zone, clamped to the supply pipe of that
-# zone's instrumented outlet. The sensor has NO authority to open an outlet. It
-# can only contribute to an all-off.
-#
-# A surface clamp is not an immersion measurement: it reads pipe wall, lags by
-# seconds, and reads low. The correction below is characterised at commissioning
-# against an immersion probe, and every threshold is evaluated on the corrected
-# value. The raw reading is logged beside it.
-#
-# With no `correction` the channel is uncorrected — which invents no offset, and
-# is why the absolute raw trip exists.
 # ------------------------------------------------------------------------ bench
 #
 # Bench-only facilities. `kdtv-config` refuses this whole table under
 # `profile = "production"`, which is what keeps everything in it off a real
 # bathroom — there is no key for any of it anywhere else.
 [bench]
-# Session-class durations only: the 1200 s session limit, the independent-probe
-# dwells, the RTD starvation window. Never a wire deadline — a 320 ms message
-# timeout is a property of 9600 8N1 and stays 320 ms whatever this says.
+# Session-class durations only: the 1200 s session limit. Never a wire
+# deadline — a 320 ms message timeout is a property of 9600 8N1 and stays
+# 320 ms whatever this says.
 session_scale = 1.0
-# Where the harness writes each zone's independent temperature, one file per
-# zone (`zone1.degc`, `zone2.degc`), each holding a Celsius reading and an
-# optional hexadecimal fault register: `38.5` or `38.5 0x04`.
-#
-# The daemon will not start a zone without an independent channel, and no
-# MAX31865 driver exists, so without this an emulated run cannot get past
-# validation. The harness writes real numbers rather than a stub returning a
-# plausible one, so an emulated run drives the same escalations hardware would.
-probe_dir = ".e2e/probes"
-
-[sensors.zone1]
-chip_select = "spi0.0"
-# correction = [
-#   { surface_c = 33.0, immersion_c = 35.0 },
-#   { surface_c = 42.0, immersion_c = 45.0 },
-# ]
-
-[sensors.zone2]
-chip_select = "spi0.1"
 
 # -------------------------------------------------------------------------- api
 #

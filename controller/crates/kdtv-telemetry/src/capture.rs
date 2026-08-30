@@ -1,6 +1,6 @@
 //! Frame capture and session records.
 //!
-//! `CONTROLLER-DESIGN.md` requires "raw RX/TX frame bytes with monotonic and
+//! `DESIGN.md` requires "raw RX/TX frame bytes with monotonic and
 //! wall-clock timestamps" among the required logs. The frame log is also the
 //! oracle the end-to-end tests assert against: what the service *did* on the
 //! wire, rather than what it believes about itself. A service that reports
@@ -97,11 +97,6 @@ pub struct SessionRecord {
     pub stop: StopReason,
     /// The highest temperature the valve reported during the session.
     pub max_valve_reported_c: Option<f32>,
-    /// The highest corrected independent reading during the session, where a
-    /// channel covered this outlet. `None` means no independent coverage —
-    /// which is itself the finding, since coverage is limited to each zone's
-    /// instrumented default outlet.
-    pub max_independent_corrected_c: Option<f32>,
 }
 
 impl SessionRecord {
@@ -121,7 +116,6 @@ impl SessionRecord {
             duration_s: ended.since(started).as_secs(),
             stop,
             max_valve_reported_c: None,
-            max_independent_corrected_c: None,
         }
     }
 
@@ -182,22 +176,5 @@ mod tests {
         );
         assert_eq!(s.duration(), Duration::from_secs(300));
         assert!(serde_json::to_string(&s).unwrap().contains("session_limit"));
-    }
-
-    #[test]
-    fn a_session_with_no_independent_coverage_says_so_rather_than_reporting_zero() {
-        let s = SessionRecord::new(
-            LinkKind::Zone(ZoneId::Zone1),
-            CommandId(1),
-            at(0),
-            at(1),
-            StopReason::Commanded,
-        );
-        assert_eq!(s.max_independent_corrected_c, None);
-        assert!(
-            serde_json::to_string(&s)
-                .unwrap()
-                .contains("\"max_independent_corrected_c\":null")
-        );
     }
 }

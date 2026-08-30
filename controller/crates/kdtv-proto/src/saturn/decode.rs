@@ -491,7 +491,7 @@ mod tests {
     /// own transmission back at us. This build's converters do not, but the
     /// decoder must survive one that does. `CORRECTIONS.md` item 3.
     #[test]
-    fn req_controller_design_proto_06_echo_bleed_before_a_response_still_decodes() {
+    fn req_design_proto_06_echo_bleed_before_a_response_still_decodes() {
         let echo: &[u8] = &[0xAA, 0x55, 0x03, 0x02, 0x00, 0xFB];
         let mut bytes = echo.to_vec();
         bytes.extend_from_slice(FW_TYPE_RESPONSE);

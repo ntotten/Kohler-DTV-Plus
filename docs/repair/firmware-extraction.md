@@ -114,6 +114,31 @@ On a LAN whose DNS you control, point the update hostname at your own FTP server
 
 ---
 
+## Parts, if the extraction is ever attempted
+
+Nothing here is bought until the board is photographed and the footprints are
+confirmed against [`Images/KohlerBoardOverall.webp`](../../Images/KohlerBoardOverall.webp).
+
+| Qty | Item                                             | Source                                                                                                  | Buying note                                                                                                                        |
+| --: | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+|   1 | USB-to-TTL serial cable, **3.3 V** logic         | [Adafruit 954](https://www.adafruit.com/product/954), $9.95                                             | The **J904** 4-pin console header, 115200 8N1. Try this first — it is the whole cost of finding out whether the shell is alive     |
+|   1 | PEmicro Multilink Universal (`USB-ML-UNIVERSAL`) | [PEmicro direct](https://www.pemicro.com/products/product_viewDetails.cfm?product_id=15320180), $299.00 | ColdFire **V2/V3/V4** BDM over the **J201** 26-pin footprint. The 26-pin ColdFire ribbon is included — do not order one separately |
+
+Three notes on the probe, all checked 2026-08-30:
+
+- **The `-FX` variant is $599 and buys speed only.** Both support ColdFire
+  V2/V3/V4; the MCF54416 is V4. For one dump, the $299 part is the correct
+  choice. `USB-ML-ACP` is ARM-only and does **not** work here.
+- **The 26-pin cable ships in the box.** Earlier drafts of this list carried a
+  separate ribbon line item; it was redundant. The $50 synchronous-ColdFire
+  adapter is for MCF5272/MCF5206(E) and is not needed either.
+- **TBLCF** (Turbo BDM Light ColdFire) is the open-hardware alternative if the
+  $299 is not worth it for a single read —
+  [reference-links.md](../../research/reference-links.md).
+
+Order neither part before the serial console has been tried and the J201
+footprint confirmed populated. J904 is $10 and may answer the question outright.
+
 ## References
 
 - MQX 3.8.1 source mirror (reviewed: `rtcs/source/httpd/httpd.c`, `httpd_supp.c`; `rtcs/source/apps/ftpclnt.c`): [wk2325272/MQX_3.8.1](https://github.com/wk2325272/MQX_3.8.1)

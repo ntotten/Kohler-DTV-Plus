@@ -35,9 +35,7 @@ use crate::command::{CommandError, ServiceHandle};
 use crate::port::Pipe;
 use crate::service::{Deps, ShutdownTrigger, assemble};
 use crate::supervisor::{SHUTDOWN_GRACE, ShutdownOutcome};
-use fakes::{
-    FakeClock, FakeIds, FakePipe, FakeRtd, FakeWatchdog, PipeScript, PipeWatch, RtdDial, Valve,
-};
+use fakes::{FakeClock, FakeIds, FakePipe, FakeWatchdog, PipeScript, PipeWatch, Valve};
 
 const PRODUCTION_TOML: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../deploy/kdtvd.toml");
 const ZONE1_PORT: &str = "/dev/serial/by-id/usb-Waveshare_USB_TO_RS485-if00-port0";
@@ -87,26 +85,16 @@ struct Harness {
     zone2: PipeScript,
     watch1: PipeWatch,
     watch2: PipeWatch,
-    probe1: RtdDial,
-    #[expect(dead_code, reason = "zone 2's probe is held so both zones are covered")]
-    probe2: RtdDial,
     watchdog: Arc<FakeWatchdog>,
 }
 
 impl Harness {
     /// Start the service with a healthy valve on each bus.
     fn start() -> Self {
-        Self::build(false)
+        Self::build()
     }
 
-    /// The same, with zone 1's independent temperature channel failing every
-    /// transfer from the first second — a broken chip select, or a ribbon that
-    /// was never seated.
-    fn start_with_a_dead_probe_on_zone1() -> Self {
-        Self::build(true)
-    }
-
-    fn build(dead_probe_on_zone1: bool) -> Self {
+    fn build() -> Self {
         let config = config();
         let clock = FakeClock::new();
         let watchdog = FakeWatchdog::new(Some(Duration::from_secs(10)));
@@ -135,12 +123,6 @@ impl Harness {
 
         let as_clock: Arc<dyn kdtv_hal::Clock> = clock;
         let as_watchdog: Arc<dyn kdtv_hal::Watchdog> = watchdog.clone();
-        let (rtd1, probe1) = if dead_probe_on_zone1 {
-            FakeRtd::broken(ZoneId::Zone1, Arc::clone(&as_clock))
-        } else {
-            FakeRtd::new(ZoneId::Zone1, Arc::clone(&as_clock), 38.0)
-        };
-        let (rtd2, probe2) = FakeRtd::new(ZoneId::Zone2, Arc::clone(&as_clock), 38.0);
 
         let started = assemble(
             &config,
@@ -150,7 +132,6 @@ impl Harness {
             Deps {
                 clock: Arc::clone(&as_clock),
                 watchdog: as_watchdog,
-                rtd: vec![Box::new(rtd1), Box::new(rtd2)],
             },
             // No link factory ran, so there is no descriptor to record.
             Vec::new(),
@@ -165,8 +146,6 @@ impl Harness {
             zone2,
             watch1,
             watch2,
-            probe1,
-            probe2,
             watchdog,
         }
     }
@@ -246,8 +225,7 @@ fn is_all_off(frame: &[u8]) -> bool {
 // ------------------------------------------------------------------ boot
 
 #[tokio::test(start_paused = true)]
-async fn req_controller_design_boot_06_the_boot_sequence_probes_every_address_and_confirms_off_before_ready()
- {
+async fn req_design_boot_06_the_boot_sequence_probes_every_address_and_confirms_off_before_ready() {
     let harness = Harness::start();
     harness.boot().await;
 
@@ -401,28 +379,6 @@ async fn a_kernel_effect_reaches_the_wire_as_the_frame_it_names() {
     harness.finish().await;
 }
 
-#[tokio::test(start_paused = true)]
-async fn the_independent_probe_can_stop_a_zone_and_reaches_the_wire_as_an_all_off() {
-    let harness = Harness::start();
-    harness.boot().await;
-
-    let before = harness.watch1.frame_count();
-    // Above the absolute raw backstop. It has no dwell and is not gated on the
-    // outlet, because a pipe that hot is a finding whatever caused it.
-    harness.probe1.set(51.0, 0);
-    harness.settle(Duration::from_secs(3)).await;
-
-    let recent: Vec<Vec<u8>> = harness.watch1.frames().into_iter().skip(before).collect();
-    assert!(
-        recent.iter().any(|f| is_all_off(f)),
-        "an over-temperature must stop the zone: {recent:02X?}"
-    );
-    assert_eq!(harness.phase(ZoneId::Zone1), ZonePhaseKind::Unavailable);
-    // The probe's only output was a safety event. It opened nothing.
-    assert!(!recent.iter().any(|f| opens_water(f)));
-    harness.finish().await;
-}
-
 // ------------------------------------------------------------------ SVC-01
 
 #[tokio::test(start_paused = true)]
@@ -487,59 +443,6 @@ async fn a_lost_port_on_one_bus_latches_only_that_zone() {
 }
 
 // ------------------------------------------------------------------ SAFE-05
-
-#[tokio::test(start_paused = true)]
-async fn a_probe_that_never_speaks_starves_the_zone_rather_than_being_waited_on_forever() {
-    let harness = Harness::start_with_a_dead_probe_on_zone1();
-    // Zone 1's channel errors on every transfer, so `RtdWatch` never gets a
-    // first sample and has nothing to measure a gap from. SAFE-05 is "if no RTD
-    // sample arrives for more than 5 s", and from boot that includes never.
-    harness
-        .settle(BOOT_TIME + kdtv_units::RTD_STARVATION + Duration::from_secs(1))
-        .await;
-
-    assert_eq!(
-        harness.phase(ZoneId::Zone1),
-        ZonePhaseKind::Unavailable,
-        "a zone with no independent temperature must not stay available: {:?}",
-        harness.snapshot()
-    );
-    assert_eq!(
-        harness.phase(ZoneId::Zone2),
-        ZonePhaseKind::ReadyOff,
-        "zone 2's own probe is healthy"
-    );
-    let snapshot = harness.snapshot();
-    let zone1 = snapshot.zone(ZoneId::Zone1).expect("zone 1 is configured");
-    assert!(zone1.independent.is_none(), "there was never a reading");
-    assert!(zone1.kernel.is_latched());
-    harness.finish().await;
-}
-
-#[tokio::test(start_paused = true)]
-async fn a_start_is_refused_while_the_independent_channel_has_never_spoken() {
-    let harness = Harness::start_with_a_dead_probe_on_zone1();
-    // Inside the starvation window, so the zone has not latched yet: this is the
-    // gap between reaching ready-off and the probe being ruled out.
-    harness.settle(BOOT_TIME).await;
-    assert_eq!(harness.phase(ZoneId::Zone1), ZonePhaseKind::ReadyOff);
-
-    let before = harness.watch1.frame_count();
-    let error = harness
-        .start_zone1(CommandId(71))
-        .await
-        .expect_err("a zone with no independent reading must refuse");
-    assert!(
-        matches!(error, CommandError::NoIndependentReading(ZoneId::Zone1)),
-        "{error:?}"
-    );
-    assert_eq!(
-        harness.watch1.frame_count(),
-        before,
-        "a refusal transmits nothing"
-    );
-    harness.finish().await;
-}
 
 // ------------------------------------------------------------------ API-06
 
@@ -895,27 +798,6 @@ async fn a_command_arriving_during_shutdown_is_answered_rather_than_dropped() {
 }
 
 #[tokio::test(start_paused = true)]
-async fn a_broken_probe_stops_the_zone_because_an_open_rtd_reads_low() {
-    let harness = Harness::start();
-    harness.boot().await;
-
-    let before = harness.watch1.frame_count();
-    // An open FORCE- line. The reading looks like cold water, so the fault
-    // register is the only thing that says the channel means nothing.
-    harness.probe1.set(20.0, 0x08);
-    harness.settle(Duration::from_secs(3)).await;
-
-    let recent: Vec<Vec<u8>> = harness.watch1.frames().into_iter().skip(before).collect();
-    assert!(
-        recent.iter().any(|f| is_all_off(f)),
-        "a faulted amplifier must stop the zone: {recent:02X?}"
-    );
-    assert_eq!(harness.phase(ZoneId::Zone1), ZonePhaseKind::Unavailable);
-    assert_eq!(harness.phase(ZoneId::Zone2), ZonePhaseKind::ReadyOff);
-    harness.finish().await;
-}
-
-#[tokio::test(start_paused = true)]
 async fn the_shutdown_grace_is_bounded() {
     // Not a behaviour test — a statement about the number, so a change to it is
     // deliberate. It has to exceed a full Saturn transaction budget and stay
@@ -948,14 +830,13 @@ async fn the_watchdog_is_petted_by_the_loop_that_services_the_links() {
 // ------------------------------------------------------------------ logging
 
 #[tokio::test(start_paused = true)]
-async fn req_controller_design_log_10_the_event_stream_carries_the_frames_and_the_stamps_the_log_requires()
+async fn req_design_log_05_req_design_log_02_the_event_stream_carries_the_frames_and_the_stamps_the_log_requires()
  {
     let harness = Harness::start();
     let mut events = harness.handle.subscribe();
     harness.boot().await;
 
     let mut saw_frame = false;
-    let mut saw_temperature = false;
     let mut saw_state = false;
     let mut saw_serial_opened = false;
     loop {
@@ -977,15 +858,6 @@ async fn req_controller_design_log_10_the_event_stream_carries_the_frames_and_th
             assert!(json.contains("wall_unix_s"), "{json}");
             assert!(json.contains("\"ntp\""), "{json}");
         }
-        if json.contains("\"event\":\"temperature\"") {
-            saw_temperature = true;
-            // LOG-03 and LOG-10: both numbers, in the same record. The valve's
-            // own reading is a self-report and the probe's is a surface
-            // reading; either alone is not evidence.
-            assert!(json.contains("independent_raw_c"), "{json}");
-            assert!(json.contains("independent_corrected_c"), "{json}");
-            assert!(json.contains("valve_reported_c"), "{json}");
-        }
         saw_serial_opened |= json.contains("serial_opened");
         saw_state |= json.starts_with("{\"state\":");
         // LOG-09: nothing credential-shaped ever reaches the stream.
@@ -995,29 +867,18 @@ async fn req_controller_design_log_10_the_event_stream_carries_the_frames_and_th
     }
     // `LOG-09` over a snapshot that actually has something in it. The check in
     // `crate::cache` serialises an empty one, which can only ever exercise the
-    // envelope; this one carries both zones, their engine caches, their kernel
-    // labels and an independent reading. Steam is `enabled = false` in the
-    // reference configuration, so `SteamStatus` is not covered here either.
+    // envelope; this one carries both zones, their engine caches and their
+    // kernel labels. Steam is `enabled = false` in the reference
+    // configuration, so `SteamStatus` is not covered here either.
     let populated = harness.snapshot();
     let json = serde_json::to_string(&*populated).expect("a snapshot must serialise");
     assert!(json.contains("\"zone\":\"zone1\""), "{json}");
-    assert!(json.contains("independent"), "{json}");
-    assert!(
-        populated
-            .zone(ZoneId::Zone1)
-            .is_some_and(|z| z.independent.is_some()),
-        "the probe must have reported by now: {json}"
-    );
     for word in ["token", "secret", "password", "credential", "pairing"] {
         assert!(!json.contains(word), "{word} appears in {json}");
     }
 
     assert!(saw_frame, "raw frame bytes must be recorded");
     assert!(saw_state, "the state stream must publish snapshots");
-    assert!(
-        saw_temperature,
-        "the independent temperature must reach the log beside the valve's own"
-    );
     // Nothing was opened through a link factory in this harness, so there is no
     // descriptor to record and no such event.
     assert!(!saw_serial_opened);

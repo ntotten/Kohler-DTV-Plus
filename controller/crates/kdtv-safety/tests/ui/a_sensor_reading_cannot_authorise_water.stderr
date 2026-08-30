@@ -1,7 +1,0 @@
-error[E0277]: the trait bound `OpenGrant: From<RtdSample>` is not satisfied
-  --> tests/ui/a_sensor_reading_cannot_authorise_water.rs:10:31
-   |
-10 |     let _: OpenGrant = sample.into();
-   |                               ^^^^ the trait `From<RtdSample>` is not implemented for `OpenGrant`
-   |
-   = note: required for `RtdSample` to implement `Into<OpenGrant>`

@@ -4,9 +4,11 @@ Guidance for AI and human agents working in this repository.
 
 ## What this project is
 
-A replacement master for the Kohler DTV+: three isolated serial links — two
-Saturn valve buses and one DTV+ steam link — driven from a Raspberry Pi, plus
-the reverse engineering that makes it possible.
+A replacement master for the Kohler DTV+: the two Saturn valve buses driven
+from a Raspberry Pi over isolated serial links, plus the reverse engineering
+that makes it possible. The scope is a like-for-like replacement of the
+K-99695 — no added installation equipment, no steam setup
+([controller/docs/DECISIONS.md](controller/docs/DECISIONS.md) D12).
 
 It began alongside an investigation into why the shower stopped mid-use. That
 question is **closed** as of 2026-08-29 — the cause was this project's own app

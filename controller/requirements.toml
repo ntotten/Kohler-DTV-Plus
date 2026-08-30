@@ -3,7 +3,7 @@
 # Machine-extracted from the documents named in each entry's `source`, then
 # reviewed. It is DERIVED material: where an entry and its source document
 # disagree, the document is right and the entry is the bug. Nothing here
-# overrides docs/replacement-controller/, PROTOCOL.md or DISCLAIMER.md.
+# overrides controller/docs/, PROTOCOL.md or DISCLAIMER.md.
 #
 # Entries are keyed on (document, id), NOT on id alone. The ids collide badly
 # across source documents: 88 of 348 distinct ids are used more than once, and
@@ -27,556 +27,556 @@
 
 [[requirement]]
 id = "SAFE-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "safety/topology"
 statement = "The K-99695 and the replacement controller must never be connected to the same valve bus."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (1)"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (1)"
 verification = "not-testable-in-software (physical wiring); commissioning inspection"
 hard = true
 
 [[requirement]]
 id = "SAFE-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "safety/procedure"
 statement = "Cable swaps happen only with both valves off and valve power removed."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (2)"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (2)"
 verification = "not-testable-in-software; manual commissioning procedure"
 hard = true
 
 [[requirement]]
 id = "SAFE-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "safety/authority"
 statement = "The permanent valve master is the local Pi service, not Homebridge, a cloud service, or an AI system."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (3)"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (3)"
 verification = "architecture review; emulator e2e showing external clients cannot drive the bus"
 hard = true
 
 [[requirement]]
 id = "SAFE-04"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "boot/state"
 statement = "Pi boot, service restart, and watchdog-reset state is `OFF`; no prior water-on state is restored."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (4)"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (4)"
 verification = "emulator e2e: kill/restart the service mid-session and assert no start frame is emitted"
 hard = true
 
 [[requirement]]
 id = "SAFE-05"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "fail-off/escalation"
 statement = "Loss of a valid response makes the service attempt `all-off` on the affected zone, close that zone's serial port, and latch that zone unavailable."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (5)"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (5)"
 verification = "emulator e2e: withhold a response and assert all-off, port close, and latch"
 hard = true
 
 [[requirement]]
 id = "SAFE-06"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "fail-off/backstop"
 statement = "Treat the valve's measured communication-loss shutdown as the physical safety backstop; the software fail-off path does not replace it."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (5)"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (5)"
 verification = "manual commissioning (Phase 3 fail-off measurement)"
 hard = true
 
 [[requirement]]
 id = "SAFE-07"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "fail-off/escalation"
 statement = "Escalation is scoped: a link fault takes one zone down; only a shared fault — the service process, the watchdog, the USB controller, or a failed configuration check — takes both zones down."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (5)"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (5)"
 verification = "unit + emulator e2e: fault-injection matrix asserting single-zone vs both-zone escalation"
 hard = true
 
 [[requirement]]
 id = "CLAMP-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "setpoint clamp"
 statement = "Clamp every setpoint at both ends before transmission."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (6)"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (6)"
 verification = "property test over the full input range asserting no frame carries a value outside [60, 85]"
 hard = true
 
 [[requirement]]
 id = "CLAMP-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "setpoint clamp"
 statement = "The setpoint ceiling is `Cx2 = 85`, i.e. 42.5 °C / 108.5 °F — the 109 °F user-facing limit rounded down to the 0.5 °C step below it."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (6), bounds table"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (6), bounds table"
 verification = "unit test on the clamp function"
 hard = true
 
 [[requirement]]
 id = "CLAMP-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "setpoint clamp"
 statement = "The setpoint floor is `Cx2 = 60`, i.e. 30 °C / 86 °F (`MIN_SYS_VALVE_TEMP`); below it the valve returns error 3, parameter out of range."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (6), bounds table"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (6), bounds table"
 verification = "unit test on the clamp function"
 hard = true
 disputed = "The floor value is not in doubt. The stated consequence is: under saturn-protocol.md code 3 is parameter-out-of-range, under docs/devices/valve-control.md it is OVERTEMP_CONTROL. Which table applies is unresolved, so the meaning of the returned code is not stated as fact."
 
 [[requirement]]
 id = "CLAMP-04"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "setpoint clamp"
 statement = "Temperatures outside the local clamp are permanently denied in the production encoder."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → 'Permanently deny'"
+source = "controller/docs/DESIGN.md § Software design → 'Permanently deny'"
 verification = "unit test on the encoder allowlist"
 hard = true
 
 [[requirement]]
 id = "CLAMP-05"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "setpoint clamp"
 statement = "Unconfigured outlet bits are permanently denied in the production encoder."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → 'Permanently deny'"
+source = "controller/docs/DESIGN.md § Software design → 'Permanently deny'"
 verification = "unit test on the encoder allowlist"
 hard = true
 
 [[requirement]]
 id = "SESS-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "session limits"
 statement = "Custom sessions have a 20-minute hard limit."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (7)"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (7)"
 verification = "emulator e2e with a simulated clock asserting stop at 1200 s"
 hard = true
 
 [[requirement]]
 id = "SESS-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "session limits"
 statement = "No keepalive may extend a session automatically."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (7)"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (7)"
 verification = "unit: assert no automatic refresh frame exists on any timer path"
 hard = true
 
 [[requirement]]
 id = "SESS-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "session limits"
 statement = "Keep the 20-minute limit below the Prompt 3 valve's own 1800-second stop, and never send the timer refresh, so the valve's timer remains an independent hardware backstop; the refresh is only accepted once ≥ 900 s have elapsed."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (7)"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (7)"
 verification = "unit + emulator e2e; capture scenario 8 (22-minute run) confirms valve-side behaviour"
 hard = true
-disputed = "saturn-protocol.md says the Prompt 3 counter resets on any valid received command, under which ordinary polling refreshes it and no independent hardware backstop exists. CONTROLLER-DESIGN.md rule 7 assumes only a deliberate refresh does. Capture question 5."
+disputed = "saturn-protocol.md says the Prompt 3 counter resets on any valid received command, under which ordinary polling refreshes it and no independent hardware backstop exists. DESIGN.md rule 7 assumes only a deliberate refresh does. Capture question 5."
 
 [[requirement]]
 id = "SESS-04"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "session limits/runtime timer"
 statement = "The service owns the 20-minute monotonic runtime timer."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → 'The service owns'"
+source = "controller/docs/DESIGN.md § Software design → 'The service owns'"
 verification = "unit test using a monotonic clock source, not wall clock"
 hard = true
 
 [[requirement]]
 id = "DENY-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "denied commands"
 statement = "Calibration, arbitrary EEPROM writes, factory reset, bootloader, and valve firmware-update commands are absent from production firmware."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (8)"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (8)"
 verification = "unit: encoder allowlist test asserting no such frame can be constructed"
 hard = true
 
 [[requirement]]
 id = "DENY-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "denied commands"
 statement = "The production encoder contains only captured and tested operational frames."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → production encoder"
+source = "controller/docs/DESIGN.md § Software design → production encoder"
 verification = "unit: every encodable frame maps to a golden fixture from Phase 1"
 hard = true
 
 [[requirement]]
 id = "DENY-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "denied commands"
 statement = "Permanently deny calibration/configuration writes."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → 'Permanently deny'"
+source = "controller/docs/DESIGN.md § Software design → 'Permanently deny'"
 verification = "unit test on the encoder allowlist"
 hard = true
 
 [[requirement]]
 id = "DENY-04"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "denied commands"
 statement = "Permanently deny factory reset."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → 'Permanently deny'"
+source = "controller/docs/DESIGN.md § Software design → 'Permanently deny'"
 verification = "unit test on the encoder allowlist"
 hard = true
 
 [[requirement]]
 id = "DENY-05"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "denied commands"
 statement = "Permanently deny bootloader and firmware update."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → 'Permanently deny'"
+source = "controller/docs/DESIGN.md § Software design → 'Permanently deny'"
 verification = "unit test on the encoder allowlist"
 hard = true
 
 [[requirement]]
 id = "DENY-06"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "denied commands"
 statement = "Permanently deny arbitrary EEPROM access."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → 'Permanently deny'"
+source = "controller/docs/DESIGN.md § Software design → 'Permanently deny'"
 verification = "unit test on the encoder allowlist"
 hard = true
 
 [[requirement]]
 id = "DENY-07"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "denied commands"
 statement = "Permanently deny unknown commands and unknown payload lengths."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → 'Permanently deny'"
+source = "controller/docs/DESIGN.md § Software design → 'Permanently deny'"
 verification = "property test: fuzz command byte and length, assert encoder refuses"
 hard = true
 
 [[requirement]]
 id = "DENY-08"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "denied commands/steam"
 statement = "Power clean, deluge and spa are denied in the encoder."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → public operations"
+source = "controller/docs/DESIGN.md § Software design → public operations"
 verification = "unit test on the encoder allowlist"
 hard = true
 
 [[requirement]]
 id = "DENY-09"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "denied commands/discovery"
 statement = "Address clear/allocation is allowed only if packet capture proves it is part of normal boot discovery, is legal only in the `DISCOVERY` state while water is off, and is never legal after the link reaches `READY_OFF`."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → address clear"
+source = "controller/docs/DESIGN.md § Software design → address clear"
 verification = "unit state-machine test: assert address-clear encode is rejected in every state but DISCOVERY"
 hard = true
 
 [[requirement]]
 id = "VALID-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "input validation"
 statement = "A request that fails API validation — temperature outside the clamp, an unconfigured outlet bit, or an unknown zone — is rejected to the caller with no valve state change."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (9), response table"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (9), response table"
 verification = "unit: assert rejection and zero frames transmitted"
 hard = true
 
 [[requirement]]
 id = "VALID-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "fail-off/wire validation"
 statement = "A reported fault, a checksum failure on a write, a malformed or out-of-range value in a valve response, or a missed safety response triggers `all-off` and latches the zone unavailable until acknowledged."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (9), response table"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (9), response table"
 verification = "emulator e2e fault injection for each of the four wire conditions"
 hard = true
 
 [[requirement]]
 id = "VALID-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "latch/acknowledgement"
 statement = "A latched-unavailable zone stays unavailable until explicitly acknowledged; recovery is not automatic."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (9)"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (9)"
 verification = "emulator e2e: restore a healthy link and assert the zone stays latched without acknowledgement"
 hard = true
 
 [[requirement]]
 id = "RAW-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "API surface"
 statement = "AI, Homebridge, the Worker, and remote clients cannot send raw valve frames."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (10)"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (10)"
 verification = "unit + emulator e2e: assert no API path accepts frame bytes"
 hard = true
 
 [[requirement]]
 id = "K99695-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "legacy controller"
 statement = "Existing automated HTTP reads against the K-99695 remain disabled; after cutover the K-99695 is powered down."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Non-negotiable rules (11)"
+source = "controller/docs/DESIGN.md § Safety boundary → Non-negotiable rules (11)"
 verification = "unit/config check that no poller is scheduled; manual commissioning for power-down"
 hard = true
 
 [[requirement]]
 id = "BOOT-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "safe boot sequence"
 statement = "Open both serial interfaces without restoring or transmitting a start state."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Safe boot sequence (1)"
+source = "controller/docs/DESIGN.md § Software design → Safe boot sequence (1)"
 verification = "emulator e2e: capture all TX during boot and assert no start frame"
 hard = true
 
 [[requirement]]
 id = "BOOT-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "safe boot sequence"
 statement = "Validate configuration, adapter identity, and physical port mapping before proceeding."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Safe boot sequence (2)"
+source = "controller/docs/DESIGN.md § Software design → Safe boot sequence (2)"
 verification = "unit + emulator e2e with a swapped/absent adapter"
 hard = true
 
 [[requirement]]
 id = "BOOT-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "safe boot sequence"
 statement = "Discover each valve using only the captured, approved startup sequence."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Safe boot sequence (3)"
+source = "controller/docs/DESIGN.md § Software design → Safe boot sequence (3)"
 verification = "unit: discovery TX must byte-match Phase 1 golden fixtures"
 hard = true
 
 [[requirement]]
 id = "BOOT-04"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "safe boot sequence"
 statement = "Read identity, firmware, outlets, temperature, and faults."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Safe boot sequence (4)"
+source = "controller/docs/DESIGN.md § Software design → Safe boot sequence (4)"
 verification = "emulator e2e"
 hard = false
 
 [[requirement]]
 id = "BOOT-05"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "safe boot sequence"
 statement = "Send the captured all-off command and require acknowledgement."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Safe boot sequence (5)"
+source = "controller/docs/DESIGN.md § Software design → Safe boot sequence (5)"
 verification = "emulator e2e: withhold the ack and assert the zone does not become READY_OFF"
 hard = true
 
 [[requirement]]
 id = "BOOT-06"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "safe boot sequence"
 statement = "Enter `READY_OFF` only after both zones are confirmed off."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Safe boot sequence (6)"
+source = "controller/docs/DESIGN.md § Software design → Safe boot sequence (6)"
 verification = "unit state-machine test"
 hard = true
 
 [[requirement]]
 id = "BOOT-07"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "safe boot sequence"
 statement = "Accept a start only after a fresh authenticated session and an explicit user command."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Safe boot sequence (7)"
+source = "controller/docs/DESIGN.md § Software design → Safe boot sequence (7)"
 verification = "emulator e2e: unauthenticated and stale-session start attempts must be rejected"
 hard = true
 
 [[requirement]]
 id = "BOOT-08"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "safe boot sequence"
 statement = "If a valve cannot be confirmed off, that zone remains unavailable and the operator is told to remove valve power."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Safe boot sequence"
+source = "controller/docs/DESIGN.md § Software design → Safe boot sequence"
 verification = "emulator e2e asserting the unavailable state and the operator message"
 hard = true
 
 [[requirement]]
 id = "BOOT-09"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "safe boot sequence/purge"
 statement = "If automatic purge is enabled (I4), 'confirmed off' in the safe boot sequence means flow has stopped, not that the valve acknowledged."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Purge handling (3)"
+source = "controller/docs/DESIGN.md § Purge handling (3)"
 verification = "manual commissioning; emulator e2e once purge behaviour is known"
 hard = true
 
 [[requirement]]
 id = "ID-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "boot/command IDs"
 statement = "Maintain a monotonically increasing boot ID and command ID so that a restart cannot replay `start`."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → 'The service owns'"
+source = "controller/docs/DESIGN.md § Software design → 'The service owns'"
 verification = "unit: property test asserting monotonicity across simulated restarts; emulator e2e replay attempt"
 hard = true
 
 [[requirement]]
 id = "SVC-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "service ownership"
 statement = "The service owns discovery and one independent Saturn state machine per valve."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → 'The service owns'"
+source = "controller/docs/DESIGN.md § Software design → 'The service owns'"
 verification = "unit: two state machines with no shared mutable state"
 hard = false
 
 [[requirement]]
 id = "SVC-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "service ownership"
 statement = "The service owns exact request/response deadlines and checksum validation."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → 'The service owns'"
+source = "controller/docs/DESIGN.md § Software design → 'The service owns'"
 verification = "unit on checksum; emulator e2e with delayed responses for deadlines"
 hard = true
 
 [[requirement]]
 id = "SVC-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "service ownership"
 statement = "The service holds the authoritative desired and actual state."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → 'The service owns'"
+source = "controller/docs/DESIGN.md § Software design → 'The service owns'"
 verification = "architecture review; unit"
 hard = false
 
 [[requirement]]
 id = "SVC-04"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "service ownership"
 statement = "The service owns valve fault polling and all-off escalation."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → 'The service owns'"
+source = "controller/docs/DESIGN.md § Software design → 'The service owns'"
 verification = "emulator e2e fault injection"
 hard = true
 
 [[requirement]]
 id = "SVC-05"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "service ownership"
 statement = "The service exposes a local authenticated API and a read-only event stream."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → 'The service owns'"
+source = "controller/docs/DESIGN.md § Software design → 'The service owns'"
 verification = "emulator e2e: assert the event stream accepts no writes and the API requires auth"
 hard = true
 
 [[requirement]]
 id = "API-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "public API"
 statement = "Expose only the constrained valve operations `start(zone, outlet_set, temperature_f, duration_seconds)`, `set_temperature(zone, temperature_f)`, `set_outlets(zone, outlet_set)`, `pause(zone)`, `resume(zone)`, `stop(zone)`, `stop_all()`, `get_cached_state()`."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → 'Expose only constrained public operations'"
+source = "controller/docs/DESIGN.md § Software design → 'Expose only constrained public operations'"
 verification = "unit: API surface test enumerating exactly these operations"
 hard = true
 
 [[requirement]]
 id = "API-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "public API/steam"
 statement = "Expose steam on the same pattern with only `steam_start(temperature_f, duration_minutes)`, `steam_set_temperature(temperature_f)`, `steam_set_duration(minutes)`, `steam_stop()`."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → steam operations"
+source = "controller/docs/DESIGN.md § Software design → steam operations"
 verification = "unit: API surface test"
 hard = true
 
 [[requirement]]
 id = "API-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "public API/steam"
 statement = "`stop_all()` stops steam as well as both valve zones."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → public operations"
-verification = "emulator e2e; manual commissioning in Phase 5"
+source = "controller/docs/DESIGN.md § Software design → public operations"
+verification = "emulator e2e"
 hard = true
 
 [[requirement]]
 id = "API-04"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "public API/outlet index"
 statement = "`outlet_set` in the public API is defined in configuration slot numbers — 1..6 for zone 1 and 1..3 for zone 2 — and is translated to the per-valve-type wire bitmap before transmission."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Outlet index spaces"
+source = "controller/docs/DESIGN.md § Software design → Outlet index spaces"
 verification = "unit: slot → status index → wire bitmap mapping tests per valve type"
 hard = true
 
 [[requirement]]
 id = "API-05"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "outlet index"
 statement = "Keep the slot/status/wire-bitmap mappings in one table with a regression test that permutes a slot, because the slot-to-status mapping is the identity on this system and an identity-only test does not exercise the code path."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Outlet index spaces"
+source = "controller/docs/DESIGN.md § Software design → Outlet index spaces"
 verification = "unit: permuted-slot regression test"
 hard = false
 
 [[requirement]]
 id = "API-06"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "caching/external clients"
 statement = "Homebridge and Worker status reads use the service cache; external callers cannot trigger an extra valve transaction or send a raw Saturn frame."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → external callers"
+source = "controller/docs/DESIGN.md § Software design → external callers"
 verification = "emulator e2e: hammer the status API and assert bus traffic is unchanged"
 hard = true
 
 [[requirement]]
 id = "BUS-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "concurrency"
 statement = "Commands to the two valves are independently serialized, with at most one request awaiting a response on each bus."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → external callers"
+source = "controller/docs/DESIGN.md § Software design → external callers"
 verification = "property test on the per-bus queue; emulator e2e with concurrent API calls"
 hard = true
 
 [[requirement]]
 id = "SER-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "serial binding"
 statement = "Bind logical zones to stable device paths using each adapter's identity or physical USB path, not incidental `/dev/ttyUSB0` enumeration order."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Pi controller service"
+source = "controller/docs/DESIGN.md § Software design → Pi controller service"
 verification = "unit on the resolver; manual commissioning with adapters re-plugged in a different order"
 hard = true
 
 [[requirement]]
 id = "SER-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "serial binding"
 statement = "Refuse to start if both expected serial interfaces are not present and distinct."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Pi controller service"
+source = "controller/docs/DESIGN.md § Software design → Pi controller service"
 verification = "unit + emulator e2e with one adapter absent and with a duplicate mapping"
 hard = true
 
 [[requirement]]
 id = "SER-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "serial timing"
 statement = "Set the USB-serial latency timer to 1 ms (`latency_timer`, and `ASYNC_LOW_LATENCY` where the driver offers it) and refuse to start if it does not read back."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Pi controller service"
+source = "controller/docs/DESIGN.md § Software design → Pi controller service"
 verification = "unit on the read-back check; manual verification on hardware"
 hard = true
 
 [[requirement]]
 id = "SER-04"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "serial timing"
 statement = "`latency_timer` is FTDI-specific; if a unit ships with a different bridge, establish that driver's equivalent before the unit is used."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Pi controller service"
+source = "controller/docs/DESIGN.md § Software design → Pi controller service"
 verification = "manual commissioning"
 hard = false
 
 [[requirement]]
 id = "PROTO-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "protocol parameters"
 statement = "All protocol parameters are `[C]` third-party reverse engineering, unverified against this hardware, and each must be confirmed from the Phase 1 capture before the encoder transmits."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Protocol parameters"
+source = "controller/docs/DESIGN.md § Software design → Protocol parameters"
 tier = "C"
 verification = "manual commissioning (Phase 1 capture) gating the encoder"
 hard = true
 
 [[requirement]]
 id = "PROTO-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "protocol parameters"
 statement = "Drive the line at 9600 8N1 with no flow control, RS-485 half-duplex."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Protocol parameters"
+source = "controller/docs/DESIGN.md § Software design → Protocol parameters"
 tier = "C"
 verification = "unit on port configuration; manual capture confirmation"
 hard = false
 
 [[requirement]]
 id = "PROTO-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "protocol parameters"
 statement = "Frames are at most 20 bytes: `AA 55` sync, addr, control, len, data, checksum."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Protocol parameters"
+source = "controller/docs/DESIGN.md § Software design → Protocol parameters"
 tier = "C"
 verification = "unit: encoder/decoder length bounds and fuzz for over-length rejection"
 hard = true
 
 [[requirement]]
 id = "PROTO-04"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "protocol parameters"
 statement = "The checksum is the 2's complement over addr + control + len + data, and must be validated on every received frame."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Protocol parameters"
+source = "controller/docs/DESIGN.md § Software design → Protocol parameters"
 tier = "C"
 verification = "unit against golden fixtures; property test on corrupted bytes"
 hard = true
 
 [[requirement]]
 id = "PROTO-05"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "protocol timing"
 statement = "Poll at the 525 ms valve tick, wait 400 ms for a valve response, allow at most 320 ms for a complete message to arrive, use a 20 ms echo timeout, a 2000 ms enquiry rate between address-discovery attempts, a 2000 ms clear delay after address clear before re-discovery, and 3 retries for read, write, and address management alike."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Protocol parameters table"
+source = "controller/docs/DESIGN.md § Software design → Protocol parameters table"
 tier = "C"
 verification = "unit on the timer constants; emulator e2e with delayed/partial responses"
 hard = false
@@ -584,146 +584,101 @@ disputed = "Mixes the 400 ms response timeout with the 320 ms message timeout an
 
 [[requirement]]
 id = "PROTO-06"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "protocol/echo"
 statement = "The decoder and emulator must not require a local echo, because a converter with automatic direction control does not present one; direction is inferred from address and content."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Echo note"
+source = "controller/docs/DESIGN.md § Software design → Echo note"
 verification = "unit: decode a capture with no echo frames present"
 hard = true
 
 [[requirement]]
 id = "SYSD-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "process supervision"
 statement = "Configure the daemon as a hardened `systemd` service with no water-state restoration, restart only into the OFF boot sequence, `WatchdogSec` application heartbeats, the Pi hardware watchdog enabled, and bounded persistent logs."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → systemd"
+source = "controller/docs/DESIGN.md § Software design → systemd"
 verification = "unit file review; emulator e2e restart test; manual commissioning"
 hard = true
 
 [[requirement]]
 id = "SYSD-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "process supervision"
 statement = "The watchdog supports recovery and diagnosis; it does not replace the valve's measured communication-loss shutdown."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → systemd"
+source = "controller/docs/DESIGN.md § Software design → systemd"
 verification = "not-testable-in-software; Phase 3 fail-off measurement"
 hard = true
 
 [[requirement]]
 id = "LOG-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "logging"
 statement = "Log the Pi boot ID, service boot ID, command ID, request source, and requested state."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Required logs"
+source = "controller/docs/DESIGN.md § Software design → Required logs"
 verification = "unit: assert every command log record carries all five fields"
 hard = false
 
 [[requirement]]
 id = "LOG-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "logging"
 statement = "Log wall-clock timestamps paired with NTP sync state, and either fit an RTC module or record sync state with each stamp because the Pi 4 has no RTC and stamps before first sync are wrong."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Required logs"
+source = "controller/docs/DESIGN.md § Software design → Required logs"
 verification = "unit: assert every wall-clock stamp is accompanied by sync state"
 hard = false
 
 [[requirement]]
-id = "LOG-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
-area = "logging"
-statement = "Log the independent outlet temperature alongside the valve's reported temperature."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Required logs"
-verification = "unit; emulator e2e with a simulated PT1000 channel"
-hard = false
-
-[[requirement]]
 id = "LOG-04"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "logging"
 statement = "Log local safety clamps and the rejection reason."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Required logs"
+source = "controller/docs/DESIGN.md § Software design → Required logs"
 verification = "unit: every rejection path emits a reason"
 hard = false
 
 [[requirement]]
 id = "LOG-05"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "logging"
 statement = "Log raw RX/TX frame bytes with both monotonic and wall-clock timestamps."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Required logs"
+source = "controller/docs/DESIGN.md § Software design → Required logs"
 verification = "unit against a recorded session"
 hard = false
 
 [[requirement]]
 id = "LOG-06"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "logging"
 statement = "Log acknowledgement latency, retry count, actual temperature, flow if supported, and valve fault flags."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Required logs"
+source = "controller/docs/DESIGN.md § Software design → Required logs"
 verification = "unit; emulator e2e"
 hard = false
 
 [[requirement]]
 id = "LOG-07"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "logging"
 statement = "Log serial, watchdog, USB, service-restart, controller-power, and valve-power-loss events."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Required logs"
+source = "controller/docs/DESIGN.md § Software design → Required logs"
 verification = "emulator e2e fault injection asserting one log record per event class"
 hard = false
 
 [[requirement]]
 id = "LOG-08"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "logging"
 statement = "Log session start, stop reason, duration, and maximum observed temperature."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Required logs"
+source = "controller/docs/DESIGN.md § Software design → Required logs"
 verification = "emulator e2e over a full session"
 hard = false
 
 [[requirement]]
 id = "LOG-09"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "logging/secrets"
 statement = "No credential, access token, or pairing data belongs in the logs."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Software design → Required logs"
+source = "controller/docs/DESIGN.md § Software design → Required logs"
 verification = "unit: redaction test; repository scan of committed fixtures"
-hard = true
-
-[[requirement]]
-id = "LOG-10"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
-area = "logging/temperature"
-statement = "Log the independent outlet temperature with every session; the independent sensor has no actuation authority and cannot open an outlet."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Independent temperature measurement"
-verification = "unit: assert no code path lets the sensor module command an outlet open"
-hard = true
-
-[[requirement]]
-id = "TEMP-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
-area = "independent temperature"
-statement = "Wire the permanent outlet temperature sensor into the same `all-off` path as the valve fault flags."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Independent temperature measurement"
-verification = "emulator e2e: simulate an over-temperature reading and assert all-off"
-hard = true
-
-[[requirement]]
-id = "TEMP-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
-area = "independent temperature"
-statement = "Evaluate every threshold on the offset-corrected surface-clamp value, characterized against the Therma K probe at commissioning, because a surface clamp reads pipe wall, lags, and reads low."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Independent temperature measurement"
-verification = "unit on the correction function; manual commissioning to obtain the offset"
-hard = true
-
-[[requirement]]
-id = "TEMP-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
-area = "independent temperature"
-statement = "Treat the interlock as covering only the instrumented outlet — each zone's default outlet — with every other outlet protected only by the setpoint clamp and fault monitoring until further channels are fitted."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Independent temperature measurement"
-verification = "not-testable-in-software; recorded in the commissioning report"
 hard = true
 
 [[requirement]]
@@ -737,361 +692,316 @@ hard = true
 
 [[requirement]]
 id = "LAT-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "acceptance latency"
 statement = "Measure fail-off latency at the outlet, from the last transmitted frame to observed flow stop, on every fault path in the Phase 3 test list."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Acceptance thresholds"
+source = "controller/docs/DESIGN.md § Safety boundary → Acceptance thresholds"
 verification = "manual commissioning (Phase 3)"
 hard = true
 
 [[requirement]]
 id = "LAT-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "acceptance latency"
 statement = "A measured fail-off latency of ≤ 10 s is a pass."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Acceptance thresholds table"
+source = "controller/docs/DESIGN.md § Safety boundary → Acceptance thresholds table"
 verification = "manual commissioning"
 hard = true
 
 [[requirement]]
 id = "LAT-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "acceptance latency"
 statement = "A measured fail-off latency of 10-30 s does not proceed past Phase 3 without written justification and a second opinion."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Acceptance thresholds table"
+source = "controller/docs/DESIGN.md § Safety boundary → Acceptance thresholds table"
 verification = "manual commissioning; documented sign-off"
 hard = true
 
 [[requirement]]
 id = "LAT-04"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "acceptance latency"
 statement = "A measured fail-off latency of > 30 s rejects this architecture."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Acceptance thresholds table"
+source = "controller/docs/DESIGN.md § Safety boundary → Acceptance thresholds table"
 verification = "manual commissioning"
 hard = true
 
 [[requirement]]
 id = "LAT-05"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "acceptance latency"
 statement = "A failing latency result is not to be solved by putting an unreviewed hobby relay in a valve's mains circuit."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary → Acceptance thresholds"
+source = "controller/docs/DESIGN.md § Safety boundary → Acceptance thresholds"
 verification = "not-testable-in-software; design review"
 hard = true
 
 [[requirement]]
 id = "LAT-06"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "acceptance latency/purge"
 statement = "If automatic purge is enabled (I4), measure Phase 3 and Phase 4 stop-latency figures against flow, not against the valve's acknowledgement."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Purge handling (2)"
+source = "controller/docs/DESIGN.md § Purge handling (2)"
 verification = "manual commissioning"
 hard = true
 
 [[requirement]]
 id = "PURGE-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "state model/purge"
 statement = "If automatic purge is enabled (I4), the state machine carries a purge state and `get_cached_state()` reports water-is-moving separately from valve-is-on."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Purge handling (1)"
+source = "controller/docs/DESIGN.md § Purge handling (1)"
 verification = "unit on the state model; emulator e2e"
 hard = true
 
 [[requirement]]
 id = "PH0-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 0 gate"
 statement = "Record the recovery baseline — both valve calibration codes (`v1_cal_code = 173`, zone 2 `160`), configured outlet slots and types, per-zone default and maximum temperatures, purge and runtime settings — before any replacement traffic, and use it as the reference for confirming nothing else changed."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 0"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 0"
 verification = "manual commissioning; software re-reads and diffs against the baseline after first discovery"
 hard = true
 
 [[requirement]]
 id = "PH0-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 0 gate"
 statement = "Discovery is permitted to broadcast address clear, but nothing else in the baseline configuration may change."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 0"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 0"
 verification = "manual commissioning: re-read baseline after first discovery"
 hard = true
 
 [[requirement]]
 id = "PH0-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 0 gate"
 statement = "Phase 0 does not close until the factory topology can be restored from the labels in under five minutes with power off."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 0 gate"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 0 gate"
 verification = "not-testable-in-software; timed drill"
 hard = true
 
 [[requirement]]
 id = "PH1-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 1 gate"
 statement = "The encoder may not transmit until Phase 1 passive capture has produced a decoder and golden-frame fixtures and quantified cadence, response deadlines, retry behavior, and bus utilization."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 1"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 1"
 verification = "manual gate; unit tests against golden fixtures"
 hard = true
 
 [[requirement]]
 id = "PH1-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 1 gate"
 statement = "The capture front end must be physically unable to transmit: termination off, `DE` hard-strapped inactive, `RE` hard-strapped asserted, and no transmit conductor from the USB UART."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Packet capture questions"
+source = "controller/docs/DESIGN.md § Packet capture questions"
 verification = "not-testable-in-software; hardware inspection"
 hard = true
 
 [[requirement]]
 id = "PH1-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 1 gate"
 statement = "Capture one valve at a time with no HTTP polling or other automation running."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Packet capture questions"
+source = "controller/docs/DESIGN.md § Packet capture questions"
 verification = "not-testable-in-software (manual capture procedure, performed by a person at the bus); disable pollers in configuration"
 hard = true
 
 [[requirement]]
 id = "PH1-04"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 1 gate"
 statement = "Timestamp at the capture device and use a logic analyzer where timing is the finding, because a 16 ms USB latency quantum does not resolve jitter on a 525 ms tick or a 320 ms deadline."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Packet capture questions"
+source = "controller/docs/DESIGN.md § Packet capture questions"
 verification = "manual commissioning"
 hard = false
 
 [[requirement]]
 id = "PH1-05"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 1 gate"
 statement = "Phase 1 closes only when repeated captures decode without checksum errors and produce the same state transitions."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 1 gate"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 1 gate"
 verification = "unit: replay captures through the decoder and diff state transitions"
 hard = true
 
 [[requirement]]
 id = "PH1-06"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 1 gate"
 statement = "The capture tap must add neither termination nor fail-safe bias to the pair, which is already terminated and biased at the controller and the valve, and its stub must be inches rather than feet."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Packet capture questions"
+source = "controller/docs/DESIGN.md § Packet capture questions"
 verification = "not-testable-in-software; hardware inspection of the tap before it is attached"
 hard = true
 
 [[requirement]]
 id = "PH2-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 2 gate"
 statement = "Implement the allowlisted protocol and a valve emulator from captures with both converters connected to the Pi and neither installed valve attached."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 2"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 2"
 verification = "emulator e2e"
 hard = true
 
 [[requirement]]
 id = "PH2-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 2 gate"
 statement = "Test malformed lengths, checksum faults, delay, duplicates, partial frames, missing responses, address conflicts, service failure, Pi reset, and USB loss."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 2"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 2"
 verification = "emulator e2e fault-injection suite covering all ten cases"
 hard = true
 
 [[requirement]]
 id = "PH2-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 2 gate"
 statement = "Run the Pi, adapters, watchdog, service, and emulator continuously for seven days."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 2"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 2"
 verification = "not-testable-in-software (seven-day soak on real hardware); manual soak"
 hard = true
 
 [[requirement]]
 id = "PH2-04"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 2 gate"
 statement = "Phase 2 closes only when every injected failure ends in `OFF` without an unallowlisted write."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 2 gate"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 2 gate"
 verification = "emulator e2e asserting terminal OFF state and a TX log containing only allowlisted frames"
 hard = true
 
 [[requirement]]
 id = "PH3-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 3 gate"
-statement = "Commission the one-valve pilot at 100 °F on one outlet with the operator present and outside the spray path, hand on the manual disconnect, and the independent probe reading the outlet throughout."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 3 procedure (3)"
+statement = "Commission the one-valve pilot at 100 °F on one outlet with the operator present and a thermometer on the outlet."
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 3 procedure (3)"
 verification = "manual commissioning"
 hard = true
 
 [[requirement]]
 id = "PH3-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 3 gate"
 statement = "Limit the first active session to two minutes."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 3 procedure (4)"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 3 procedure (4)"
 verification = "manual commissioning; configurable duration cap in software"
 hard = true
 
 [[requirement]]
 id = "PH3-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 3 gate"
 statement = "Test process kill, forced process hang, Pi power loss, USB disconnect, Pi watchdog reset, A-wire open, B-wire open, bus short, and manual valve-power removal."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 3"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 3"
 verification = "manual commissioning against the live valve"
 hard = true
 
 [[requirement]]
 id = "PH3-04"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 3 gate"
 statement = "Phase 3 closes only when every failure stops flow or reaches the valve's measured fail-off path within the acceptance threshold, records a diagnostic reason, and requires a deliberate new start."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 3 gate"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 3 gate"
 verification = "manual commissioning plus log inspection for the diagnostic reason"
 hard = true
 
 [[requirement]]
 id = "PH3-05"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 3 gate"
 statement = "Record stop latency per fault path, maximum physical temperature, and the K-99695's behaviour with a missing valve, and run the full timed manual rollback drill before leaving Phase 3."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 3 gate"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 3 gate"
 verification = "manual commissioning"
 hard = true
 
 [[requirement]]
 id = "PH4-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 4 gate"
-statement = "Verify every configured outlet independently with the calibrated thermometer, then run one zone at a time and then both zones at 100 °F."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 4"
+statement = "Verify every configured outlet independently with a thermometer, then run one zone at a time and then both zones at 100 °F."
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 4"
 verification = "manual commissioning"
 hard = true
 
 [[requirement]]
 id = "PH4-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 4 gate"
 statement = "Phase 4 closes only when every outlet passes temperature and stop testing and the manual rollback drill succeeds."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 4 gate"
-verification = "manual commissioning"
-hard = true
-
-[[requirement]]
-id = "PH5-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
-area = "phase 5 gate/steam"
-statement = "Bring up the DTV+ codec against the emulator first, then against the adapter with the generator's own control still able to stop it."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 5"
-verification = "emulator e2e then manual commissioning"
-hard = true
-
-[[requirement]]
-id = "PH5-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
-area = "phase 5 gate/steam"
-statement = "Verify the Fx2/Cx2 type split rejects a cross-encoding assignment."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 5"
-verification = "unit: type-level test asserting an Fx2 value cannot be assigned where Cx2 is required and vice versa"
-hard = true
-
-[[requirement]]
-id = "PH5-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
-area = "phase 5 gate/steam"
-statement = "Commission one steam session at the 110 °F default for the 10-minute default with the operator present."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 5"
-verification = "manual commissioning"
-hard = true
-
-[[requirement]]
-id = "PH5-04"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
-area = "phase 5 gate/steam"
-statement = "Confirm that `stop_all()` stops steam and that a degraded DTV+ link commands `steam_stop` before latching."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 5"
-verification = "emulator e2e for the degraded-link ordering; manual commissioning to confirm"
-hard = true
-
-[[requirement]]
-id = "PH5-05"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
-area = "phase 5 gate/steam"
-statement = "Measure the hard case by pulling the DTV+ link mid-session and recording what the generator does; Phase 5 closes only when a steam session starts, holds setpoint, stops on command and on timer, and the hard-link-loss behaviour is measured and recorded whatever it turns out to be."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 5 gate"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 4 gate"
 verification = "manual commissioning"
 hard = true
 
 [[requirement]]
 id = "PH6-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 6 gate"
 statement = "Keep voice, cloud, Homebridge, and automatic routines disabled for a one-week local-only soak."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 6"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 6"
 verification = "not-testable-in-software (one-week soak on real hardware); configuration check; manual soak"
 hard = true
 
 [[requirement]]
 id = "PH6-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 6 gate"
 statement = "Enable explicit Homebridge/Worker commands only after the soak has no unexplained reset, temperature, or bus event."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 6"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 6"
 verification = "not-testable-in-software (a person reads the soak logs and judges what counts as unexplained); log review after the soak"
 hard = true
 
 [[requirement]]
 id = "PH6-03"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 6 gate"
 statement = "Keep all external status reads cache-only."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 6"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 6"
 verification = "emulator e2e: assert external reads generate no bus transaction"
 hard = true
 
 [[requirement]]
 id = "PH6-04"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 6 gate"
 statement = "Keep automatic shower actuation disabled unless separately and explicitly approved."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 6"
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 6"
 verification = "configuration check; unit asserting no scheduler can call `start`"
 hard = true
 
 [[requirement]]
 id = "PH6-05"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "phase 6 gate"
-statement = "Phase 6 closes only with a signed commissioning report and homeowner-visible emergency instructions."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 6 gate"
+statement = "Phase 6 closes only when the commissioning record is complete."
+source = "controller/docs/DESIGN.md § Delivery phases → Phase 6 gate"
 verification = "not-testable-in-software"
 hard = true
 
 [[requirement]]
 id = "RB-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "rollback"
 statement = "Manual rollback begins by sending `stop_all` and verifying physical flow has stopped, and is complete only when the configuration matches the Phase 0 recovery baseline — not when water flows."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Manual rollback to Kohler"
+source = "controller/docs/DESIGN.md § Manual rollback to Kohler"
 verification = "manual commissioning; software re-reads calibration codes and configured outlets for the comparison"
 hard = true
 
 [[requirement]]
 id = "RB-02"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "rollback/verification"
 statement = "Confirm both valves appear independently in `values.cgi` (`valve_1_con_string` / `valve_2_con_string` reading `conn`) and do not rely on the touchscreen alone."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Manual rollback to Kohler (8)"
+source = "controller/docs/DESIGN.md § Manual rollback to Kohler (8)"
 verification = "manual commissioning; read-only API check"
 hard = false
 
 [[requirement]]
 id = "WELD-01"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "emergency/faults"
-statement = "State in the posted emergency procedure, and surface in software, that a `WELDED` fault (35) is a mechanically stuck mixing valve that no controller can turn off; the only remedy is valve power removal and the hot and cold service shutoffs."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Safety boundary and § Manual rollback to Kohler"
+statement = "Surface in software that a `WELDED` fault (35) is a mechanically stuck mixing valve that no controller can turn off; the remedy is removing valve power."
+source = "controller/docs/DESIGN.md § Safety boundary"
 verification = "unit: fault-code 35 renders the correct operator message; not-testable-in-software for the physical remedy"
 hard = true
 
@@ -1259,122 +1169,113 @@ hard = false
 
 [[requirement]]
 id = "OPS-07"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "data handling"
 statement = "Keep raw captures — which may contain device serials — outside the public repository, review any fixture before commit, and never include household backups, network credentials, access tokens, or pairing material."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Proposed repository layout"
+source = "controller/docs/DESIGN.md § Captures and privacy"
 verification = "unit/CI secret scan on committed fixtures"
 hard = true
 
 [[requirement]]
 id = "OPS-08"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
+document = "controller/docs/DESIGN.md"
 area = "data handling"
 statement = "Keep the household-specific configuration backup outside this public repository."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Scope"
+source = "controller/docs/DESIGN.md § Scope"
 verification = "not-testable-in-software (a test cannot assert the absence of a file it cannot name); repository review"
 hard = true
 
 [[requirement]]
-id = "OPS-09"
-document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
-area = "scope"
-statement = "Do not describe the K-99695 as unreliable or frame the replacement as a fix for I1 or as improved controller stability; every recorded lockup came from this project's own HTTP clients exceeding documented limits."
-source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Scope → Non-goals; CLAUDE.md Where things stand"
-verification = "not-testable-in-software; documentation review"
-hard = false
-
-[[requirement]]
 id = "USB-01"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "USB / serial startup"
 statement = "At service start, set the FTDI latency_timer to 1 ms and set ASYNC_LOW_LATENCY on every RS-485 converter port, then read the value back and refuse to start if it does not read back 1 ms."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §5 'The three USB failure modes and their mitigations'; §13 check 2"
+source = "controller/docs/HARDWARE.md §5 'The three USB failure modes and their mitigations'; §13 check 2"
 verification = "unit (mock ioctl/sysfs) plus manual commissioning on real FTDI hardware"
 hard = false
 
 [[requirement]]
 id = "USB-02"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "USB / serial startup"
 statement = "Bind each zone to its converter by physical USB port path, never by /dev/ttyUSB* enumeration order, because duplicate or blank USB serial numbers are an expected failure mode."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §5 'The three USB failure modes and their mitigations'"
+source = "controller/docs/HARDWARE.md §5 'The three USB failure modes and their mitigations'"
 verification = "unit (device-path resolver against fixture sysfs trees) plus manual commissioning"
 hard = true
 
 [[requirement]]
 id = "USB-03"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "USB / serial startup"
 statement = "Refuse to start unless all required converter interfaces are present AND distinct; a collision or missing interface is a start-up refusal, not a degraded start."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §5; §13 check 1"
+source = "controller/docs/HARDWARE.md §5; §13 check 1"
 verification = "unit"
 hard = true
 
 [[requirement]]
 id = "USB-04"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "USB / serial startup"
 statement = "If a converter arrives with a non-FTDI bridge, establish that driver's equivalent low-latency setting and adjust the start-up read-back before the unit is used; do not ship a unit whose low-latency setting is unverified."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §5 (note after failure-mode table); §13 check 3"
+source = "controller/docs/HARDWARE.md §5 (note after failure-mode table); §13 check 3"
 verification = "manual commissioning"
 hard = false
 
 [[requirement]]
 id = "USB-05"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "USB / serial startup"
 statement = "Treat USB enumeration loss mid-session as a link fault: command all-off on that zone, close the port, and latch the zone unavailable (design rule 5)."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §5 'The three USB failure modes and their mitigations'"
+source = "controller/docs/HARDWARE.md §5 'The three USB failure modes and their mitigations'"
 verification = "emulator e2e (simulated device removal)"
 hard = true
 
 [[requirement]]
 id = "PROTO-01"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Saturn protocol timing"
 statement = "Drive both Saturn valve links at 9600 8N1."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §6 table"
+source = "controller/docs/HARDWARE.md §6 table"
 tier = "C"
 verification = "unit"
 hard = false
 
 [[requirement]]
 id = "PROTO-02"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Saturn protocol timing"
 statement = "Run the Saturn state machine on a 525 ms tick."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §6 table"
+source = "controller/docs/HARDWARE.md §6 table"
 tier = "C"
 verification = "unit / emulator e2e"
 hard = false
 
 [[requirement]]
 id = "PROTO-03"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Saturn protocol timing"
 statement = "Apply a 400 ms Saturn response timeout and a 320 ms Saturn message timeout."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §6 table"
+source = "controller/docs/HARDWARE.md §6 table"
 tier = "C"
 verification = "unit / emulator e2e"
 hard = false
 
 [[requirement]]
 id = "PROTO-04"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Saturn protocol timing"
 statement = "Do not implement the 20 ms Saturn echo timeout: auto-direction converters present no local echo, so it does not apply to this build."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §2 platform table and §6 table ('20 ms — n/a')"
+source = "controller/docs/HARDWARE.md §6 table ('20 ms — n/a'); controller/docs/DECISIONS.md D2"
 tier = "C"
 verification = "not-testable-in-software (hardware property); asserted by absence of echo-wait code"
 hard = false
 
 [[requirement]]
 id = "PROTO-05"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Saturn protocol timing"
 statement = "Retry a failed Saturn message 3 times."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §6 table"
+source = "controller/docs/HARDWARE.md §6 table"
 tier = "C"
 verification = "unit"
 hard = false
@@ -1382,356 +1283,228 @@ disputed = "saturn-protocol.md gives 3 for read, write and address management, a
 
 [[requirement]]
 id = "PROTO-06"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Saturn protocol timing"
 statement = "Enforce a 20-byte maximum Saturn frame."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §6 table"
+source = "controller/docs/HARDWARE.md §6 table"
 tier = "C"
 verification = "unit / property"
 hard = false
 
 [[requirement]]
 id = "PROTO-07"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Protocol timing"
 statement = "Size all timing budgets against a 9600 8N1 byte time of ~1.04 ms and a 20-byte frame wire occupancy of ~21 ms; no software deadline in this build is shorter than 150 ms."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §6 (closing line) and §2 'Why the deadlines do not favour an MCU'"
+source = "controller/docs/HARDWARE.md §6 (closing line) and §2 'Why the deadlines do not favour an MCU'"
 tier = "C"
 verification = "unit (deadline constants audited against the table)"
 hard = false
 
 [[requirement]]
 id = "PROTO-08"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Protocol timing"
 statement = "Treat all §6 protocol parameters as unverified against this hardware and confirm them from the Phase 1 capture before they are relied on."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §6 preamble"
+source = "controller/docs/HARDWARE.md §6 preamble"
 tier = "C"
 verification = "manual commissioning (Phase 1 capture)"
 hard = false
 
 [[requirement]]
 id = "PROTO-09"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Link independence"
 statement = "Give each of the three links its own converter, its own isolation barrier and its own state machine; share nothing between them."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §1 (after the link table); §5 'One converter per valve. Never shared.'; §12"
+source = "controller/docs/HARDWARE.md §1 (after the link table); §5 'One converter per valve. Never shared.'; §12"
 verification = "unit (no shared mutable state between link tasks) plus manual inspection"
 hard = true
 
 [[requirement]]
-id = "TEMP-01"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Independent temperature measurement"
-statement = "Fit one PT1000 Class A 3-wire pipe-surface-clamp probe per zone, read through a MAX31865 (Adafruit PID 3648, 4300 Ω 0.1 % reference) on SPI0 with one chip select per channel; two channels fitted, electronics support four."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §7 'Chain'"
-tier = "V"
-verification = "manual commissioning"
-hard = false
-
-[[requirement]]
-id = "TEMP-02"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Independent temperature measurement"
-statement = "Power each MAX31865 VIN from the Pi's 3V3 rail (never 5 V), because the breakout's level shifting follows VIN and SDO would otherwise drive 5 V onto a 3.3 V GPIO; configure each breakout for 3-wire."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §7 'Chain' note"
-tier = "V"
-verification = "not-testable-in-software (wiring); manual commissioning"
-hard = true
-
-[[requirement]]
-id = "TEMP-03"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Independent temperature measurement"
-statement = "Characterise the surface-clamp offset at commissioning against the Therma K immersion probe across the working range, and apply that correction before evaluating any threshold."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §7 'Placement and its limitation', consequence 1"
-verification = "unit (correction applied before threshold evaluation) plus manual commissioning (deriving the offset)"
-hard = true
-
-[[requirement]]
-id = "TEMP-04"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Independent temperature measurement"
-statement = "Log the raw RTD reading alongside the corrected one."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §7 'Placement and its limitation', consequence 1"
-verification = "unit"
-hard = false
-
-[[requirement]]
-id = "TEMP-05"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Independent temperature measurement"
-statement = "Clamp the probe to the supply pipe of that zone's default outlet, as close to the valve as accessible pipe allows; exact location and pipe OD are set at the Phase 0 survey."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §7 'Placement and its limitation'"
-verification = "manual commissioning"
-hard = false
-
-[[requirement]]
-id = "TEMP-06"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Independent temperature measurement"
-statement = "Scope the temperature interlock to the instrumented (default) outlet only; when a non-instrumented outlet is active there is no independent continuous measurement, and this limitation must be recorded in the commissioning report."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §7 'Placement and its limitation', consequence 2"
-verification = "unit (interlock keyed to instrumented outlet) plus manual commissioning (report entry)"
-hard = true
-
-[[requirement]]
-id = "TEMP-07"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Independent temperature measurement"
-statement = "Verify every outlet individually with the immersion probe at Phase 4; the setpoint clamp and valve fault monitoring still apply to non-instrumented outlets."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §7 'Placement and its limitation', consequence 2"
-verification = "manual commissioning"
-hard = true
-
-[[requirement]]
-id = "SAFE-01"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Temperature alarm logic"
-statement = "Give the temperature sensor no authority to open an outlet; its only possible action is to contribute to all-off."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §7 'Alarm logic' preamble"
-verification = "unit / property (no code path from sensor state to an open command)"
-hard = true
-
-[[requirement]]
-id = "SAFE-02"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Temperature alarm logic"
-statement = "If the corrected outlet temperature exceeds 45.0 °C for more than 2 s while the instrumented outlet is on, command all-off on that zone and latch the zone unavailable."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §7 'Alarm logic' table row 1"
-verification = "unit (threshold + dwell) and emulator e2e"
-hard = true
-
-[[requirement]]
 id = "SAFE-03"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Temperature alarm logic"
 statement = "If the raw reading exceeds 50.0 °C, regardless of correction and with no dwell, command all-off on that zone and latch the zone unavailable."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §7 'Alarm logic' table row 2"
+source = "controller/docs/HARDWARE.md §7 'Alarm logic' table row 2"
 verification = "unit"
 hard = true
-
-[[requirement]]
-id = "SAFE-04"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Temperature alarm logic"
-statement = "If the MAX31865 fault register is non-zero (RTD open/short, over/under-voltage), command all-off on that zone and latch the zone unavailable."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §7 'Alarm logic' table row 3"
-verification = "unit plus bench injection (§13 check 9)"
-hard = true
-
-[[requirement]]
-id = "SAFE-05"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Temperature alarm logic"
-statement = "If no RTD sample arrives for more than 5 s, command all-off on that zone and latch the zone unavailable."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §7 'Alarm logic' table row 4"
-verification = "unit (starved sampler) and emulator e2e"
-hard = true
-
-[[requirement]]
-id = "SAFE-06"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Temperature alarm logic"
-statement = "If the corrected reading and the valve-reported temperature differ by more than 5 °C for more than 10 s, command all-off on that zone, latch it unavailable, and record the event as an I5-class finding."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §7 'Alarm logic' table row 5"
-verification = "unit (divergence detector + dwell) and emulator e2e"
-hard = true
-
-[[requirement]]
-id = "SAFE-07"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Temperature alarm logic"
-statement = "Treat 45.0 °C as a fault threshold, not a comfort limit; it sits above the 42.5 °C setpoint ceiling and above the 43 °C scald threshold with margin for sensor lag."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §7 (note under the alarm table)"
-verification = "unit (constants audit; comfort clamp and fault gate are separate)"
-hard = false
 
 [[requirement]]
 id = "TIME-01"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Timekeeping"
 statement = "Record NTP sync state with every wall-clock timestamp in the logs; the DS3231 RTC narrows the pre-sync window but does not remove this requirement."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §8 (note after the RTC table)"
+source = "controller/docs/HARDWARE.md §8 (note after the RTC table)"
 verification = "unit (log record schema) plus emulator e2e"
 hard = true
 
 [[requirement]]
 id = "TIME-02"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Timekeeping"
 statement = "Fit an Adafruit DS3231 Precision RTC (STEMMA QT, PID 5188) on I2C1 with a CR1220 coin cell, which is not supplied with the board."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §8 table"
+source = "controller/docs/HARDWARE.md §8 table"
 tier = "V"
 verification = "manual commissioning"
 hard = false
 
 [[requirement]]
 id = "GPIO-01"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "GPIO map"
-statement = "Wire the 40-pin header exactly as specified: pin 1 3V3 to both MAX31865 VIN; pin 3 GPIO2 I2C1 SDA to DS3231 SDA; pin 5 GPIO3 I2C1 SCL to DS3231 SCL; pin 6 GND to DS3231 GND; pin 9 GND to MAX31865 #1 GND; pin 14 GND to MAX31865 #2 GND; pin 17 3V3 to DS3231 VIN; pin 19 GPIO10 SPI0 MOSI to both SDI; pin 21 GPIO9 SPI0 MISO to both SDO; pin 23 GPIO11 SPI0 SCLK to both SCK; pin 24 GPIO8 SPI0 CE0 to MAX31865 #1 CS (zone 1); pin 26 GPIO7 SPI0 CE1 to MAX31865 #2 CS (zone 2)."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §8 'Pi 40-pin header assignments'"
-verification = "unit (chip-select-to-zone mapping constants) plus manual commissioning"
+statement = "Wire the 40-pin header exactly as specified: pin 3 GPIO2 I2C1 SDA to DS3231 SDA; pin 5 GPIO3 I2C1 SCL to DS3231 SCL; pin 6 GND to DS3231 GND; pin 17 3V3 to DS3231 VIN."
+source = "controller/docs/HARDWARE.md §8 'Pi 40-pin header assignments'"
+verification = "manual commissioning"
 hard = true
 
 [[requirement]]
-id = "GPIO-02"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "GPIO map"
-statement = "Reserve SPI1 CE0 (GPIO18, pin 12) and CE1 (GPIO17, pin 11) for expansion RTD channels 3 and 4."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §8 (note after the header table)"
-verification = "unit (config surface allows 4 channels)"
-hard = false
-
-[[requirement]]
 id = "GPIO-03"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "GPIO map"
 statement = "No GPIO drives a relay, a contactor, or anything in a mains path."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §8 (note after the header table); §14 row 1"
+source = "controller/docs/HARDWARE.md §8 (note after the header table); §14 row 1"
 verification = "unit / property (no GPIO output driver in the codebase beyond SPI/I2C peripherals)"
 hard = true
 
 [[requirement]]
 id = "PWR-01"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Power and isolation"
 statement = "Assume no mains conductor enters the enclosure; only the low-voltage output of an external USB-C supply passes through a gland, so software has no mains-side actuator to model."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §9 'Mains policy'; §3 closing note; §14 row 2"
+source = "controller/docs/HARDWARE.md §9 'Mains policy'; §3 closing note; §14 row 2"
 verification = "not-testable-in-software"
 hard = true
 
 [[requirement]]
 id = "PWR-02"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Power and isolation"
 statement = "Never join field-side grounds between links; one complete galvanic barrier exists per valve bus, the Pi's USB ground is host-side only and never reaches a valve, and field-side PE is connected per-zone only and only if measurement shows it is required."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §9 'Isolation policy' items 1–3; §5 'Configuration at assembly' item 3"
+source = "controller/docs/HARDWARE.md §9 'Isolation policy' items 1–3; §5 'Configuration at assembly' item 3"
 verification = "not-testable-in-software; bench checks §13 items 5 and 7"
 hard = true
 
 [[requirement]]
 id = "PWR-03"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Power and isolation"
 statement = "Add RS-485 termination only where the factory topology has it; ship with termination jumpers off on both valve converters until the factory bus is captured and measured."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §9 'Isolation policy' item 4; §5 'Configuration at assembly' item 2"
+source = "controller/docs/HARDWARE.md §9 'Isolation policy' item 4; §5 'Configuration at assembly' item 2"
 verification = "manual commissioning; bench check §13 item 4"
 hard = false
 
 [[requirement]]
 id = "PWR-04"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Power and isolation"
 statement = "Do not fit a UPS: house power loss must remove valve power so the valves close, and loss of Pi power is one of the fault paths Phase 3 measures — software must therefore treat its own sudden death as an expected, tested state, not an anomaly to be papered over."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §4 'No UPS'; §14 row 3"
+source = "controller/docs/HARDWARE.md §4 'No UPS'; §14 row 3"
 verification = "emulator e2e (unclean shutdown) plus Phase 3 measurement"
 hard = true
 
 [[requirement]]
 id = "PWR-05"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Power and isolation"
-statement = "Stay inside the power budget: total ≈ 6.6 W against a 15.3 W supply, and worst-case downstream USB draw of 600 mA across three converters, inside the Pi 4's documented USB budget."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §9 'Budget'"
+statement = "Stay inside the power budget: total ≈ 5.6 W against a 15.3 W supply, and worst-case downstream USB draw of 400 mA across two converters, inside the Pi 4's documented USB budget."
+source = "controller/docs/HARDWARE.md §9 'Budget'"
 tier = "V"
 verification = "not-testable-in-software; manual measurement"
 hard = false
 
 [[requirement]]
 id = "PWR-06"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Compute platform"
 statement = "Enable the BCM2711 hardware watchdog and systemd RuntimeWatchdogSec/WatchdogSec; on a watchdog reset the service must boot to READY_OFF with no state restored."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §4 table; §2 table; §13 check 11"
+source = "controller/docs/HARDWARE.md §4 table; §2 table; §13 check 9"
 verification = "emulator e2e (forced hang) plus manual commissioning"
 hard = true
 
 [[requirement]]
 id = "PWR-07"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Compute platform"
 statement = "Use wired Gigabit Ethernet for the control path with Wi-Fi and Bluetooth disabled in firmware; no radio is in the control path."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §4 table; §14 row 7"
+source = "controller/docs/HARDWARE.md §4 table; §14 row 7"
 verification = "manual commissioning"
 hard = true
 
 [[requirement]]
 id = "PWR-08"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Compute platform"
 statement = "Mount the root filesystem with journaling and write frame logs and session logs to a separate partition with bounded rotation."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §4 'Storage policy'"
+source = "controller/docs/HARDWARE.md §4 'Storage policy'"
 verification = "manual commissioning"
 hard = false
 
 [[requirement]]
 id = "STEAM-01"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — protocol"
 statement = "Frame DTV+ messages as SOF 0x88 · DEST · SRC · CMD · payload · CHECKSUM · EOF 0x55."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'Protocol — DTV+, not Saturn' table"
+source = "controller/docs/HARDWARE.md §12 'Protocol — DTV+, not Saturn' table"
 tier = "C"
 verification = "unit / property (round-trip encode-decode)"
 hard = false
 
 [[requirement]]
 id = "STEAM-02"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — protocol"
 statement = "Byte-stuff 0x88, 0x55 and 0xAA with a leading 0xAA escape; never escape the SOF or EOF bytes themselves."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 protocol table"
+source = "controller/docs/HARDWARE.md §12 protocol table"
 tier = "C"
 verification = "unit / property"
 hard = false
 
 [[requirement]]
 id = "STEAM-03"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — protocol"
 statement = "Compute the DTV+ checksum as the 2's complement of DEST+SRC+CMD+payload, and verify a received frame by summing those fields plus the checksum to 0x00."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 protocol table"
+source = "controller/docs/HARDWARE.md §12 protocol table"
 tier = "C"
 verification = "unit / property"
 hard = false
 
 [[requirement]]
 id = "STEAM-04"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — protocol"
 statement = "Perform DTV+ discovery as DEV_ADDRESS_OPP 0x05 broadcast → DEV_REQUEST_ADDR 0x06 carrying the device ID → DEV_ASSIGN_ADDR 0x07."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 protocol table"
+source = "controller/docs/HARDWARE.md §12 protocol table"
 tier = "C"
 verification = "emulator e2e"
 hard = false
 
 [[requirement]]
 id = "STEAM-05"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — protocol"
 statement = "Address DTV+ devices as: ships at 0x00, master assigns 0x03–0x07, 0xFF is broadcast; the steam device ID is 0x05."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 protocol table"
+source = "controller/docs/HARDWARE.md §12 protocol table"
 tier = "C"
 verification = "unit / emulator e2e"
 hard = false
 
 [[requirement]]
 id = "STEAM-06"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — protocol"
 statement = "Implement only these DTV+ commands: GET_DEV_STATUS 0x30, STATUS_UPDATE 0x31, SET_DEV_PARAM 0x34, DEV_ACK 0x35, DEV_NAK 0x36, ERROR 0x37, CLEAR_FAULT_FLAGS 0x3A."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 protocol table"
+source = "controller/docs/HARDWARE.md §12 protocol table"
 tier = "C"
 verification = "unit"
 hard = false
 
 [[requirement]]
 id = "STEAM-07"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — protocol"
 statement = "Run the DTV+ link on a 150 ms tick with a 300 ms reply timeout, at 9600 8N1; do not implement the 150 ms DTV+ echo timeout (auto-direction converter, no local echo)."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §6 table and §12 protocol table"
+source = "controller/docs/HARDWARE.md §6 table and §12 protocol table"
 tier = "C"
 verification = "unit / emulator e2e"
 hard = false
@@ -1739,459 +1512,345 @@ disputed = "STEAM-ADAPTER.md section 10.5 records STEAM_TICK_TIME 150 ms against
 
 [[requirement]]
 id = "STEAM-08"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — encoding"
 statement = "Encode steam temperatures as Fx2 (Fahrenheit × 2) and valve temperatures as Cx2 (Celsius × 2); make Cx2 and Fx2 distinct types that cannot be assigned to each other, and place the conversion Fx2 = ((Cx2 × 9) / 5) + 64 in exactly one place."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'The encoding split is the one real implementation hazard'"
+source = "controller/docs/HARDWARE.md §12 'The encoding split is the one real implementation hazard'"
 tier = "C"
 verification = "unit (type-level: the cross-assignment must not compile) plus bench checks in §13"
 hard = true
 
 [[requirement]]
 id = "STEAM-09"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — limits"
 statement = "Clamp the steam setpoint in our own code at both ends to 90 °F (32 °C) – 125 °F (52 °C) in 1 °F steps, before transmission, the same way valve setpoints are clamped."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'Limits' table and following paragraph"
+source = "controller/docs/HARDWARE.md §12 'Limits' table and following paragraph"
 tier = "K"
 verification = "unit / property (no frame leaves the encoder outside the range)"
 hard = true
 
 [[requirement]]
 id = "STEAM-10"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — limits"
 statement = "Use 110 °F as the factory-default steam setpoint."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'Limits' table"
+source = "controller/docs/HARDWARE.md §12 'Limits' table"
 tier = "K/A"
 verification = "unit"
 hard = false
 
 [[requirement]]
 id = "STEAM-11"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — limits"
 statement = "Clamp steam session duration to 1–20 minutes with a default of 10; the generator's own envelope is min run 10 min, max 20."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'Limits' table"
+source = "controller/docs/HARDWARE.md §12 'Limits' table"
 tier = "K/B"
 verification = "unit"
 hard = true
 
 [[requirement]]
 id = "STEAM-12"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — limits"
 statement = "Treat steam_max_temp as installer configuration, not as a guarantee — it has no min/max in the shipped web UI — exactly as the water max_temp is treated; never derive a safety bound from it."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 (paragraph after the Limits table)"
+source = "controller/docs/HARDWARE.md §12 (paragraph after the Limits table)"
 tier = "B"
 verification = "unit (clamp derives from the [K] range, not from configuration)"
 hard = true
 
 [[requirement]]
 id = "STEAM-13"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — command allowlist"
 statement = "Expose only steam_start(temperature_f, duration_minutes), steam_set_temperature, steam_set_duration, steam_stop and get_cached_state on the steam link."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'Command allowlist' — Exposed"
+source = "controller/docs/HARDWARE.md §12 'Command allowlist' — Exposed"
 verification = "unit (allowlist enumeration test)"
 hard = true
 
 [[requirement]]
 id = "STEAM-14"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — command allowlist"
 statement = "Permanently deny Power clean (STEAM_POWER_CLEAN 0xCC): a 45-minute unattended cycle discharging through the steam head, to be run from the generator's own control."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'Permanently denied' table row 1"
+source = "controller/docs/HARDWARE.md §12 'Permanently denied' table row 1"
 verification = "unit"
 hard = true
 
 [[requirement]]
 id = "STEAM-15"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — command allowlist"
 statement = "Permanently deny Deluge: it opens a Saturn valve from a steam session, and cross-bus actuation stays out of the first implementation."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'Permanently denied' table row 2"
+source = "controller/docs/HARDWARE.md §12 'Permanently denied' table row 2"
 verification = "unit / property (no code path from the steam state machine to a Saturn open)"
 hard = true
 
 [[requirement]]
 id = "STEAM-16"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — command allowlist"
 statement = "Permanently deny the Spa 'Steam Coach' function: it is mutually exclusive with steam and the shipped UI carries the interlock."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'Permanently denied' table row 3"
+source = "controller/docs/HARDWARE.md §12 'Permanently denied' table row 3"
 tier = "B"
 verification = "unit"
 hard = true
 
 [[requirement]]
 id = "STEAM-17"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — command allowlist"
 statement = "Permanently deny address clear outside DISCOVERY, and deny anything not in the captured frame set — the same rule as the valve links: only captured, tested, operational frames ship."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'Command allowlist' preamble and denied-table rows 4–5"
+source = "controller/docs/HARDWARE.md §12 'Command allowlist' preamble and denied-table rows 4–5"
 verification = "unit (encoder rejects any frame without a capture provenance entry)"
 hard = true
 
 [[requirement]]
 id = "STEAM-18"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — link loss"
 statement = "On a degraded-but-alive DTV+ link (timeouts, NAKs, checksum failures, port still open), command steam_stop, require acknowledgement, and latch the link unavailable."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'Losing the DTV+ link' case table"
+source = "controller/docs/HARDWARE.md §12 'Losing the DTV+ link' case table"
 verification = "emulator e2e (fault injection: timeout, NAK, bad checksum)"
 hard = true
 disputed = "steam-generator.md says SET_DEV_PARAM expects no explicit response. Requiring an acknowledgement before latching assumes one exists."
 
 [[requirement]]
-id = "STEAM-19"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Steam link — link loss"
-statement = "Make no assumption about the hard-loss case (USB gone, cable pulled, service dead, Pi unpowered): a dead process enforces no session limit, so steam falls entirely to the generator's own behaviour, which is not yet measured."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'Losing the DTV+ link'"
-verification = "not-testable-in-software; Phase 5 measurement"
-hard = true
-
-[[requirement]]
 id = "STEAM-20"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Steam link — link loss"
-statement = "Enforce the service's own session limit for the degraded case, and assume the worst for the hard case until Phase 5 measures what the generator does when the DTV+ link drops mid-session."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'Losing the DTV+ link' closing paragraphs"
+statement = "Enforce the service's own session limit on the steam link, and assume nothing about the hard-loss case: a dead process enforces no limit."
+source = "controller/docs/HARDWARE.md §12 'Losing the DTV+ link' closing paragraphs"
 verification = "unit (session timer) plus manual commissioning (Phase 5)"
 hard = true
 
 [[requirement]]
-id = "STEAM-21"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Steam link — hardware"
-statement = "Give the steam link its own Waveshare SKU 23949 converter on a Pi USB 2.0 port with its own isolation barrier, and never join its field-side PE to either valve's."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'Hardware' table"
-verification = "not-testable-in-software; manual commissioning"
-hard = true
-
-[[requirement]]
-id = "STEAM-22"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Steam link — hardware"
-statement = "Wire the adapter lead as four conductors: connector B/A/GND (pins 1/2/3) to the converter's TB/TA/PE, plus pin 4 to a +V rail supplied by our master; pin 3 GND is mandatory on this link, unlike the valve links."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'Before the connector can be built' — pinout table and the Ground row"
-tier = "A"
-verification = "not-testable-in-software; manual commissioning"
-hard = true
-
-[[requirement]]
-id = "STEAM-23"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Steam link — hardware"
-statement = "Leave our converter's termination jumper off on the steam link: the adapter is already terminated (114 Ω measured across pins 1 and 2, R27), and a second terminator halves the bus to 60 Ω (40 Ω with a chained second adapter), below the 54 Ω RS-485 drivers are specified against."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'Before the connector can be built' — Termination row and 'Why our termination stays off'"
-tier = "A"
-verification = "not-testable-in-software; bench measurement"
-hard = true
-
-[[requirement]]
-id = "STEAM-24"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Steam link — hardware"
-statement = "Add a 12 V rail to the enclosure to drive adapter pin 4, and confirm it before committing: apply 12 V to pin 4 from a current-limited supply with ground on pin 3 and measure IC2 pin 8 — about 5 V confirms the rail and the supply chain, and the current reading sizes the permanent supply."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'New build requirement: a 12 V rail in the enclosure'"
-tier = "I"
-verification = "manual commissioning (bench measurement)"
-hard = false
-
-[[requirement]]
-id = "STEAM-25"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Steam link — scope"
-statement = "Treat the generator and everything behind the adapter as out of scope; the generator owns its own safety envelope (low water/dry fire 0140-A, tank high-limit 0140-B, automatic fill shutoff, ¾″ pressure relief, room over-temperature 0120, session auto-shutoff) and this controller only sends setpoints."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 preamble and 'Out of scope'"
-tier = "K"
-verification = "not-testable-in-software"
-hard = true
-
-[[requirement]]
-id = "STEAM-26"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Steam link — deviation"
-statement = "Record the in-enclosure user-interface deviation in the commissioning report: Kohler's WARNING requires a user interface inside the steam enclosure, this design powers the K-99693 down at Phase 4, and the operator accepted the deviation on 2026-08-29."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §12 'The in-enclosure interface requirement'"
-tier = "K"
-verification = "manual commissioning (report entry)"
-hard = true
-
-[[requirement]]
 id = "TEST-01"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
-statement = "Run all bench acceptance checks with all three converters on the Pi and nothing attached to the field side (Phase 2)."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §13 preamble"
+statement = "Run all bench acceptance checks with both converters on the Pi and nothing attached to the field side (Phase 2)."
+source = "controller/docs/HARDWARE.md §13 preamble"
 verification = "manual commissioning"
 hard = true
 
 [[requirement]]
 id = "TEST-02"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
 statement = "Check 1: both converters enumerate with distinct USB serial numbers; pass requires two distinct IDs or documented port-path binding in use."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §13 table row 1"
+source = "controller/docs/HARDWARE.md §13 table row 1"
 verification = "manual commissioning"
 hard = false
 
 [[requirement]]
 id = "TEST-03"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
 statement = "Check 2: latency_timer reads back 1 ms on both converters; the service refuses to start otherwise."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §13 table row 2"
+source = "controller/docs/HARDWARE.md §13 table row 2"
 verification = "unit plus manual commissioning"
 hard = true
 
 [[requirement]]
 id = "TEST-04"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
 statement = "Check 3: the bridge chip is identified and recorded; pass requires an FTDI part, or the driver's low-latency equivalent established."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §13 table row 3"
+source = "controller/docs/HARDWARE.md §13 table row 3"
 verification = "manual commissioning"
 hard = false
 
 [[requirement]]
 id = "TEST-05"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
 statement = "Check 4: termination jumpers OFF, verified visually and by resistance — no 120 Ω across A/B."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §13 table row 4"
+source = "controller/docs/HARDWARE.md §13 table row 4"
 verification = "manual commissioning"
 hard = false
 
 [[requirement]]
 id = "TEST-06"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
 statement = "Check 5: field-side PE terminals not joined — open circuit between the two zones' PE."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §13 table row 5"
+source = "controller/docs/HARDWARE.md §13 table row 5"
 verification = "manual commissioning"
 hard = true
 
 [[requirement]]
 id = "TEST-07"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
 statement = "Check 6: loopback A↔B per converter in both directions; frames must decode without checksum error. May not be skipped — it catches a wiring error capable of bridging two buses."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §13 table row 6 and the note below the table"
+source = "controller/docs/HARDWARE.md §13 table row 6 and the note below the table"
 verification = "manual commissioning (with the decoder under test)"
 hard = true
 
 [[requirement]]
 id = "TEST-08"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
 statement = "Check 7: zone-to-zone isolation — no continuity between zone 1 and zone 2 field terminals. May not be skipped."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §13 table row 7 and the note below the table"
+source = "controller/docs/HARDWARE.md §13 table row 7 and the note below the table"
 verification = "manual commissioning"
-hard = true
-
-[[requirement]]
-id = "TEST-09"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Bench acceptance (§13)"
-statement = "Check 8: RTD channels read ambient and read a known reference against the Therma K probe, within Class A tolerance plus the characterised offset."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §13 table row 8"
-verification = "manual commissioning"
-hard = false
-
-[[requirement]]
-id = "TEST-10"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Bench acceptance (§13)"
-statement = "Check 9: inject RTD open-circuit and short-circuit; the MAX31865 fault register must set and the service must command all-off."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §13 table row 9"
-verification = "unit (fault-register handling) plus manual commissioning (injection)"
 hard = true
 
 [[requirement]]
 id = "TEST-11"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
-statement = "Check 10: the RTC holds time across a full power removal — time correct on the next boot before NTP."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §13 table row 10"
+statement = "Check 8: the RTC holds time across a full power removal — time correct on the next boot before NTP."
+source = "controller/docs/HARDWARE.md §13 table row 8"
 verification = "manual commissioning"
 hard = false
 
 [[requirement]]
 id = "TEST-12"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
-statement = "Check 11: the hardware watchdog fires on a forced service hang; the Pi resets and boots to READY_OFF with no state restored."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §13 table row 11"
+statement = "Check 9: the hardware watchdog fires on a forced service hang; the Pi resets and boots to READY_OFF with no state restored."
+source = "controller/docs/HARDWARE.md §13 table row 9"
 verification = "emulator e2e plus manual commissioning"
 hard = true
 
 [[requirement]]
 id = "TEST-13"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
-statement = "Check 12: enclosure interior ≤ 40 °C after 7 days sealed, logged from the Pi's own thermal sensor."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §13 table row 12; §10 'Interior ambient'"
+statement = "Check 10: enclosure interior ≤ 40 °C after 7 days sealed, logged from the Pi's own thermal sensor."
+source = "controller/docs/HARDWARE.md §13 table row 10; §10 'Interior ambient'"
 verification = "manual commissioning (7-day soak, with the service logging Pi thermals)"
 hard = false
 
 [[requirement]]
 id = "TEST-14"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
-statement = "Check 13: every label present and correct, and the emergency card in the lid."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §13 table row 13; §10 'Labelling and test points'"
+statement = "Check 11: every label present and correct."
+source = "controller/docs/HARDWARE.md §13 table row 11; §10 'Labelling and test points'"
 verification = "manual commissioning (visual)"
 hard = false
 
 [[requirement]]
 id = "TEST-15"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
 statement = "Add two steam checks against the DTV+ emulator: a Cx2 value must be rejected by the steam encoder, and an Fx2 value must be rejected by the valve encoder; the §12 type split should make both uncompilable and the checks confirm it."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §13 closing paragraph"
+source = "controller/docs/HARDWARE.md §13 closing paragraph"
 verification = "unit (compile-fail test) plus emulator e2e"
 hard = true
 
 [[requirement]]
-id = "TEST-16"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Emergency documentation"
-statement = "State on the lid card that a WELDED fault (35) is a mechanically stuck mixing valve that no controller can close; the only remedy is removing valve power and closing the hot and cold service shutoffs."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §10 (paragraph after the labelling table)"
-verification = "manual commissioning; the software must not present fault 35 as controller-recoverable"
-hard = true
-
-[[requirement]]
 id = "EXCL-01"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Deliberately excluded (§14)"
 statement = "Exclude any relay, contactor, smart plug or cord switch in valve mains — a failing stop latency is not solved with an unreviewed relay."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §14 row 1"
+source = "controller/docs/HARDWARE.md §14 row 1"
 verification = "not-testable-in-software; design review"
 hard = true
 
 [[requirement]]
 id = "EXCL-02"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Deliberately excluded (§14)"
 statement = "Exclude mains wiring inside the enclosure, a UPS on the Pi, Wi-Fi in the control path, a custom PCB, and an industrial PLC."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §14 rows 2, 3, 7, 8, 9"
+source = "controller/docs/HARDWARE.md §14 rows 2, 3, 7, 8, 9"
 verification = "not-testable-in-software; design review"
 hard = true
 
 [[requirement]]
 id = "EXCL-03"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Deliberately excluded (§14)"
 statement = "Exclude any dual-channel RS-485 converter or HAT (one isolation barrier shared by both zones), and generic MAX485/MAX3485/TTL-to-RS485 modules (mostly unisolated; some assert the transmitter during boot)."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §14 rows 4 and 6; §5 'Why not a dual-channel part'"
+source = "controller/docs/HARDWARE.md §14 rows 4 and 6; §5 'Why not a dual-channel part'"
 verification = "not-testable-in-software; parts review"
 hard = true
 
 [[requirement]]
 id = "EXCL-04"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Deliberately excluded (§14)"
 statement = "Do not use a bidirectional USB-RS-485 adapter as a capture tap — hardware automatic direction control is not physically receive-only."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §14 row 5"
+source = "controller/docs/HARDWARE.md §14 row 5"
 verification = "not-testable-in-software"
 hard = true
 
 [[requirement]]
-id = "EXCL-05"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Deliberately excluded (§14)"
-statement = "Do not add a second temperature sensor on the same element: a redundant sensor is not a redundant measurement; the immersion probe is the reference."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §14 row 10"
-verification = "not-testable-in-software; design review"
-hard = false
-
-[[requirement]]
 id = "OPEN-01"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Open items (§15)"
 statement = "Do not transmit on a valve bus until Phase 1 capture establishes cable polarity (which conductor is A+); the TA/TB labels are the converter's convention, not Kohler's."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §15 row 3; §11 'Cable polarity'"
+source = "controller/docs/HARDWARE.md §15 row 3; §11 'Cable polarity'"
 verification = "manual commissioning (blocks first transmission)"
 hard = true
 
 [[requirement]]
 id = "OPEN-02"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Open items (§15)"
 statement = "Resolve the Saturn response timeout — 320 ms or 400 ms — from the Phase 1 capture (I5) before fixing decoder deadlines."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §15 row 8"
+source = "controller/docs/HARDWARE.md §15 row 6"
 tier = "?"
 verification = "manual commissioning (Phase 1 capture); then unit constants"
 hard = false
 
 [[requirement]]
 id = "OPEN-03"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Open items (§15)"
 statement = "Determine whether automatic purge is on (I4, one read-only call) before the stop-latency definition is fixed."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §15 row 9"
+source = "controller/docs/HARDWARE.md §15 row 9"
 verification = "live read-only call; then unit definition of stop latency"
 hard = false
 
 [[requirement]]
 id = "OPEN-04"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Open items (§15)"
-statement = "Do not order field cabling by assumption: valve model/nameplate, connector housing/keying/pin count, factory termination and idle bias, outlet pipe OD and sensor location, valve mains voltage/receptacles/circuits/GFCI, and DTV+ peripheral-port pinout each stay open until their named measurement closes them."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §15 rows 1, 2, 4, 5, 6, 10; §11"
+statement = "Do not order field cabling by assumption: valve model/nameplate, connector housing/keying/pin count, and factory termination and idle bias each stay open until their named measurement closes them."
+source = "controller/docs/HARDWARE.md §15 rows 1, 2, 4; §11"
 verification = "manual commissioning"
 hard = true
 
 [[requirement]]
 id = "OPEN-05"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Open items (§15)"
 statement = "Record which FTDI part is fitted, FT232RL or FT232RNL; this blocks nothing but must be recorded."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §15 row 7; §5 'Configuration at assembly' item 4"
+source = "controller/docs/HARDWARE.md §15 row 5; §5 'Configuration at assembly' item 4"
 tier = "?"
 verification = "manual commissioning (inspection on arrival)"
 hard = false
 
 [[requirement]]
-id = "OPEN-06"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
-area = "Open items (§15)"
-statement = "Measure at Phase 5 what the generator does when the DTV+ link drops mid-session (Kohler case #07797183 runs in parallel); until then the worst case is assumed."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §15 row 11; §12 'Losing the DTV+ link'"
-tier = "?"
-verification = "manual commissioning (Phase 5)"
-hard = true
-
-[[requirement]]
 id = "ARCH-01"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Architecture assumption"
 statement = "Treat the master as a protocol translator, not a safety controller: mixing, the temperature envelope, over-temperature trips and fail-closed-on-comms-loss live inside the valve, and a late frame is expected to produce a valve timeout and closure."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §2 'Why determinism is not a safety argument here'"
+source = "controller/docs/HARDWARE.md §2 'Why determinism is not a safety argument here'"
 tier = "C"
 verification = "emulator e2e (late frame produces the designed-for outcome); Phase 3 measurement"
 hard = true
 
 [[requirement]]
 id = "ARCH-02"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Architecture assumption"
 statement = "If Phase 3 measures that a valve does not close on communication loss, the acceptance thresholds reject this architecture outright and a redesign — not a platform swap — is required."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §2 (closing [I])"
+source = "controller/docs/HARDWARE.md §2 (closing [I])"
 tier = "I"
 verification = "manual commissioning (Phase 3)"
 hard = true
 
 [[requirement]]
 id = "ARCH-03"
-document = "docs/replacement-controller/HARDWARE-SPEC.md"
+document = "controller/docs/HARDWARE.md"
 area = "Rollback path"
 statement = "Never cut the original Kohler cables — they are the rollback path; use adapter leads instead, and keep the K-99695 ports disconnected, capped and labeled."
-source = "docs/replacement-controller/HARDWARE-SPEC.md §11 closing note; §3 block-diagram footer; §10 label 'OEM — DO NOT CUT'"
+source = "controller/docs/HARDWARE.md §11 closing note; §3 block-diagram footer; §10 label 'OEM — DO NOT CUT'"
 verification = "not-testable-in-software; manual commissioning"
 hard = true
 
@@ -2702,7 +2361,7 @@ source = "research/xagon0/docs/protocols/saturn-protocol.md — Example 2: Turn 
 tier = "C"
 verification = "unit (exact byte vector AA 55 03 87 02 04 00 70) + emulator e2e"
 hard = false
-disputed = "CONTROLLER-DESIGN.md capture question 4 asks whether the K-99695 writes one compound desired state or separate values. This entry states an answer the documents do not have."
+disputed = "DESIGN.md capture question 4 asks whether the K-99695 writes one compound desired state or separate values. This entry states an answer the documents do not have."
 
 [[requirement]]
 id = "OUT-04"
@@ -3039,7 +2698,7 @@ id = "PHY-01"
 document = "research/xagon0/docs/protocols/dtv-plus-protocol.md"
 area = "physical"
 statement = "Configure every DTV+ serial link as 9600 baud, 8 data bits, no parity, 1 stop bit, no flow control."
-source = "research/xagon0/docs/protocols/dtv-plus-protocol.md § Physical Layer; docs/replacement-controller/STEAM-ADAPTER.md §2"
+source = "research/xagon0/docs/protocols/dtv-plus-protocol.md § Physical Layer; controller/docs/STEAM-ADAPTER.md §2"
 tier = "C"
 verification = "unit (port-open config assertion) plus manual commissioning"
 hard = false
@@ -3069,7 +2728,7 @@ id = "PHY-04"
 document = "research/xagon0/docs/protocols/dtv-plus-protocol.md"
 area = "physical"
 statement = "Read back and discard the echo of every transmitted byte before parsing any response, because a half-duplex RS-485 transmitter sees its own traffic."
-source = "research/xagon0/docs/protocols/dtv-plus-protocol.md § Echo Handling; docs/replacement-controller/STEAM-ADAPTER.md §3 (Half-duplex row)"
+source = "research/xagon0/docs/protocols/dtv-plus-protocol.md § Echo Handling; controller/docs/STEAM-ADAPTER.md §3 (Half-duplex row)"
 tier = "C"
 verification = "emulator e2e with a loopback fixture that replays TX bytes back into RX"
 hard = false
@@ -3113,26 +2772,6 @@ source = "research/xagon0/docs/protocols/dtv-plus-protocol.md § Multi-Port Supp
 tier = "C"
 verification = "unit (two port instances driven concurrently, assert isolation)"
 hard = false
-
-[[requirement]]
-id = "PHY-09"
-document = "docs/replacement-controller/CLAUDE.md"
-area = "physical"
-statement = "Leave our end of the steam RS-485 link unterminated; the K-1737-K1 adapter already terminates the bus at approximately 114 ohm."
-source = "docs/replacement-controller/CLAUDE.md § Settled — do not re-litigate; docs/replacement-controller/STEAM-ADAPTER.md §5"
-tier = "A"
-verification = "manual commissioning (resistance measurement)"
-hard = false
-
-[[requirement]]
-id = "PHY-10"
-document = "docs/replacement-controller/CLAUDE.md"
-area = "physical"
-statement = "Connect signal ground on the steam link (not optional there, because the adapter's SMBJ28A clamps are unidirectional and remove the negative common-mode range) and drive pin 4 of the DTV+ header, which bus-powers the adapter's transceiver through R16."
-source = "docs/replacement-controller/CLAUDE.md § Settled — do not re-litigate; docs/replacement-controller/STEAM-ADAPTER.md §5"
-tier = "A"
-verification = "manual commissioning"
-hard = true
 
 [[requirement]]
 id = "FRAME-01"
@@ -3296,10 +2935,10 @@ hard = false
 
 [[requirement]]
 id = "ADDR-05"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "addressing"
 statement = "Keep device IDs and bus addresses in separate, non-interchangeable types; never use the steam device ID 0x05 as a DEST address."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §10.3; research/xagon0/docs/protocols/dtv-plus-protocol.md § Annotated Packet Captures Example 1 (the erroneous case)"
+source = "controller/docs/STEAM-ADAPTER.md §10.3; research/xagon0/docs/protocols/dtv-plus-protocol.md § Annotated Packet Captures Example 1 (the erroneous case)"
 tier = "I"
 verification = "unit (type system prevents the assignment; a test asserts the steam DEST comes from the discovery table)"
 hard = true
@@ -3316,10 +2955,10 @@ hard = false
 
 [[requirement]]
 id = "ADDR-07"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "addressing"
 statement = "For the reference topology of one steam adapter on its own dedicated converter, expect the assigned address to be 0x03 and treat any other assigned address as a topology change requiring re-discovery."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §10.3; docs/replacement-controller/CLAUDE.md § Three links, not two"
+source = "controller/docs/STEAM-ADAPTER.md §10.3; controller/CLAUDE.md § Three links, not two"
 tier = "I"
 verification = "emulator e2e"
 hard = false
@@ -3356,20 +2995,20 @@ hard = false
 
 [[requirement]]
 id = "CMD-01"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "command-allowlist"
 statement = "Permit the encoder to construct only these opcodes: DEV_ADDRESS_OPP 0x05, DEV_REQUEST_ADDR 0x06 (decode only), DEV_ASSIGN_ADDR 0x07, GET_DEV_STATUS 0x30, STATUS_UPDATE 0x31 (decode only), SET_DEV_PARAM 0x34, DEV_ACK 0x35 (decode only), DEV_NAK 0x36 (decode only), ERROR 0x37 (decode only), CLEAR_FAULT_FLAGS 0x3A."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §3 (Command set row: \"Everything else must be denied, per the valve design's allowlist rule\")"
+source = "controller/docs/STEAM-ADAPTER.md §3 (Command set row: \"Everything else must be denied, per the valve design's allowlist rule\")"
 tier = "C"
 verification = "unit (exhaustive opcode enumeration test)"
 hard = true
 
 [[requirement]]
 id = "CMD-02"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "command-allowlist"
 statement = "Make the denied opcodes unrepresentable in the encoder's type system rather than filtering them at call time."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §3, §9"
+source = "controller/docs/STEAM-ADAPTER.md §3, §9"
 tier = "I"
 verification = "unit (no public constructor exists for a denied opcode)"
 hard = true
@@ -3379,27 +3018,27 @@ id = "CMD-03"
 document = "research/xagon0/docs/protocols/dtv-plus-protocol.md"
 area = "command-allowlist"
 statement = "Permanently deny transmission of NETWORK_RESET 0x03, SET_EXT_KEY 0x13, CHANGE_BAUD 0x18, SET_FILE_TRANSFER 0x20, FLUSH_MD5 0x21, FILE_COMPLETE 0x22, GET_DEV_PARAM 0x33, SETTINGS_UPDATE 0x32, GET_FIRMWARE_VERSION 0x38, FIRMWARE_UPDATE 0x39, ID_DEV 0x40, WRITE_DATA 0x70, READ_DATA 0x71, GET_DATA_BUFFER 0x72, WRITE_LARGE_DATA 0x74, REBOOT 0x80, GET_TRACK_STR 0x90, GET_DIR_ENTRIES 0x91 and ACTIVATE_BOOT 0xA1."
-source = "research/xagon0/docs/protocols/dtv-plus-protocol.md § Command Set; docs/replacement-controller/STEAM-ADAPTER.md §3"
+source = "research/xagon0/docs/protocols/dtv-plus-protocol.md § Command Set; controller/docs/STEAM-ADAPTER.md §3"
 tier = "C"
 verification = "unit (exhaustive opcode enumeration test)"
 hard = true
 
 [[requirement]]
 id = "CMD-04"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "command-allowlist"
 statement = "Decode frames carrying denied opcodes for logging and diagnostics, but never act on them and never mirror them back onto the bus."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §3"
+source = "controller/docs/STEAM-ADAPTER.md §3"
 tier = "I"
 verification = "unit"
 hard = false
 
 [[requirement]]
 id = "CMD-05"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "command-allowlist"
 statement = "Emit the discovery opcodes 0x05 and 0x07 only while the port is in DISCOVERY state, with water off and no steam session active."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §3 (Discovery row: \"which the valve design permits only in DISCOVERY state with water off\")"
+source = "controller/docs/STEAM-ADAPTER.md §3 (Discovery row: \"which the valve design permits only in DISCOVERY state with water off\")"
 tier = "C"
 verification = "emulator e2e (state-machine guard test)"
 hard = true
@@ -3409,7 +3048,7 @@ id = "CMD-06"
 document = "research/xagon0/docs/protocols/dtv-plus-protocol.md"
 area = "command-allowlist"
 statement = "Never emit CHANGE_BAUD 0x18; the steam link stays at 9600 8N1 for its whole life."
-source = "research/xagon0/docs/protocols/dtv-plus-protocol.md § Configuration Commands; docs/replacement-controller/STEAM-ADAPTER.md §3"
+source = "research/xagon0/docs/protocols/dtv-plus-protocol.md § Configuration Commands; controller/docs/STEAM-ADAPTER.md §3"
 tier = "C"
 verification = "unit"
 hard = true
@@ -3419,7 +3058,7 @@ id = "CMD-07"
 document = "research/xagon0/docs/protocols/dtv-plus-protocol.md"
 area = "command-allowlist"
 statement = "Never emit FIRMWARE_UPDATE 0x39, ACTIVATE_BOOT 0xA1 or REBOOT 0x80 at a steam device."
-source = "research/xagon0/docs/protocols/dtv-plus-protocol.md § Data Transfer Commands, § System Commands; docs/replacement-controller/STEAM-ADAPTER.md §3"
+source = "research/xagon0/docs/protocols/dtv-plus-protocol.md § Data Transfer Commands, § System Commands; controller/docs/STEAM-ADAPTER.md §3"
 tier = "C"
 verification = "unit"
 hard = true
@@ -3516,10 +3155,10 @@ hard = false
 
 [[requirement]]
 id = "TIME-01"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "timing"
 statement = "Default the steam port's polling interval to the slower of the two documented values (500 ms), make it configurable, and never allow it to be set faster than 150 ms."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §10.5; research/xagon0/docs/protocols/dtv-plus-protocol.md § Timing Parameters; research/xagon0/docs/devices/steam-generator.md § Device Configuration"
+source = "controller/docs/STEAM-ADAPTER.md §10.5; research/xagon0/docs/protocols/dtv-plus-protocol.md § Timing Parameters; research/xagon0/docs/devices/steam-generator.md § Device Configuration"
 tier = "?"
 verification = "unit (config clamp test)"
 hard = true
@@ -3559,7 +3198,7 @@ id = "TIME-05"
 document = "research/xagon0/docs/devices/steam-generator.md"
 area = "timing"
 statement = "Retry a failed command at most 4 times before latching a permanent error, taking the lower of the two documented retry counts."
-source = "research/xagon0/docs/devices/steam-generator.md § Recovery Logic; docs/replacement-controller/STEAM-ADAPTER.md §10.7"
+source = "research/xagon0/docs/devices/steam-generator.md § Recovery Logic; controller/docs/STEAM-ADAPTER.md §10.7"
 tier = "?"
 verification = "emulator e2e (count frames emitted before the fault latches)"
 hard = false
@@ -3579,7 +3218,7 @@ id = "TIME-07"
 document = "research/xagon0/docs/protocols/dtv-plus-protocol.md"
 area = "timing"
 statement = "Do not implement the 2000 ms large-write timeout path, because WRITE_LARGE_DATA 0x74 is permanently denied."
-source = "research/xagon0/docs/protocols/dtv-plus-protocol.md § Timing Parameters (Large Write Timeout); docs/replacement-controller/STEAM-ADAPTER.md §3"
+source = "research/xagon0/docs/protocols/dtv-plus-protocol.md § Timing Parameters (Large Write Timeout); controller/docs/STEAM-ADAPTER.md §3"
 tier = "I"
 verification = "unit (no code path constructs 0x74)"
 hard = false
@@ -3601,7 +3240,7 @@ area = "steam-status"
 statement = "Decode the steam status payload in this field order: actual temperature (Fx2), desired temperature (Fx2), operation state, timer minutes, timer seconds, error flags."
 source = "research/xagon0/docs/devices/steam-generator.md § GET_DEV_STATUS (0x30) Response"
 tier = "C"
-verification = "unit (decode vector) — field order is unverified against hardware, see docs/replacement-controller/STEAM-ADAPTER.md §11 item 7"
+verification = "unit (decode vector) — field order is unverified against hardware, see controller/docs/STEAM-ADAPTER.md §11 item 7"
 hard = false
 
 [[requirement]]
@@ -3609,7 +3248,7 @@ id = "STEAM-03"
 document = "research/xagon0/docs/devices/steam-generator.md"
 area = "steam-status"
 statement = "Assume each steam status field is one byte wide, giving a 6-byte payload, and reject any status frame whose payload length differs rather than decoding it positionally."
-source = "research/xagon0/docs/devices/steam-generator.md § GET_DEV_STATUS (0x30) Response — widths are not stated; docs/replacement-controller/STEAM-ADAPTER.md §11 item 7"
+source = "research/xagon0/docs/devices/steam-generator.md § GET_DEV_STATUS (0x30) Response — widths are not stated; controller/docs/STEAM-ADAPTER.md §11 item 7"
 tier = "I"
 verification = "unit (length-guard test on 5-, 6- and 7-byte payloads)"
 hard = false
@@ -3686,20 +3325,20 @@ hard = false
 
 [[requirement]]
 id = "STEAM-11"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "steam-state"
 statement = "Never encode operation state 0xCC: the replacement controller must not be able to initiate a power-clean cycle."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §8 (\"A defensible position is that the replacement controller never initiates power clean\"), §9"
+source = "controller/docs/STEAM-ADAPTER.md §8 (\"A defensible position is that the replacement controller never initiates power clean\"), §9"
 tier = "I"
 verification = "unit (no constructor produces 0xCC) plus emulator e2e (0xCC never appears in any TX trace)"
 hard = true
 
 [[requirement]]
 id = "STEAM-12"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "steam-state"
 statement = "When a decoded operation state is 0xCC, lock out all steam commands, report PC_ACTIVE, and do nothing that could interrupt the cycle, because an interrupted power clean must be restarted from the beginning."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §8 (\"If electrical power ... is interrupted during the power clean function, the power clean cycle will need to be restarted\")"
+source = "controller/docs/STEAM-ADAPTER.md §8 (\"If electrical power ... is interrupted during the power clean function, the power clean cycle will need to be restarted\")"
 tier = "K"
 verification = "emulator e2e"
 hard = true
@@ -3729,7 +3368,7 @@ id = "STEAM-15"
 document = "research/xagon0/docs/devices/steam-generator.md"
 area = "steam-errors"
 statement = "On decoding overtemperature (0x20) or safety-circuit (0x40), command STEAM_OFF immediately, latch the fault, and require explicit operator action to clear it."
-source = "research/xagon0/docs/devices/steam-generator.md § Error Bits; docs/replacement-controller/STEAM-ADAPTER.md §6 (error 0120, cleared by cycling generator power)"
+source = "research/xagon0/docs/devices/steam-generator.md § Error Bits; controller/docs/STEAM-ADAPTER.md §6 (error 0120, cleared by cycling generator power)"
 tier = "C"
 verification = "emulator e2e (inject 0x20 mid-session; assert a STEAM_OFF write and a latched fault)"
 hard = true
@@ -3759,27 +3398,27 @@ id = "STEAM-18"
 document = "research/xagon0/docs/devices/steam-generator.md"
 area = "steam-timer"
 statement = "Never transmit a timer duration of 0 minutes, because 0 disables automatic shutoff on the device."
-source = "research/xagon0/docs/devices/steam-generator.md § Timer System (\"Setting steamTimerSetTime to 0 disables automatic shutoff\"); docs/replacement-controller/STEAM-ADAPTER.md §6 exception 2"
+source = "research/xagon0/docs/devices/steam-generator.md § Timer System (\"Setting steamTimerSetTime to 0 disables automatic shutoff\"); controller/docs/STEAM-ADAPTER.md §6 exception 2"
 tier = "C"
 verification = "unit (encoder rejects duration 0 at the type level)"
 hard = true
 
 [[requirement]]
 id = "STEAM-19"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "steam-timer"
 statement = "Clamp or reject any commanded session duration outside 1..20 minutes inclusive before encoding."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §7 (Maximum session duration 20 min [K][B]; web UI min=1 max=20)"
+source = "controller/docs/STEAM-ADAPTER.md §7 (Maximum session duration 20 min [K][B]; web UI min=1 max=20)"
 tier = "K"
 verification = "unit (boundary test at 0, 1, 20, 21)"
 hard = true
 
 [[requirement]]
 id = "STEAM-20"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "steam-timer"
 statement = "Maintain an independent master-side session watchdog that commands STEAM_OFF at the commanded duration regardless of the device's own timer, because which timer actually ends a session is unresolved."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §6 exception 2, §11 item 2; research/xagon0/docs/devices/steam-generator.md § Timer System"
+source = "controller/docs/STEAM-ADAPTER.md §6 exception 2, §11 item 2; research/xagon0/docs/devices/steam-generator.md § Timer System"
 tier = "?"
 verification = "emulator e2e (device that never self-stops must still be shut off by the master)"
 hard = true
@@ -3796,10 +3435,10 @@ hard = false
 
 [[requirement]]
 id = "STEAM-22"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "power-clean"
 statement = "Lock steam out when cumulative runtime reaches 600 minutes and require the cycle to be run from the factory path; do not offer a way to start it."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §8; research/xagon0/docs/devices/steam-generator.md § Power Clean"
+source = "controller/docs/STEAM-ADAPTER.md §8; research/xagon0/docs/devices/steam-generator.md § Power Clean"
 tier = "K"
 verification = "emulator e2e (runtime accumulator crossing 600 min blocks new sessions)"
 hard = true
@@ -3809,7 +3448,7 @@ id = "TEMP-01"
 document = "research/xagon0/docs/devices/steam-generator.md"
 area = "temperature"
 statement = "Represent all steam-link temperatures as Fx2 (Fahrenheit x 2) in a single unsigned byte, and all valve-link temperatures as Cx2, in two distinct types that cannot be assigned to each other."
-source = "research/xagon0/docs/devices/steam-generator.md § Temperature Format; docs/replacement-controller/STEAM-ADAPTER.md §7"
+source = "research/xagon0/docs/devices/steam-generator.md § Temperature Format; controller/docs/STEAM-ADAPTER.md §7"
 tier = "C"
 verification = "unit (a compile-fail test asserting Cx2 cannot be passed where Fx2 is required)"
 hard = true
@@ -3819,7 +3458,7 @@ id = "TEMP-02"
 document = "research/xagon0/docs/devices/steam-generator.md"
 area = "temperature"
 statement = "Convert Cx2 to Fx2 as Fx2 = ((Cx2 * 9) / 5) + 64 using integer division, in exactly one function in the codebase."
-source = "research/xagon0/docs/devices/steam-generator.md § Temperature Format; docs/control-logic/temperature-system.md via docs/replacement-controller/STEAM-ADAPTER.md §7"
+source = "research/xagon0/docs/devices/steam-generator.md § Temperature Format; docs/control-logic/temperature-system.md via controller/docs/STEAM-ADAPTER.md §7"
 tier = "C"
 verification = "unit (Cx2 70 -> Fx2 190; Cx2 48 -> Fx2 150)"
 hard = false
@@ -3846,70 +3485,70 @@ hard = true
 
 [[requirement]]
 id = "TEMP-05"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "temperature"
 statement = "Treat Fx2 as bounded by the byte encoding at 255 = 127.5 F and assume no headroom above that exists on the wire."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §7 (\"Fx2 is documented as a single byte, so it tops out at 255 = 127.5 F\")"
+source = "controller/docs/STEAM-ADAPTER.md §7 (\"Fx2 is documented as a single byte, so it tops out at 255 = 127.5 F\")"
 tier = "I"
 verification = "unit (encoder saturation/rejection test)"
 hard = false
 
 [[requirement]]
 id = "LIMIT-01"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "limits"
 statement = "Reject any steam setpoint outside Fx2 180..250 (90..125 F) at the encoder rather than clamping silently, and report the rejection to the caller."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §7 (target range 90-125 F [K]; generator's own limits 90-125 F [K])"
+source = "controller/docs/STEAM-ADAPTER.md §7 (target range 90-125 F [K]; generator's own limits 90-125 F [K])"
 tier = "K"
 verification = "unit (boundary test at Fx2 179, 180, 250, 251)"
 hard = true
 
 [[requirement]]
 id = "LIMIT-02"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "limits"
 statement = "Apply the configured installation maximum (steam_max_temp_string, 125 F on the reference system) as an additional ceiling on top of the hard Fx2 250 limit, taking whichever is lower."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §1, §7"
+source = "controller/docs/STEAM-ADAPTER.md §1, §7"
 tier = "A"
 verification = "unit"
 hard = true
 
 [[requirement]]
 id = "LIMIT-03"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "limits"
 statement = "Do not treat the configured maximum temperature as a safety guarantee: on the shipped controller it is an unbounded settings field written to save_variable.cgi index 58 with no min or max attribute."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §7 (\"125 F is not a firmware constant, it is a settings field\"); DISCLAIMER.md"
+source = "controller/docs/STEAM-ADAPTER.md §7 (\"125 F is not a firmware constant, it is a settings field\"); DISCLAIMER.md"
 tier = "B"
 verification = "not-testable-in-software; enforced by LIMIT-01's independent hard bound"
 hard = true
 
 [[requirement]]
 id = "LIMIT-04"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "limits"
 statement = "Do not use MIN_STEAM_SETPOINT (Cx2 48 = Fx2 150 = 75 F) as the operational floor; the operational floor is the documented 90 F (Fx2 180)."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §7, §10.8; research/xagon0/docs/devices/steam-generator.md § Temperature Format"
+source = "controller/docs/STEAM-ADAPTER.md §7, §10.8; research/xagon0/docs/devices/steam-generator.md § Temperature Format"
 tier = "?"
 verification = "unit"
 hard = true
 
 [[requirement]]
 id = "LIMIT-05"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "limits"
 statement = "Default a steam session to Fx2 220 (110 F) for 10 minutes when the caller supplies no values."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §7 (factory default 110 F, default duration 10 min); §1 (steam_temp_string 110, steam_def_time_string 10)"
+source = "controller/docs/STEAM-ADAPTER.md §7 (factory default 110 F, default duration 10 min); §1 (steam_temp_string 110, steam_def_time_string 10)"
 tier = "K"
 verification = "unit"
 hard = false
 
 [[requirement]]
 id = "LIMIT-06"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "limits"
 statement = "Support the optional cumulative max-run-time cap with the values No Limit, 20, 25, 30 and 35 minutes, and treat it as a separate accumulator from the per-session 20-minute cap."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §7 (Optional max-run-time cap row, from settings.html)"
+source = "controller/docs/STEAM-ADAPTER.md §7 (Optional max-run-time cap row, from settings.html)"
 tier = "B"
 verification = "unit"
 hard = false
@@ -3936,20 +3575,20 @@ hard = true
 
 [[requirement]]
 id = "LINK-03"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "link-loss"
 statement = "On every retry of a lost transaction during an active steam session, send STEAM_OFF rather than re-sending the running setpoint, so the last frame the generator can possibly have received is a stop."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §6 (fail-closed on comms loss is Unknown for steam), §11 item 1"
+source = "controller/docs/STEAM-ADAPTER.md §6 (fail-closed on comms loss is Unknown for steam), §11 item 1"
 tier = "I"
 verification = "emulator e2e (inspect the TX trace during a simulated link failure)"
 hard = true
 
 [[requirement]]
 id = "LINK-04"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "link-loss"
 statement = "Never assume the generator fails closed when the data link goes silent; report link loss during a session as an unsafe, operator-visible condition, not as an implicit stop."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §6 side-by-side table (Fail-closed on comms loss: Unknown), §11 item 1"
+source = "controller/docs/STEAM-ADAPTER.md §6 side-by-side table (Fail-closed on comms loss: Unknown), §11 item 1"
 tier = "?"
 verification = "emulator e2e (UI/API state must read UNKNOWN-UNSAFE, never OFF, after a silent link)"
 hard = true
@@ -3959,7 +3598,7 @@ id = "LINK-05"
 document = "research/xagon0/docs/devices/steam-generator.md"
 area = "link-loss"
 statement = "Never auto-resume or auto-restart a steam session after a link recovers; require a fresh, explicit operator start."
-source = "research/xagon0/docs/devices/steam-generator.md § Recovery Logic; docs/replacement-controller/STEAM-ADAPTER.md §6"
+source = "research/xagon0/docs/devices/steam-generator.md § Recovery Logic; controller/docs/STEAM-ADAPTER.md §6"
 tier = "I"
 verification = "emulator e2e"
 hard = true
@@ -3979,37 +3618,37 @@ id = "LINK-07"
 document = "research/xagon0/docs/devices/steam-generator.md"
 area = "link-loss"
 statement = "Report steam as OFF only on the strength of a fresh, checksum-valid status frame showing operation state 0x00; never infer OFF from a timeout, a retry exhaustion or an unacknowledged write."
-source = "research/xagon0/docs/devices/steam-generator.md § SET_DEV_PARAM (0x34); docs/replacement-controller/STEAM-ADAPTER.md §6"
+source = "research/xagon0/docs/devices/steam-generator.md § SET_DEV_PARAM (0x34); controller/docs/STEAM-ADAPTER.md §6"
 tier = "I"
 verification = "emulator e2e"
 hard = true
 
 [[requirement]]
 id = "SAFE-01"
-document = "AGENT.md hard rule 2; docs/replacement-controller/STEAM-ADAPTER.md"
+document = "AGENT.md hard rule 2; controller/docs/STEAM-ADAPTER.md"
 area = "safety"
 statement = "Never open a valve without explicit, in-the-moment operator consent, including the 10-second deluge that a steam session can request."
-source = "AGENT.md hard rule 2; docs/replacement-controller/STEAM-ADAPTER.md §9 (Deluge)"
+source = "AGENT.md hard rule 2; controller/docs/STEAM-ADAPTER.md §9 (Deluge)"
 tier = "K"
 verification = "emulator e2e (a deluge request with no consent token must not produce a valve command)"
 hard = true
 
 [[requirement]]
 id = "SAFE-02"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "safety"
 statement = "Enforce mutual exclusion between steam and spa: refuse to start steam while a spa script is running and refuse to start spa while steam is running."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §9 (\"Cannot Run Steam While Spa Is Running\")"
+source = "controller/docs/STEAM-ADAPTER.md §9 (\"Cannot Run Steam While Spa Is Running\")"
 tier = "B"
 verification = "unit plus emulator e2e"
 hard = true
 
 [[requirement]]
 id = "SAFE-03"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "safety"
 statement = "Scope the steam feature to on, off and setpoint only; deny deluge and spa steam-coach coupling permanently."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §9 (\"the cheapest safe scope is almost certainly steam on/off/setpoint only, deluge and spa permanently denied\")"
+source = "controller/docs/STEAM-ADAPTER.md §9 (\"the cheapest safe scope is almost certainly steam on/off/setpoint only, deluge and spa permanently denied\")"
 tier = "I"
 verification = "unit (no API surface exists for deluge or spa steam-coach)"
 hard = true
@@ -4026,10 +3665,10 @@ hard = true
 
 [[requirement]]
 id = "SAFE-05"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "safety"
 statement = "Constrain save_variable.cgi by index; specifically deny index 60 (steam_start_clean), which starts a 45-minute unattended power-clean cycle, and index 58 (steam max temperature)."
-source = "docs/replacement-controller/STEAM-ADAPTER.md §10.1, §10.2, §7"
+source = "controller/docs/STEAM-ADAPTER.md §10.1, §10.2, §7"
 tier = "B"
 verification = "unit (index allowlist test on the proxy)"
 hard = true
@@ -4039,27 +3678,27 @@ id = "SAFE-06"
 document = "CLAUDE.md"
 area = "safety"
 statement = "Do not treat 125 F / 51.7 C as a safe temperature bound: it is a product ceiling above the 43 C / 109 F scald threshold, and the steam hazard is whole-room air at that temperature with near-100% humidity."
-source = "CLAUDE.md § Quick orientation; docs/replacement-controller/STEAM-ADAPTER.md § Safety position"
+source = "CLAUDE.md § Quick orientation; controller/docs/STEAM-ADAPTER.md § Safety position"
 tier = "K"
 verification = "not-testable-in-software (documentation and UI-warning requirement)"
 hard = true
 
 [[requirement]]
 id = "SAFE-07"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "safety"
 statement = "Gate any transmission on real steam hardware behind an explicit operator enable, because no tier [A] evidence of a running steam generator exists in this project and the entire steam wire format is unverified reverse engineering."
-source = "docs/replacement-controller/STEAM-ADAPTER.md § Evidence tiers, §11 item 7"
+source = "controller/docs/STEAM-ADAPTER.md § Evidence tiers, §11 item 7"
 tier = "?"
 verification = "emulator e2e is the only permitted default; a hardware-enable flag defaults off"
 hard = true
 
 [[requirement]]
 id = "SAFE-08"
-document = "docs/replacement-controller/STEAM-ADAPTER.md"
+document = "controller/docs/STEAM-ADAPTER.md"
 area = "safety"
 statement = "Build and validate the codec against an offline steam emulator and fixtures before any hardware exists, and keep every worked frame in this specification as a regression fixture."
-source = "docs/replacement-controller/STEAM-ADAPTER.md § Cheapest next steps, step 8"
+source = "controller/docs/STEAM-ADAPTER.md § Cheapest next steps, step 8"
 tier = "I"
 verification = "unit plus emulator e2e"
 hard = false

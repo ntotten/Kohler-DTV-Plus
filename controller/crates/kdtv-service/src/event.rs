@@ -30,7 +30,7 @@ use crate::cache::SystemSnapshot;
 /// How many events the stream holds for a subscriber that is behind.
 ///
 /// Sized for the busiest second this service can have: three links at their
-/// tick, a frame record each way, an RTD sample per zone and a session record
+/// tick, a frame record each way and a session record
 /// is well under a hundred. A subscriber that cannot keep up with that is not
 /// going to be rescued by a deeper buffer.
 pub const EVENT_CAPACITY: usize = 256;

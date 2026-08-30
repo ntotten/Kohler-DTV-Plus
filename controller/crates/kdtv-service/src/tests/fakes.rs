@@ -26,13 +26,10 @@ use std::time::Duration;
 
 use tokio::sync::Notify;
 
-use kdtv_hal::{
-    BoxedFuture, Clock, FaultRegister, IdError, IdStore, LinkIoError, RtdChannel, RtdError,
-    RtdSample, WallClock, Watchdog,
-};
+use kdtv_hal::{BoxedFuture, Clock, IdError, IdStore, LinkIoError, WallClock, Watchdog};
 use kdtv_proto::saturn::{MasterAddr, SYNC1, SYNC2, ValveAddr, checksum, opcode};
 use kdtv_telemetry::{Monotonic, NtpSync};
-use kdtv_units::{BootId, CommandId, LinkKind, PiBootId, RawC, ZoneId};
+use kdtv_units::{BootId, CommandId, LinkKind, PiBootId};
 
 use crate::port::Pipe;
 
@@ -158,97 +155,6 @@ impl IdStore for FakeIds {
 
     fn pi_boot_id(&self) -> Result<PiBootId, IdError> {
         Ok(PiBootId("test-pi-boot".into()))
-    }
-}
-
-// ---------------------------------------------------------------- rtd
-
-/// What a [`FakeRtd`] reports: a reading, or a transfer that failed.
-#[derive(Copy, Clone, Debug)]
-struct Dialled {
-    celsius: f32,
-    fault_bits: u8,
-    /// Every transfer fails. A broken chip select or an unplugged ribbon, which
-    /// produces no reading at all rather than a wrong one.
-    dead: bool,
-}
-
-/// A probe that reports whatever the test last dialled in.
-#[derive(Debug)]
-pub(crate) struct FakeRtd {
-    zone: ZoneId,
-    clock: Arc<dyn Clock>,
-    reading: Arc<Mutex<Dialled>>,
-}
-
-/// The dial on a [`FakeRtd`], so a test can heat the pipe or break the probe.
-#[derive(Clone, Debug)]
-pub(crate) struct RtdDial(Arc<Mutex<Dialled>>);
-
-impl RtdDial {
-    pub(crate) fn set(&self, celsius: f32, fault_bits: u8) {
-        let mut dialled = self.0.lock().unwrap();
-        dialled.celsius = celsius;
-        dialled.fault_bits = fault_bits;
-        dialled.dead = false;
-    }
-}
-
-impl FakeRtd {
-    pub(crate) fn new(zone: ZoneId, clock: Arc<dyn Clock>, celsius: f32) -> (Self, RtdDial) {
-        Self::build(zone, clock, celsius, false)
-    }
-
-    /// A channel whose every transfer fails, from the first second of service
-    /// life. Nothing about it is a reading, so [`RtdWatch`] never has a last
-    /// sample to measure starvation from.
-    ///
-    /// [`RtdWatch`]: kdtv_safety::RtdWatch
-    pub(crate) fn broken(zone: ZoneId, clock: Arc<dyn Clock>) -> (Self, RtdDial) {
-        Self::build(zone, clock, 0.0, true)
-    }
-
-    fn build(zone: ZoneId, clock: Arc<dyn Clock>, celsius: f32, dead: bool) -> (Self, RtdDial) {
-        let reading = Arc::new(Mutex::new(Dialled {
-            celsius,
-            fault_bits: 0,
-            dead,
-        }));
-        (
-            Self {
-                zone,
-                clock,
-                reading: Arc::clone(&reading),
-            },
-            RtdDial(reading),
-        )
-    }
-}
-
-impl RtdChannel for FakeRtd {
-    fn zone(&self) -> ZoneId {
-        self.zone
-    }
-
-    fn sample(&mut self) -> BoxedFuture<'_, Result<RtdSample, RtdError>> {
-        let zone = self.zone;
-        let dialled = *self.reading.lock().unwrap();
-        let at = self.clock.monotonic();
-        Box::pin(async move {
-            if dialled.dead {
-                return Err(RtdError::Transfer {
-                    zone,
-                    chip_select: kdtv_hal::chip_select_for(zone),
-                    source: std::io::Error::from(std::io::ErrorKind::BrokenPipe),
-                });
-            }
-            Ok(RtdSample {
-                zone,
-                raw: RawC(dialled.celsius),
-                fault: FaultRegister::from_bits(dialled.fault_bits),
-                at,
-            })
-        })
     }
 }
 

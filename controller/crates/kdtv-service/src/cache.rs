@@ -19,34 +19,17 @@
 //! # What is in a snapshot
 //!
 //! The engine's own caches ([`ZoneCache`], [`SteamCache`]) verbatim, plus the
-//! two things the engine cannot know: what the safety kernel believes about each
-//! link, and what the independent temperature probe read. Both temperatures
-//! travel together — the valve's own thermistor reading is a self-report, and
-//! one without the other is not evidence (`LOG-03`, `LOG-10`).
+//! one thing the engine cannot know: what the safety kernel believes about each
+//! link.
 
 use std::sync::Arc;
 
 use arc_swap::ArcSwap;
 use kdtv_engine::{SteamCache, ZoneCache};
 use kdtv_safety::{LatchReason, LinkState};
-use kdtv_telemetry::{Monotonic, Stamp};
+use kdtv_telemetry::Stamp;
 use kdtv_units::{BootId, PiBootId, ZoneId};
 use serde::Serialize;
-
-/// One reading from a zone's independent channel, corrected and raw.
-///
-/// Both numbers are kept. A surface clamp reads pipe wall and reads low, so the
-/// correction is what every threshold is evaluated on — and the raw value is
-/// what says whether the correction curve is the thing that is wrong.
-#[derive(Copy, Clone, PartialEq, Debug, Serialize)]
-pub struct IndependentReading {
-    pub raw_c: f32,
-    pub corrected_c: f32,
-    /// The `MAX31865` fault register, verbatim. An open probe reads *low*, so
-    /// this is the only field that can say the reading means nothing.
-    pub fault_bits: u8,
-    pub at: Monotonic,
-}
 
 /// What the safety kernel believes about one link, in a form that serialises.
 ///
@@ -99,9 +82,6 @@ pub struct ZoneStatus {
     pub kernel: LinkStateLabel,
     /// The engine's own cache, unaltered.
     pub valve: ZoneCache,
-    /// The independent probe. `None` before the first sample, which is itself
-    /// the finding — a channel that has never spoken has not been ruled out.
-    pub independent: Option<IndependentReading>,
     /// Frames that reached the wire on this link since boot.
     pub frames_tx: u64,
     /// Frames decoded off this link since boot, decode failures included.
@@ -202,7 +182,7 @@ impl StateCache {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kdtv_telemetry::NtpSync;
+    use kdtv_telemetry::{Monotonic, NtpSync};
 
     fn stamp() -> Stamp {
         Stamp::new(
@@ -257,8 +237,8 @@ mod tests {
     /// [`ZoneCache`] and [`SteamCache`] have no public constructor, so nothing
     /// here can build a populated snapshot; what this covers is the four fields
     /// of [`SystemSnapshot`] itself. The same assertion over a real snapshot —
-    /// both zones, their engine caches, their kernel labels and an independent
-    /// reading — is in `crate::tests`, driven off the running supervisor, and
+    /// both zones, their engine caches and their kernel labels — is in
+    /// `crate::tests`, driven off the running supervisor, and
     /// that is the one that would catch a credential-shaped field added to
     /// [`ZoneStatus`].
     #[test]

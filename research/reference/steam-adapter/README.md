@@ -48,7 +48,7 @@ Left to right on the connector edge, each label's `>` pointing at its connector:
 Ports 3 and 4 are `CN1` and `CN2` on the silkscreen; which is which is not yet
 determined.
 
-**This corrects [STEAM-ADAPTER.md § 5](../../../docs/replacement-controller/STEAM-ADAPTER.md).**
+**This corrects [STEAM-ADAPTER.md § 5](../../../controller/docs/STEAM-ADAPTER.md).**
 That section inferred, marked **[I]**, that DTV+ peripheral ports are modular
 jacks carrying a serial bus over patch cable, and concluded a screw-terminal
 converter "is not, on its own, plausibly sufficient". The modular jack is the
@@ -216,7 +216,7 @@ forward-biases the TVS and draws current.
 must be connected to our converter's `PE`, giving the two ends a shared
 reference so the differential pair never sits far below the adapter's ground.
 This is a departure from the valve links, where
-[CONTROLLER-DESIGN.md](../../../docs/replacement-controller/CONTROLLER-DESIGN.md)
+[DESIGN.md](../../../controller/docs/DESIGN.md)
 connects `PE` only if measurement shows a reference conductor is needed. Here
 the reason is positive and known in advance.
 

@@ -1,9 +1,13 @@
-# Steam as a third link on the replacement controller
+# Steam: the K-1737-K1 adapter and the DTV+ protocol
 
-Reference material for the steam link specified in
-[HARDWARE-SPEC.md § 12](HARDWARE-SPEC.md): what Kohler publishes about the
-K-1737-K1 adapter, the DTV+ protocol it speaks, the limits it enforces, and
-where the published sources contradict each other.
+Reference material, not a plan. **Steam is out of scope of the build** —
+operator decision 2026-08-30,
+[DECISIONS.md](DECISIONS.md#d12--like-for-like-scope-no-added-equipment-no-steam-setup) —
+and this document is the record kept for a future revisit: what Kohler
+publishes about the K-1737-K1 adapter, the DTV+ protocol it speaks, the limits
+it enforces, where the published sources contradict each other, and what was
+measured on the opened adapter board. The dormant DTV+ code the workspace
+carries is documented in [HARDWARE.md § 12](HARDWARE.md).
 
 Nothing here has been tested against steam hardware. Everything is from Kohler
 documents **[K]**, the controller's own shipped code **[B]**, and third-party
@@ -17,11 +21,11 @@ The generator is a self-contained appliance. Kohler documents its protections
 in the generator itself (§6), which is the same architecture the valve links
 rely on: the device owns its safety, and the master sends setpoints.
 
-[CONTROLLER-DESIGN.md](CONTROLLER-DESIGN.md) is acceptable because the valve
+[DESIGN.md](DESIGN.md) is acceptable because the valve
 owns mixing, over-temperature trips, and fail-closed behaviour; the replacement
 master sends a setpoint to a device that protects itself. That claim is sourced
 and testable —
-[valve-control.md § Safety Ownership](../devices/valve-control.md#safety-ownership).
+[valve-control.md § Safety Ownership](../../docs/devices/valve-control.md#safety-ownership).
 
 The equivalent claim for steam is partly established. Kohler documents
 low-water, tank-high-limit and room-over-temperature protections inside the
@@ -47,13 +51,13 @@ Two questions stay open and are queued on Kohler case **#07797183**: what the
 generator does when the DTV+ link goes silent, and whether the 20-minute shutoff
 runs in the generator or the controller. Neither needs Kohler to answer first —
 pulling the link mid-session measures both, which is what
-[HARDWARE-SPEC.md § 12](HARDWARE-SPEC.md) schedules for Phase 5.
+[HARDWARE.md § 12](HARDWARE.md) schedules for Phase 5.
 
 ---
 
 ## Evidence tiers
 
-Same scheme as [system-specification.md](../system-specification.md).
+Same scheme as [system-specification.md](../../docs/system-specification.md).
 
 | Tier                       | Meaning                                                                                                                                                           |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -111,7 +115,7 @@ meaning is unverified **[?]**.
 The controller side is well described. Its eight DTV+ ports are **RS-485
 half-duplex, 9600 8N1, no flow control**, GPIO-driven DE/RE, 2048-byte TX/RX
 buffers, one independent bus per port **[C]**
-([hardware.md](../hardware.md), [system-specification.md § 4](../system-specification.md)).
+([hardware.md](../../docs/hardware.md), [system-specification.md § 4](../../docs/system-specification.md)).
 The documented RS-485 connector pinout is **1 = A+, 2 = B−, 3 = GND**, and the
 same table covers both the DTV+ and the valve ports **[C]**.
 
@@ -125,10 +129,10 @@ What is **not** established:
 
 - **The connector housing and keying.** The 3-pin A+/B−/GND table is a signal
   assignment, not a part number. The valve design already refuses to buy mating
-  connectors by assumption — [CONTROLLER-DESIGN.md § Field-select](CONTROLLER-DESIGN.md)
+  connectors by assumption — [DESIGN.md § Hardware, "Not orderable from documents"](DESIGN.md)
   requires photographing both ends first. The same rule applies here, harder,
   because nobody in this project has ever seen a DTV+ peripheral port populated.
-- **Whether the port carries device power.** [hardware.md](../hardware.md) says
+- **Whether the port carries device power.** [hardware.md](../../docs/hardware.md) says
   "each peripheral device is powered separately" and shows a `VCC` pin only on
   the _UI_ connector, not on the RS-485 connector **[C]**. **[I]** That reads as
   "DTV+ ports are signal-only", but it is inference from an omission, which is
@@ -154,7 +158,7 @@ document.**
 The replacement controller currently implements **Saturn** only. DTV+ is a
 different protocol on the same kind of wire at the same baud rate — the repo
 already calls this the system's most confusing property
-([system-specification.md § 5](../system-specification.md)), and upstream notes
+([system-specification.md § 5](../../docs/system-specification.md)), and upstream notes
 that a DTV+ frame sent to a valve produces "no response or garbage" **[C]**.
 
 New work required, all tier **[C]** from
@@ -175,7 +179,7 @@ New work required, all tier **[C]** from
 
 **[I]** Rough shape of the effort: the serial-port count goes 2 → 3, but the
 protocol implementations go 1 → 2, the fixture/emulator work roughly doubles,
-and the capture campaign in [CONTROLLER-DESIGN.md § Packet capture questions](CONTROLLER-DESIGN.md)
+and the capture campaign in [DESIGN.md § Packet capture questions](DESIGN.md)
 has to be repeated end to end on a bus type nobody has captured yet. Calling
 this "one more port" would be wrong by a wide margin.
 
@@ -191,7 +195,7 @@ The one DTV+ speaker in the house is the **wall interface**, which is connected
 controller's **separate UI UART**, not on one of the eight peripheral ports, and
 that link is documented at **115200** 8N1 for Amulet CRC while DTV+ is **9600**
 **[C]**. Discovery is said to happen over DTV+ before the switch to Amulet
-([system-specification.md § 4](../system-specification.md)); the DTV+ command set
+([system-specification.md § 4](../../docs/system-specification.md)); the DTV+ command set
 does contain `CHANGE_BAUD 0x18`. **[I]** So a capture of that link plausibly
 contains real DTV+ discovery frames, but whether and when the baud changes is
 **unverified**, and the capture rig would have to cope with it. See
@@ -330,7 +334,7 @@ controller-side pinout table in §2 does not capture.
 Optional Components" port group** — the same group the wall interface uses. And
 the wall interface's cable is already documented here as **"up to 25 ft of
 RJ45-terminated cable plus an in-line coupler… Nothing about it is Ethernet"**
-([wall-interface.md](../devices/wall-interface.md)), which matches the
+([wall-interface.md](../../docs/devices/wall-interface.md)), which matches the
 K-99693-P spec sheet's own bill of materials: "25′ (7.62 m) / RJ45 Coupler /
 RJ45 Ethernet Cable" **[K]**
 ([`K-99693-P_spec.pdf`](../../research/reference/K-99693-P_spec.pdf)).
@@ -412,7 +416,7 @@ independent of the bus, but it is the best evidence available.
 A Raspberry Pi in a service enclosure is not a user interface inside the steam
 room, and on this system the in-enclosure interface is the K-99693, which the
 replacement plan powers down
-([CONTROLLER-DESIGN.md](CONTROLLER-DESIGN.md), Phase 4).
+([DESIGN.md](DESIGN.md), Phase 4).
 
 **Operator decision, 2026-08-29: accepted and not treated as a blocker.** The
 reasoning is recorded here because it is a deliberate deviation from a
@@ -448,7 +452,7 @@ mid-session is safe.
 ### Side by side with the valve
 
 The valve column is sourced from
-[valve-control.md § Safety Ownership](../devices/valve-control.md#safety-ownership).
+[valve-control.md § Safety Ownership](../../docs/devices/valve-control.md#safety-ownership).
 
 | Protection                   | Valve — who owns it                                                                                                                  | Steam — who owns it                                                                                                                                                                                                                                       |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -476,10 +480,10 @@ enclosure.
 
 Steam uses **Fahrenheit × 2**; valves use **Celsius × 2**. Conversion at the
 boundary is `Fx2 = ((Cx2 × 9) / 5) + 64` **[C]**
-([temperature-system.md](../control-logic/temperature-system.md)).
+([temperature-system.md](../../docs/control-logic/temperature-system.md)).
 
 This is already flagged as a footgun in
-[system-specification.md § 8](../system-specification.md). Adding a real steam
+[system-specification.md § 8](../../docs/system-specification.md). Adding a real steam
 link makes it a live one rather than a theoretical one, because the replacement
 controller would then hold both encodings in the same process:
 
@@ -528,7 +532,7 @@ guarantee. Whether the generator or the firmware clamps above 125 °F is
 spec sheet gives "Max. Ambient temp: 125 °F (51.7 °C)" and warns "Do not install
 the digital interface above the steamhead of a steam unit" **[K]**
 ([`K-99693-P_spec.pdf`](../../research/reference/K-99693-P_spec.pdf); also
-[wall-interface.md](../devices/wall-interface.md)). **[I]** That the steam
+[wall-interface.md](../../docs/devices/wall-interface.md)). **[I]** That the steam
 ceiling and the interface's ambient rating are the same number looks like a
 system-integration limit rather than a coincidence — but that is inference, and
 it would not be the binding constraint on a human in the room anyway.
@@ -657,7 +661,7 @@ cannot keep steam in its own lane. It needs a cross-bus coordinator that can
 open a valve outlet for 10 seconds while a steam session is running, plus a
 mutual-exclusion rule against spa. That is state-machine work spanning both
 protocols, and it is the kind of coupling that turns "add a third link" into a
-redesign of the service's core. It also means the [CONTROLLER-DESIGN.md](CONTROLLER-DESIGN.md)
+redesign of the service's core. It also means the [DESIGN.md](DESIGN.md)
 rule "never open a valve without explicit consent" now has a second caller.
 
 If steam is ever added, the cheapest safe scope is almost certainly **steam
@@ -758,7 +762,7 @@ system's sensitivity to polling.
 ### 10.6 Devices per port: 1, 2, or 5?
 
 [timing-constants.md](../../research/xagon0/docs/control-logic/timing-constants.md)
-says max **1** non-valve device per port; [system-specification.md § 4](../system-specification.md)
+says max **1** non-valve device per port; [system-specification.md § 4](../../docs/system-specification.md)
 says up to **2** devices per port; [dtv-plus-protocol.md](../../research/xagon0/docs/protocols/dtv-plus-protocol.md)
 says addresses `0x03–0x07` allow **5** per port. Unreconciled **[?]**. Irrelevant
 for one steam generator on a dedicated converter, but it would matter for any
@@ -789,26 +793,113 @@ connects to what, where the adapter draws power, the generator's mains
 requirements, what power clean does, and that low-water and high-limit
 protection exist. What they do not answer:
 
-| #   | Unknown                                                                                                                                                                                                                  | Why it blocks                                                                                                                |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **What the heating element does when the data link goes silent.** Kohler documents error `0408` and a UI reset; nothing says the generator stops                                                                         | The fail-closed claim, which is the whole basis of the valve design's safety case                                            |
-| 2   | **Which timer actually ends a session** — the generator's documented 20-minute auto-shutoff **[K]**, or `steamTimerSetTime` where `0` disables shutoff **[C]**                                                           | Decides whether a crashed master leaves a boiler running                                                                     |
-| 3   | ~~Whether the in-enclosure-interface WARNING can be satisfied at all~~ — **closed 2026-08-29 by operator decision.** Accepted as a recorded deviation; see §6                                                            | No longer blocking                                                                                                           |
-| 4   | ~~**The protocol on the adapter↔controller link.**~~ **Closed 2026-08-29 [A]** — `IC2` is an `ADM4852` half-duplex RS-485 transceiver. A standard converter is the right part                                            | Closed                                                                                                                       |
-| 5   | **The modular connector's pin assignment**, pin count, termination and idle bias on a DTV+ peripheral port                                                                                                               | Cannot build a lead                                                                                                          |
-| 6   | **Whether the DTV+ port sources device power.** The adapter is generator-powered, so probably not — but the wall interface _is_ controller-powered on a similar cable                                                    | Decides isolation and cabling                                                                                                |
-| 7   | **The real on-wire steam frames** — exact `SET_DEV_PARAM` payload shape, status field order and widths, discovery sequence                                                                                               | Cannot write an encoder from prose                                                                                           |
-| 8   | **Whether the generator speaks DTV+ natively or the adapter translates.** The adapter substitutes for the native keypad, which suggests the generator side is the _generator's_ protocol and the adapter bridges **[I]** | Decides whether the master talks to the adapter or through it                                                                |
-| 9   | **Whether K-1737-K1 is the right kit for whichever generator is bought.** Kohler maps current Invigoration generators to K-5548-K1, not K-1737-K1                                                                        | Buying the wrong generator wastes the kit                                                                                    |
-| 10  | **Whether the 125 °F ceiling is enforced below the settings layer**                                                                                                                                                      | An installer field with no `min`/`max` is not a limit                                                                        |
-| 11  | **How deluge is commanded on the wire**, and whether it is controller-side orchestration or a generator-initiated request                                                                                                | The cross-bus coupling in §9                                                                                                 |
-| 12  | **Everything in §10 marked [?]**                                                                                                                                                                                         | Implementation details that decide whether a link works at all                                                               |
-| 13  | **Listing status.** No UL 499 / UL 1951 / ASME statement appeared in any fetchable Kohler PDF; they likely live on the rating label                                                                                      | The listing argument in [temperature-safety.md](../control-logic/temperature-safety.md) applies here with much higher stakes |
+| #   | Unknown                                                                                                                                                                                                                  | Why it blocks                                                                                                                        |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | **What the heating element does when the data link goes silent.** Kohler documents error `0408` and a UI reset; nothing says the generator stops                                                                         | The fail-closed claim, which is the whole basis of the valve design's safety case                                                    |
+| 2   | **Which timer actually ends a session** — the generator's documented 20-minute auto-shutoff **[K]**, or `steamTimerSetTime` where `0` disables shutoff **[C]**                                                           | Decides whether a crashed master leaves a boiler running                                                                             |
+| 3   | ~~Whether the in-enclosure-interface WARNING can be satisfied at all~~ — **closed 2026-08-29 by operator decision.** Accepted as a recorded deviation; see §6                                                            | No longer blocking                                                                                                                   |
+| 4   | ~~**The protocol on the adapter↔controller link.**~~ **Closed 2026-08-29 [A]** — `IC2` is an `ADM4852` half-duplex RS-485 transceiver. A standard converter is the right part                                            | Closed                                                                                                                               |
+| 5   | **The modular connector's pin assignment**, pin count, termination and idle bias on a DTV+ peripheral port                                                                                                               | Cannot build a lead                                                                                                                  |
+| 6   | **Whether the DTV+ port sources device power.** The adapter is generator-powered, so probably not — but the wall interface _is_ controller-powered on a similar cable                                                    | Decides isolation and cabling                                                                                                        |
+| 7   | **The real on-wire steam frames** — exact `SET_DEV_PARAM` payload shape, status field order and widths, discovery sequence                                                                                               | Cannot write an encoder from prose                                                                                                   |
+| 8   | **Whether the generator speaks DTV+ natively or the adapter translates.** The adapter substitutes for the native keypad, which suggests the generator side is the _generator's_ protocol and the adapter bridges **[I]** | Decides whether the master talks to the adapter or through it                                                                        |
+| 9   | **Whether K-1737-K1 is the right kit for whichever generator is bought.** Kohler maps current Invigoration generators to K-5548-K1, not K-1737-K1                                                                        | Buying the wrong generator wastes the kit                                                                                            |
+| 10  | **Whether the 125 °F ceiling is enforced below the settings layer**                                                                                                                                                      | An installer field with no `min`/`max` is not a limit                                                                                |
+| 11  | **How deluge is commanded on the wire**, and whether it is controller-side orchestration or a generator-initiated request                                                                                                | The cross-bus coupling in §9                                                                                                         |
+| 12  | **Everything in §10 marked [?]**                                                                                                                                                                                         | Implementation details that decide whether a link works at all                                                                       |
+| 13  | **Listing status.** No UL 499 / UL 1951 / ASME statement appeared in any fetchable Kohler PDF; they likely live on the rating label                                                                                      | The listing argument in [temperature-safety.md](../../docs/control-logic/temperature-safety.md) applies here with much higher stakes |
 
 Items 1, 2, 7, 8 and 11 need a capture of a working steam installation. Items 5,
 6 and 13 need the parts in hand. Items 3 and 9 need a conversation with Kohler.
 
 ---
+
+---
+
+## 12. Building the link, if it is ever wanted
+
+Moved here from the hardware specification when steam left the plan. All of it
+was measured or derived before the descope, and none of it is scheduled work.
+
+The adapter-side link is a **4-pin polarized header**, read directly off the
+adapter's own lid label **[A]** —
+[`research/reference/steam-adapter/`](../../research/reference/steam-adapter/).
+The adapter carries two identical headers, `FROM DTV CONTROL` and `TO NEXT
+DEVICE (OPTIONAL)`, so the bus is multi-drop with a daisy-chain out.
+
+**The link is RS-485 — settled.** The adapter's transceiver is an **`ADM4852`**
+**[A]**: half-duplex RS-485/RS-422, ⅛ unit load, slew-rate limited, 8-lead SOIC
+([Analog Devices](https://www.analog.com/en/products/adm4852.html)). Two wires,
+A and B. A standard converter is the correct part, and the three `PC900V`
+optocouplers map onto its receiver output, driver input and tied enable — the
+textbook isolated half-duplex node.
+
+⅛ unit load means up to 256 transceivers on the bus, and the driver is
+deliberately slew-limited. Both are the signature of a long multi-drop
+daisy-chain, which matches the adapter's own `TO NEXT DEVICE` header.
+
+**The connector pinout is measured [A]**, `CN1` and `CN2` in parallel:
+
+| Pin | Position                  | `IC2` pin | Signal                                     |
+| --- | ------------------------- | --------- | ------------------------------------------ |
+| 1   | Furthest from barrel jack | 7         | **`B`**                                    |
+| 2   |                           | 6         | **`A`**                                    |
+| 3   |                           | 5         | **`GND`**                                  |
+| 4   | Nearest the barrel jack   | —         | Not connected to `IC2`; not yet identified |
+
+Pin 1 is anchored physically: it is the end furthest from the barrel jack and
+nearest `IC2`. Both headers carry the same orientation.
+
+`B` before `A` — the reverse of the obvious guess, which is why it was metered.
+Either header can be the bus input, so the daisy-chain is plain multi-drop.
+
+The lead is three conductors: connector `B`/`A`/`GND` to the converter's
+`TB`/`TA`/`PE`, **plus pin 4 to a +V rail** — four conductors, not three.
+
+**Settled at the bench, board open and unpowered [A]:**
+
+| Item        | Finding                                                                                                                                                                                                                                                               |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pin 4       | **+V supplied by the master** **[A]** — enters `D9` (`M7`, 1N4007) on the anode, then `R16` (1.2 kΩ, measured) to `IC2` pin 8, with `D7` shunting the rail. The adapter's transceiver is bus-powered, so **our master must drive pin 4**; the lead is four conductors |
+| Termination | 114 Ω across pins 1 and 2, identical both polarities. `R27` is across the pair; the adapter is terminated. **Our converter's jumper stays off** — see below                                                                                                           |
+| Ground      | **Required.** `SMBJ28A` clamps are unidirectional, conducting from ~0.7 V forward, which removes the negative half of the ADM4852's −7 V…+12 V common-mode range at the adapter. Pin 3 must tie to the converter's `PE`                                               |
+
+Ground being mandatory is a departure from the valve links, where `PE` is
+connected only if measurement shows a reference conductor is needed. The
+converter is isolated, so this creates a shared reference without a loop back
+through the Pi, and this link's field ground is still never joined to another
+link's.
+
+**Carry forward:** if a second DTV+ peripheral is ever daisy-chained onto this
+link, it may expect power on pin 4, which our master would then have to supply.
+
+**The DTV+ side is galvanically isolated — closed.** The transceiver draws its
+supply from the bus rather than from the board it sits on, which only makes
+sense across an isolation barrier; the three `PC900V` optocouplers bridge to the
+generator-powered MCU domain.
+
+**New build requirement: a 12 V rail in the enclosure.** The `ADM4852` is a 5 V
+part, `R16` is 1.2 kΩ in series, and the 330 µF capacitor's 16 V rating caps the
+bus — which leaves **12 V** as the only standard rail that fits **[I]**. `D7`
+carries no legible marking and is not needed to reach that.
+
+The Pi's 5 V USB-C supply cannot provide it, so a 12 V source joins the parts
+list. Confirm before committing to it: apply 12 V to pin 4 from a
+current-limited supply with ground on pin 3, and measure `IC2` pin 8. About 5 V
+confirms both the rail and the supply chain, and the current reading sizes the
+permanent supply.
+
+**Why our termination stays off.** At 9600 baud the bit period is 104 µs while
+25 ft of cable is ~38 ns one way — a ratio near 1:2700, so reflections settle
+thousands of times over before a bit is sampled. The adapter's 120 Ω already
+supplies the DC load and damping; a second one halves the bus to 60 Ω for no
+gain, and a chained second adapter would reach 40 Ω, below the 54 Ω RS-485
+drivers are specified against.
+
+Procedure and results in
+[`research/reference/steam-adapter/README.md`](../../research/reference/steam-adapter/README.md).
+
+This replaces the earlier plan of metering an unused DTV+ port on the K-99695.
 
 ## Cheapest next steps
 
@@ -820,7 +911,7 @@ Ordered cheapest first. Every one of these is read-only or off-hardware.
 | 2   | **Ask Kohler.** Support case **#07797183** is already open with Kohler engineering. Add four questions: is the K-1737-K1 link RS-485 and what is its pinout; what does the generator do when the data link goes silent; is the 20-minute shutoff in the generator or the controller; and can the in-enclosure-interface requirement be met other than with a K-99693                                      | Free; one email                 | Unknowns 1, 2, 3, 4 — the four that reading cannot close                                                                                                                                                                                 |
 | 3   | **Confirm generator/kit pairing before buying anything.** Kohler maps current Invigoration generators to K-5548-K1, not K-1737-K1                                                                                                                                                                                                                                                                         | Free                            | Unknown 9, before money is spent                                                                                                                                                                                                         |
 | 4   | **Retrieve the two Kohler Assist wiring diagrams.** They are the documents most likely to show terminals on both the adapter and the generator, and the research could not fetch them — they sit behind a Salesforce login at [assist.kohler.com](https://assist.kohler.com/en/valves-shower-bath/DTV-and-Steam-Generator-Wiring-Diagrams). A Kohler account, or asking in case #07797183, may reach them | Free                            | Unknowns 4 and 5, from a primary source                                                                                                                                                                                                  |
-| 5   | **Read US 9,777,470 B2 FIG. 14–15 and their description**, the steam figures of the DTV+ system patent                                                                                                                                                                                                                                                                                                    | Free                            | May document the steam subsystem's architecture — the only first-party architecture text that exists ([patents.md](../patents.md))                                                                                                       |
+| 5   | **Read US 9,777,470 B2 FIG. 14–15 and their description**, the steam figures of the DTV+ system patent                                                                                                                                                                                                                                                                                                    | Free                            | May document the steam subsystem's architecture — the only first-party architecture text that exists ([patents.md](../../docs/patents.md))                                                                                               |
 | 6   | **Reconcile §10.1 in the repo's safety table.** Decide whether `powerclean_check.cgi` should be re-rated as a read, and whether `save_variable.cgi` should be index-restricted                                                                                                                                                                                                                            | Half a day of code              | The live gap between what is blocked and what is reachable                                                                                                                                                                               |
 | 7   | **Capture the wall-interface link at controller boot** with the physically receive-only front end the valve design already specifies. The K-99693 is the only DTV+ speaker in this house, and it is connected and healthy. Capture at 9600 and 115200; expect a baud change                                                                                                                               | Existing hardware; no new parts | If discovery really is DTV+, this validates framing, stuffing, checksum and the 3-step handshake against real Kohler traffic — the parts steam shares with every other DTV+ device. Also settles §10.5 and §10.6 for at least one device |
 | 8   | **Write a DTV+ codec against the vendored spec, with fixtures, offline** — framing, stuffing, checksum, discovery, the steam status/param payloads, plus a steam emulator                                                                                                                                                                                                                                 | Days; no hardware               | Turns unknown 7 from "unwritten" into "written but unverified", and produces the decoder needed to read any future capture                                                                                                               |
@@ -852,8 +943,8 @@ can engineer around.
 | [xagon0 `steam-generator.md`](../../research/xagon0/docs/devices/steam-generator.md)                                                                                                                                                                     | Device ID `0x05`, operating states, Fx2, status/param payload shape, error bits, status codes, power-clean state `0xCC`                                                                  | **[C]** |
 | [xagon0 `dtv-plus-protocol.md`](../../research/xagon0/docs/protocols/dtv-plus-protocol.md)                                                                                                                                                               | Framing, stuffing, checksum, discovery, addressing, command set, timing                                                                                                                  | **[C]** |
 | [xagon0 `timing-constants.md`](../../research/xagon0/docs/control-logic/timing-constants.md)                                                                                                                                                             | 150 ms steam tick, retry counts, pre-heat cap, port limits                                                                                                                               | **[C]** |
-| [`docs/hardware.md`](../hardware.md), [`system-specification.md`](../system-specification.md)                                                                                                                                                            | DTV+ port electrical spec, RS-485 pinout, per-peripheral power                                                                                                                           | **[C]** |
-| [`docs/devices/valve-control.md`](../devices/valve-control.md)                                                                                                                                                                                           | The valve safety-ownership table this document compares against                                                                                                                          | **[C]** |
+| [`docs/hardware.md`](../../docs/hardware.md), [`system-specification.md`](../../docs/system-specification.md)                                                                                                                                            | DTV+ port electrical spec, RS-485 pinout, per-peripheral power                                                                                                                           | **[C]** |
+| [`docs/devices/valve-control.md`](../../docs/devices/valve-control.md)                                                                                                                                                                                   | The valve safety-ownership table this document compares against                                                                                                                          | **[C]** |
 
 Kohler documents and supports none of the protocol material. The vendored
 xagon0 tree publishes **no license** — see

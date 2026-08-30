@@ -805,7 +805,7 @@ for the same protocol. Blocking for the replacement controller's encoder.
 - [ ] **E13 · Resolve from passive capture.**
   - **Discriminates:** the two sources, against this hardware.
   - **Method:** Phase 1 of
-    [CONTROLLER-DESIGN.md](docs/replacement-controller/CONTROLLER-DESIGN.md).
+    [DESIGN.md](controller/docs/DESIGN.md).
     Decode K-99695 boot and idle traffic; record control bytes sent, responses,
     and cadence. Receive-only front end; no transmission.
   - **Matches one source:** that source becomes the encoder reference; the other

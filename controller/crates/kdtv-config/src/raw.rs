@@ -27,7 +27,6 @@ pub(crate) struct RawConfig {
     pub(crate) zones: RawZones,
     #[serde(default)]
     pub(crate) steam: Option<RawSteam>,
-    pub(crate) sensors: RawSensors,
     pub(crate) api: RawApi,
     pub(crate) logging: RawLogging,
 }
@@ -40,10 +39,6 @@ pub(crate) struct RawBench {
     /// Applied to session-class durations and to nothing else. See
     /// [`crate::timing`].
     pub(crate) session_scale: f64,
-    /// Where the harness writes each zone's independent temperature, in place
-    /// of a MAX31865 on the SPI bus. See
-    /// [`ValidatedConfig::bench_probe_dir`](crate::ValidatedConfig::bench_probe_dir).
-    pub(crate) probe_dir: Option<String>,
 }
 
 /// Optional narrowing of the compiled-in safety bounds. Every field may only
@@ -85,7 +80,6 @@ pub(crate) struct RawZone {
     pub(crate) valve: ConfiguredValve,
     pub(crate) master_address: u8,
     pub(crate) outlets: Vec<RawOutlet>,
-    pub(crate) instrumented_slot: u8,
 }
 
 #[derive(Deserialize, Debug)]
@@ -107,28 +101,6 @@ pub(crate) struct RawSteam {
     pub(crate) tick_ms: Option<u64>,
     #[serde(default)]
     pub(crate) retries: Option<u8>,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct RawSensors {
-    pub(crate) zone1: RawSensor,
-    pub(crate) zone2: RawSensor,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct RawSensor {
-    pub(crate) chip_select: String,
-    #[serde(default)]
-    pub(crate) correction: Option<Vec<RawCurvePoint>>,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct RawCurvePoint {
-    pub(crate) surface_c: f64,
-    pub(crate) immersion_c: f64,
 }
 
 #[derive(Deserialize, Debug)]

@@ -6,14 +6,14 @@ use std::time::Duration;
 
 /// How long a water session may run.
 ///
-/// The hard limit is 20 minutes (`CONTROLLER-DESIGN.md` § Safety boundary rule
+/// The hard limit is 20 minutes (`DESIGN.md` § Safety boundary rule
 /// 7). It sits below the Prompt 3 valve's own 1800-second stop.
 ///
 /// **No keepalive may extend a session automatically.** There is no `extend`,
 /// no `refresh` and no setter on this type or on the deadline built from it.
 ///
 /// A note on the valve's own timer, because the sources disagree and it matters:
-/// `CONTROLLER-DESIGN.md` rule 7 says never sending the refresh "leaves the
+/// `DESIGN.md` rule 7 says never sending the refresh "leaves the
 /// valve's timer as an independent hardware backstop", while
 /// `research/xagon0/docs/protocols/saturn-protocol.md` § Prompt 3 Timeout says
 /// the counter "resets on any valid received command" — under which ordinary
@@ -69,7 +69,7 @@ pub enum SessionError {
 
 /// A steam session length, in whole minutes.
 ///
-/// 1 to 20 minutes, default 10 (`HARDWARE-SPEC.md` § 12, `[K][B]`).
+/// 1 to 20 minutes, default 10 (`HARDWARE.md` § 12, `[K][B]`).
 ///
 /// **Zero is not representable.** `steamTimerSetTime = 0` disables the
 /// generator's automatic shutoff and leaves it in manual control
@@ -135,12 +135,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn req_controller_design_sess_01_the_hard_limit_is_twenty_minutes() {
+    fn req_design_sess_01_the_hard_limit_is_twenty_minutes() {
         assert_eq!(SessionDuration::HARD_LIMIT.as_secs(), 1200);
     }
 
     #[test]
-    fn req_valve_control_timer_05_req_controller_design_sess_03_the_hard_limit_sits_below_the_prompt_three_stop()
+    fn req_valve_control_timer_05_req_design_sess_03_the_hard_limit_sits_below_the_prompt_three_stop()
      {
         // The valve's own stop is 1800 s. Ours must be strictly below it so the
         // service stops first even if the valve's timer never becomes a backstop.
@@ -172,7 +172,7 @@ mod tests {
     }
 
     #[test]
-    fn req_hardware_spec_steam_11_steam_default_is_ten_minutes() {
+    fn req_hardware_steam_11_steam_default_is_ten_minutes() {
         assert_eq!(SteamMinutes::default().wire(), 10);
         assert_eq!(
             SteamMinutes::DEFAULT.as_duration(),

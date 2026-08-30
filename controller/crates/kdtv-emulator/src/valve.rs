@@ -345,10 +345,8 @@ impl SaturnValveModel {
     /// What a `0x0B` [`opcode::READ_TEMPERATURE`] read answers with.
     ///
     /// **Not the setpoint**, though the two start equal and a commanded
-    /// setpoint write syncs them. This is the number the daemon compares
-    /// against the independent probe, so it is the one an assertion about
-    /// divergence has to read — see
-    /// [`Self::set_reported_temperature`].
+    /// setpoint write syncs them. This is the number the daemon reports as the
+    /// valve's own reading — see [`Self::set_reported_temperature`].
     #[must_use]
     pub const fn reported_temperature(&self) -> Cx2 {
         self.reported

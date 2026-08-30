@@ -20,7 +20,7 @@
 //! (`0x34`), which is allowlisted. Omitting a command variant does nothing to
 //! it. The denial is [`SteamOpState`], which has `Off` and `On` and no third
 //! variant, and it is the only type this encoder accepts in that position.
-//! [`req_hardware_spec_steam_14_no_encoded_frame_carries_power_clean_in_the_state_byte`] scans the byte.
+//! [`req_hardware_steam_14_no_encoded_frame_carries_power_clean_in_the_state_byte`] scans the byte.
 //! `CORRECTIONS.md` item 1, `STEAM-11`, `STEAM-14`(design).
 //!
 //! # Evidence
@@ -31,7 +31,7 @@
 //! opcode and no capture of this bus exists.
 //!
 //! [`req_dtv_plus_protocol_cmd_03_req_steam_adapter_cmd_02_no_denied_opcode_is_reachable`]: self#tests
-//! [`req_hardware_spec_steam_14_no_encoded_frame_carries_power_clean_in_the_state_byte`]: self#tests
+//! [`req_hardware_steam_14_no_encoded_frame_carries_power_clean_in_the_state_byte`]: self#tests
 
 use crate::dtv::addr::{BROADCAST, DevAddr, MASTER, UNASSIGNED};
 use crate::dtv::command::opcode;
@@ -823,7 +823,7 @@ mod tests {
     /// decodes it back, and asserts the operation-state byte is `0x00` or `0xFF`
     /// and never `0xCC`.
     #[test]
-    fn req_hardware_spec_steam_14_no_encoded_frame_carries_power_clean_in_the_state_byte() {
+    fn req_hardware_steam_14_no_encoded_frame_carries_power_clean_in_the_state_byte() {
         let e = SteamEncoder::new(&auth());
         let t = token();
         let mut writes = 0u32;

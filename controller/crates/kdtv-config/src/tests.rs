@@ -81,7 +81,6 @@ fn the_committed_production_contract_loads() {
     assert_eq!(z1.master(), MasterAddr::Dtv);
     assert_eq!(z1.port().to_string(), ZONE1_PORT);
     assert_eq!(z1.configured_slots().len(), 5);
-    assert_eq!(z1.instrumented_slot().get(), 1);
     assert_eq!(z1.label(Slot::new(5).unwrap()), Some("bath filler"));
     // Slot 1 on a DTV 6-Port is wire outlet 0, mask 0x01.
     let bits = z1
@@ -103,10 +102,6 @@ fn the_committed_production_contract_loads() {
     // steam.enabled = false, so there is no steam configuration to reach for.
     assert!(c.steam().is_none());
     assert_eq!(c.links(), vec![z1.link(), z2.link()]);
-
-    assert_eq!(c.sensor(ZoneId::Zone1).chip_select(), "spi0.0");
-    assert!(!c.sensor(ZoneId::Zone1).is_characterised());
-    assert_eq!(c.sensor(ZoneId::Zone2).chip_select(), "spi0.1");
 
     assert_eq!(c.api().bind().port(), 8443);
     assert!(c.api().bind().ip().is_loopback());
@@ -287,19 +282,6 @@ fn a_prompt_valve_has_no_wire_outlet_zero() {
     let text = err.to_string();
     assert!(text.contains("zones.zone2.outlets"), "{text}");
     assert!(text.contains("Prompt 3-Port"), "{text}");
-}
-
-#[test]
-fn an_instrumented_slot_that_is_not_configured_is_refused() {
-    // Zone 2 has slots 1..=3.
-    let err = mutated(
-        "instrumented_slot = 1\n\n# ------",
-        "instrumented_slot = 6\n\n# ------",
-    )
-    .unwrap_err();
-    let text = err.to_string();
-    assert!(text.contains("instrumented_slot = 6"), "{text}");
-    assert!(text.contains("configured: 1, 2, 3"), "{text}");
 }
 
 #[test]
@@ -556,30 +538,6 @@ fn a_master_address_that_is_neither_identity_is_refused() {
     assert!(mutated("master_address = 0x00", "master_address = 0x10").is_ok());
 }
 
-#[test]
-fn two_sensors_on_one_chip_select_are_refused() {
-    let err = mutated("chip_select = \"spi0.1\"", "chip_select = \"spi0.0\"").unwrap_err();
-    assert!(
-        matches!(err, ConfigError::DuplicateChipSelect { .. }),
-        "{err}"
-    );
-}
-
-#[test]
-fn a_commissioned_correction_curve_loads() {
-    let c = mutated(
-        "chip_select = \"spi0.0\"",
-        "chip_select = \"spi0.0\"\n\
-         correction = [\n\
-         { surface_c = 33.0, immersion_c = 35.0 },\n\
-         { surface_c = 42.0, immersion_c = 45.0 },\n\
-         ]",
-    )
-    .unwrap();
-    assert!(c.sensor(ZoneId::Zone1).is_characterised());
-    assert!(!c.sensor(ZoneId::Zone2).is_characterised());
-}
-
 /// The bench profile's whole reason for existing, end to end: session-class
 /// durations shrink, wire-class deadlines do not.
 #[test]
@@ -596,10 +554,6 @@ fn a_bench_scale_shortens_sessions_and_leaves_the_bus_alone() {
     let c = ValidatedConfig::from_str_with(&text, Path::new(EMULATED_TOML), &bench_fs()).unwrap();
 
     assert_eq!(c.scaled_max_session(), Duration::from_secs(12));
-    let d = c.scaled_dwells();
-    assert_eq!(d.corrected_trip, Duration::from_millis(20));
-    assert_eq!(d.divergence, Duration::from_millis(100));
-    assert_eq!(d.rtd_starvation, Duration::from_millis(50));
 
     // Wire class, untouched.
     assert_eq!(c.timing().saturn(), Timings::DOCUMENTED);

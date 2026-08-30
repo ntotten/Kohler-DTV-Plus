@@ -76,7 +76,7 @@ pub(crate) fn run() -> Result<()> {
         for id in captured {
             failures.push(format!(
                 "{id} claims tier `[A]` provenance. Phase 1 capture has not happened; \
-                 see docs/replacement-controller/CONTROLLER-DESIGN.md"
+                 see controller/docs/DESIGN.md"
             ));
         }
     }

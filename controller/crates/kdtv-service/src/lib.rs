@@ -110,14 +110,11 @@ pub mod service;
 pub mod supervisor;
 
 mod port;
-mod rtd;
 
 #[cfg(test)]
 mod tests;
 
-pub use cache::{
-    IndependentReading, LinkStateLabel, StateCache, SteamStatus, SystemSnapshot, ZoneStatus,
-};
+pub use cache::{LinkStateLabel, StateCache, SteamStatus, SystemSnapshot, ZoneStatus};
 pub use command::{Command, CommandError, ServiceHandle};
 pub use event::{Lifecycle, ServiceEvent};
 pub use record::Recorder;

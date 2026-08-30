@@ -2,7 +2,7 @@
 //!
 //! All tier `[C]`, from `research/xagon0/docs/protocols/dtv-plus-protocol.md`
 //! § Frame Format, § Special Characters and Byte Stuffing and § Checksum
-//! Calculation, cross-checked against `HARDWARE-SPEC.md` § 12.
+//! Calculation, cross-checked against `HARDWARE.md` § 12.
 //!
 //! # The wire format
 //!

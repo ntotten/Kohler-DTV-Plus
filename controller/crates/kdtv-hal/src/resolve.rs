@@ -515,8 +515,7 @@ mod tests {
     /// Present or refuse. There is no degraded branch that starts the two zones
     /// and leaves steam out.
     #[test]
-    fn req_controller_design_ser_02_req_hardware_spec_usb_03_a_missing_interface_refuses_the_whole_start()
-     {
+    fn req_design_ser_02_req_hardware_usb_03_a_missing_interface_refuses_the_whole_start() {
         let fs = DirSysfs::fixture("missing-interface");
         let err = resolve_distinct(&reference_bindings(), &fs).unwrap_err();
         match err {
@@ -581,7 +580,7 @@ mod tests {
     }
 
     #[test]
-    fn req_hardware_spec_usb_03_two_names_for_one_device_are_refused_by_the_canonical_path() {
+    fn req_hardware_usb_03_two_names_for_one_device_are_refused_by_the_canonical_path() {
         let fs = DirSysfs::fixture("aliased");
         let bindings = vec![
             (Z1, by_id(&format!("{W}-if00-port0"))),

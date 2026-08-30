@@ -5,12 +5,12 @@
 //!
 //! ```text
 //! #[test]
-//! fn req_controller_design_safe_05_missing_response_latches_zone() { ... }
+//! fn req_design_safe_05_missing_response_latches_zone() { ... }
 //! ```
 //!
 //! The name is `req_` plus the requirement's [`Requirement::slug`], optionally
 //! followed by `_` and a description. The description is the point: a suite of
-//! 670 tests named `req_controller_design_safe_05` and nothing else is a suite
+//! 670 tests named `req_design_safe_05` and nothing else is a suite
 //! nobody can read, and the sentence is what tells a reviewer whether the test
 //! actually proves the requirement it claims. [`covered_by`] is therefore a
 //! prefix match anchored on that underscore, and [`slug_ambiguities`] asserts
@@ -298,7 +298,7 @@ fn collect_test_names(root: &Path) -> Vec<String> {
 /// `#[tokio::test]`, and while this scan matched only a bare `fn`, an
 /// `async fn req_...` was invisible: five tests in `kdtv-api` carried a slug and
 /// were still reported uncovered. It also cost the suite a real test —
-/// `req_controller_design_api_01` was split off from
+/// `req_design_api_01` was split off from
 /// `seven_of_the_eight_api_01_operations_are_performed` for no reason but to put
 /// the slug on something this function could see. A traceability tool that makes
 /// the tests worse is not earning its place.

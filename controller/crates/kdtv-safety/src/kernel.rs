@@ -224,11 +224,6 @@ impl SafetyKernel {
                                service shutoffs.",
                     });
                 }
-                if matches!(e, SafetyEvent::TemperatureDivergence { .. }) {
-                    out.push(Effect::RecordFinding(
-                        crate::event::FindingClass::TemperatureDivergence,
-                    ));
-                }
             }
             FaultScope::Link(LinkKind::Steam) => {
                 // Degraded but alive: transmission still works, so the stop goes
@@ -389,7 +384,7 @@ mod tests {
     }
 
     #[test]
-    fn req_controller_design_id_01_an_authorisation_from_a_previous_boot_is_refused() {
+    fn req_design_id_01_an_authorisation_from_a_previous_boot_is_refused() {
         let mut k = kernel();
         k.mark_ready(LinkKind::Zone(ZoneId::Zone1));
         let d = k
@@ -593,11 +588,6 @@ mod tests {
                 SafetyEvent::SafetyResponseMissed {
                     zone,
                     op: "AllOff".into(),
-                },
-                SafetyEvent::RtdFaultRegister { zone, bits: 1 },
-                SafetyEvent::RtdStarved {
-                    zone,
-                    since: Duration::from_secs(6),
                 },
                 SafetyEvent::ValveFault {
                     zone,

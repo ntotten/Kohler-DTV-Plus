@@ -7,7 +7,7 @@
 //!
 //! # There is no echo timeout in this struct
 //!
-//! `HARDWARE-SPEC.md` § 6 lists a 20 ms Saturn echo timeout, `timing-constants.md`
+//! `HARDWARE.md` § 6 lists a 20 ms Saturn echo timeout, `timing-constants.md`
 //! lists `VALVE_MESSAGE_ECHO_TIMEOUT` = 20 ms alongside a general 150 ms
 //! `RS485_ECHO_TIMEOUT`, and the 525 ms cycle diagram allocates ~70 ms to "echo
 //! clear". All three are moot here. The stock master waits for its own
@@ -19,7 +19,7 @@
 //!
 //! That non-applicability is a property of the selected part. **If the converter
 //! is ever substituted for one with local echo, all three figures come back into
-//! force and the platform decision in `HARDWARE-SPEC.md` § 2 must be
+//! force and the platform decision in `HARDWARE.md` § 2 must be
 //! revisited.** The emulator can still inject echo so the `AA 55` resync can be
 //! proven against echo bleed either way.
 
@@ -39,7 +39,7 @@ pub struct Timings {
 
     /// The deadline the decoder actually enforces.
     ///
-    /// **Unresolved.** `HARDWARE-SPEC.md` § 6 lists "response timeout 400 ms"
+    /// **Unresolved.** `HARDWARE.md` § 6 lists "response timeout 400 ms"
     /// and "message timeout 320 ms" as two distinct parameters; § 15 open item 8
     /// states the open question as "Saturn response timeout: 320 ms or 400 ms",
     /// implying they may be one parameter reported twice. Defaults to the

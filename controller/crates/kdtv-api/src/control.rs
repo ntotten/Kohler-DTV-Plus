@@ -3,7 +3,7 @@
 //! [`kdtv_service::ServiceHandle`] is the production implementation and the only
 //! one that ships. The trait exists for one reason: `ServiceHandle::new` is
 //! crate-private, so a handler test that wanted a real handle would have to
-//! stand up a supervisor, three link pumps and two RTD samplers to assert that a
+//! stand up a supervisor and three link pumps to assert that a
 //! request without a token reaches no handler. A narrow trait makes those tests
 //! possible without giving anything up — the trait names exactly the five things
 //! the router calls and nothing else, so it cannot become a second, wider way

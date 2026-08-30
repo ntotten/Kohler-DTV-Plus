@@ -314,7 +314,7 @@ proptest! {
     /// No operation, on any input the encoder accepts, produces a frame longer
     /// than the 20-byte maximum or a `DATA_LEN` above 14. `PHY-02` / `DENY-07`.
     #[test]
-    fn req_controller_design_deny_07_no_encodable_frame_exceeds_the_wire_limits(
+    fn req_design_deny_07_no_encodable_frame_exceeds_the_wire_limits(
         raw_setpoint in any::<u8>(),
         slot_mask in 0u8..32,
         flag_bits in any::<u8>(),

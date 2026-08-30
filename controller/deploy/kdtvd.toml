@@ -72,10 +72,6 @@ outlets = [
   { slot = 5, status_index = 5, wire_outlet = 4, name = "bath filler" },
 ]
 
-# The outlet whose supply pipe carries the independent temperature probe.
-# Continuous independent coverage exists for this outlet only; every other
-# outlet is verified individually with an immersion probe at commissioning.
-instrumented_slot = 1
 
 [zones.zone2]
 port = "/dev/serial/by-id/usb-Waveshare_USB_TO_RS485-if01-port0"
@@ -86,7 +82,6 @@ outlets = [
   { slot = 2, status_index = 2, wire_outlet = 2, name = "handshower" },
   { slot = 3, status_index = 3, wire_outlet = 3, name = "body spray" },
 ]
-instrumented_slot = 1
 
 # ------------------------------------------------------------------------ steam
 #
@@ -104,29 +99,6 @@ port = "/dev/serial/by-id/usb-Waveshare_USB_TO_RS485-if02-port0"
 # 500 ms port tick. Retries are given as 4 in one place and 5 in another.
 tick_ms = 150
 retries = 4
-
-# ------------------------------------------ independent temperature measurement
-#
-# PT1000 on a MAX31865, one channel per zone, clamped to the supply pipe of that
-# zone's instrumented outlet. The sensor has NO authority to open an outlet. It
-# can only contribute to an all-off.
-#
-# A surface clamp is not an immersion measurement: it reads pipe wall, lags by
-# seconds, and reads low. The correction below is characterised at commissioning
-# against an immersion probe, and every threshold is evaluated on the corrected
-# value. The raw reading is logged beside it.
-#
-# With no `correction` the channel is uncorrected — which invents no offset, and
-# is why the absolute raw trip exists.
-[sensors.zone1]
-chip_select = "spi0.0"
-# correction = [
-#   { surface_c = 33.0, immersion_c = 35.0 },
-#   { surface_c = 42.0, immersion_c = 45.0 },
-# ]
-
-[sensors.zone2]
-chip_select = "spi0.1"
 
 # -------------------------------------------------------------------------- api
 #
