@@ -17,13 +17,14 @@ and clock boards, and ThermoWorks and Fluke directly for instruments.
 
 Parts fall into five groups:
 
-| Group | Meaning                                                                   |
-| ----- | ------------------------------------------------------------------------- |
-| **A** | Order now. Fully specified, nothing to measure first                      |
-| **B** | Order after the Phase 0 survey. The measurement that closes each is named |
-| **C** | Instruments                                                               |
-| **D** | Passive-capture equipment — select the method before buying anything      |
-| **E** | Steam — the parts a professional supplies                                 |
+| Group | Meaning                                                                    |
+| ----- | -------------------------------------------------------------------------- |
+| **A** | Order now. Fully specified, nothing to measure first                       |
+| **B** | Order after the Phase 0 survey. The measurement that closes each is named  |
+| **C** | Instruments                                                                |
+| **D** | Passive-capture equipment — select the method before buying anything       |
+| **E** | Steam — the parts a professional supplies                                  |
+| **F** | Firmware extraction — optional, and not on the replacement-controller path |
 
 ---
 
@@ -155,9 +156,17 @@ adapter leads instead.
 | --: | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 |   1 | Therma K meter and fast-response probe kit, NIST-traceable certificate | [ThermoWorks direct](https://www.thermoworks.com/products/therma-k-kit)                              | The reference instrument. Characterizes the surface probes' offset and verifies every outlet |
 |   1 | Fluke 117 true-RMS multimeter                                          | [Fluke direct](https://www.fluke.com/en-us/product/electrical-testing/digital-multimeters/fluke-117) | Buy only if no suitable meter is already available. The electrician handles mains            |
+|   1 | Bench DC supply with adjustable current limit, 0–30 V                  | Any lab-grade supply                                                                                 | Buy only if none is already available. Closes the §12 measurement below                      |
+|   1 | Temperature-controlled soldering iron and thin rosin-core solder       | Any                                                                                                  | Buy only if none is already available. The MAX31865 boards ship with unsoldered headers      |
 
 Borrow or rent the oscilloscope and isolated differential probe. Do not buy a
 cheap marketplace probe for this job.
+
+The current limit on the supply is the point, not the voltage range.
+[HARDWARE-SPEC.md § 12](HARDWARE-SPEC.md) closes the DTV+ rail question by
+applying 12 V to pin 4 with ground on pin 3 and reading `IC2` pin 8 — into an
+adapter board whose working voltage is the thing being established. Set the
+limit low and raise it.
 
 The Therma K is not optional. The permanent PT1000 probes are surface-clamped
 and read low with lag; their correction is established against this instrument
@@ -182,6 +191,36 @@ Requirements:
   on a 525 ms tick or a 320 ms deadline. Use a logic analyzer on the
   differential pair, or an analyzer with a hardware listen-only mode.
 
+### Wiring the tap
+
+Whatever front end is chosen, four rules govern how it attaches. They are
+properties of bridging a live, already-terminated bus, not of any one product.
+
+- **Strap `RE` as well as `DE`.** Tying the driver enable inactive stops the
+  transmitter; tying the receiver enable asserted is what makes the part a
+  listener rather than a device that can be commanded into driving.
+- **Add no termination at the tap.** The bus is already terminated by the
+  controller and the valve. A third 120 Ω across the pair halves the load the
+  drivers see.
+- **Add no fail-safe bias at the tap.** The existing bias network sets the idle
+  level; a parallel one shifts it. This is a separate rule from termination and
+  is the easier of the two to leave populated by accident.
+- **Keep the stub to inches, not feet.** A long spur off a terminated pair is an
+  unterminated reflection path.
+
+### On price, and what it does not buy
+
+A commodity 8-channel 24 MHz USB analyzer — the FX2 class, `sigrok`/PulseView
+supported, [SparkFun `TOL-18627`](https://www.sparkfun.com/usb-logic-analyzer-24mhz-8-channel.html),
+$26.95, backordered as of 2026-08-30 — samples fast enough for 9600 baud by
+three orders of magnitude, and it does satisfy the hardware-timestamping
+requirement above, which a USB-serial front end cannot. It does **not** satisfy
+the isolation requirement, and no sampling rate substitutes for that. It is a
+candidate only behind an isolated front end, or on a bench rig where our own
+emulator drives both ends and the K-99695 is not in the circuit. Priced here so
+the tradeoff is explicit — a professional isolated analyzer is roughly 20× this
+— not as a recommendation to buy it and strap it to a live valve bus.
+
 Capture equipment is not part of the permanent controller.
 
 ---
@@ -205,6 +244,37 @@ The third converter is in Group A. The only remaining part is the adapter-side
 lead: a **4-pin polarized header**, not the modular jack earlier documents
 assumed. Its mating connector is a Group B item, pending a continuity check on
 the open board.
+
+---
+
+## Group F — firmware extraction, optional
+
+Getting Kohler's firmware off the K-99695 is a **separate track** from building
+a replacement master. Nothing here is needed to ship the controller, and nothing
+here is ordered until the board is photographed — see
+[repair/firmware-extraction.md](../repair/firmware-extraction.md), which ranks
+the two vectors and gates both on confirming the footprints against
+[`Images/KohlerBoardOverall.webp`](../../Images/KohlerBoardOverall.webp).
+
+| Qty | Item                                             | Source                                                                                                  | Buying note                                                                                                                        |
+| --: | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+|   1 | USB-to-TTL serial cable, **3.3 V** logic         | [Adafruit 954](https://www.adafruit.com/product/954), $9.95                                             | The **J904** 4-pin console header, 115200 8N1. Try this first — it is the whole cost of finding out whether the shell is alive     |
+|   1 | PEmicro Multilink Universal (`USB-ML-UNIVERSAL`) | [PEmicro direct](https://www.pemicro.com/products/product_viewDetails.cfm?product_id=15320180), $299.00 | ColdFire **V2/V3/V4** BDM over the **J201** 26-pin footprint. The 26-pin ColdFire ribbon is included — do not order one separately |
+
+Three notes on the probe, all checked 2026-08-30:
+
+- **The `-FX` variant is $599 and buys speed only.** Both support ColdFire
+  V2/V3/V4; the MCF54416 is V4. For one dump, the $299 part is the correct
+  choice. `USB-ML-ACP` is ARM-only and does **not** work here.
+- **The 26-pin cable ships in the box.** Earlier drafts of this list carried a
+  separate ribbon line item; it was redundant. The $50 synchronous-ColdFire
+  adapter is for MCF5272/MCF5206(E) and is not needed either.
+- **TBLCF** (Turbo BDM Light ColdFire) is the open-hardware alternative if the
+  $299 is not worth it for a single read —
+  [reference-links.md](../../research/reference-links.md).
+
+Order neither part before the serial console has been tried and the J201
+footprint confirmed populated. J904 is $10 and may answer the question outright.
 
 ---
 

@@ -485,7 +485,17 @@ Capture one valve at a time with no HTTP polling or other automation:
 10. _withdrawn — see below._
 
 The capture front end must be physically unable to transmit: termination off,
-`DE` hard-strapped inactive, and no transmit conductor from the USB UART.
+`DE` hard-strapped inactive, `RE` hard-strapped asserted, and no transmit
+conductor from the USB UART. Strapping `DE` stops the transmitter; strapping
+`RE` is what leaves a part that can only listen, rather than one that a glitch
+or a driver can still put into driving.
+
+The tap must also not load the bus it is listening to. The pair is already
+terminated and biased at the controller and at the valve, so the tap adds
+**neither** — a third 120 Ω halves the load the drivers see, and a parallel
+fail-safe network shifts the idle level. These are two separate omissions, and
+the bias one is the easier to leave populated by accident. Keep the stub to
+inches: a long spur off a terminated pair is an unterminated reflection path.
 
 Timestamp at the capture device. Use a logic analyzer where timing is the
 finding; a 16 ms USB latency quantum does not resolve jitter on a 525 ms tick
