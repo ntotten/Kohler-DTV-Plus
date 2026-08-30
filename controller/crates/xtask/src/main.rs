@@ -6,6 +6,7 @@ use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand};
 
 mod audit;
+mod emulate;
 mod gate;
 mod reqs;
 
@@ -32,6 +33,18 @@ enum Command {
     /// The transmit gate cannot open while every fixture is tier `[C]`. This is
     /// the same claim checked against the committed data rather than the code.
     GateClosed,
+    /// Run the whole system against emulated devices, until Ctrl-C.
+    ///
+    /// The interactive half of ring 3: the real daemon binary, three
+    /// pseudo-terminals, a DTV 6-port valve, a Prompt 3-port valve and a
+    /// K-1737-K1 steam adapter, with the transcript streamed to the terminal.
+    /// `scripts/emulate.sh` is the entry point.
+    Emulate {
+        /// `native` for this machine's binary, `pi-sim` for the ARM64 one
+        /// under qemu.
+        #[arg(long, default_value = "native")]
+        mode: String,
+    },
     /// Report requirement coverage from requirements.toml.
     Reqs {
         /// Fail if a hard, software-verifiable requirement has no covering test.
@@ -48,6 +61,7 @@ fn main() -> Result<()> {
     match cli.command {
         Command::AuditGraph => audit::run(),
         Command::GateClosed => gate::run(),
+        Command::Emulate { mode } => emulate::run(emulate::Mode::parse(&mode)?),
         Command::Reqs { strict, checklist } => reqs::run(strict, checklist.as_deref()),
     }
 }

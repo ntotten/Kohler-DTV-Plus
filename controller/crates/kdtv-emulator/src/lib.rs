@@ -25,6 +25,7 @@
     )
 )]
 
+pub mod e2e;
 pub mod pty;
 pub mod rig;
 pub mod steam;

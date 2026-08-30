@@ -80,6 +80,21 @@ impl Harness {
         self
     }
 
+    /// Set every link's [`crate::wire::Wire::with_write_deadline`].
+    ///
+    /// Only [`RunningHarness::pump_failure`]'s own test uses it: inducing a
+    /// real pump I/O error means filling a pty's output buffer and waiting for
+    /// the write to give up, and the default bound is measured in seconds.
+    #[must_use]
+    pub fn with_write_deadline(mut self, d: Duration) -> Self {
+        self.wires = self
+            .wires
+            .into_iter()
+            .map(|(k, w)| (k, w.with_write_deadline(d)))
+            .collect();
+        self
+    }
+
     /// The device path to hand the daemon for each link.
     #[must_use]
     pub fn port_paths(&self) -> BTreeMap<LinkKind, PathBuf> {
@@ -196,25 +211,38 @@ impl Harness {
         let inner = Arc::new(Mutex::new(self));
         let stop = Arc::new(AtomicBool::new(false));
         let started = Instant::now();
+        // Written by the pump thread on its way out, read by anything waiting
+        // on the wire. Without it a dead pump and a silent daemon look the
+        // same: every subsequent wait burns its whole budget and reports the
+        // condition it was waiting for as the thing that did not happen.
+        let failure: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
 
         let pump_inner = Arc::clone(&inner);
         let pump_stop = Arc::clone(&stop);
+        let pump_failure = Arc::clone(&failure);
         let thread = std::thread::spawn(move || {
-            while !pump_stop.load(Ordering::Relaxed) {
-                // Elapsed real time is what `pump` wants, and the lock is held
-                // only for the pump itself so a test can inject a fault or read
-                // a transcript between iterations.
-                let now = started.elapsed();
-                {
-                    let mut h = lock(&pump_inner);
-                    for (_, w) in &mut h.wires {
-                        w.pump(now)?;
+            let result = (|| -> io::Result<()> {
+                while !pump_stop.load(Ordering::Relaxed) {
+                    // Elapsed real time is what `pump` wants, and the lock is
+                    // held only for the pump itself so a test can inject a
+                    // fault or read a transcript between iterations.
+                    let now = started.elapsed();
+                    {
+                        let mut h = lock(&pump_inner);
+                        for (_, w) in &mut h.wires {
+                            w.pump(now)?;
+                        }
+                        h.now = now;
                     }
-                    h.now = now;
+                    std::thread::sleep(RunningHarness::PUMP_INTERVAL);
                 }
-                std::thread::sleep(RunningHarness::PUMP_INTERVAL);
+                Ok(())
+            })();
+            if let Err(e) = &result {
+                let mut slot = pump_failure.lock().unwrap_or_else(PoisonError::into_inner);
+                *slot = Some(format!("at {:?}: {e}", started.elapsed()));
             }
-            Ok(())
+            result
         });
 
         RunningHarness {
@@ -222,6 +250,7 @@ impl Harness {
             stop,
             thread: Some(thread),
             started,
+            failure,
         }
     }
 }
@@ -236,6 +265,7 @@ pub struct RunningHarness {
     stop: Arc<AtomicBool>,
     thread: Option<JoinHandle<io::Result<()>>>,
     started: Instant,
+    failure: Arc<Mutex<Option<String>>>,
 }
 
 impl RunningHarness {
@@ -263,6 +293,24 @@ impl RunningHarness {
     /// so do not sleep or wait in one.
     pub fn with<R>(&self, f: impl FnOnce(&mut Harness) -> R) -> R {
         f(&mut lock(&self.inner))
+    }
+
+    /// Why the pump thread stopped, if it stopped on an error.
+    ///
+    /// The pump ends on the first I/O error, on **every** link at once, and
+    /// [`Self::elapsed`] keeps advancing off the `Instant` afterwards — so
+    /// nothing that waits on the wire notices. Every wait then burns its whole
+    /// budget and reports the condition it was waiting for as the thing that
+    /// did not happen, which is the one conclusion that is not true. Anything
+    /// that times out should ask this first.
+    ///
+    /// `None` while the pump is running and after a clean [`Self::stop`].
+    #[must_use]
+    pub fn pump_failure(&self) -> Option<String> {
+        self.failure
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .clone()
     }
 
     /// The device path for each link, for handing to the daemon.
@@ -394,6 +442,50 @@ mod tests {
         nix::fcntl::fcntl(&f, nix::fcntl::F_SETFL(nix::fcntl::OFlag::O_NONBLOCK))
             .unwrap_or_else(|e| panic!("O_NONBLOCK on fd {fd}: {e}"));
         f
+    }
+
+    /// A pump that dies takes every link with it, and the tests waiting on the
+    /// wire cannot tell that from a daemon that went quiet — so the reason has
+    /// to be retrievable without calling `stop`, which the end-to-end suite
+    /// never does.
+    #[test]
+    fn a_pump_that_dies_says_why() {
+        /// Answers one inbound burst with more bytes than a pty leader will
+        /// hold, so the write gives up and the pump ends on an I/O error.
+        struct Flood;
+        impl DeviceModel for Flood {
+            fn on_bytes(&mut self, _bytes: &[u8], _at: Duration) -> Vec<Vec<u8>> {
+                vec![vec![0x5A; 64]; 512]
+            }
+        }
+
+        let h = Harness::new(vec![(LinkKind::Zone(ZoneId::Zone1), Box::new(Flood))])
+            .expect("one wire")
+            .with_write_deadline(Duration::from_millis(20));
+        let paths = h.port_paths();
+        // Opened and never read: that is what fills the leader's buffer.
+        let mut follower = open_follower(&paths[&LinkKind::Zone(ZoneId::Zone1)]);
+        let mut running = h.start_real_time();
+        assert_eq!(running.pump_failure(), None, "it has not failed yet");
+
+        follower
+            .write_all(&[0xAA, 0x55, 0x03, 0x21, 0x00, 0xDC])
+            .expect("write to the follower");
+
+        let mut why = None;
+        for _ in 0..500 {
+            why = running.pump_failure();
+            if why.is_some() {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        let why = why.expect("the pump reports the error that ended it");
+        assert!(why.contains("would not accept"), "{why}");
+        // And the clock keeps advancing regardless, which is exactly why the
+        // failure has to be asked for rather than inferred from a quiet wire.
+        assert!(running.elapsed() > Duration::ZERO);
+        running.stop().expect_err("stop reports it too");
     }
 
     #[test]

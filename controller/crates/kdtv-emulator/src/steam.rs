@@ -63,6 +63,32 @@ pub enum WriteAck {
     Silent,
 }
 
+/// Whether step 3 of the discovery handshake is acknowledged.
+///
+/// **The sources say it is not, and this repository's own engine requires that
+/// it is.** `dtv-plus-protocol.md` § Device Discovery (3-Step) draws the
+/// handshake as broadcast, request, assign, with no fourth arrow and the note
+/// "Device now responds to address 0x03"; `STEAM-ADAPTER.md` § 168 and
+/// `HARDWARE-SPEC.md` § 498 repeat the three steps and no reply.
+/// `kdtv_engine::steam::SteamMachine::on_address_assigned` nonetheless refuses
+/// any answer that is not [`opcode::DEV_ACK`], and an adapter that follows the
+/// document is refused with "no device answered discovery" after its retry
+/// budget.
+///
+/// So both readings are plumbed and the default is the documented one. The
+/// end-to-end rig selects [`AssignAck::DevAck`], because it is the only reading
+/// under which the daemon enrols an adapter at all — see
+/// `crate::e2e::RigOptions::assign_ack`, which says so where a reader of the
+/// suite will see it.
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Default)]
+pub enum AssignAck {
+    /// No reply, as every source draws it.
+    #[default]
+    Silent,
+    /// `DEV_ACK`, which `kdtv-engine` requires before it will enrol.
+    DevAck,
+}
+
 /// The error byte a `DEV_NAK` carries.
 ///
 /// `[I]`. No source enumerates the DTV+ NAK error space, so only the presence
@@ -89,6 +115,7 @@ pub struct SteamAdapterModel {
 
     status_carrier: StatusCarrier,
     write_ack: WriteAck,
+    assign_ack: AssignAck,
     nak_error: u8,
 
     /// Simulated time the session timer runs out. `None` when nothing is
@@ -128,6 +155,7 @@ impl SteamAdapterModel {
             errors: SteamErrorFlags::empty(),
             status_carrier: StatusCarrier::DevAck,
             write_ack,
+            assign_ack: AssignAck::Silent,
             nak_error: NAK_ERROR_BYTE,
             session_end: None,
             session_len: Duration::ZERO,
@@ -161,6 +189,13 @@ impl SteamAdapterModel {
     #[must_use]
     pub fn preaddressed(mut self, addr: DevAddr) -> Self {
         self.address = Some(addr);
+        self
+    }
+
+    /// Whether the address assignment is acknowledged. See [`AssignAck`].
+    #[must_use]
+    pub const fn with_assign_ack(mut self, ack: AssignAck) -> Self {
+        self.assign_ack = ack;
         self
     }
 
@@ -366,8 +401,13 @@ impl SteamAdapterModel {
                 if let [addr, ..] = f.payload.as_slice() {
                     self.address = DevAddr::new(*addr).ok();
                 }
-                // The documented handshake ends here: step 3 has no reply.
-                return None;
+                // The documented handshake ends here: step 3 has no reply, and
+                // that is the default. `kdtv-engine` disagrees — see
+                // [`AssignAck`].
+                return match self.assign_ack {
+                    AssignAck::Silent => None,
+                    AssignAck::DevAck => Some(self.reply(opcode::DEV_ACK, &[])),
+                };
             }
             _ => {}
         }
@@ -668,6 +708,42 @@ mod tests {
     }
 
     // -- Discovery -----------------------------------------------------------
+
+    /// The documented handshake has three steps and no reply to the third.
+    /// `kdtv-engine` requires a fourth. Both readings are reachable and neither
+    /// is derived from the other — see [`AssignAck`].
+    #[test]
+    fn the_assignment_is_acknowledged_only_under_the_reading_that_asks_for_one() {
+        let enc = encoder();
+
+        let mut documented = Link::new(SteamAdapterModel::new(WriteAck::DevAck));
+        discover(&mut documented, &enc);
+        assert_eq!(
+            documented.replies().len(),
+            1,
+            "the only reply in the documented handshake is DEV_REQUEST_ADDR"
+        );
+        assert_eq!(
+            documented.steam.with(|s| s.address()),
+            Some(DevAddr::REFERENCE),
+            "the address is taken whether or not it is acknowledged"
+        );
+
+        let mut acknowledged =
+            Link::new(SteamAdapterModel::new(WriteAck::DevAck).with_assign_ack(AssignAck::DevAck));
+        discover(&mut acknowledged, &enc);
+        let replies = acknowledged.reply_bytes();
+        assert_eq!(replies.len(), 2, "{replies:02X?}");
+        assert_eq!(
+            replies.get(1).and_then(|r| r.get(3)),
+            Some(&opcode::DEV_ACK),
+            "the second reply is the acknowledgement kdtv-engine waits for"
+        );
+        assert_eq!(
+            acknowledged.steam.with(|s| s.address()),
+            Some(DevAddr::REFERENCE)
+        );
+    }
 
     /// From cold: the adapter answers the broadcast with its device ID, takes
     /// the address it is assigned, and says nothing to the assignment itself.

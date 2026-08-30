@@ -99,6 +99,7 @@ pub struct Wire {
     transcript: Transcript,
     silent: bool,
     rx: Vec<u8>,
+    write_deadline: Duration,
 }
 
 impl std::fmt::Debug for Wire {
@@ -122,7 +123,21 @@ impl Wire {
             transcript: Transcript::new(),
             silent: false,
             rx: Vec::new(),
+            write_deadline: PtyPair::WRITE_DEADLINE,
         })
+    }
+
+    /// How long a device reply may wait for room in the pty's output buffer
+    /// before the link is declared broken.
+    ///
+    /// [`PtyPair::WRITE_DEADLINE`] is the only value the rig uses. The knob
+    /// exists so the bound itself is testable in milliseconds rather than in
+    /// seconds — an unbounded write here hangs the whole harness, so the test
+    /// that proves it is bounded is worth having cheap.
+    #[must_use]
+    pub const fn with_write_deadline(mut self, d: Duration) -> Self {
+        self.write_deadline = d;
+        self
     }
 
     /// The device path to hand the daemon.
@@ -241,7 +256,7 @@ impl Wire {
             if self.silent {
                 continue;
             }
-            self.pty.write_all(&bytes)?;
+            self.pty.write_all_before(&bytes, self.write_deadline)?;
             self.transcript
                 .record(at, Direction::DeviceToDaemon, &bytes);
         }

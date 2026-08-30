@@ -1,8 +1,11 @@
-# The replacement controller: format, lint, tests, the transmit gate, and the
-# Raspberry Pi cross-build.
+# The replacement controller: format, lint, tests, the end-to-end suite, the
+# transmit gate, and the Raspberry Pi cross-build.
 #
-# Every job here is also a line in controller/scripts/test.sh, in the same order,
-# so a green run locally means a green run here.
+# Every job here but `e2e` is also a line in controller/scripts/test.sh, in the
+# same order, so a green run locally means a green run here. `e2e` is
+# controller/scripts/e2e.sh, which is deliberately not part of that gate: it
+# starts a real process and waits on real deadlines, so it belongs beside the
+# fast checks rather than inside them.
 #
 # No job in this workflow can reach real hardware. That is not a policy — every
 # wire fixture in the repository is tier [C], derived from third-party reverse
@@ -66,6 +69,74 @@ jobs:
         run: cargo doc --workspace --no-deps --document-private-items
         env:
           RUSTDOCFLAGS: -D warnings
+
+  e2e:
+    name: end-to-end (ring 3)
+    runs-on: ubuntu-latest
+    # The only job here that waits on real deadlines rather than on a compiler.
+    # A hung `cargo clippy` is not a thing; a hung end-to-end run is — and
+    # without a bound it holds a runner to the workflow limit and is *cancelled*
+    # rather than failed, so the `if: failure()` artifact step never runs and
+    # there is neither a log nor a transcript to read. Fifteen minutes against a
+    # ~35 s local run, and ~40 s under 150x CPU oversubscription, is enormous
+    # headroom for a bound whose whole job is to turn a hang into a red job.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: controller
+      - name: the USB serial bus has to be enumerable
+        # Not because anything here touches a converter. `kdtvd` resolves its
+        # ports through kdtv_hal::resolve::resolve_distinct, which enumerates
+        # /sys/bus/usb-serial/devices BEFORE it looks at what any link is bound
+        # to and treats a failure as fatal — so an all-pseudo-terminal bench
+        # configuration still refuses to start on a machine where no usbserial
+        # driver is loaded, which is every runner. Loading the module creates
+        # the (empty) directory and costs nothing else.
+        #
+        # The failure is tolerated because the rig synthesises the directory in
+        # a private mount namespace instead — and, since a hosted runner
+        # executes jobs as the unprivileged `runner` user and a bare `unshare
+        # --mount` needs real CAP_SYS_ADMIN, that fallback goes through a user
+        # namespace. Both routes are proved by SysfsShim::required before the
+        # rig opens anything, so a machine where neither works skips loudly
+        # rather than reporting a pass. What is NOT tolerated is the failure
+        # being invisible: it is printed, because it decides which of the two
+        # paths the whole job then depends on.
+        #
+        # The real fix is one line in kdtv-hal — enumerate lazily, or only for a
+        # binding that is not a PTY — and belongs there rather than here.
+        run: |
+          if sudo modprobe usbserial; then
+            echo "usbserial loaded; $(ls /sys/bus/usb-serial/devices | wc -l) device(s)"
+          else
+            echo "::notice::modprobe usbserial failed as $(id -un); the rig will \
+            synthesise /sys/bus/usb-serial/devices in a user + mount namespace"
+          fi
+      - name: build the daemon the suite drives
+        # scripts/e2e.sh builds it too. Doing it here as well keeps a build
+        # failure legible as a build failure rather than as a suite that could
+        # not find a binary.
+        run: cargo build --package kdtvd
+      - name: the real daemon against emulated devices, over pseudo-terminals
+        # Native only. The --pi-sim variant runs the same suite against the
+        # ARM64 binary under qemu-user and is **not** run here: it needs a full
+        # release cross-build, which the `cross` job already performs and
+        # uploads, to exercise wire behaviour that does not depend on the
+        # architecture — and under qemu the daemon competes with the emulator
+        # for one runner CPU, which would make a marginal timing failure
+        # indistinguishable from a real one. scripts/e2e.sh is explicit that a
+        # flaky end-to-end test here is a bug and not weather, so it is run
+        # locally (./scripts/e2e.sh --pi-sim) before a deployment instead.
+        run: ./scripts/e2e.sh
+      - name: what the daemon said, when it failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-daemon-logs
+          path: controller/.e2e/*/daemon.log
+          if-no-files-found: ignore
 
   gate:
     name: transmit gate is closed

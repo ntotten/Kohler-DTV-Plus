@@ -326,22 +326,15 @@ pub fn resolve_distinct(
         }
     }
 
-    let enumerated = sysfs
-        .enumerate()
-        .map_err(|source| ResolveError::Enumeration { source })?;
-    let by_node: BTreeMap<&str, &TtyCandidate> =
-        enumerated.iter().map(|c| (c.node.as_str(), c)).collect();
-
-    let mut resolved: Vec<ResolvedPort> = Vec::with_capacity(bindings.len());
-    let mut seen: BTreeMap<PathBuf, LinkKind> = BTreeMap::new();
-
+    // Canonicalise before enumerating, because whether the USB tree is needed at
+    // all is a property of what the paths resolve *to*.
+    let mut canonical: Vec<(LinkKind, &PortPath, PathBuf)> = Vec::with_capacity(bindings.len());
     for (link, configured) in bindings {
         let link = *link;
         let Some(path) = configured.as_path() else {
             // Ruled out above; the pattern stays so the binding is irrefutable.
             return Err(ResolveError::UnboundPlaceholder { link });
         };
-
         let device = sysfs
             .canonicalize(path)
             .map_err(|source| ResolveError::NotPresent {
@@ -349,7 +342,33 @@ pub fn resolve_distinct(
                 path: path.display().to_string(),
                 source,
             })?;
+        canonical.push((link, configured, device));
+    }
 
+    // Enumerate only if some link is not a pseudo-terminal.
+    //
+    // A PTY has no USB bridge, no `by-id` name and no latency timer, so nothing
+    // below reads the enumeration for one. Enumerating unconditionally made an
+    // all-pseudo-terminal bench configuration refuse to start on any machine
+    // with no usbserial driver loaded — which is every CI runner and most
+    // developer boxes — and the failure it reported, "cannot enumerate USB
+    // serial devices", named a bus the configuration does not mention. The
+    // end-to-end suite was carrying a mount-namespace shim to work around it.
+    let needs_usb = canonical.iter().any(|(_, _, d)| !d.starts_with(PTY_DIR));
+    let enumerated = if needs_usb {
+        sysfs
+            .enumerate()
+            .map_err(|source| ResolveError::Enumeration { source })?
+    } else {
+        Vec::new()
+    };
+    let by_node: BTreeMap<&str, &TtyCandidate> =
+        enumerated.iter().map(|c| (c.node.as_str(), c)).collect();
+
+    let mut resolved: Vec<ResolvedPort> = Vec::with_capacity(bindings.len());
+    let mut seen: BTreeMap<PathBuf, LinkKind> = BTreeMap::new();
+
+    for (link, configured, device) in canonical {
         // Distinctness is decided on the canonical node, never on the
         // configured name.
         if let Some(other) = seen.insert(device.clone(), link) {
@@ -387,7 +406,9 @@ pub fn resolve_distinct(
             if siblings > 1 {
                 return Err(ResolveError::AmbiguousById {
                     link,
-                    path: path.display().to_string(),
+                    path: configured
+                        .as_path()
+                        .map_or_else(String::new, |p| p.display().to_string()),
                     identity: identity_of(candidate).to_string(),
                     count: siblings,
                 });
@@ -679,16 +700,98 @@ mod tests {
         ));
     }
 
-    /// ...and a configuration with no placeholder still reports the enumeration
-    /// failure, so hoisting the check did not swallow it.
+    /// An all-pseudo-terminal configuration resolves where there is no USB tree
+    /// to enumerate.
+    ///
+    /// This is the bench profile on any machine with no usbserial driver loaded
+    /// — every CI runner, and most developer boxes. Enumerating unconditionally
+    /// made it refuse to start, reporting a bus its configuration never
+    /// mentions, and the end-to-end suite carried a mount-namespace shim to
+    /// work around it.
     #[test]
-    fn a_real_binding_still_reports_a_failed_enumeration() {
+    fn a_configuration_of_only_pseudo_terminals_needs_no_usb_tree() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        std::fs::create_dir_all(root.join("dev/pts")).unwrap();
+        std::fs::write(root.join("dev/pts/3"), "/dev/pts/3\n").unwrap();
+        std::fs::write(root.join("dev/pts/4"), "/dev/pts/4\n").unwrap();
+        let fs = DirSysfs::new(root);
+        // No `devices` directory under the root, so enumeration fails.
+        assert!(
+            fs.enumerate().is_err(),
+            "this test is only meaningful where enumeration fails"
+        );
+
+        let bindings = vec![
+            (
+                Z1,
+                PortPath::parse("zones.zone1.port", "/dev/pts/3", Profile::Bench).unwrap(),
+            ),
+            (
+                LinkKind::Zone(ZoneId::Zone2),
+                PortPath::parse("zones.zone2.port", "/dev/pts/4", Profile::Bench).unwrap(),
+            ),
+        ];
+        let bound = resolve_distinct(&bindings, &fs).expect("pseudo-terminals need no USB tree");
+        assert_eq!(bound.len(), 2);
+        for b in &bound {
+            assert_eq!(b.backend(), Backend::Pty);
+        }
+    }
+
+    /// One real port among the pseudo-terminals still needs the tree, so the
+    /// laziness cannot be used to skip the checks a converter requires.
+    #[test]
+    fn one_real_port_among_them_still_requires_the_tree() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        std::fs::create_dir_all(root.join("dev/pts")).unwrap();
+        std::fs::write(root.join("dev/pts/3"), "/dev/pts/3\n").unwrap();
+        std::fs::create_dir_all(root.join("dev/serial/by-id")).unwrap();
+        std::fs::write(
+            root.join("dev/serial/by-id/usb-thing-if00-port0"),
+            "/dev/ttyUSB0\n",
+        )
+        .unwrap();
+        // Again no `devices` directory: both paths canonicalise, and the USB
+        // one makes the enumeration necessary.
+        let fs = DirSysfs::new(root);
+
+        let bindings = vec![
+            (
+                Z1,
+                PortPath::parse("zones.zone1.port", "/dev/pts/3", Profile::Bench).unwrap(),
+            ),
+            (
+                LinkKind::Zone(ZoneId::Zone2),
+                by_id("/dev/serial/by-id/usb-thing-if00-port0"),
+            ),
+        ];
+        // Both canonicalise, so the failure has to come from the enumeration
+        // this configuration still requires — proving the laziness cannot be
+        // used to skip the checks a converter needs.
+        assert!(matches!(
+            resolve_distinct(&bindings, &fs),
+            Err(ResolveError::Enumeration { .. })
+        ));
+    }
+
+    /// ...and a configuration with no placeholder is still refused, so hoisting
+    /// the placeholder check did not swallow the failure.
+    ///
+    /// It is now [`ResolveError::NotPresent`] rather than
+    /// [`ResolveError::Enumeration`]: canonicalisation runs first, so a `by-id`
+    /// name that is not there is reported as the missing name rather than as a
+    /// bus that could not be read. That is the more specific of the two, and it
+    /// names the thing the operator can fix.
+    #[test]
+    fn a_real_binding_that_is_not_there_names_the_path_not_the_bus() {
         let dir = tempfile::tempdir().unwrap();
         let fs = DirSysfs::new(dir.path());
         let bindings = vec![(Z1, by_id("/dev/serial/by-id/usb-anything-if00-port0"))];
         assert!(matches!(
             resolve_distinct(&bindings, &fs),
-            Err(ResolveError::Enumeration { .. })
+            Err(ResolveError::NotPresent { link: Z1, .. })
         ));
     }
 

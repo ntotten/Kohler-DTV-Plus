@@ -717,6 +717,8 @@ dependencies = [
 name = "kdtv-emulator"
 version = "0.1.0"
 dependencies = [
+ "kdtv-config",
+ "kdtv-hal",
  "kdtv-proto",
  "kdtv-units",
  "nix 0.31.3",
@@ -1853,8 +1855,11 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "kdtv-emulator",
+ "kdtv-units",
  "serde",
  "serde_json",
+ "tokio",
  "toml",
 ]
 

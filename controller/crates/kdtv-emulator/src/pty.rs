@@ -36,6 +36,14 @@ impl PtyPair {
     /// dedicated thread per link, and the line discipline is put into raw mode
     /// immediately.
     ///
+    /// `O_CLOEXEC` is not decoration. `crate::e2e` starts the real daemon as a
+    /// child of this process, and without it the child inherits all three
+    /// leader descriptors: `/proc/<pid>/fd` then shows three `/dev/ptmx`
+    /// entries the daemon never opened, and — the part that matters —
+    /// [`PtyPair::hangup`] stops hanging anything up, because the follower's
+    /// last leader is still open in the child. A fault that models a converter
+    /// being unplugged would silently model nothing.
+    ///
     /// Raw mode is not a detail. A pseudo-terminal starts in canonical mode with
     /// echo on, which would (a) hold bytes until a newline arrives — and a
     /// Saturn frame contains no newline — and (b) echo everything the emulator
@@ -43,8 +51,9 @@ impl PtyPair {
     /// transport that is supposed to be a dumb pipe. A real RS-485 converter has
     /// no line discipline, so neither should this.
     pub fn open() -> io::Result<Self> {
-        let leader = posix_openpt(OFlag::O_RDWR | OFlag::O_NOCTTY | OFlag::O_NONBLOCK)
-            .map_err(io::Error::from)?;
+        let leader =
+            posix_openpt(OFlag::O_RDWR | OFlag::O_NOCTTY | OFlag::O_NONBLOCK | OFlag::O_CLOEXEC)
+                .map_err(io::Error::from)?;
         grantpt(&leader).map_err(io::Error::from)?;
         unlockpt(&leader).map_err(io::Error::from)?;
         // The pair shares one termios, so setting it from the leader configures
@@ -114,13 +123,54 @@ impl PtyPair {
         }
     }
 
-    /// Write bytes towards the daemon.
-    pub fn write_all(&self, mut buf: &[u8]) -> io::Result<()> {
+    /// How long [`PtyPair::write_all`] will spin on a full output buffer before
+    /// it gives up.
+    ///
+    /// A pseudo-terminal leader holds a few kilobytes. Filling it needs the
+    /// daemon to keep transmitting while never reading — hundreds of frames at
+    /// the 525 ms tick — so this deadline is not reached by anything the suite
+    /// does today. It exists because the alternative is worse than a failure:
+    /// [`crate::wire::Wire::pump`] delivers replies through this from the pump
+    /// thread while that thread holds the harness lock, and `Rig::wait_for`
+    /// evaluates its readiness closure — which takes the same lock — *before*
+    /// it consults its own deadline. An unbounded spin here is therefore a hung
+    /// `cargo test` with no output rather than a red test with a transcript,
+    /// which is the one outcome a CI job cannot be diagnosed from.
+    pub const WRITE_DEADLINE: Duration = Duration::from_secs(2);
+
+    /// Write bytes towards the daemon, bounded by [`Self::WRITE_DEADLINE`].
+    pub fn write_all(&self, buf: &[u8]) -> io::Result<()> {
+        self.write_all_before(buf, Self::WRITE_DEADLINE)
+    }
+
+    /// [`Self::write_all`] with an explicit bound, so the bound itself is
+    /// testable without a two-second test.
+    #[expect(
+        clippy::disallowed_methods,
+        reason = "the ban on Instant::now exists to keep state machines deterministic; \
+                  this is a real wall-clock bound on real I/O in the test harness, and it \
+                  is what stops a full pty buffer hanging the suite instead of failing it"
+    )]
+    pub fn write_all_before(&self, mut buf: &[u8], deadline: Duration) -> io::Result<()> {
+        let start = Instant::now();
+        let total = buf.len();
         while !buf.is_empty() {
             match nix::unistd::write(&self.leader, buf) {
                 Ok(0) => return Err(io::Error::other("pty leader accepted no bytes")),
                 Ok(n) => buf = buf.get(n..).unwrap_or(&[]),
-                Err(nix::errno::Errno::EAGAIN) => std::thread::yield_now(),
+                Err(nix::errno::Errno::EAGAIN) => {
+                    if start.elapsed() > deadline {
+                        return Err(io::Error::new(
+                            io::ErrorKind::TimedOut,
+                            format!(
+                                "the pty leader would not accept {} of {total} bytes within \
+                                 {deadline:?}; the daemon is transmitting without reading",
+                                buf.len(),
+                            ),
+                        ));
+                    }
+                    std::thread::yield_now();
+                }
                 Err(e) => return Err(io::Error::from(e)),
             }
         }
@@ -190,6 +240,33 @@ mod tests {
                 .open(pty.follower_path())
                 .is_ok()
         );
+    }
+
+    /// A follower that is never read fills the leader's output buffer. The
+    /// write has to end in an error rather than spinning, because the caller —
+    /// `Wire::deliver_due`, on the pump thread — is holding the harness lock,
+    /// and every `Rig::wait_for` takes that lock before it looks at its own
+    /// deadline. Spinning here hangs the whole suite with no output.
+    #[test]
+    fn a_full_output_buffer_ends_the_write_rather_than_spinning() {
+        let pty = PtyPair::open().expect("allocate a pty");
+        let _follower = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(pty.follower_path())
+            .expect("open the follower, and never read it");
+
+        // A pty leader holds a few kilobytes; 256 KiB is past any of it.
+        let block = vec![0x5Au8; 4096];
+        let mut err = None;
+        for _ in 0..64 {
+            if let Err(e) = pty.write_all_before(&block, Duration::from_millis(20)) {
+                err = Some(e);
+                break;
+            }
+        }
+        let err = err.expect("the leader's output buffer fills and the write gives up");
+        assert_eq!(err.kind(), std::io::ErrorKind::TimedOut, "{err}");
     }
 
     #[test]

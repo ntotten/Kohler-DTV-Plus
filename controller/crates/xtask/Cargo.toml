@@ -12,8 +12,18 @@ publish = false
 name = "xtask"
 path = "src/main.rs"
 
+# `kdtv-emulator` is the rig `xtask emulate` starts, and it is shared with
+# `crates/kdtv-emulator/tests/e2e.rs` rather than reimplemented here. Neither
+# crate ships: `cargo xtask audit-graph` asserts that `kdtvd` reaches neither.
+#
+# `tokio` is here for exactly one thing — `tokio::signal::ctrl_c`, so that
+# Ctrl-C does not kill this process before the daemon has finished stopping
+# water. See `emulate.rs`.
 [dependencies]
 anyhow = { workspace = true }
+kdtv-emulator = { workspace = true }
+kdtv-units = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt", "signal", "time"] }
 clap = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
