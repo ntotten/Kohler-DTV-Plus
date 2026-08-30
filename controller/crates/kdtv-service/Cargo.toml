@@ -35,14 +35,7 @@ jiff = { workspace = true }
 # `test-util` is what makes `tokio::time::pause()` available, and that is what
 # lets a twenty-minute session and a full retry train run in microseconds
 # against the real supervisor rather than against a second copy of its logic.
-tokio = { workspace = true, features = [
-  "rt",
-  "macros",
-  "time",
-  "sync",
-  "signal",
-  "test-util",
-] }
+tokio = { workspace = true, features = ["rt", "macros", "time", "sync", "signal", "test-util"] }
 
 [lints]
 workspace = true

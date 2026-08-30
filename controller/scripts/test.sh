@@ -5,8 +5,12 @@
 #   ./scripts/test.sh          format, lint, unit and integration tests
 #   ./scripts/test.sh --quick  tests only, skipping format and lint
 #
-# This is the same set the CI workflow runs, in the same order, so a green run
-# here means a green run there.
+# This is the same set the CI workflows run, in the same order, so a green run
+# here means a green run there. Note *workflows*, plural: .github/workflows has
+# controller.yml for the Rust checks and format.yml for oxfmt, which formats the
+# Markdown, TOML, YAML, JSON and HTML in this repository. Leaving oxfmt out meant
+# a Cargo.toml this gate called clean failed on the remote — cargo fmt does not
+# format manifests and nothing local did either.
 #
 source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 cd "$CONTROLLER_DIR"
@@ -45,5 +49,17 @@ cargo xtask audit-graph
 
 say "every requirement in the register is still accounted for"
 cargo xtask reqs
+
+say "oxfmt: Markdown, TOML, YAML, JSON, HTML"
+# The root workspace, not this one: oxfmt runs over the whole repository. Skipped
+# with a warning rather than a failure when its dependencies are not installed,
+# because a Rust contributor who has never run `npm install` should still get the
+# rest of this gate.
+if [ -x "$CONTROLLER_DIR/../node_modules/.bin/oxfmt" ]; then
+  (cd "$CONTROLLER_DIR/.." && npm run --silent format:check)
+else
+  warn "oxfmt is not installed; run 'npm install' at the repository root."
+  warn "the format.yml CI job will still check it."
+fi
 
 say "all checks passed"
