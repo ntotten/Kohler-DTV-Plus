@@ -307,6 +307,25 @@ pub fn resolve_distinct(
     bindings: &[(LinkKind, PortPath)],
     sysfs: &dyn SysfsView,
 ) -> Result<Vec<PortBinding>, ResolveError> {
+    // Placeholders first, before anything touches the USB tree. An unbound
+    // placeholder is a caller error that no amount of enumeration can fix, and
+    // the machine that most often has one — a developer box running the
+    // emulated profile — is also the machine least likely to have a
+    // /dev/serial/by-id at all. Enumerating first meant `kdtvd --check-only
+    // --config deploy/kdtvd.emulated.toml` reported "cannot enumerate USB
+    // serial devices" when the real answer was "call bind_ptys first".
+    //
+    // This also gives an unbound placeholder precedence over a collision or an
+    // absent device on another link, wherever it sits in the list. That is the
+    // right order: until the placeholders are substituted the binding list is
+    // not the one the service will run with, so anything else it says about
+    // those links is provisional.
+    for (link, configured) in bindings {
+        if configured.as_path().is_none() {
+            return Err(ResolveError::UnboundPlaceholder { link: *link });
+        }
+    }
+
     let enumerated = sysfs
         .enumerate()
         .map_err(|source| ResolveError::Enumeration { source })?;
@@ -319,6 +338,7 @@ pub fn resolve_distinct(
     for (link, configured) in bindings {
         let link = *link;
         let Some(path) = configured.as_path() else {
+            // Ruled out above; the pattern stays so the binding is irrefutable.
             return Err(ResolveError::UnboundPlaceholder { link });
         };
 
@@ -631,6 +651,44 @@ mod tests {
         assert!(matches!(
             resolve_distinct(&bindings, &fs),
             Err(ResolveError::UnboundPlaceholder { link: Z1 })
+        ));
+    }
+
+    /// The placeholder answer must not depend on the USB tree existing.
+    ///
+    /// The test above uses a fixture where enumeration succeeds, so it passed
+    /// while the placeholder check sat *after* the enumeration and could not be
+    /// reached on a machine with no `/dev/serial/by-id`. That is the machine
+    /// running the emulated profile.
+    #[test]
+    fn a_placeholder_is_named_even_where_there_is_no_usb_tree_to_enumerate() {
+        let dir = tempfile::tempdir().unwrap();
+        let fs = DirSysfs::new(dir.path());
+        // Nothing under the root at all: no dev/, no devices/.
+        assert!(
+            fs.enumerate().is_err(),
+            "this test is only meaningful where enumeration fails"
+        );
+        let bindings = vec![(
+            Z1,
+            PortPath::parse("zones.zone1.port", "/dev/pts/PLACEHOLDER", Profile::Bench).unwrap(),
+        )];
+        assert!(matches!(
+            resolve_distinct(&bindings, &fs),
+            Err(ResolveError::UnboundPlaceholder { link: Z1 })
+        ));
+    }
+
+    /// ...and a configuration with no placeholder still reports the enumeration
+    /// failure, so hoisting the check did not swallow it.
+    #[test]
+    fn a_real_binding_still_reports_a_failed_enumeration() {
+        let dir = tempfile::tempdir().unwrap();
+        let fs = DirSysfs::new(dir.path());
+        let bindings = vec![(Z1, by_id("/dev/serial/by-id/usb-anything-if00-port0"))];
+        assert!(matches!(
+            resolve_distinct(&bindings, &fs),
+            Err(ResolveError::Enumeration { .. })
         ));
     }
 
