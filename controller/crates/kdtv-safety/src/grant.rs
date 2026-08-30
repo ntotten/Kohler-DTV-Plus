@@ -3,19 +3,24 @@
 //! Three types here have no public constructor and are deliberately `!Clone`.
 //! Each represents an authority that must be spent exactly once, by the code
 //! that was given it, and a `Clone` would turn "the operator asked for this"
-//! into "the operator asked for this, repeatedly, whenever we like".
+//! into "the operator asked for this, repeatedly, whenever we like". Not
+//! deriving `Clone` is the whole of that mechanism; `tests/ui/` proves it.
+//!
+//! ~~Each carried a `PhantomData<*const ()>` field to say so.~~ Superseded: a
+//! raw-pointer marker does not make a type any less cloneable — every field
+//! here is already private and `Clone` was never derived — but it does make the
+//! type `!Send` and `!Sync`, which nothing had asked for and nothing recorded.
+//! That collided with the architecture: `StartAuthorization` is minted in the
+//! API layer and consumed by the service, so it crosses a channel, and
+//! `ZoneMachine` holds an `OpenGrant`, so a `!Send` grant pinned every zone to
+//! one thread. The marker is gone and `the_authorities_cross_threads` holds
+//! the property it was silently costing.
 
 use crate::event::LatchReason;
 use kdtv_units::{
     BootId, ClampError, CommandId, SessionDuration, Slot, SlotSet, ValveSetpoint, ZoneId,
 };
 use serde::Serialize;
-use std::marker::PhantomData;
-
-/// A `!Clone`, `!Copy` marker. Holding one of these types means holding the only
-/// copy, and passing it by value spends it.
-type NotClone = PhantomData<*const ()>;
-
 /// Proof that an authenticated caller asked to start water, in this service boot.
 ///
 /// Minted only by the API layer, from a live authenticated session, and consumed
@@ -26,7 +31,6 @@ type NotClone = PhantomData<*const ()>;
 pub struct StartAuthorization {
     boot: BootId,
     command: CommandId,
-    _not_clone: NotClone,
 }
 
 impl StartAuthorization {
@@ -34,11 +38,7 @@ impl StartAuthorization {
     /// a request was authenticated.
     #[must_use]
     pub fn issue(boot: BootId, command: CommandId) -> Self {
-        Self {
-            boot,
-            command,
-            _not_clone: PhantomData,
-        }
+        Self { boot, command }
     }
 
     #[must_use]
@@ -60,16 +60,12 @@ impl StartAuthorization {
 #[derive(Debug)]
 pub struct OperatorAck {
     command: CommandId,
-    _not_clone: NotClone,
 }
 
 impl OperatorAck {
     #[must_use]
     pub fn issue(command: CommandId) -> Self {
-        Self {
-            command,
-            _not_clone: PhantomData,
-        }
+        Self { command }
     }
 
     #[must_use]
@@ -105,7 +101,6 @@ pub struct OpenGrant {
     zone: ZoneId,
     command: CommandId,
     boot: BootId,
-    _not_clone: NotClone,
 }
 
 impl OpenGrant {
@@ -115,7 +110,6 @@ impl OpenGrant {
             zone,
             command,
             boot,
-            _not_clone: PhantomData,
         }
     }
 
@@ -210,14 +204,23 @@ mod tests {
         // ZoneId a steam operation could supply.
     }
 
-    /// Not a runtime assertion — a statement about the types, kept as a test so
-    /// it is read. `OpenGrant`, `StartAuthorization` and `OperatorAck` are all
-    /// `!Clone` and `!Copy`; the compile-fail cases live in the trybuild suite.
+    /// The authorities must cross threads.
+    ///
+    /// `StartAuthorization` is minted by the API layer and consumed by the
+    /// service, so it travels a channel; `ZoneMachine` holds an `OpenGrant`, so
+    /// a `!Send` grant would pin every zone to one thread. Both were true until
+    /// a `PhantomData<*const ()>` field was removed from these three types — see
+    /// the module documentation. This is the test that would have caught it.
     #[test]
-    fn the_authority_types_are_move_only() {
-        fn assert_not_copy<T>() {}
-        assert_not_copy::<OpenGrant>();
-        assert_not_copy::<StartAuthorization>();
-        assert_not_copy::<OperatorAck>();
+    fn the_authorities_cross_threads() {
+        const fn assert_send<T: Send>() {}
+        assert_send::<OpenGrant>();
+        assert_send::<StartAuthorization>();
+        assert_send::<OperatorAck>();
     }
+
+    // `!Clone` and `!Copy` have no stable expression as a bound — a
+    // `fn assert_not_copy<T>()` with no bound on `T` accepts `i32` and proves
+    // nothing, which is what stood here. The claim is made by the compile-fail
+    // cases in `tests/ui/`, which are real programs that must fail to build.
 }
