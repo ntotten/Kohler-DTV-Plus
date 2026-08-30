@@ -633,6 +633,56 @@ async fn a_valve_that_never_confirms_is_reported_rather_than_called_a_clean_stop
 }
 
 #[tokio::test(start_paused = true)]
+async fn a_command_arriving_during_shutdown_is_answered_rather_than_dropped() {
+    let harness = Harness::start();
+    harness.boot().await;
+
+    // Silent valves keep the drain open long enough for a command to arrive
+    // while the confirmations are outstanding.
+    harness.zone1.adjust(|valve| valve.silent = true);
+    harness.zone2.adjust(|valve| valve.silent = true);
+    harness.shutdown.trigger("test");
+    harness.settle(Duration::from_millis(50)).await;
+
+    let error = harness
+        .handle
+        .zone(
+            ZoneId::Zone1,
+            OperatorCommand::Pause {
+                command: CommandId(61),
+            },
+            operator(),
+        )
+        .await
+        .expect_err("a shutting-down service accepts nothing new");
+    assert_eq!(error, CommandError::ShuttingDown);
+
+    let outcome = harness.join.await.expect("the supervisor must not panic");
+    assert!(!outcome.is_confirmed(), "{outcome:?}");
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_broken_probe_stops_the_zone_because_an_open_rtd_reads_low() {
+    let harness = Harness::start();
+    harness.boot().await;
+
+    let before = harness.watch1.frame_count();
+    // An open FORCE- line. The reading looks like cold water, so the fault
+    // register is the only thing that says the channel means nothing.
+    harness.probe1.set(20.0, 0x08);
+    harness.settle(Duration::from_secs(3)).await;
+
+    let recent: Vec<Vec<u8>> = harness.watch1.frames().into_iter().skip(before).collect();
+    assert!(
+        recent.iter().any(|f| is_all_off(f)),
+        "a faulted amplifier must stop the zone: {recent:02X?}"
+    );
+    assert_eq!(harness.phase(ZoneId::Zone1), ZonePhaseKind::Unavailable);
+    assert_eq!(harness.phase(ZoneId::Zone2), ZonePhaseKind::ReadyOff);
+    harness.finish().await;
+}
+
+#[tokio::test(start_paused = true)]
 async fn the_shutdown_grace_is_bounded() {
     // Not a behaviour test — a statement about the number, so a change to it is
     // deliberate. It has to exceed a full Saturn transaction budget and stay
