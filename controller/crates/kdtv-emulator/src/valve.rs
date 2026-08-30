@@ -1295,7 +1295,7 @@ mod tests {
 
     /// `WELDED` (35): the outlets do not move, and the fault does not clear.
     #[test]
-    fn a_welded_valve_does_not_close_and_cannot_be_cleared() {
+    fn req_valve_control_err_06_a_welded_valve_does_not_close_and_cannot_be_cleared() {
         let mut link = Link::new(SaturnValveModel::dtv_6_port());
         let enc = zone1_encoder();
         discover(&mut link, &enc);
@@ -1391,7 +1391,7 @@ mod tests {
     /// this is the reading in which the timer is a hazard rather than a
     /// backstop.
     #[test]
-    fn the_prompt_3_timer_expires_under_deliberate_refresh_only() {
+    fn req_valve_control_timer_03_the_prompt_3_timer_expires_under_deliberate_refresh_only() {
         let mut link = Link::new(
             SaturnValveModel::prompt_3_port(TimerRefresh::DeliberateRefreshOnly)
                 .with_comms_loss_shutdown(None),
@@ -1419,7 +1419,7 @@ mod tests {
     /// Under "any valid command", the same polling holds it open — which is why
     /// the two readings cannot be collapsed into one.
     #[test]
-    fn the_prompt_3_timer_is_held_off_under_any_valid_command() {
+    fn req_valve_control_timer_03_the_prompt_3_timer_is_held_off_under_any_valid_command() {
         let mut link = Link::new(
             SaturnValveModel::prompt_3_port(TimerRefresh::AnyValidCommand)
                 .with_comms_loss_shutdown(None),

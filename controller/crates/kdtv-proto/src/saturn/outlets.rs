@@ -17,10 +17,10 @@
 //! mapping, and a Home Assistant integration turned on outlet 6 when the user
 //! asked for outlet 2. On this installation the slot-to-status mapping happens
 //! to be the identity, so a test built from the reference configuration does not
-//! execute the interesting path at all. [`permuted_slots_reach_the_right_outlet`]
+//! execute the interesting path at all. [`req_field_notes_state_01_permuted_slots_reach_the_right_outlet`]
 //! permutes a synthetic configuration for exactly that reason.
 //!
-//! [`permuted_slots_reach_the_right_outlet`]: self#tests
+//! [`req_field_notes_state_01_permuted_slots_reach_the_right_outlet`]: self#tests
 
 use crate::saturn::control::FirmwareType;
 use core::fmt;
@@ -471,7 +471,7 @@ mod tests {
 
     /// `OUT-01`. The single sentence that makes the two tables worth having.
     #[test]
-    fn mask_0x04_is_a_different_outlet_on_each_valve() {
+    fn req_valve_control_out_01_mask_0x04_is_a_different_outlet_on_each_valve() {
         assert_eq!(ValveType::Dtv6Port.outlet_for_mask(0x04), Some(2));
         assert_eq!(ValveType::Prompt3Port.outlet_for_mask(0x04), Some(1));
         assert_eq!(ValveType::Dtv6Port.mask_for_outlet(2), Ok(0x04));
@@ -532,7 +532,7 @@ mod tests {
     /// This configuration permutes all three, so a table that quietly assumed
     /// any two were equal produces the wrong mask.
     #[test]
-    fn permuted_slots_reach_the_right_outlet() {
+    fn req_field_notes_state_01_permuted_slots_reach_the_right_outlet() {
         // Slot 1 -> DTV outlet 4 (mask 0x10), reported under status index 6.
         // Slot 2 -> DTV outlet 0 (mask 0x01), reported under status index 3.
         // Slot 5 -> DTV outlet 3 (mask 0x08), reported under status index 1.
@@ -718,7 +718,7 @@ mod tests {
     /// `FLAG-01` / `FLAG-02`. The undefined bits cannot be constructed, and the
     /// two byte-shaped types are not interchangeable even where they collide.
     #[test]
-    fn primary_flags_reject_undefined_bits_and_do_not_alias_outlets() {
+    fn req_valve_control_flag_02_primary_flags_reject_undefined_bits_and_do_not_alias_outlets() {
         assert_eq!(PrimaryFlags::from_bits(0x08), None);
         assert_eq!(PrimaryFlags::from_bits(0x10), None);
         assert_eq!(PrimaryFlags::from_bits(0x80), None);

@@ -12,7 +12,7 @@
 //! is no `Reboot`, no `FirmwareUpdate`, no `ActivateBoot`, so no program in this
 //! workspace can spell one. The list is
 //! [`denied_opcodes`](crate::dtv::denied_opcodes) and
-//! [`no_denied_opcode_is_reachable`] scans every frame this encoder can produce
+//! [`req_dtv_plus_protocol_cmd_03_req_steam_adapter_cmd_02_no_denied_opcode_is_reachable`] scans every frame this encoder can produce
 //! to prove none of them appears in the `CMD` field.
 //!
 //! **Power clean is not an opcode and is not denied that way.** `0xCC` is a
@@ -20,7 +20,7 @@
 //! (`0x34`), which is allowlisted. Omitting a command variant does nothing to
 //! it. The denial is [`SteamOpState`], which has `Off` and `On` and no third
 //! variant, and it is the only type this encoder accepts in that position.
-//! [`no_encoded_frame_carries_power_clean_in_the_state_byte`] scans the byte.
+//! [`req_hardware_spec_steam_14_no_encoded_frame_carries_power_clean_in_the_state_byte`] scans the byte.
 //! `CORRECTIONS.md` item 1, `STEAM-11`, `STEAM-14`(design).
 //!
 //! # Evidence
@@ -30,8 +30,8 @@
 //! [`ParamCodec`]: two sources describe incompatible payloads for the same
 //! opcode and no capture of this bus exists.
 //!
-//! [`no_denied_opcode_is_reachable`]: self#tests
-//! [`no_encoded_frame_carries_power_clean_in_the_state_byte`]: self#tests
+//! [`req_dtv_plus_protocol_cmd_03_req_steam_adapter_cmd_02_no_denied_opcode_is_reachable`]: self#tests
+//! [`req_hardware_spec_steam_14_no_encoded_frame_carries_power_clean_in_the_state_byte`]: self#tests
 
 use crate::dtv::addr::{BROADCAST, DevAddr, MASTER, UNASSIGNED};
 use crate::dtv::command::opcode;
@@ -742,7 +742,8 @@ mod tests {
     /// The five opcodes the allowlist resolves to, and their disjointness from
     /// the denied set.
     #[test]
-    fn the_reachable_opcodes_are_a_known_five() {
+    fn req_dtv_plus_protocol_cmd_07_req_steam_adapter_cmd_01_the_reachable_opcodes_are_a_known_five()
+     {
         let mut reachable: Vec<u8> = SteamOp::ALL.iter().map(|k| k.opcode()).collect();
         reachable.sort_unstable();
         reachable.dedup();
@@ -777,7 +778,7 @@ mod tests {
     /// be weakened until it proved nothing. `CMD` is the field that selects the
     /// operation.
     #[test]
-    fn no_denied_opcode_is_reachable() {
+    fn req_dtv_plus_protocol_cmd_03_req_steam_adapter_cmd_02_no_denied_opcode_is_reachable() {
         let e = SteamEncoder::new(&auth());
         let t = token();
         let denied = denied_opcodes();
@@ -822,7 +823,7 @@ mod tests {
     /// decodes it back, and asserts the operation-state byte is `0x00` or `0xFF`
     /// and never `0xCC`.
     #[test]
-    fn no_encoded_frame_carries_power_clean_in_the_state_byte() {
+    fn req_hardware_spec_steam_14_no_encoded_frame_carries_power_clean_in_the_state_byte() {
         let e = SteamEncoder::new(&auth());
         let t = token();
         let mut writes = 0u32;
@@ -1234,7 +1235,7 @@ mod tests {
     /// `CORRECTIONS.md` item 2. The destination comes from the discovery table,
     /// never from the device ID.
     #[test]
-    fn the_destination_is_an_assigned_address_not_a_device_id() {
+    fn req_steam_adapter_addr_05_the_destination_is_an_assigned_address_not_a_device_id() {
         let e = SteamEncoder::new(&auth());
         for a in DevAddr::ALL {
             let f = e

@@ -849,7 +849,7 @@ document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
 area = "phase 1 gate"
 statement = "Capture one valve at a time with no HTTP polling or other automation running."
 source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Packet capture questions"
-verification = "manual procedure; disable pollers in configuration"
+verification = "not-testable-in-software (manual capture procedure, performed by a person at the bus); disable pollers in configuration"
 hard = true
 
 [[requirement]]
@@ -894,7 +894,7 @@ document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
 area = "phase 2 gate"
 statement = "Run the Pi, adapters, watchdog, service, and emulator continuously for seven days."
 source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 2"
-verification = "manual soak"
+verification = "not-testable-in-software (seven-day soak on real hardware); manual soak"
 hard = true
 
 [[requirement]]
@@ -1020,7 +1020,7 @@ document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
 area = "phase 6 gate"
 statement = "Keep voice, cloud, Homebridge, and automatic routines disabled for a one-week local-only soak."
 source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 6"
-verification = "configuration check; manual soak"
+verification = "not-testable-in-software (one-week soak on real hardware); configuration check; manual soak"
 hard = true
 
 [[requirement]]
@@ -1029,7 +1029,7 @@ document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
 area = "phase 6 gate"
 statement = "Enable explicit Homebridge/Worker commands only after the soak has no unexplained reset, temperature, or bus event."
 source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Delivery phases → Phase 6"
-verification = "log review after the soak"
+verification = "not-testable-in-software (a person reads the soak logs and judges what counts as unexplained); log review after the soak"
 hard = true
 
 [[requirement]]
@@ -1263,7 +1263,7 @@ document = "docs/replacement-controller/CONTROLLER-DESIGN.md"
 area = "data handling"
 statement = "Keep the household-specific configuration backup outside this public repository."
 source = "docs/replacement-controller/CONTROLLER-DESIGN.md § Scope"
-verification = "repository review"
+verification = "not-testable-in-software (a test cannot assert the absence of a file it cannot name); repository review"
 hard = true
 
 [[requirement]]
@@ -4178,7 +4178,7 @@ document = "CLAUDE.md 'Quick orientation'; AGENT.md 'Hard rules' #2"
 area = "valve control"
 statement = "Never open a valve (move water) without explicit, in-the-moment operator consent, requested every time; read-only operations require no such consent."
 source = "CLAUDE.md 'Quick orientation'; AGENT.md 'Hard rules' #2"
-verification = "manual/commissioning verification; not unit-testable without a human-in-the-loop harness, though a consent-gate function can be unit tested for refusing to proceed absent a consent flag"
+verification = "not-testable-in-software (human-in-the-loop consent, as this entry already said); manual/commissioning verification, though a consent-gate function can be unit tested for refusing to proceed absent a consent flag"
 hard = true
 
 [[requirement]]
@@ -4313,7 +4313,7 @@ area = "polling"
 statement = "Never exceed 2 concurrent HTTP sessions to the controller, counting any other client on the LAN (the controller's own web UI, a second copy of this service from e.g. a hot-reload restart). The K-99693 RS-485 wall interface, if present, does not count against this budget."
 source = "app/CLAUDE.md Hard limits table and 'The two-session budget is easy to blow without noticing'"
 tier = "A"
-verification = "manual/operational; enforceable in-process only via a shared session/queue limiter"
+verification = "not-testable-in-software (the budget counts HTTP clients outside this process, which no test here can observe); manual/operational; enforceable in-process only via a shared session/queue limiter"
 hard = true
 
 [[requirement]]

@@ -12,6 +12,61 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ## 2026-08-30
 
+### 13:28 — The requirements convention was never adopted because it could not be
+
+`cargo xtask reqs` has always reported `0/356`, and the note in `reqs.rs` read
+that as a convention nobody had got round to using. It is the other way round.
+The matcher could not match the names its own documentation asked for.
+
+Two faults, both in `reqs.rs`:
+
+- **Coverage was an equality test.** `sources.contains(&r.slug())` wants a test
+  named exactly `req_controller_design_safe_05`. The module doc one screen above
+  it gives `req_controller_design_safe_05_missing_response_latches_zone` as the
+  example, and the failure message prints `req_{slug}...` with the ellipsis.
+  Both promised a suffix the matcher rejected.
+- **The scan could not see `async fn`.** It matched a bare `fn req_`, and half
+  the API suite is `#[tokio::test]`. Five tests in `kdtv-api` already carried a
+  slug and were reported uncovered anyway.
+
+The second one had already damaged the suite. `req_controller_design_api_01`
+exists as a separate test from
+`seven_of_the_eight_api_01_operations_are_performed` for no reason other than to
+put the slug on something the scan could see — its own doc comment says so.
+
+With both fixed the register reports `8` before any work, not `0`, and the real
+gate is **189** hard software-verifiable requirements, not the 270 hard ones:
+`--strict` only ever iterated the software-verifiable subset.
+
+**Why it matters:** the tool was reporting a fact about itself as a fact about
+the codebase. Every one of the 646 tests looked untraceable because the matcher
+was stricter than the convention it documented.
+
+### 13:31 — A power clean started by someone else is interrupted at boot
+
+Tracing `STEAM-12` to a test found no test, and then found the reason.
+
+`SteamStateByte::is_producing()` is true for `PowerClean` (`0xCC`) as well as
+`On`. `SteamMachine::on_first_status` treats a producing generator at boot as
+something to shut down: it sets the parameter state to `Off` and transmits a
+stop before the link is called ready.
+
+`STEAM-ADAPTER.md` `STEAM-12` says the opposite — on a decoded `0xCC`, report
+`PC_ACTIVE` and _do nothing that could interrupt the cycle_, because an
+interrupted power clean has to be restarted from the beginning. The decoder half
+is right and tested (`an_observed_power_clean_reports_pc_active`); the boot path
+is not.
+
+Nothing here moves shower water, and a power clean is run from the generator's
+own control, so this is a correctness fault rather than a safety one. It is
+**not fixed** in this change — the change was traceability, and fixing it means
+deciding what a master should do when it boots into someone else's 45-minute
+cycle.
+
+**Why it matters:** the traceability pass found it in its first hour, which is
+the argument for the traceability pass. `STEAM-12` is left in the register
+uncovered rather than pointed at the decoder test that only proves half of it.
+
 ### 06:21 — The replacement controller runs, against emulated hardware, in CI
 
 The real `kdtvd` binary now boots against two emulated Saturn valves and an

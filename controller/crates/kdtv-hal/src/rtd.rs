@@ -128,7 +128,7 @@ pub const fn chip_select_for(zone: ZoneId) -> ChipSelect {
 /// cannot arrive through another crate either.
 ///
 /// The value is a string so the reason has somewhere to live in the built
-/// documentation. `tests::no_gpio_crate_is_a_dependency` reads the manifest back.
+/// documentation. `tests::req_hardware_spec_gpio_03_no_gpio_crate_is_a_dependency` reads the manifest back.
 pub const NO_GPIO_OUTPUT: &str = "this service drives no relay, contactor or mains path; there is no GPIO output trait \
      and no GPIO crate in the daemon's dependency graph";
 

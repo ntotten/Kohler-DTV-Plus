@@ -362,14 +362,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn valve_bounds_are_the_documented_numbers() {
+    fn req_controller_design_clamp_02_req_controller_design_clamp_03_valve_bounds_are_the_documented_numbers()
+     {
         assert!((ValveSetpoint::FLOOR.celsius() - 30.0).abs() < f32::EPSILON);
         assert!((ValveSetpoint::CEILING.celsius() - 42.5).abs() < f32::EPSILON);
         assert!((ValveSetpoint::CEILING.fahrenheit() - 108.5).abs() < 0.01);
     }
 
     #[test]
-    fn the_ceiling_sits_below_the_scald_threshold_plus_nothing() {
+    fn req_valve_control_temp_03_the_ceiling_sits_below_the_scald_threshold_plus_nothing() {
         // 42.5 C is below 43 C, which is where water begins to scald. The valve's
         // own ceiling of 49 C is far above it and is never used as a limit.
         assert!(ValveSetpoint::CEILING.celsius() < crate::independent::SCALD_C);
@@ -499,14 +500,14 @@ mod tests {
         /// The property the encoder relies on: whatever comes in, what goes out
         /// is inside the clamp. No input reaches the wire outside 60..=85.
         #[test]
-        fn no_input_escapes_the_valve_clamp(raw in 0u8..=255) {
+        fn req_valve_control_temp_02_req_controller_design_clamp_01_no_input_escapes_the_valve_clamp(raw in 0u8..=255) {
             let (v, _) = ValveSetpoint::clamped(Cx2::from_raw(raw));
             proptest::prop_assert!(v.wire() >= ValveSetpoint::FLOOR);
             proptest::prop_assert!(v.wire() <= ValveSetpoint::CEILING);
         }
 
         #[test]
-        fn no_input_escapes_the_steam_clamp(raw in 0u8..=255) {
+        fn req_hardware_spec_steam_09_no_input_escapes_the_steam_clamp(raw in 0u8..=255) {
             let (v, _) = SteamSetpoint::clamped(Fx2::from_raw(raw));
             proptest::prop_assert!(v.wire() >= SteamSetpoint::FLOOR);
             proptest::prop_assert!(v.wire() <= SteamSetpoint::CEILING);

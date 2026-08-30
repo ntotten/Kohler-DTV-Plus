@@ -222,7 +222,8 @@ mod tests {
     /// `CORRECTIONS.md` item 5. Both tick readings are present, the configured
     /// value is one of exactly the two, and the default is the slower one.
     #[test]
-    fn both_tick_candidates_are_plumbed_and_the_default_is_the_slow_one() {
+    fn req_steam_adapter_time_01_both_tick_candidates_are_plumbed_and_the_default_is_the_slow_one()
+    {
         let t = DtvTimings::DOCUMENTED;
         assert_eq!(t.tick_candidate_fast, Duration::from_millis(150));
         assert_eq!(t.tick_candidate_slow, Duration::from_millis(500));

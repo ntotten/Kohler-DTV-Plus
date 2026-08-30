@@ -1212,7 +1212,7 @@ async fn every_steam_command_arrives_as_the_operation_it_names() {
 /// The authorisation carries this boot and this command, which is what the
 /// safety kernel checks before it mints a grant.
 #[tokio::test]
-async fn a_start_authorisation_names_this_boot_and_this_command() {
+async fn req_controller_design_id_01_a_start_authorisation_names_this_boot_and_this_command() {
     let rig = Rig::new();
     let session = rig.establish().await;
     let answer = rig
@@ -1376,7 +1376,8 @@ async fn the_fahrenheit_boundaries_hold_through_the_api() {
 /// `a_request_above_the_ceiling_is_refused_rather_than_rounded_into_it`
 /// covers in `kdtv-units`.
 #[tokio::test]
-async fn a_request_above_a_narrowed_ceiling_is_refused_rather_than_rounded_into_it() {
+async fn req_valve_control_temp_03_a_request_above_a_narrowed_ceiling_is_refused_rather_than_rounded_into_it()
+ {
     // Cx2 80 is 40.0 °C, which is 104.0 °F exactly. The next step up, Cx2 81,
     // is 40.5 °C = 104.9 °F, so everything in (104.0, 104.9] rounds down onto
     // the ceiling.

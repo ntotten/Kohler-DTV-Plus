@@ -11,7 +11,7 @@ use kdtv_units::{LinkKind, ZoneId};
 /// this is the crate-local half, so a dependency added here fails a test in the
 /// same crate rather than only in the audit job.
 #[test]
-fn no_gpio_crate_is_a_dependency() {
+fn req_hardware_spec_gpio_03_no_gpio_crate_is_a_dependency() {
     let manifest =
         std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml")).unwrap();
     let deps = manifest

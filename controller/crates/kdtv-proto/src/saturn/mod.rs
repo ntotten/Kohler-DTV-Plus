@@ -207,7 +207,7 @@ mod tests {
     /// identities are all reachable from the crate root under their documented
     /// names, so a reviewer can find them without reading the module tree.
     #[test]
-    fn the_public_surface_names_the_contradictions() {
+    fn req_saturn_protocol_err_01_the_public_surface_names_the_contradictions() {
         assert_eq!(MasterAddr::ALL.len(), 2);
         assert_eq!(ValveType::ALL.len(), 4);
         assert_eq!(denied_control_bytes().len(), 10);
