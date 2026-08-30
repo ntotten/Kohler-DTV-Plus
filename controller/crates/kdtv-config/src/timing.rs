@@ -16,7 +16,7 @@
 //! [`SessionScale::apply`] accepts a [`SessionSpan`] and nothing else, and a
 //! `SessionSpan` cannot be built from an arbitrary [`Duration`] — its
 //! constructors enumerate the session-class durations this service has:
-//! the session limit and the three independent-temperature dwells. A protocol
+//! the session limit. A protocol
 //! deadline has no route into one, so scaling a 525 ms tick is not a mistake
 //! that can be made; it is a program that does not compile.
 //!
@@ -29,7 +29,7 @@ use crate::error::ConfigError;
 use crate::profile::Profile;
 use kdtv_proto::dtv::DtvTimings;
 use kdtv_proto::saturn::Timings;
-use kdtv_units::{CORRECTED_TRIP_DWELL, DIVERGENCE_DWELL, RTD_STARVATION, SessionDuration};
+use kdtv_units::SessionDuration;
 use std::time::Duration;
 
 /// A session-class duration: one that exists because a person is standing in a
@@ -45,26 +45,6 @@ impl SessionSpan {
     #[must_use]
     pub const fn of_session(d: SessionDuration) -> Self {
         Self(d.get())
-    }
-
-    /// How long the corrected independent reading may sit above
-    /// [`kdtv_units::CORRECTED_TRIP_C`] before the zone stops.
-    #[must_use]
-    pub const fn corrected_trip_dwell() -> Self {
-        Self(CORRECTED_TRIP_DWELL)
-    }
-
-    /// How long the independent reading and the valve's self-report may
-    /// disagree before the zone stops.
-    #[must_use]
-    pub const fn divergence_dwell() -> Self {
-        Self(DIVERGENCE_DWELL)
-    }
-
-    /// How long the RTD may go unsampled before the zone stops.
-    #[must_use]
-    pub const fn rtd_starvation() -> Self {
-        Self(RTD_STARVATION)
     }
 
     #[must_use]
@@ -253,18 +233,6 @@ mod tests {
         // Session class: scaled.
         let limit = SessionSpan::of_session(SessionDuration::clamped(Duration::from_secs(1200)));
         assert_eq!(t.scaled(limit).get(), Duration::from_secs(12));
-        assert_eq!(
-            t.scaled(SessionSpan::divergence_dwell()).get(),
-            Duration::from_millis(100)
-        );
-        assert_eq!(
-            t.scaled(SessionSpan::corrected_trip_dwell()).get(),
-            Duration::from_millis(20)
-        );
-        assert_eq!(
-            t.scaled(SessionSpan::rtd_starvation()).get(),
-            Duration::from_millis(50)
-        );
 
         // Wire class: untouched. Every deadline the two protocols define.
         let s = t.saturn();
@@ -293,14 +261,8 @@ mod tests {
     fn scaling_only_shortens() {
         for raw in [1.0_f64, 0.5, 0.25, 0.01, 1e-6] {
             let scale = SessionScale::try_new(raw).unwrap();
-            for span in [
-                SessionSpan::of_session(SessionDuration::clamped(Duration::from_secs(1200))),
-                SessionSpan::corrected_trip_dwell(),
-                SessionSpan::divergence_dwell(),
-                SessionSpan::rtd_starvation(),
-            ] {
-                assert!(scale.apply(span) <= span);
-            }
+            let span = SessionSpan::of_session(SessionDuration::clamped(Duration::from_secs(1200)));
+            assert!(scale.apply(span) <= span);
         }
     }
 }

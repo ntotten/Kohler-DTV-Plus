@@ -27,11 +27,7 @@
 //!    `kdtv_api::MIN_TOKEN_BYTES` long, mode `0600` — `kdtvd`'s own
 //!    `check_credential_permissions` refuses anything an account other than the
 //!    owner can read.
-//! 3. **A probe file per zone**, under `bench.probe_dir`, named by
-//!    [`kdtv_hal::FileRtdChannel::path_for`]. Writing these is how a test drives
-//!    the independent temperature interlock, which is the only safety input in
-//!    this system that does not come from the valve.
-//! 4. **A closed transmit gate**, which is a property of the build rather than
+//! 3. **A closed transmit gate**, which is a property of the build rather than
 //!    of anything here: every fixture is tier `[C]`, so the daemon may open a
 //!    pseudo-terminal and may not open a real serial port.
 //!
@@ -64,7 +60,6 @@ use std::time::Duration;
 
 use kdtv_config::port::PTY_PLACEHOLDER;
 use kdtv_config::{RealFs, TimingConfig, ValidatedConfig};
-use kdtv_hal::FileRtdChannel;
 use kdtv_proto::dtv::{DtvRxBuffer, decode as decode_dtv};
 use kdtv_proto::saturn::{
     Expectation, MasterAddr, RX_CAPACITY, RxBuffer, ValveAddr, ValveType, decode, opcode,
@@ -101,21 +96,6 @@ pub const WORK_DIR: &str = ".e2e";
 /// this process. A generated one would only make the failure mode "the test
 /// cannot log in" harder to read.
 const TOKEN: &str = "e2e-token-0123456789abcdef";
-
-/// The resting independent-probe reading the rig starts every zone at.
-///
-/// 38.0 °C: inside the setpoint clamp, well under the 45 °C corrected trip and
-/// the 50 °C raw backstop, and not equal to either — so a test that means to
-/// cross one has to say so.
-///
-/// **It also has to agree with what the valve reports**, to within
-/// `kdtv_units::DIVERGENCE_LIMIT_C`. The independent probe and the valve's own
-/// thermistor disagreeing by more than 5 °C for
-/// `kdtv_units::DIVERGENCE_DWELL` latches the zone, and correctly so: one of
-/// them is lying and this project does not know which. `SaturnValveModel`
-/// reports `Cx2` 76, which is this number, so an idle rig sits at zero
-/// divergence.
-pub const RESTING_PROBE_C: &str = "38.0";
 
 /// Why the rig could not be assembled or driven.
 #[derive(Debug, thiserror::Error)]
@@ -396,8 +376,7 @@ impl Daemon {
         // covers every path that unwinds — but a test binary killed with
         // SIGKILL (an OOM kill, a runner cancelling a step, a double panic
         // aborting the process) runs no destructor, and the orphan does not
-        // exit on its own: the next `Rig::start` deletes its probe directory,
-        // it latches on RTD starvation and then sits there.
+        // exit on its own.
         let pid_file = rig.root().join(DAEMON_PID_FILE);
         std::fs::write(
             &pid_file,
@@ -573,14 +552,12 @@ pub struct RigOptions {
     /// `kdtv_engine::zone::ZoneMachine::absorb_temperature` reads the **first**
     /// payload byte as the whole `Cx2` (the second byte's role is `[?]`), while
     /// the model under `TwoByteOrder::BigEndian` puts the value in the second
-    /// and `0x00` in the first. The daemon therefore reads every valve as
-    /// 0.0 °C, the independent probe reads 38 °C, and after the 10 s divergence
-    /// dwell **both zones latch** — on every emulated run, about eleven seconds
-    /// in, whatever else is being tested.
+    /// and `0x00` in the first — under which the daemon reads every valve as
+    /// 0.0 °C.
     ///
-    /// So the rig selects the reading under which the two agree. Which one the
-    /// valve actually uses is still open, and Phase 1 capture is what answers
-    /// it.
+    /// So the rig selects the reading under which the two halves of this
+    /// repository agree. Which one the valve actually uses is still open, and
+    /// Phase 1 capture is what answers it.
     pub two_byte_order: TwoByteOrder,
     /// The valve's own communication-loss shutdown. `None` — a valve that does
     /// **not** close on a quiet bus — is the setting that makes the service's
@@ -607,7 +584,6 @@ pub struct Rig {
     root: PathBuf,
     config: PathBuf,
     token: PathBuf,
-    probes: PathBuf,
     state: PathBuf,
     logs: PathBuf,
     api: SocketAddr,
@@ -623,31 +599,25 @@ impl Rig {
     /// Assemble a rig under `.e2e/<name>` and start pumping the wire.
     ///
     /// `name` scopes everything: the pseudo-terminals are per-rig by
-    /// construction, and the directory, the credential, the probe files and the
-    /// API port are per-rig by this. Two rigs can run at once, which is what
+    /// construction, and the directory, the credential and the API port are
+    /// per-rig by this. Two rigs can run at once, which is what
     /// makes the suite's correctness independent of `--test-threads=1`.
     pub fn start(name: &str, options: &RigOptions) -> Result<Self, RigError> {
         let root = controller_dir().join(WORK_DIR).join(name);
         // Before the record of it is deleted with everything else.
         reap_orphaned_daemon(&root);
-        // A previous run's probe files would be read as this run's readings.
         if root.exists() {
             std::fs::remove_dir_all(&root)
                 .map_err(io_err(format!("clearing {}", root.display())))?;
         }
-        let probes = root.join("probes");
         let state = root.join("state");
         let logs = root.join("logs");
-        for dir in [&root, &probes, &state, &logs] {
+        for dir in [&root, &state, &logs] {
             std::fs::create_dir_all(dir).map_err(io_err(format!("creating {}", dir.display())))?;
         }
 
         let token = root.join("api-token");
         write_credential(&token)?;
-
-        for zone in ZoneId::ALL {
-            write_probe_file(&probes, zone, RESTING_PROBE_C)?;
-        }
 
         let api = free_loopback_port()?;
         // Decided before anything is opened, so a machine that cannot run the
@@ -686,7 +656,6 @@ impl Rig {
             &text,
             &Substitutions {
                 ports: &ports,
-                probe_dir: &probes,
                 token_file: &token,
                 log_dir: &logs,
                 api,
@@ -716,7 +685,6 @@ impl Rig {
             root,
             config,
             token,
-            probes,
             state,
             logs,
             api,
@@ -742,11 +710,6 @@ impl Rig {
     #[must_use]
     pub fn token_path(&self) -> &Path {
         &self.token
-    }
-
-    #[must_use]
-    pub fn probe_dir(&self) -> &Path {
-        &self.probes
     }
 
     #[must_use]
@@ -882,26 +845,6 @@ impl Rig {
         self.harness.pump_failure()
     }
 
-    /// Write one zone's independent temperature.
-    ///
-    /// `<celsius>` or `<celsius> 0x<fault register>`, which is the whole of the
-    /// format `kdtv_hal::FileRtdChannel` reads. This is the only safety input in
-    /// the system that does not come from the valve, so it is the only one a
-    /// test can drive without the valve's cooperation.
-    pub fn write_probe(&self, zone: ZoneId, reading: &str) -> Result<(), RigError> {
-        write_probe_file(&self.probes, zone, reading)
-    }
-
-    /// Stop supplying a zone's independent temperature at all.
-    ///
-    /// Not the same as writing a cold reading: the channel's `sample` reports a
-    /// failed transfer, no sample is absorbed, and the supervisor's own
-    /// starvation check is what has to notice.
-    pub fn remove_probe(&self, zone: ZoneId) -> Result<(), RigError> {
-        let path = FileRtdChannel::path_for(&self.probes, zone);
-        std::fs::remove_file(&path).map_err(io_err(format!("removing {}", path.display())))
-    }
-
     /// Stop the pump and join its thread. The transcripts stay readable.
     pub fn stop(&mut self) -> io::Result<()> {
         self.harness.stop()
@@ -1033,31 +976,6 @@ fn write_credential(path: &Path) -> Result<(), RigError> {
         .map_err(io_err(format!("setting mode 0600 on {}", path.display())))
 }
 
-/// Write one zone's probe reading, atomically.
-///
-/// `std::fs::write` truncates and then writes, and the reader is **another
-/// process** polling on its own schedule — so a plain write leaves a window in
-/// which the daemon samples an empty file or `55` where `55.0` was meant. Both
-/// are absorbed today (one unparsable sample is far inside the 5 s starvation
-/// window, one low sample far inside the 10 s divergence dwell), which is
-/// precisely why it would not be found by the tests that exist: it stops being
-/// benign the first time something asserts on a dwell shorter than the poll
-/// interval. Writing a sibling and renaming makes every reading the daemon sees
-/// a reading this rig wrote.
-fn write_probe_file(dir: &Path, zone: ZoneId, reading: &str) -> Result<(), RigError> {
-    let path = FileRtdChannel::path_for(dir, zone);
-    let mut staging = path.clone();
-    staging.as_mut_os_string().push(".staging");
-    std::fs::write(&staging, format!("{reading}\n"))
-        .map_err(io_err(format!("writing {}", staging.display())))?;
-    // Same directory, so the rename is atomic rather than a copy.
-    std::fs::rename(&staging, &path).map_err(io_err(format!(
-        "renaming {} over {}",
-        staging.display(),
-        path.display()
-    )))
-}
-
 /// A loopback port nothing is listening on.
 ///
 /// Asking the kernel for one and letting it go is a race in principle. In
@@ -1083,7 +1001,6 @@ fn free_loopback_port() -> Result<SocketAddr, RigError> {
 
 struct Substitutions<'a> {
     ports: &'a BTreeMap<LinkKind, PathBuf>,
-    probe_dir: &'a Path,
     token_file: &'a Path,
     log_dir: &'a Path,
     api: SocketAddr,
@@ -1115,7 +1032,6 @@ fn render_config(template: &str, s: &Substitutions<'_>) -> Result<String, RigErr
             ("zones.zone1", Some("port")) => port_line(s, LinkKind::Zone(ZoneId::Zone1)),
             ("zones.zone2", Some("port")) => port_line(s, LinkKind::Zone(ZoneId::Zone2)),
             ("steam", Some("port")) => port_line(s, LinkKind::Steam),
-            ("bench", Some("probe_dir")) => Some(quoted("probe_dir", s.probe_dir)),
             ("api", Some("token_file")) => Some(quoted("token_file", s.token_file)),
             ("api", Some("bind")) => Some(format!("bind = \"{}\"", s.api)),
             ("logging", Some("directory")) => Some(quoted("directory", s.log_dir)),
@@ -1149,7 +1065,6 @@ const REQUIRED_KEYS: &[(&str, &str)] = &[
     ("zones.zone1", "port"),
     ("zones.zone2", "port"),
     ("steam", "port"),
-    ("bench", "probe_dir"),
     ("api", "token_file"),
     ("api", "bind"),
     ("logging", "directory"),
@@ -1481,7 +1396,6 @@ mod tests {
             template,
             &Substitutions {
                 ports: &ports,
-                probe_dir: Path::new("/tmp/rig/probes"),
                 token_file: Path::new("/tmp/rig/api-token"),
                 log_dir: Path::new("/tmp/rig/logs"),
                 api: "127.0.0.1:19999".parse().expect("a loopback address"),
@@ -1499,7 +1413,6 @@ mod tests {
         assert!(out.contains("port = \"/tmp/rig/pts0\""), "{out}");
         assert!(out.contains("port = \"/tmp/rig/pts1\""), "{out}");
         assert!(out.contains("port = \"/tmp/rig/pts2\""), "{out}");
-        assert!(out.contains("probe_dir = \"/tmp/rig/probes\""), "{out}");
         assert!(out.contains("token_file = \"/tmp/rig/api-token\""), "{out}");
         assert!(out.contains("bind = \"127.0.0.1:19999\""), "{out}");
         assert!(out.contains("directory = \"/tmp/rig/logs\""), "{out}");
@@ -1564,8 +1477,6 @@ port = \"/dev/pts/PLACEHOLDER\"
 port = \"/dev/pts/PLACEHOLDER\"
 [zones.zone1]
 port = \"/dev/pts/PLACEHOLDER\"
-[bench]
-probe_dir = \".e2e/probes\"
 [api]
 bind = \"127.0.0.1:8443\"
 token_file = \".e2e/api-token\"
@@ -1785,8 +1696,7 @@ directory = \".e2e/logs\"
 
         // Under BigEndian the model puts Cx2 in the second payload byte and
         // `kdtv_engine::zone::ZoneMachine::absorb_temperature` reads the first,
-        // so every valve reads 0.0 C against a 38 C probe: 38 C of divergence,
-        // and both zones latch ten seconds into every run.
+        // so every valve reads 0.0 C.
         assert_eq!(o.two_byte_order, TwoByteOrder::LittleEndian);
 
         // Under Silent — which is what every source draws — `kdtv-engine`
@@ -1797,33 +1707,6 @@ directory = \".e2e/logs\"
         // the zone latches before it can be tested. The address is inside
         // `0x03..=0x07`, which is the range discovery scans.
         assert!(ValveAddr::new(o.valve_address).is_ok());
-
-        // And the resting probe agrees with what the valve reports, or the
-        // divergence check latches the zone whatever else is under test.
-        //
-        // `reported_temperature`, not `setpoint`. A `0x0B` read answers the
-        // `reported` field, which has its own setter documented as
-        // "independent of the setpoint" and only follows the setpoint when one
-        // is commanded. The two are equal today by coincidence of their
-        // construction defaults, and asserting the setpoint would read a field
-        // the daemon never sees — which is the exact drift this test exists to
-        // catch, since the consequence is every ring-3 test latching on
-        // `TemperatureDivergence` ten seconds in.
-        let resting: f32 = RESTING_PROBE_C.parse().expect("a Celsius reading");
-        for zone in ZoneId::ALL {
-            let model = match zone {
-                ZoneId::Zone1 => SaturnValveModel::dtv_6_port(),
-                ZoneId::Zone2 => SaturnValveModel::prompt_3_port(TimerRefresh::AnyValidCommand),
-            };
-            let answers = model.reported_temperature().celsius();
-            assert!(
-                (resting - answers).abs() < kdtv_units::DIVERGENCE_LIMIT_C,
-                "{zone}: the resting probe reads {resting} C and a 0x0B read answers \
-                 {answers} C, which is {} C of divergence against a {} C limit",
-                (resting - answers).abs(),
-                kdtv_units::DIVERGENCE_LIMIT_C
-            );
-        }
     }
 
     /// A daemon orphaned by a test binary that never unwound is killed by the
@@ -1832,8 +1715,7 @@ directory = \".e2e/logs\"
     /// `Daemon::drop` covers every path that unwinds, and a panicking assertion
     /// is one — but a test process killed outright (an OOM kill, a runner
     /// cancelling a step, a double panic aborting) runs no destructor, and the
-    /// orphan does not exit on its own: the next `Rig::start` deletes its probe
-    /// directory, it latches on RTD starvation and then sits there polling.
+    /// orphan does not exit on its own; it sits there polling.
     ///
     /// `PR_SET_PDEATHSIG` would be the direct fix and needs `pre_exec`, which
     /// is `unsafe`; this workspace forbids it. So the pid is recorded and
@@ -1910,34 +1792,6 @@ directory = \".e2e/logs\"
         );
         drop(other.kill());
         drop(other.wait());
-        drop(std::fs::remove_dir_all(&dir));
-    }
-
-    /// The daemon reads the probe file from another process on its own
-    /// schedule, so a truncate-then-write leaves a window in which it samples
-    /// an empty file or half a number. Writing a sibling and renaming closes
-    /// it.
-    #[test]
-    fn a_probe_reading_is_written_atomically() {
-        let dir = controller_dir().join(WORK_DIR).join("atomic-probe-test");
-        drop(std::fs::remove_dir_all(&dir));
-        std::fs::create_dir_all(&dir).expect("the directory");
-
-        write_probe_file(&dir, ZoneId::Zone1, "38.0").expect("the first reading");
-        write_probe_file(&dir, ZoneId::Zone1, "55.0").expect("the second");
-        let path = FileRtdChannel::path_for(&dir, ZoneId::Zone1);
-        assert_eq!(
-            std::fs::read_to_string(&path).expect("the reading"),
-            "55.0\n"
-        );
-        // Nothing left behind that a directory scan would find.
-        let stray: Vec<_> = std::fs::read_dir(&dir)
-            .expect("the directory")
-            .flatten()
-            .map(|e| e.file_name())
-            .filter(|n| n != path.file_name().unwrap_or_default())
-            .collect();
-        assert!(stray.is_empty(), "{stray:?}");
         drop(std::fs::remove_dir_all(&dir));
     }
 

@@ -12,6 +12,30 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ## 2026-08-30
 
+### 16:20 — The independent temperature sensor is removed from the plan
+
+Operator decision. The PT1000/MAX31865 outlet-temperature subsystem — two
+surface-clamp probes, the SPI amplifiers, the correction curve, the
+over-temperature/fault/starvation/divergence latches, and the rule that a zone
+does not start until its channel has spoken — is out: removed from the design
+documents, the shopping list (~$130 and the build's only soldering), the
+deploy configurations, the requirements register (22 requirements), and the
+Rust workspace, where it was fully implemented and tested.
+
+The reasoning is recorded in
+[controller/docs/DECISIONS.md W3](controller/docs/DECISIONS.md): the stock
+system runs with no independent measurement at all, the valve owns the safety
+envelope, and the safety case rests on the setpoint clamps, the Phase 3
+fail-off measurements and the Therma K verification of every outlet — none of
+which involve the permanent sensor. Its only authority was an `all-off`
+through the same valve it was second-guessing.
+
+**Why it matters:** the build loses its only analog subsystem and its only
+soldering; the daemon's production start path no longer refuses
+unconditionally for want of an RTD driver that was never written. The whole
+implementation is one revert away in git history if evidence ever says the
+valve's self-report cannot be trusted.
+
 ### 13:28 — The requirements convention was never adopted because it could not be
 
 `cargo xtask reqs` has always reported `0/356`, and the note in `reqs.rs` read

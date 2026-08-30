@@ -2,10 +2,10 @@
 //! promises not to have.
 
 use crate::{
-    Backend, ChipSelect, Clock, IdStore, LineSettings, Link, LinkFactory, NO_GPIO_OUTPUT, NtpProbe,
-    RtdChannel, SysfsView, Watchdog,
+    Backend, Clock, IdStore, LineSettings, Link, LinkFactory, NO_GPIO_OUTPUT, NtpProbe, SysfsView,
+    Watchdog,
 };
-use kdtv_units::{LinkKind, ZoneId};
+use kdtv_units::LinkKind;
 
 /// `GPIO-03`. The ban is restated workspace-wide by `cargo xtask audit-graph`;
 /// this is the crate-local half, so a dependency added here fails a test in the
@@ -33,7 +33,6 @@ fn req_hardware_spec_gpio_03_no_gpio_crate_is_a_dependency() {
 fn the_boundary_traits_are_object_safe() {
     let link: Option<&dyn Link> = None;
     let factory: Option<&dyn LinkFactory> = None;
-    let rtd: Option<&dyn RtdChannel> = None;
     let clock: Option<&dyn Clock> = None;
     let watchdog: Option<&dyn Watchdog> = None;
     let ids: Option<&dyn IdStore> = None;
@@ -42,7 +41,6 @@ fn the_boundary_traits_are_object_safe() {
     assert!(
         link.is_none()
             && factory.is_none()
-            && rtd.is_none()
             && clock.is_none()
             && watchdog.is_none()
             && ids.is_none()
@@ -114,27 +112,4 @@ async fn the_deployed_configuration_binds_and_is_then_refused_at_the_gate() {
         let err = factory.open(binding, &auth).await.unwrap_err();
         assert!(err.is_gate(), "{} opened: {err:?}", binding.link());
     }
-
-    // And the configured chip selects still agree with the constant.
-    for zone in ZoneId::ALL {
-        ChipSelect::check(zone, cfg.sensor(zone).chip_select()).unwrap();
-    }
-}
-
-/// The chip-select mapping restated once more from outside the module, because
-/// it is the thing configuration is checked against.
-#[test]
-fn the_zone_chip_selects_are_the_ones_the_deployed_config_names() {
-    assert_eq!(
-        ChipSelect::check(ZoneId::Zone1, "spi0.0")
-            .unwrap()
-            .to_string(),
-        "spi0.0"
-    );
-    assert_eq!(
-        ChipSelect::check(ZoneId::Zone2, "spi0.1")
-            .unwrap()
-            .to_string(),
-        "spi0.1"
-    );
 }

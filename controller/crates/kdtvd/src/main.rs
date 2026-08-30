@@ -10,14 +10,12 @@
 //! and no shower.
 //!
 //! **It checks everything the run path checks before it opens anything**, and
-//! that is the property, not a list of conveniences. ~~The credential and the
-//! independent temperature channels were checked only on the run path.~~
-//! Superseded: `--check-only` reported "all checks passed" for a file that
-//! [`rtd_channels`] refuses unconditionally in this build, and for a credential
-//! that `ApiToken::load` refuses as too short — so the deployment installed,
-//! the unit failed on every start, `StartLimitBurst=5` gave up, and the
-//! previous working binary was already gone. That is the exact outcome the mode
-//! exists to prevent.
+//! that is the property, not a list of conveniences. ~~The credential was
+//! checked only on the run path.~~ Superseded: `--check-only` reported "all
+//! checks passed" for a credential that `ApiToken::load` refuses as too short —
+//! so the deployment installed, the unit failed on every start,
+//! `StartLimitBurst=5` gave up, and the previous working binary was already
+//! gone. That is the exact outcome the mode exists to prevent.
 //!
 //! Without it, the same checks run and then the links are opened, the service
 //! is started and the API is served until a signal arrives.
@@ -25,11 +23,10 @@
 //! # The order the run path does things in, and why
 //!
 //! 1. **Validate.** Exactly what `--check-only` does: the file, the hardware it
-//!    names, the credential, whether it may transmit, and the independent
-//!    temperature channels. Nothing is opened until all five pass.
+//!    names, the credential, and whether it may transmit. Nothing is opened
+//!    until all four pass.
 //! 2. **Identity and platform.** The durable id counter, the clock and the
-//!    watchdog. The temperature channels come out of step 1 — see
-//!    [`rtd_channels`] for the one this build cannot supply.
+//!    watchdog.
 //! 3. **Open and assemble.** [`kdtv_service::Service::start`] opens each link
 //!    through the transmit gate's second boundary and hands back a handle, a
 //!    supervisor and a shutdown trigger.
@@ -219,10 +216,8 @@ async fn serve(cli: &Cli) -> Result<u8> {
     use kdtv_hal::{FileIdStore, LinuxLinkFactory, RealSysfs, SystemdWatchdog, Watchdog as _};
     use kdtv_service::{Deps, Service, Started};
 
-    // 1. Everything --check-only does. Nothing is opened until all five pass,
-    //    the independent temperature channels included — which is why they come
-    //    out of here rather than being probed separately on this path.
-    let mut checked = validate(&cli.config, Reporting::Log)?;
+    // 1. Everything --check-only does. Nothing is opened until all four pass.
+    let checked = validate(&cli.config, Reporting::Log)?;
 
     // 2. Identity and platform. The id counter is opened before any port,
     //    because every authorisation to open water is bound to a boot id and a
@@ -247,7 +242,6 @@ async fn serve(cli: &Cli) -> Result<u8> {
     let deps = Deps {
         clock: Arc::clone(&checked.clock),
         watchdog,
-        rtd: std::mem::take(&mut checked.rtd),
     };
 
     // 3. Open and assemble.
@@ -398,74 +392,6 @@ impl CommandIds for DurableIds {
     }
 }
 
-/// The independent temperature channels.
-///
-/// **On hardware this build has none.** `kdtv-hal` ships no `RtdChannel` for the
-/// MAX31865: an SPI transfer needs either `unsafe`, which the workspace denies,
-/// or a driver crate, and `rppal` is banned from the daemon's dependency graph
-/// while `linux-embedded-hal` is deliberately absent from `kdtv-hal` (see
-/// `kdtv_hal::rtd::NO_GPIO_OUTPUT`). So this refuses and says what is missing.
-///
-/// **It refuses rather than returning a plausible number.** `kdtv-service`
-/// declines to start a zone with no channel
-/// (`kdtv_service::StartError::NoProbe`), because the interlock covers the
-/// instrumented outlet and nothing else covers it. A stub reading would satisfy
-/// that check while removing the only measurement in this system that is
-/// independent of the valve's own thermistor — which is the entire reason the
-/// channel exists (`LOG-10`: the sensor has no actuation authority and its only
-/// output is a safety event).
-///
-/// **On a bench it reads files the harness writes.** `bench.probe_dir` names a
-/// directory, and `kdtv_hal::FileRtdChannel` reads a real number out of it, so
-/// an emulated run drives the same escalations hardware would: past the
-/// corrected trip, past the raw backstop, a gap past the starvation window, a
-/// fault register with bits in it. That key lives in the `[bench]` table, which
-/// `kdtv-config` refuses outright under `profile = "production"`, and there is
-/// no other key for it — so this cannot become the probe in a real bathroom.
-///
-/// The hardware gap is still `kdtv-hal`'s to close.
-fn rtd_channels(
-    config: &kdtv_config::ValidatedConfig,
-    clock: &Arc<dyn kdtv_hal::Clock>,
-) -> Result<Vec<Box<dyn kdtv_hal::RtdChannel>>> {
-    if let Some(dir) = config.bench_probe_dir() {
-        return kdtv_units::ZoneId::ALL
-            .iter()
-            .map(|zone| {
-                let ch = kdtv_hal::FileRtdChannel::new(*zone, dir, Arc::clone(clock));
-                // Read once here rather than discovering at the first sample
-                // that the harness never wrote the file. A zone whose probe
-                // never speaks does not start, and finding that out during
-                // validation is the difference between a refusal and a latch.
-                if !ch.path().is_file() {
-                    return Err(CheckFailure::Hardware(format!(
-                        "bench.probe_dir names {}, but {} does not exist. The harness \
-                         writes one file per zone before the daemon starts.",
-                        dir.display(),
-                        kdtv_hal::FileRtdChannel::path_for(dir, *zone).display()
-                    ))
-                    .into());
-                }
-                let boxed: Box<dyn kdtv_hal::RtdChannel> = Box::new(ch);
-                Ok(boxed)
-            })
-            .collect();
-    }
-
-    let named: Vec<String> = kdtv_units::ZoneId::ALL
-        .iter()
-        .map(|zone| format!("{zone} on {}", config.sensor(*zone).chip_select()))
-        .collect();
-    Err(CheckFailure::Hardware(format!(
-        "no independent temperature channel is available in this build: kdtv-hal has no \
-         RtdChannel implementation for the MAX31865, and the configuration names {}. \
-         A zone without one does not start, because the interlock covers the instrumented \
-         outlet and nothing else covers it.",
-        named.join(" and ")
-    ))
-    .into())
-}
-
 /// Map a start failure onto the code that says what to fix.
 ///
 /// The transmit gate is the one refusal that is about the state of the
@@ -476,9 +402,7 @@ fn start_failure(e: &kdtv_service::StartError) -> anyhow::Error {
     use kdtv_service::StartError as E;
     match e {
         E::Open(open) if open.is_gate() => CheckFailure::Gate(e.to_string()).into(),
-        E::Open(_) | E::Unbound(_) | E::Rtd(_) | E::NoProbe(_) => {
-            CheckFailure::Hardware(e.to_string()).into()
-        }
+        E::Open(_) | E::Unbound(_) => CheckFailure::Hardware(e.to_string()).into(),
         E::Ids(_) => CheckFailure::Runtime(e.to_string()).into(),
     }
 }
@@ -574,9 +498,6 @@ struct Checked {
     /// clock the checks used. Two clocks would mean two monotonic origins, and
     /// a sample stamped by one compared against a deadline from the other.
     clock: Arc<dyn kdtv_hal::Clock>,
-    /// The independent temperature channels, probed during validation because
-    /// the run path cannot start a zone without them.
-    rtd: Vec<Box<dyn kdtv_hal::RtdChannel>>,
 }
 
 /// Validate everything that can be validated without opening a link.
@@ -619,33 +540,27 @@ fn validate(path: &std::path::Path, how: Reporting) -> Result<Checked> {
         }
     };
 
-    let (authority, rtd) = check_beyond_the_devices(&config, &clock, how)?;
+    let authority = check_beyond_the_devices(&config, how)?;
 
     Ok(Checked {
         config,
         bindings,
         authority,
         clock,
-        rtd,
     })
 }
 
-/// Steps 3 to 5: the credential, the transmit gate, and the temperature
-/// channels.
+/// Steps 3 and 4: the credential, and the transmit gate.
 ///
 /// Split from [`validate`] so a test can drive them against the shipped file
 /// with the devices faked — on a machine with no converters that is the only
 /// way to assert that the pre-flight refuses what the run path refuses.
 ///
-/// The order is the order the problems would have to be fixed. The channels are
-/// last because their absence is a gap in `kdtv-hal` rather than something an
-/// operator can act on, and putting them first would mask every problem a
-/// deployment can actually correct.
+/// The order is the order the problems would have to be fixed.
 fn check_beyond_the_devices(
     config: &kdtv_config::ValidatedConfig,
-    clock: &Arc<dyn kdtv_hal::Clock>,
     how: Reporting,
-) -> Result<(TransmitAuthority, Vec<Box<dyn kdtv_hal::RtdChannel>>)> {
+) -> Result<TransmitAuthority> {
     // 3. The credential. Read and dropped: nothing here retains it, and
     //    `ApiToken` zeroizes when it goes. This is the one startup failure a
     //    deployment cannot recover from remotely — by the time `bring_up`
@@ -680,16 +595,7 @@ fn check_beyond_the_devices(
         }
     };
 
-    // 5. The independent temperature channels. The run path cannot start a zone
-    //    without one, so a pre-flight that does not ask for them reports
-    //    success for a service that will not run.
-    let rtd = rtd_channels(config, clock)?;
-    how.say(&format!(
-        "ok  {} independent temperature channel(s)",
-        rtd.len()
-    ));
-
-    Ok((authority, rtd))
+    Ok(authority)
 }
 
 /// Refuse a credential any account but its owner can read.
@@ -801,12 +707,6 @@ fn gate_request(cfg: &kdtv_config::TransmitGateConfig) -> kdtv_proto::gate::Tran
 mod tests {
     use super::*;
 
-    /// A clock for the checks that take one. The real one reads systemd's
-    /// environment, which a test runner does not have.
-    fn test_clock() -> Arc<dyn kdtv_hal::Clock> {
-        Arc::new(kdtv_hal::LinuxClock::systemd())
-    }
-
     #[test]
     fn the_exit_codes_are_distinct() {
         // A deployment script branches on these, so two meaning the same thing
@@ -883,10 +783,6 @@ mod tests {
             code(&StartError::Unbound(LinkKind::Steam)),
             Some(exit::HARDWARE)
         );
-        assert_eq!(
-            code(&StartError::NoProbe(ZoneId::Zone2)),
-            Some(exit::HARDWARE)
-        );
     }
 
     /// The command ids the API mints come from the durable counter, and a crash
@@ -904,29 +800,6 @@ mod tests {
         let reopened = DurableIds(kdtv_hal::FileIdStore::open(dir.path()).expect("a counter"));
         let after = reopened.next().expect("an id");
         assert!(after.0 > second.0, "{second:?} then {after:?}");
-    }
-
-    /// The run path refuses because this build has no independent temperature
-    /// channel, and the refusal says which channels are missing.
-    ///
-    /// This is a real gap in `kdtv-hal`, not a placeholder here: it ships no
-    /// `RtdChannel` implementation for the MAX31865. The test exists so the gap
-    /// is visible and so that closing it is what makes this test change.
-    #[test]
-    fn the_run_path_refuses_without_an_independent_temperature_channel() {
-        let Some(config) = production_config() else {
-            return;
-        };
-        let err = rtd_channels(&config, &test_clock()).expect_err("this build has no RTD channel");
-        assert_eq!(
-            err.downcast_ref::<CheckFailure>().map(CheckFailure::code),
-            Some(exit::HARDWARE)
-        );
-        let text = format!("{err}");
-        assert!(text.contains("RtdChannel"), "{text}");
-        for zone in kdtv_units::ZoneId::ALL {
-            assert!(text.contains(&zone.to_string()), "{text}");
-        }
     }
 
     /// The daemon mints no authorisation to open water.
@@ -972,30 +845,6 @@ mod tests {
         path
     }
 
-    /// `--check-only` refuses whatever the run path refuses.
-    ///
-    /// The mode exists so a configuration that will not start is found while the
-    /// old binary is still in place. `rtd_channels` refuses unconditionally in
-    /// this build and was reached only from `serve`, so the two modes disagreed
-    /// about the same file: `scripts/deploy.sh` got exit 0, installed, and the
-    /// unit then failed with exit 3 on every start until `StartLimitBurst=5`
-    /// gave up — with the previous working binary already gone.
-    #[test]
-    fn the_pre_flight_refuses_what_the_run_path_refuses() {
-        let dir = tempfile::tempdir().expect("a temporary directory");
-        let token = credential(dir.path(), b"0123456789abcdef0123456789abcdef", 0o400);
-        let Some(config) = production_config_with(&token) else {
-            return;
-        };
-        let err = check_beyond_the_devices(&config, &test_clock(), Reporting::Log)
-            .expect_err("this build has no independent temperature channel");
-        assert_eq!(
-            err.downcast_ref::<CheckFailure>().map(CheckFailure::code),
-            Some(exit::HARDWARE),
-            "{err:#}"
-        );
-    }
-
     /// A credential that will not load fails the pre-flight, not the first
     /// start after a deployment.
     #[test]
@@ -1005,7 +854,7 @@ mod tests {
         let Some(config) = production_config_with(&token) else {
             return;
         };
-        let err = check_beyond_the_devices(&config, &test_clock(), Reporting::Log)
+        let err = check_beyond_the_devices(&config, Reporting::Log)
             .expect_err("seven bytes is not a credential for something that runs a shower");
         assert_eq!(
             err.downcast_ref::<CheckFailure>().map(CheckFailure::code),
@@ -1030,7 +879,7 @@ mod tests {
             let Some(config) = production_config_with(&token) else {
                 return;
             };
-            let err = check_beyond_the_devices(&config, &test_clock(), Reporting::Log)
+            let err = check_beyond_the_devices(&config, Reporting::Log)
                 .expect_err("a credential the group can read must be refused");
             assert_eq!(
                 err.downcast_ref::<CheckFailure>().map(CheckFailure::code),
@@ -1038,12 +887,6 @@ mod tests {
                 "mode {mode:04o}: {err:#}"
             );
         }
-    }
-
-    /// The committed production configuration, through the real loader, with
-    /// the devices it names faked so this runs on a machine with no converters.
-    fn production_config() -> Option<kdtv_config::ValidatedConfig> {
-        production_config_with(std::path::Path::new(SHIPPED_TOKEN_FILE))
     }
 
     /// The path the shipped file names, which `systemd` supplies as a

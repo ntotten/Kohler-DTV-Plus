@@ -12,8 +12,8 @@ interface.
 
 Raspberry Pi recommends its Approved Reseller network. The carts below use
 PiShop US for Raspberry Pi hardware, B&H as an authorized SanDisk dealer,
-Waveshare directly for the valve interfaces, Adafruit directly for the sensor
-and clock boards, and ThermoWorks and Fluke directly for instruments.
+Waveshare directly for the valve interfaces, Adafruit directly for the clock
+board, and ThermoWorks and Fluke directly for instruments.
 
 Parts fall into six groups:
 
@@ -88,27 +88,19 @@ page names both.
 
 ### Cart 4: Adafruit direct
 
-| Qty | Item                                               | PID    |   Unit |  Total |
-| --: | -------------------------------------------------- | ------ | -----: | -----: |
-|   2 | PT1000 RTD Temperature Sensor Amplifier — MAX31865 | `3648` | $14.95 | $29.90 |
-|   1 | DS3231 Precision RTC — STEMMA QT                   | `5188` | $13.95 | $13.95 |
-|   1 | STEMMA QT 4-pin to premium male headers cable      | —      |  $0.95 |  $0.95 |
-|   1 | Female-to-female jumper wire bundle                | —      |    ~$2 |    ~$2 |
+| Qty | Item                                          | PID    |   Unit |  Total |
+| --: | --------------------------------------------- | ------ | -----: | -----: |
+|   1 | DS3231 Precision RTC — STEMMA QT              | `5188` | $13.95 | $13.95 |
+|   1 | STEMMA QT 4-pin to premium male headers cable | —      |  $0.95 |  $0.95 |
+|   1 | Female-to-female jumper wire bundle           | —      |    ~$2 |    ~$2 |
 
-Subtotal **≈ $46.80**. Both boards in stock when checked.
+Subtotal **≈ $16.90**. In stock when checked.
 
 **Also required, any source:** one **CR1220** coin cell — the DS3231 board does
 not include one, and without it the RTC does not survive a power removal.
 
-**Assembly note.** The MAX31865 breakouts ship with unsoldered header and
-terminal blocks; soldering is required, and each must be configured for 3-wire
-operation. The RTC needs no soldering when the STEMMA QT-to-headers cable is
-used.
+No soldering: the RTC connects with the STEMMA QT-to-headers cable.
 
-Power the MAX31865 `VIN` from the Pi's **3V3** rail. Its level shifting follows
-`VIN`, so a 5 V supply would drive 5 V into a 3.3 V GPIO.
-
-- [PT1000 MAX31865 amplifier, PID 3648](https://www.adafruit.com/product/3648)
 - [DS3231 Precision RTC — STEMMA QT, PID 5188](https://www.adafruit.com/product/5188)
 
 ### Group A total
@@ -118,8 +110,8 @@ Power the MAX31865 `VIN` from the Pi's **3V3** rail. Its level shifting follows
 | PiShop US |     $80.75 |
 | B&H       |     $53.98 |
 | Waveshare |     $51.27 |
-| Adafruit  |    ~$46.80 |
-| **Total** | **≈ $233** |
+| Adafruit  |    ~$16.90 |
+| **Total** | **≈ $203** |
 
 Before shipping and tax, across four vendors.
 
@@ -132,10 +124,9 @@ prohibited by [DESIGN.md § Hardware, "Not orderable from documents"](DESIGN.md)
 
 | Item                                    | Specification                                                      | Closed by                                             | Rough |
 | --------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------- | ----: |
-| 2 × PT1000 pipe-surface probe           | Class A, 3-wire, ≥ 2 m lead, ≥ 100 °C, clamp sized to the pipe     | Outlet pipe OD, Phase 0                               | ~$100 |
 | Enclosure                               | IP65 / NEMA 4X, non-metallic, ≥ 300 × 200 × 150 mm, mounting plate | Bench layout                                          |  ~$80 |
 | DIN rail                                | 35 × 7.5 mm, ≥ 200 mm usable — sized for three converters          | Bench layout                                          |  ~$10 |
-| Cable glands                            | 7 minimum: PSU, Ethernet, 2 × valve, 1 × steam, 2 × RTD            | Cable ODs                                             |  ~$20 |
+| Cable glands                            | 5 minimum: PSU, Ethernet, 2 × valve, 1 × steam                     | Cable ODs                                             |  ~$20 |
 | DIN terminal blocks, end stops, markers | Field-side A/B/PE per zone                                         | Conductor gauge                                       |  ~$30 |
 | Ferrules and crimp tool                 | Sized to the conductors                                            | Conductor gauge                                       |  ~$40 |
 | Pi DIN carrier or standoff set          | GPIO header must stay accessible                                   | Bench layout                                          |  ~$15 |
@@ -152,12 +143,11 @@ adapter leads instead.
 
 ## Group C — instruments
 
-| Qty | Item                                                                   | Source                                                                                               | Buying note                                                                                  |
-| --: | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-|   1 | Therma K meter and fast-response probe kit, NIST-traceable certificate | [ThermoWorks direct](https://www.thermoworks.com/products/therma-k-kit)                              | The reference instrument. Characterizes the surface probes' offset and verifies every outlet |
-|   1 | Fluke 117 true-RMS multimeter                                          | [Fluke direct](https://www.fluke.com/en-us/product/electrical-testing/digital-multimeters/fluke-117) | Buy only if no suitable meter is already available. The electrician handles mains            |
-|   1 | Bench DC supply with adjustable current limit, 0–30 V                  | Any lab-grade supply                                                                                 | Buy only if none is already available. Closes the §12 measurement below                      |
-|   1 | Temperature-controlled soldering iron and thin rosin-core solder       | Any                                                                                                  | Buy only if none is already available. The MAX31865 boards ship with unsoldered headers      |
+| Qty | Item                                                                   | Source                                                                                               | Buying note                                                                                   |
+| --: | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+|   1 | Therma K meter and fast-response probe kit, NIST-traceable certificate | [ThermoWorks direct](https://www.thermoworks.com/products/therma-k-kit)                              | The reference instrument. Verifies the delivered temperature at every outlet at commissioning |
+|   1 | Fluke 117 true-RMS multimeter                                          | [Fluke direct](https://www.fluke.com/en-us/product/electrical-testing/digital-multimeters/fluke-117) | Buy only if no suitable meter is already available. The electrician handles mains             |
+|   1 | Bench DC supply with adjustable current limit, 0–30 V                  | Any lab-grade supply                                                                                 | Buy only if none is already available. Closes the §12 measurement below                       |
 
 Borrow or rent the oscilloscope and isolated differential probe. Do not buy a
 cheap marketplace probe for this job.
@@ -168,9 +158,9 @@ applying 12 V to pin 4 with ground on pin 3 and reading `IC2` pin 8 — into an
 adapter board whose working voltage is the thing being established. Set the
 limit low and raise it.
 
-The Therma K is not optional. The permanent PT1000 probes are surface-clamped
-and read low with lag; their correction is established against this instrument
-at commissioning, and every outlet is verified with it at Phase 4.
+The Therma K is not optional. Every temperature the system reports is the
+valve's own thermistor self-report; this instrument is what verifies the
+delivered water at commissioning, at every outlet, at Phase 3 and Phase 4.
 
 ---
 

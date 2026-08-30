@@ -125,10 +125,6 @@ watchdog, the USB controller, a failed configuration check — takes both. The
 scoping is an exhaustive match, so a new fault variant does not compile until its
 scope is decided.
 
-**The independent temperature sensor cannot open anything.** Its only output type
-is a safety event. Nothing in the workspace maps a sensor reading to an
-authorisation to open water.
-
 ## Contradictions carried deliberately
 
 The sources disagree in places, and this repository's rule is that inference is

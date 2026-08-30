@@ -11,11 +11,10 @@ sequencing.
 **Money follows measurement.** Nothing whose specification depends on the
 installation is ordered until the named measurement closes it — that is all of
 [SHOPPING-LIST.md](SHOPPING-LIST.md) Group B: connectors wait for photographs
-and continuity checks, probe clamps wait for the pipe OD, cable wait for the
-measured run, disconnects wait for the electrician. What is ordered up front —
-Group A — is the set of parts fully specified from manufacturer data alone: the
-Pi, the three converters, storage, the sensor and clock boards. No Phase 0 or
-Phase 1 measurement feeds into any of them.
+and continuity checks, cable waits for the measured run, disconnects wait for
+the electrician. What is ordered up front — Group A — is the set of parts fully
+specified from manufacturer data alone: the Pi, the three converters, storage,
+the clock board. No Phase 0 or Phase 1 measurement feeds into any of them.
 
 ## Why compute hardware is ordered before the measurements
 
@@ -30,7 +29,7 @@ What the early order puts at risk, stated plainly:
 
 | Risk                                                                                           | Exposure                |
 | ---------------------------------------------------------------------------------------------- | ----------------------- |
-| Phase 3 measures a fail-off latency over 30 s, which rejects this architecture outright        | The ~$233 Group A spend |
+| Phase 3 measures a fail-off latency over 30 s, which rejects this architecture outright        | The ~$203 Group A spend |
 | The valve buses are RS-485 at tier `[C]` until Phase 1 confirms them (the steam link is `[A]`) | Two converters, ~$34    |
 
 Waiting would not shrink either risk — resolving them takes the same capture
@@ -47,7 +46,7 @@ the two tracks.
  (Group D gates on that choice)            baseline; no purchases needed)
         |                                       |
         v                                       +--> closes most of Group B:
- bench layout with parts in hand                |    probes, glands, leads,
+ bench layout with parts in hand                |    glands, leads,
         |                                       |    connectors, blocks;
         +--> closes the layout rows of          |    electrician closes the
         |    Group B: enclosure, rail,          |    valve-power disconnects
@@ -89,9 +88,9 @@ captures, and a bench-proven unit to connect.
 
 ### 2. Order Group A and the instruments
 
-Group A (~$233, four carts) plus the Therma K reference thermometer from
-Group C — bench acceptance check 8 needs it, not just commissioning. The
-Fluke, bench supply and soldering iron are bought only if not already owned.
+Group A (~$203, four carts) plus the Therma K reference thermometer from
+Group C — every phase that touches water measures against it. The Fluke and
+bench supply are bought only if not already owned.
 
 ### 3. Phase 0 — survey and recovery
 
@@ -103,12 +102,12 @@ Gate: the factory topology restores from the labels in under five minutes.
 
 Three closers, three moments:
 
-| Rows                                                               | Closed by                             |
-| ------------------------------------------------------------------ | ------------------------------------- |
-| Enclosure, DIN rail, Pi carrier, test posts                        | Bench layout, once Group A is in hand |
-| Probes, glands, terminal blocks, ferrules, cable, valve connectors | The Phase 0 survey                    |
-| Termination and bias components                                    | The Phase 1 capture — likely **none** |
-| Manual valve-power disconnects                                     | The electrician, after the nameplates |
+| Rows                                                       | Closed by                             |
+| ---------------------------------------------------------- | ------------------------------------- |
+| Enclosure, DIN rail, Pi carrier, test posts                | Bench layout, once Group A is in hand |
+| Glands, terminal blocks, ferrules, cable, valve connectors | The Phase 0 survey                    |
+| Termination and bias components                            | The Phase 1 capture — likely **none** |
+| Manual valve-power disconnects                             | The electrician, after the nameplates |
 
 ### 5. Phase 1 — passive capture
 
@@ -138,8 +137,8 @@ architecture, it does not get patched.
 
 ### 8. Phase 4 — second valve and every outlet
 
-Repeat for the other valve, verify every outlet with the immersion probe,
-run the rollback drill, power down the K-99695 and wall interface.
+Repeat for the other valve, verify every outlet with the Therma K probe, run
+the rollback drill, power down the K-99695 and wall interface.
 
 ### 9. Phase 5 — steam
 

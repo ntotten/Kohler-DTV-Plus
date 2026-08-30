@@ -13,7 +13,7 @@ through, and signed. **Record the measured value** wherever a threshold is
 named — a tick against "stops within the threshold" is worth much less than
 the number that was actually observed.
 
-**125 items.**
+**114 items.**
 
 ## AGENT.md
 
@@ -122,12 +122,6 @@ the number that was actually observed.
 - [ ] **SYSD-02** — The watchdog supports recovery and diagnosis; it does not replace the valve's measured communication-loss shutdown.
   - _Verify:_ not-testable-in-software; Phase 3 fail-off measurement
   - _Source:_ controller/docs/DESIGN.md § Software design → systemd
-- [ ] **TEMP-02** — Evaluate every threshold on the offset-corrected surface-clamp value, characterized against the Therma K probe at commissioning, because a surface clamp reads pipe wall, lags, and reads low.
-  - _Verify:_ unit on the correction function; manual commissioning to obtain the offset
-  - _Source:_ controller/docs/DESIGN.md § Safety boundary → Independent temperature measurement
-- [ ] **TEMP-03** — Treat the interlock as covering only the instrumented outlet — each zone's default outlet — with every other outlet protected only by the setpoint clamp and fault monitoring until further channels are fitted.
-  - _Verify:_ not-testable-in-software; recorded in the commissioning report
-  - _Source:_ controller/docs/DESIGN.md § Safety boundary → Independent temperature measurement
 - [ ] **LAT-01** — Measure fail-off latency at the outlet, from the last transmitted frame to observed flow stop, on every fault path in the Phase 3 test list.
   - _Verify:_ manual commissioning (Phase 3)
   - _Source:_ controller/docs/DESIGN.md § Safety boundary → Acceptance thresholds
@@ -170,7 +164,7 @@ the number that was actually observed.
 - [ ] **PH2-03** — Run the Pi, adapters, watchdog, service, and emulator continuously for seven days.
   - _Verify:_ not-testable-in-software (seven-day soak on real hardware); manual soak
   - _Source:_ controller/docs/DESIGN.md § Delivery phases → Phase 2
-- [ ] **PH3-01** — Commission the one-valve pilot at 100 °F on one outlet with the operator present and outside the spray path, hand on the manual disconnect, and the independent probe reading the outlet throughout.
+- [ ] **PH3-01** — Commission the one-valve pilot at 100 °F on one outlet with the operator present and outside the spray path, hand on the manual disconnect, and the Therma K probe reading the outlet throughout.
   - _Verify:_ manual commissioning
   - _Source:_ controller/docs/DESIGN.md § Delivery phases → Phase 3 procedure (3)
 - [ ] **PH3-02** — Limit the first active session to two minutes.
@@ -242,29 +236,11 @@ the number that was actually observed.
 - [ ] **PROTO-08** — Treat all §6 protocol parameters as unverified against this hardware and confirm them from the Phase 1 capture before they are relied on.
   - _Verify:_ manual commissioning (Phase 1 capture)
   - _Source:_ controller/docs/HARDWARE.md §6 preamble
-- [ ] **TEMP-01** — Fit one PT1000 Class A 3-wire pipe-surface-clamp probe per zone, read through a MAX31865 (Adafruit PID 3648, 4300 Ω 0.1 % reference) on SPI0 with one chip select per channel; two channels fitted, electronics support four.
-  - _Verify:_ manual commissioning
-  - _Source:_ controller/docs/HARDWARE.md §7 'Chain'
-- [ ] **TEMP-02** — Power each MAX31865 VIN from the Pi's 3V3 rail (never 5 V), because the breakout's level shifting follows VIN and SDO would otherwise drive 5 V onto a 3.3 V GPIO; configure each breakout for 3-wire.
-  - _Verify:_ not-testable-in-software (wiring); manual commissioning
-  - _Source:_ controller/docs/HARDWARE.md §7 'Chain' note
-- [ ] **TEMP-03** — Characterise the surface-clamp offset at commissioning against the Therma K immersion probe across the working range, and apply that correction before evaluating any threshold.
-  - _Verify:_ unit (correction applied before threshold evaluation) plus manual commissioning (deriving the offset)
-  - _Source:_ controller/docs/HARDWARE.md §7 'Placement and its limitation', consequence 1
-- [ ] **TEMP-05** — Clamp the probe to the supply pipe of that zone's default outlet, as close to the valve as accessible pipe allows; exact location and pipe OD are set at the Phase 0 survey.
-  - _Verify:_ manual commissioning
-  - _Source:_ controller/docs/HARDWARE.md §7 'Placement and its limitation'
-- [ ] **TEMP-06** — Scope the temperature interlock to the instrumented (default) outlet only; when a non-instrumented outlet is active there is no independent continuous measurement, and this limitation must be recorded in the commissioning report.
-  - _Verify:_ unit (interlock keyed to instrumented outlet) plus manual commissioning (report entry)
-  - _Source:_ controller/docs/HARDWARE.md §7 'Placement and its limitation', consequence 2
-- [ ] **TEMP-07** — Verify every outlet individually with the immersion probe at Phase 4; the setpoint clamp and valve fault monitoring still apply to non-instrumented outlets.
-  - _Verify:_ manual commissioning
-  - _Source:_ controller/docs/HARDWARE.md §7 'Placement and its limitation', consequence 2
 - [ ] **TIME-02** — Fit an Adafruit DS3231 Precision RTC (STEMMA QT, PID 5188) on I2C1 with a CR1220 coin cell, which is not supplied with the board.
   - _Verify:_ manual commissioning
   - _Source:_ controller/docs/HARDWARE.md §8 table
-- [ ] **GPIO-01** — Wire the 40-pin header exactly as specified: pin 1 3V3 to both MAX31865 VIN; pin 3 GPIO2 I2C1 SDA to DS3231 SDA; pin 5 GPIO3 I2C1 SCL to DS3231 SCL; pin 6 GND to DS3231 GND; pin 9 GND to MAX31865 #1 GND; pin 14 GND to MAX31865 #2 GND; pin 17 3V3 to DS3231 VIN; pin 19 GPIO10 SPI0 MOSI to both SDI; pin 21 GPIO9 SPI0 MISO to both SDO; pin 23 GPIO11 SPI0 SCLK to both SCK; pin 24 GPIO8 SPI0 CE0 to MAX31865 #1 CS (zone 1); pin 26 GPIO7 SPI0 CE1 to MAX31865 #2 CS (zone 2).
-  - _Verify:_ unit (chip-select-to-zone mapping constants) plus manual commissioning
+- [ ] **GPIO-01** — Wire the 40-pin header exactly as specified: pin 3 GPIO2 I2C1 SDA to DS3231 SDA; pin 5 GPIO3 I2C1 SCL to DS3231 SCL; pin 6 GND to DS3231 GND; pin 17 3V3 to DS3231 VIN.
+  - _Verify:_ manual commissioning
   - _Source:_ controller/docs/HARDWARE.md §8 'Pi 40-pin header assignments'
 - [ ] **PWR-01** — Assume no mains conductor enters the enclosure; only the low-voltage output of an external USB-C supply passes through a gland, so software has no mains-side actuator to model.
   - _Verify:_ not-testable-in-software
@@ -280,7 +256,7 @@ the number that was actually observed.
   - _Source:_ controller/docs/HARDWARE.md §9 'Budget'
 - [ ] **PWR-06** — Enable the BCM2711 hardware watchdog and systemd RuntimeWatchdogSec/WatchdogSec; on a watchdog reset the service must boot to READY_OFF with no state restored.
   - _Verify:_ emulator e2e (forced hang) plus manual commissioning
-  - _Source:_ controller/docs/HARDWARE.md §4 table; §2 table; §13 check 11
+  - _Source:_ controller/docs/HARDWARE.md §4 table; §2 table; §13 check 9
 - [ ] **PWR-07** — Use wired Gigabit Ethernet for the control path with Wi-Fi and Bluetooth disabled in firmware; no radio is in the control path.
   - _Verify:_ manual commissioning
   - _Source:_ controller/docs/HARDWARE.md §4 table; §14 row 7
@@ -335,24 +311,18 @@ the number that was actually observed.
 - [ ] **TEST-08** — Check 7: zone-to-zone isolation — no continuity between zone 1 and zone 2 field terminals. May not be skipped.
   - _Verify:_ manual commissioning
   - _Source:_ controller/docs/HARDWARE.md §13 table row 7 and the note below the table
-- [ ] **TEST-09** — Check 8: RTD channels read ambient and read a known reference against the Therma K probe, within Class A tolerance plus the characterised offset.
+- [ ] **TEST-11** — Check 8: the RTC holds time across a full power removal — time correct on the next boot before NTP.
   - _Verify:_ manual commissioning
   - _Source:_ controller/docs/HARDWARE.md §13 table row 8
-- [ ] **TEST-10** — Check 9: inject RTD open-circuit and short-circuit; the MAX31865 fault register must set and the service must command all-off.
-  - _Verify:_ unit (fault-register handling) plus manual commissioning (injection)
-  - _Source:_ controller/docs/HARDWARE.md §13 table row 9
-- [ ] **TEST-11** — Check 10: the RTC holds time across a full power removal — time correct on the next boot before NTP.
-  - _Verify:_ manual commissioning
-  - _Source:_ controller/docs/HARDWARE.md §13 table row 10
-- [ ] **TEST-12** — Check 11: the hardware watchdog fires on a forced service hang; the Pi resets and boots to READY_OFF with no state restored.
+- [ ] **TEST-12** — Check 9: the hardware watchdog fires on a forced service hang; the Pi resets and boots to READY_OFF with no state restored.
   - _Verify:_ emulator e2e plus manual commissioning
-  - _Source:_ controller/docs/HARDWARE.md §13 table row 11
-- [ ] **TEST-13** — Check 12: enclosure interior ≤ 40 °C after 7 days sealed, logged from the Pi's own thermal sensor.
+  - _Source:_ controller/docs/HARDWARE.md §13 table row 9
+- [ ] **TEST-13** — Check 10: enclosure interior ≤ 40 °C after 7 days sealed, logged from the Pi's own thermal sensor.
   - _Verify:_ manual commissioning (7-day soak, with the service logging Pi thermals)
-  - _Source:_ controller/docs/HARDWARE.md §13 table row 12; §10 'Interior ambient'
-- [ ] **TEST-14** — Check 13: every label present and correct, and the emergency card in the lid.
+  - _Source:_ controller/docs/HARDWARE.md §13 table row 10; §10 'Interior ambient'
+- [ ] **TEST-14** — Check 11: every label present and correct, and the emergency card in the lid.
   - _Verify:_ manual commissioning (visual)
-  - _Source:_ controller/docs/HARDWARE.md §13 table row 13; §10 'Labelling and test points'
+  - _Source:_ controller/docs/HARDWARE.md §13 table row 11; §10 'Labelling and test points'
 - [ ] **TEST-16** — State on the lid card that a WELDED fault (35) is a mechanically stuck mixing valve that no controller can close; the only remedy is removing valve power and closing the hot and cold service shutoffs.
   - _Verify:_ manual commissioning; the software must not present fault 35 as controller-recoverable
   - _Source:_ controller/docs/HARDWARE.md §10 (paragraph after the labelling table)
@@ -368,24 +338,21 @@ the number that was actually observed.
 - [ ] **EXCL-04** — Do not use a bidirectional USB-RS-485 adapter as a capture tap — hardware automatic direction control is not physically receive-only.
   - _Verify:_ not-testable-in-software
   - _Source:_ controller/docs/HARDWARE.md §14 row 5
-- [ ] **EXCL-05** — Do not add a second temperature sensor on the same element: a redundant sensor is not a redundant measurement; the immersion probe is the reference.
-  - _Verify:_ not-testable-in-software; design review
-  - _Source:_ controller/docs/HARDWARE.md §14 row 10
 - [ ] **OPEN-01** — Do not transmit on a valve bus until Phase 1 capture establishes cable polarity (which conductor is A+); the TA/TB labels are the converter's convention, not Kohler's.
   - _Verify:_ manual commissioning (blocks first transmission)
   - _Source:_ controller/docs/HARDWARE.md §15 row 3; §11 'Cable polarity'
 - [ ] **OPEN-02** — Resolve the Saturn response timeout — 320 ms or 400 ms — from the Phase 1 capture (I5) before fixing decoder deadlines.
   - _Verify:_ manual commissioning (Phase 1 capture); then unit constants
-  - _Source:_ controller/docs/HARDWARE.md §15 row 8
-- [ ] **OPEN-04** — Do not order field cabling by assumption: valve model/nameplate, connector housing/keying/pin count, factory termination and idle bias, outlet pipe OD and sensor location, valve mains voltage/receptacles/circuits/GFCI, and DTV+ peripheral-port pinout each stay open until their named measurement closes them.
+  - _Source:_ controller/docs/HARDWARE.md §15 row 7
+- [ ] **OPEN-04** — Do not order field cabling by assumption: valve model/nameplate, connector housing/keying/pin count, factory termination and idle bias, valve mains voltage/receptacles/circuits/GFCI, and DTV+ peripheral-port pinout each stay open until their named measurement closes them.
   - _Verify:_ manual commissioning
-  - _Source:_ controller/docs/HARDWARE.md §15 rows 1, 2, 4, 5, 6, 10; §11
+  - _Source:_ controller/docs/HARDWARE.md §15 rows 1, 2, 4, 5, 9; §11
 - [ ] **OPEN-05** — Record which FTDI part is fitted, FT232RL or FT232RNL; this blocks nothing but must be recorded.
   - _Verify:_ manual commissioning (inspection on arrival)
-  - _Source:_ controller/docs/HARDWARE.md §15 row 7; §5 'Configuration at assembly' item 4
+  - _Source:_ controller/docs/HARDWARE.md §15 row 6; §5 'Configuration at assembly' item 4
 - [ ] **OPEN-06** — Measure at Phase 5 what the generator does when the DTV+ link drops mid-session (Kohler case #07797183 runs in parallel); until then the worst case is assumed.
   - _Verify:_ manual commissioning (Phase 5)
-  - _Source:_ controller/docs/HARDWARE.md §15 row 11; §12 'Losing the DTV+ link'
+  - _Source:_ controller/docs/HARDWARE.md §15 row 10; §12 'Losing the DTV+ link'
 - [ ] **ARCH-02** — If Phase 3 measures that a valve does not close on communication loss, the acceptance thresholds reject this architecture outright and a redesign — not a platform swap — is required.
   - _Verify:_ manual commissioning (Phase 3)
   - _Source:_ controller/docs/HARDWARE.md §2 (closing [I])

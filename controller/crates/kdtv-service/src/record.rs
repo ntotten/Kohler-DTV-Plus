@@ -11,8 +11,7 @@
 //! # The required logs
 //!
 //! `LOG-01` boot ids, command id, request source and requested state;
-//! `LOG-02` every wall stamp paired with its NTP sync state; `LOG-03` and
-//! `LOG-10` the independent outlet temperature beside the valve's own;
+//! `LOG-02` every wall stamp paired with its NTP sync state;
 //! `LOG-04` clamps and rejection reasons; `LOG-05` raw RX and TX bytes with both
 //! timestamps; `LOG-06` acknowledgement latency, retries and fault flags;
 //! `LOG-07` serial, watchdog, USB and lifecycle events; `LOG-08` session start,
@@ -78,9 +77,8 @@ impl Recorder {
     ///
     /// Returned rather than emitted, because two of the variants need finishing
     /// that only the supervisor can do: a session record's maximum observed
-    /// temperatures (`LOG-08`) and a command record's real request source
-    /// (`LOG-01`). The engine cannot know either — it has no probe and no idea
-    /// who asked.
+    /// temperature (`LOG-08`) and a command record's real request source
+    /// (`LOG-01`). The engine cannot know either.
     #[must_use]
     pub fn finish(&self, note: Note, at: Stamp) -> LogEvent {
         note.into_log_event(at, &self.pi_boot, self.boot)
@@ -134,29 +132,6 @@ impl Recorder {
             record = record.with_decode_error(why);
         }
         self.emit(LogEvent::Frame(Box::new(record)));
-    }
-
-    /// The independent outlet temperature beside the valve's own. `LOG-03`,
-    /// `LOG-10`.
-    ///
-    /// Both numbers, always. One without the other is not evidence: the valve's
-    /// figure is a self-report and the probe's is a surface reading, and the
-    /// only useful thing either says is what it says next to the other.
-    pub fn temperature(
-        &self,
-        link: LinkKind,
-        independent_raw_c: Option<f32>,
-        independent_corrected_c: Option<f32>,
-        valve_reported_c: Option<f32>,
-        at: Stamp,
-    ) {
-        self.emit(LogEvent::Temperature {
-            link,
-            independent_raw_c,
-            independent_corrected_c,
-            valve_reported_c,
-            at,
-        });
     }
 
     /// A request this service refused before anything was transmitted.
@@ -294,7 +269,6 @@ mod tests {
         };
         assert_eq!(record.max_valve_reported_c, None);
         record.max_valve_reported_c = Some(40.5);
-        record.max_independent_corrected_c = Some(41.2);
         rec.emit(event);
     }
 

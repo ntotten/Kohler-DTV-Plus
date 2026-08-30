@@ -2,9 +2,9 @@
 //!
 //! # What a pass of the loop does
 //!
-//! It waits on the earliest of five things — a byte report from a pump, an
-//! independent temperature sample, a command from the API, the shutdown signal,
-//! and the deadline the engine last asked to be woken on — turns it into an
+//! It waits on the earliest of four things — a byte report from a pump, a
+//! command from the API, the shutdown signal, and the deadline the engine last
+//! asked to be woken on — turns it into an
 //! event for the machine it concerns, transmits whatever the resulting
 //! [`Step`] says to transmit, performs the kernel's
 //! [`Effect`]s in order, pets the watchdog and publishes the cache.
@@ -13,8 +13,8 @@
 //! one arm of it, alternating with it. The select is `biased` and the timer is
 //! its last arm, so an arm that is always ready — a link reporting failures
 //! faster than they can be consumed — would mean the timer was never polled:
-//! no tick, no response timeout, no session expiry, no probe-starvation check,
-//! and the watchdog petted throughout, because the loop really was completing
+//! no tick, no response timeout, no session expiry, and the watchdog petted
+//! throughout, because the loop really was completing
 //! passes. Everything that keeps water bounded is behind that deadline, so
 //! nothing else may be allowed to displace it indefinitely.
 //!
@@ -51,8 +51,8 @@
 //! sequence again.
 //!
 //! **What a tick is.** Whatever [`Step::deadline`](kdtv_engine::Step) asked
-//! for, floored by [`HOUSEKEEPING`] so a latched service still publishes and
-//! still checks for probe starvation. A deadline already past is not slept on
+//! for, floored by [`HOUSEKEEPING`] so a latched service still publishes. A
+//! deadline already past is not slept on
 //! and not caught up: exactly one event is delivered, because two ticks in a
 //! pass would put two frames on a bus that allows one. Lateness beyond a tick is
 //! logged as a platform event rather than absorbed.
@@ -83,27 +83,22 @@ use kdtv_engine::{
 use kdtv_hal::{Clock, Watchdog};
 use kdtv_proto::dtv::{DiscoveryStep, DtvRxBuffer, DtvTimings, SteamEncoder, SteamOp};
 use kdtv_proto::saturn::{Encoder, Expectation, MasterAddr, RxBuffer, Timings};
-use kdtv_safety::{Effect, RtdWatch, SafetyEvent, SafetyKernel};
+use kdtv_safety::{Effect, SafetyEvent, SafetyKernel};
 use kdtv_telemetry::{Direction, LogEvent, Monotonic, PlatformEvent, RequestSource, Stamp};
 use kdtv_units::{CommandId, LinkKind, PiBootId, ZoneId};
 use tokio::sync::{mpsc, watch};
 
-use crate::cache::{
-    IndependentReading, LinkStateLabel, StateCache, SteamStatus, SystemSnapshot, ZoneStatus,
-};
+use crate::cache::{LinkStateLabel, StateCache, SteamStatus, SystemSnapshot, ZoneStatus};
 use crate::command::{Command, CommandError};
 use crate::event::{Lifecycle, ServiceEvent};
 use crate::port::{LinkReport, PortHandle, Transmitted};
 use crate::record::Recorder;
-use crate::rtd::Sampled;
 
 /// The longest the loop will sleep with nothing else to do.
 ///
-/// It bounds three things: how stale a published snapshot can be, how late a
-/// probe-starvation check can be, and how long a latched service can go without
-/// petting the watchdog. Well inside the 5 s
-/// [`kdtv_units::RTD_STARVATION`] window and half of the deployed 10 s
-/// `WatchdogSec`.
+/// It bounds two things: how stale a published snapshot can be, and how long a
+/// latched service can go without petting the watchdog. Half of the deployed
+/// 10 s `WatchdogSec`.
 pub const HOUSEKEEPING: Duration = Duration::from_millis(500);
 
 /// How long shutdown waits for every link to confirm itself off.
@@ -148,7 +143,6 @@ impl ShutdownOutcome {
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 struct Live {
     reports: bool,
-    samples: bool,
     commands: bool,
 }
 
@@ -156,7 +150,6 @@ impl Default for Live {
     fn default() -> Self {
         Self {
             reports: true,
-            samples: true,
             commands: true,
         }
     }
@@ -180,8 +173,6 @@ pub(crate) struct ZoneRuntime {
     pub(crate) rx: RxBuffer,
     pub(crate) port: PortHandle,
     pub(crate) timings: Timings,
-    pub(crate) watch: RtdWatch,
-    independent: Option<IndependentReading>,
     /// When the outstanding response is due, if one is.
     awaiting_until: Option<Monotonic>,
     /// When the machine asked to be stepped again.
@@ -192,12 +183,9 @@ pub(crate) struct ZoneRuntime {
     last_command_tx: Option<Monotonic>,
     frames_tx: u64,
     frames_rx: u64,
-    /// The highest readings seen since the last session record. `LOG-08`.
+    /// The highest reading seen since the last session record. `LOG-08`.
     max_valve_c: Option<f32>,
-    max_independent_c: Option<f32>,
     last_refusal: Option<Refusal>,
-    /// Starvation is reported once per episode, not once per housekeeping pass.
-    starvation_reported: bool,
     overflowed: usize,
 }
 
@@ -209,7 +197,6 @@ impl ZoneRuntime {
         port: PortHandle,
         master: MasterAddr,
         timings: Timings,
-        watch: RtdWatch,
     ) -> Self {
         Self {
             zone,
@@ -220,17 +207,13 @@ impl ZoneRuntime {
             rx: RxBuffer::new(),
             port,
             timings,
-            watch,
-            independent: None,
             awaiting_until: None,
             wake_at: Some(Monotonic::from_nanos(0)),
             last_command_tx: None,
             frames_tx: 0,
             frames_rx: 0,
             max_valve_c: None,
-            max_independent_c: None,
             last_refusal: None,
-            starvation_reported: false,
             overflowed: 0,
         }
     }
@@ -341,7 +324,6 @@ impl SteamRuntime {
 /// What woke the loop.
 enum Woke {
     Report(Option<LinkReport>),
-    Sample(Option<Sampled>),
     Command(Option<Command>),
     /// Someone asked the service to stop. `false` means nobody did: the last
     /// [`crate::ShutdownTrigger`] was dropped, which resolves `changed()` with
@@ -365,8 +347,6 @@ pub struct Supervisor {
     pub(crate) cache: Arc<StateCache>,
     pub(crate) commands: mpsc::Receiver<Command>,
     pub(crate) reports: mpsc::Receiver<LinkReport>,
-    pub(crate) samples: mpsc::Receiver<Sampled>,
-    pub(crate) stop_samplers: watch::Sender<bool>,
     pub(crate) shutdown: watch::Receiver<Option<&'static str>>,
     pub(crate) pi_boot: PiBootId,
     pub(crate) shutdown_command: CommandId,
@@ -378,9 +358,6 @@ pub struct Supervisor {
     mode: Mode,
     /// Which of the loop's channels are still live.
     live: Live,
-    /// When the loop began, so that "this probe has never spoken" can be given
-    /// the same 5 s window as "this probe has stopped speaking".
-    started_at: Option<Monotonic>,
     /// Which links had not finished the boot sequence when the drain began.
     /// Recorded there rather than read at the end, because the drain's own stop
     /// moves a booting machine into `ConfirmOff`.
@@ -423,8 +400,6 @@ impl Supervisor {
             cache,
             commands: channels.commands,
             reports: channels.reports,
-            samples: channels.samples,
-            stop_samplers: channels.stop_samplers,
             shutdown: channels.shutdown,
             pi_boot,
             shutdown_command,
@@ -432,7 +407,6 @@ impl Supervisor {
             opened,
             mode: Mode::Serving,
             live: Live::default(),
-            started_at: None,
             booting_at_drain: Vec::new(),
             last_pet: None,
             last_published: None,
@@ -461,9 +435,9 @@ impl Supervisor {
             // ready — a pump reporting failures faster than they can be
             // consumed, or a client keeping the command channel full — would
             // otherwise mean the timer arm is never polled and `on_deadline`
-            // never runs: no tick, no response timeout, no session expiry and
-            // no probe-starvation check, with the watchdog petted throughout.
-            // Stepping the deadline first bounds all of them by one pass.
+            // never runs: no tick, no response timeout and no session expiry,
+            // with the watchdog petted throughout. Stepping the deadline first
+            // bounds all of them by one pass.
             if !deadline_served && now >= self.next_wake(now) {
                 deadline_served = true;
                 self.on_deadline(now);
@@ -477,17 +451,12 @@ impl Supervisor {
             // disabled once it has ended. Without that the loop would spin at
             // the speed of the scheduler the moment the last pump exited, which
             // is precisely when it most needs to be servicing the drain.
-            let Live {
-                reports,
-                samples,
-                commands,
-            } = self.live;
+            let Live { reports, commands } = self.live;
             let serving = matches!(self.mode, Mode::Serving);
             let nap = self.clock.sleep_until(self.next_wake(now));
             let woke = tokio::select! {
                 biased;
                 report = self.reports.recv(), if reports => Woke::Report(report),
-                sample = self.samples.recv(), if samples => Woke::Sample(sample),
                 command = self.commands.recv(), if commands => Woke::Command(command),
                 changed = self.shutdown.changed(), if serving => Woke::Shutdown {
                     requested: changed.is_ok(),
@@ -498,7 +467,6 @@ impl Supervisor {
             let now = self.clock.monotonic();
             match woke {
                 Woke::Report(Some(report)) => self.on_report(report, now),
-                Woke::Sample(Some(sample)) => self.on_sample(sample, now),
                 Woke::Command(Some(command)) => self.on_command(command, now),
                 // Every pump has gone, or the API has. Neither is survivable as
                 // a serving state, and both end the only correct way.
@@ -510,7 +478,6 @@ impl Supervisor {
                     self.live.commands = false;
                     self.begin_drain("the command channel closed", now);
                 }
-                Woke::Sample(None) => self.live.samples = false,
                 Woke::Shutdown { requested: true } => {
                     let reason = (*self.shutdown.borrow_and_update()).unwrap_or("shutdown");
                     self.begin_drain(reason, now);
@@ -536,7 +503,6 @@ impl Supervisor {
     fn announce_start(&mut self) {
         let now = self.clock.monotonic();
         let at = self.stamp(now);
-        self.started_at = Some(now);
         for (link, descriptor) in self.opened.clone() {
             // `LOG-07`. The bare `tracing` line the factory writes has no boot
             // ids and no NTP-paired stamp, and the close of the same port
@@ -604,15 +570,7 @@ impl Supervisor {
     /// One event per link per pass. A deadline already in the past is stepped
     /// immediately and **not** caught up — two ticks in a pass would put two
     /// frames on a bus that correlates responses by there being one.
-    ///
-    /// Starvation is checked **first**, for the same reason. It is the only
-    /// other thing in this pass that can transmit, and what it transmits is an
-    /// all-off; going first means the all-off is the frame that goes out, and
-    /// the escalation's `ClosePort` then makes the tick that would have
-    /// followed it a no-op rather than a second frame on a bus mid-reply.
     fn on_deadline(&mut self, now: Monotonic) {
-        self.check_starvation(now);
-
         for index in 0..self.zones.len() {
             let Some(zone) = self.zones.get(index) else {
                 continue;
@@ -665,46 +623,6 @@ impl Supervisor {
                 ),
                 self.stamp(now),
             );
-        }
-    }
-
-    /// The absence of a sample cannot announce itself, so it is checked here.
-    ///
-    /// A channel that has **never** produced a sample is starvation too.
-    /// [`RtdWatch::check_starvation`] measures from the last sample and returns
-    /// nothing while there has not been one, which is correct for that type and
-    /// leaves the case to its caller — `has_never_sampled` exists for exactly
-    /// this. `SAFE-05` says "if no RTD sample arrives for more than 5 s, command
-    /// all-off on that zone and latch the zone unavailable", and from boot that
-    /// includes never: a broken chip select, a swapped ribbon or a channel that
-    /// errors on every transfer would otherwise let the zone reach `ReadyOff`
-    /// and open water with the whole independent interlock silently absent.
-    fn check_starvation(&mut self, now: Monotonic) {
-        for index in 0..self.zones.len() {
-            let Some(zone) = self.zones.get(index) else {
-                continue;
-            };
-            if zone.starvation_reported
-                || LinkStateLabel::of(self.kernel.state(zone.link)).is_latched()
-            {
-                continue;
-            }
-            let event = zone.watch.check_starvation(now).or_else(|| {
-                let since = self.started_at.map(|start| now.since(start))?;
-                (zone.watch.has_never_sampled() && since > kdtv_units::RTD_STARVATION).then_some(
-                    SafetyEvent::RtdStarved {
-                        zone: zone.zone,
-                        since,
-                    },
-                )
-            });
-            let Some(event) = event else {
-                continue;
-            };
-            if let Some(zone) = self.zones.get_mut(index) {
-                zone.starvation_reported = true;
-            }
-            self.drive_zone(index, ZoneEvent::Safety(event), now, None);
         }
     }
 
@@ -991,93 +909,6 @@ impl Supervisor {
         }
     }
 
-    // ---- the independent temperature chain ------------------------------
-
-    fn on_sample(&mut self, sampled: Sampled, now: Monotonic) {
-        let Some(index) = self.zone_index(sampled.zone) else {
-            return;
-        };
-        let at = self.stamp(now);
-        let events = match sampled.result {
-            Ok(sample) => self.absorb_sample(index, &sample, at),
-            Err(why) => {
-                self.recorder
-                    .platform(PlatformEvent::SerialError, why.to_string(), at);
-                // A transfer that failed is not a reading. Starvation is what
-                // reports a channel that has stopped answering, and it is
-                // checked on the loop's own tick.
-                return;
-            }
-        };
-        for event in events {
-            self.drive_zone(index, ZoneEvent::Safety(event), now, None);
-        }
-    }
-
-    fn absorb_sample(
-        &mut self,
-        index: usize,
-        sample: &kdtv_hal::RtdSample,
-        at: Stamp,
-    ) -> Vec<SafetyEvent> {
-        let Some(zone) = self.zones.get_mut(index) else {
-            return Vec::new();
-        };
-        zone.starvation_reported = false;
-        let first = zone.independent.is_none();
-        let cached = zone.machine.cached();
-        let outlet_on = cached.valve_on;
-        let valve_c = cached.valve_reported_c;
-        let water_moving = cached.water_moving;
-        let corrected = zone.watch.correct(sample.raw);
-        let events = zone
-            .watch
-            .observe(
-                kdtv_safety::RtdSample {
-                    raw: sample.raw,
-                    fault_register: sample.fault.bits(),
-                    at: sample.at,
-                },
-                outlet_on,
-                valve_c,
-            )
-            .to_vec();
-        zone.independent = Some(IndependentReading {
-            raw_c: sample.raw.0,
-            corrected_c: corrected.celsius(),
-            fault_bits: sample.fault.bits(),
-            at: sample.at,
-        });
-        if water_moving {
-            zone.max_independent_c = Some(
-                zone.max_independent_c
-                    .map_or(corrected.celsius(), |m| m.max(corrected.celsius())),
-            );
-        }
-        let link = zone.link;
-        // `LOG-03` / `LOG-10`: both numbers, together. Every sample while water
-        // may be moving, because that is when it is evidence; otherwise once per
-        // starvation window, so a live channel is still visible in the log
-        // without filling it.
-        if water_moving || first || !events.is_empty() {
-            self.recorder.temperature(
-                link,
-                Some(sample.raw.0),
-                Some(corrected.celsius()),
-                valve_c,
-                at,
-            );
-        } else {
-            tracing::trace!(
-                link = %link,
-                raw_c = sample.raw.0,
-                corrected_c = corrected.celsius(),
-                "independent temperature"
-            );
-        }
-        events
-    }
-
     // ---- commands --------------------------------------------------------
 
     fn on_command(&mut self, command: Command, now: Monotonic) {
@@ -1215,21 +1046,6 @@ impl Supervisor {
             return Err(CommandError::NoSuchLink(LinkKind::Zone(zone)));
         };
         if let Some(why) = self.refuse_zone_command(index, None, id, now) {
-            return Err(why);
-        }
-        // The independent channel is the only thing in this system that can
-        // contradict the valve's own thermistor. A channel that has never
-        // spoken has not been ruled out, and opening water behind one leaves
-        // every independent trip — the corrected trip, the raw backstop, the
-        // fault register and the divergence check — inert. `SAFE-05`.
-        if self
-            .zones
-            .get(index)
-            .is_some_and(|z| z.watch.has_never_sampled())
-        {
-            let why = CommandError::NoIndependentReading(zone);
-            self.recorder
-                .rejection(id, why.to_string(), "independent probe", self.stamp(now));
             return Err(why);
         }
         let grant = match self.kernel.authorize_open(request, authorization) {
@@ -1493,7 +1309,6 @@ impl Supervisor {
         if let Some(steam) = self.steam.as_mut() {
             steam.port.close();
         }
-        let _ = self.stop_samplers.send(true);
 
         // Waited on the *pumps*, not on `is_open`: `PortHandle::close` clears
         // that flag synchronously, so a loop keyed on it exited before it began
@@ -1610,7 +1425,6 @@ impl Supervisor {
                 zone: zone.zone,
                 kernel: LinkStateLabel::of(self.kernel.state(zone.link)),
                 valve: zone.machine.cached().clone(),
-                independent: zone.independent,
                 frames_tx: zone.frames_tx,
                 frames_rx: zone.frames_rx,
             })
@@ -1714,8 +1528,6 @@ fn refuse(command: Command, why: &CommandError) {
 pub(crate) struct SupervisorChannels {
     pub(crate) commands: mpsc::Receiver<Command>,
     pub(crate) reports: mpsc::Receiver<LinkReport>,
-    pub(crate) samples: mpsc::Receiver<Sampled>,
-    pub(crate) stop_samplers: watch::Sender<bool>,
     pub(crate) shutdown: watch::Receiver<Option<&'static str>>,
 }
 
@@ -1781,7 +1593,6 @@ fn apply_zone_step(
         match &mut event {
             LogEvent::Session(record) => {
                 record.max_valve_reported_c = zone.max_valve_c.take();
-                record.max_independent_corrected_c = zone.max_independent_c.take();
             }
             LogEvent::Command(_) => {
                 if let Some(source) = source {

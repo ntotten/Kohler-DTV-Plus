@@ -21,7 +21,6 @@
 //! | A `/dev/tty*` port path — enumeration order is how zone 1 becomes zone 2 after a reboot | [`port`] |
 //! | Two links resolving to one device, through symlinks | this module |
 //! | A duplicate slot, duplicate status index, or a wire outlet the valve family does not have | [`zone`] |
-//! | `instrumented_slot` naming a slot that is not configured | [`zone`] |
 //! | A pseudo-terminal or a time scale under `profile = "production"` | [`port`], [`timing`] |
 //! | Steam enabled with no port | this module |
 //! | A token file that is missing or world-readable | [`api`] |
@@ -79,7 +78,6 @@ pub mod logging;
 pub mod port;
 pub mod profile;
 mod raw;
-pub mod sensors;
 pub mod steam;
 pub mod timing;
 pub mod zone;
@@ -92,7 +90,6 @@ pub use gate::{GateScope, TransmitGateConfig};
 pub use logging::LoggingConfig;
 pub use port::PortPath;
 pub use profile::Profile;
-pub use sensors::SensorConfig;
 pub use steam::SteamConfig;
 pub use timing::{SessionScale, SessionSpan, TimingConfig};
 pub use zone::{ConfiguredValve, OutletConfig, ZoneConfig};
@@ -119,13 +116,10 @@ pub struct ValidatedConfig {
     zone1: ZoneConfig,
     zone2: ZoneConfig,
     steam: Option<SteamConfig>,
-    sensor1: SensorConfig,
-    sensor2: SensorConfig,
     api: ApiConfig,
     logging: LoggingConfig,
     bounds: Bounds,
     timing: TimingConfig,
-    bench_probe_dir: Option<PathBuf>,
 }
 
 impl ValidatedConfig {
@@ -156,15 +150,12 @@ impl ValidatedConfig {
         let profile = raw.profile;
 
         // --- time scaling -------------------------------------------------
-        let (scale, bench_probe_dir) = match raw.bench {
-            None => (SessionScale::UNSCALED, None),
+        let scale = match raw.bench {
+            None => SessionScale::UNSCALED,
             Some(_) if profile.is_production() => {
                 return Err(ConfigError::BenchTableUnderProduction);
             }
-            Some(b) => (
-                SessionScale::try_new(b.session_scale)?,
-                b.probe_dir.map(PathBuf::from),
-            ),
+            Some(b) => SessionScale::try_new(b.session_scale)?,
         };
 
         // --- zones --------------------------------------------------------
@@ -219,17 +210,6 @@ impl ValidatedConfig {
             &links,
         )?;
 
-        // --- sensors ------------------------------------------------------
-        let sensor1 = build_sensor(ZoneId::Zone1, raw.sensors.zone1)?;
-        let sensor2 = build_sensor(ZoneId::Zone2, raw.sensors.zone2)?;
-        if sensor1.chip_select() == sensor2.chip_select() {
-            return Err(ConfigError::DuplicateChipSelect {
-                zone1: ZoneId::Zone1,
-                zone2: ZoneId::Zone2,
-                value: sensor1.chip_select().to_owned(),
-            });
-        }
-
         // --- api and logging ----------------------------------------------
         let api = ApiConfig::build(
             &raw.api.bind,
@@ -261,13 +241,10 @@ impl ValidatedConfig {
             zone1,
             zone2,
             steam,
-            sensor1,
-            sensor2,
             api,
             logging,
             bounds,
             timing,
-            bench_probe_dir,
         })
     }
 
@@ -302,14 +279,6 @@ impl ValidatedConfig {
     }
 
     #[must_use]
-    pub const fn sensor(&self, id: ZoneId) -> &SensorConfig {
-        match id {
-            ZoneId::Zone1 => &self.sensor1,
-            ZoneId::Zone2 => &self.sensor2,
-        }
-    }
-
-    #[must_use]
     pub const fn api(&self) -> &ApiConfig {
         &self.api
     }
@@ -331,33 +300,6 @@ impl ValidatedConfig {
         &self.timing
     }
 
-    /// Where the harness writes each zone's independent temperature, if this is
-    /// a bench configuration that supplies one.
-    ///
-    /// # Why a file is allowed to be a safety input here, and only here
-    ///
-    /// The independent probe is the one measurement in this system that does
-    /// not come from the valve, and `kdtvd` refuses to start a zone without one
-    /// (`kdtv_service::StartError::NoProbe`). No `RtdChannel` for the MAX31865
-    /// exists yet, so on a bench there is nothing to read — and a stub that
-    /// returned a plausible number would satisfy the interlock while removing
-    /// the thing it interlocks on.
-    ///
-    /// This names a directory the harness writes real numbers into, so the
-    /// emulated run exercises the same escalation paths as hardware: a value
-    /// past the trip, a gap past the starvation window, a fault register. It
-    /// lives under `[bench]`, which [`ConfigError::BenchTableUnderProduction`]
-    /// refuses outright under `profile = "production"` — the same refusal that
-    /// keeps scaled session timers off a real bathroom. There is no key for it
-    /// outside that table, so a production file cannot name one.
-    ///
-    /// It is the same shape as the port placeholders: the bench configuration
-    /// names something the harness supplies, and production names hardware.
-    #[must_use]
-    pub fn bench_probe_dir(&self) -> Option<&Path> {
-        self.bench_probe_dir.as_deref()
-    }
-
     /// The session limit, with the bench scale applied.
     ///
     /// The scale is at most 1.0 and the bound is at most
@@ -368,20 +310,6 @@ impl ValidatedConfig {
         self.timing
             .scaled(SessionSpan::of_session(self.bounds.max_session()))
             .get()
-    }
-
-    /// The independent-temperature dwells, with the bench scale applied. Their
-    /// unscaled values are `kdtv_units` constants; nothing configures them.
-    #[must_use]
-    pub fn scaled_dwells(&self) -> Dwells {
-        Dwells {
-            corrected_trip: self
-                .timing
-                .scaled(SessionSpan::corrected_trip_dwell())
-                .get(),
-            divergence: self.timing.scaled(SessionSpan::divergence_dwell()).get(),
-            rtd_starvation: self.timing.scaled(SessionSpan::rtd_starvation()).get(),
-        }
     }
 
     /// Every link this service will drive: both zones, and steam when enabled.
@@ -467,19 +395,6 @@ impl ValidatedConfig {
     }
 }
 
-/// The dwells [`ValidatedConfig::scaled_dwells`] returns.
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-pub struct Dwells {
-    /// Corrected reading above [`kdtv_units::CORRECTED_TRIP_C`] for this long
-    /// stops the zone.
-    pub corrected_trip: Duration,
-    /// Corrected and reported temperatures apart by more than
-    /// [`kdtv_units::DIVERGENCE_LIMIT_C`] for this long stops the zone.
-    pub divergence: Duration,
-    /// No RTD sample for this long stops the zone.
-    pub rtd_starvation: Duration,
-}
-
 /// Only reachable when steam is absent, in which case
 /// [`ValidatedConfig::links`] never names it.
 const PLACEHOLDER_PORT: PortPath = PortPath::PtyPlaceholder;
@@ -511,23 +426,7 @@ fn build_zone(id: ZoneId, raw: raw::RawZone, profile: Profile) -> Result<ZoneCon
             name: o.name,
         });
     }
-    ZoneConfig::build(
-        id,
-        port,
-        raw.valve,
-        raw.master_address,
-        outlets,
-        raw.instrumented_slot,
-    )
-}
-
-fn build_sensor(id: ZoneId, raw: raw::RawSensor) -> Result<SensorConfig, ConfigError> {
-    let points = raw.correction.map(|ps| {
-        ps.into_iter()
-            .map(|p| (p.surface_c, p.immersion_c))
-            .collect()
-    });
-    SensorConfig::build(id, raw.chip_select, points)
+    ZoneConfig::build(id, port, raw.valve, raw.master_address, outlets)
 }
 
 fn build_bounds_request(raw: &raw::RawBounds) -> Result<BoundsRequest, ConfigError> {

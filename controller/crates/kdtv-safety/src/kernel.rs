@@ -224,11 +224,6 @@ impl SafetyKernel {
                                service shutoffs.",
                     });
                 }
-                if matches!(e, SafetyEvent::TemperatureDivergence { .. }) {
-                    out.push(Effect::RecordFinding(
-                        crate::event::FindingClass::TemperatureDivergence,
-                    ));
-                }
             }
             FaultScope::Link(LinkKind::Steam) => {
                 // Degraded but alive: transmission still works, so the stop goes
@@ -593,11 +588,6 @@ mod tests {
                 SafetyEvent::SafetyResponseMissed {
                     zone,
                     op: "AllOff".into(),
-                },
-                SafetyEvent::RtdFaultRegister { zone, bits: 1 },
-                SafetyEvent::RtdStarved {
-                    zone,
-                    since: Duration::from_secs(6),
                 },
                 SafetyEvent::ValveFault {
                     zone,

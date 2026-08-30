@@ -129,32 +129,8 @@ cut valve power. The installation therefore needs:
 - a posted emergency procedure, which must state that a `WELDED` fault (35) is
   a stuck mixing valve that **no controller can turn off** — the only remedy is
   valve power removal and the hot and cold service shutoffs;
-- an independent outlet temperature measurement (see below);
 - measured proof during commissioning that each valve stops on controller
   communication loss and power loss.
-
-### Independent temperature measurement
-
-A permanent temperature sensor is installed on the outlet plumbing, read by the
-Pi, logged with every session, and wired into the same `all-off` path as the
-valve fault flags.
-
-Every other temperature in this system is the valve's own thermistor reading.
-Per [DISCLAIMER.md](../../DISCLAIMER.md), that is a self-report, not a
-measurement. The sensor has no actuation authority and cannot open an outlet.
-
-One PT1000 channel per zone, specified in
-[HARDWARE.md § 7](HARDWARE.md). Two limits are carried deliberately
-and must appear in the commissioning report:
-
-- **A surface clamp is not an immersion measurement.** It reads pipe wall, lags,
-  and reads low. Its offset is characterized against the Therma K probe at
-  commissioning, and every threshold is evaluated on the corrected value.
-- **The interlock covers only the instrumented outlet.** Continuous independent
-  coverage exists for each zone's default outlet. Every other outlet is verified
-  individually with the immersion probe at Phase 4 and is protected by the
-  setpoint clamp and fault monitoring, but has no continuous independent
-  measurement until further channels are fitted.
 
 ### Acceptance thresholds
 
@@ -222,21 +198,20 @@ grounding policy, enclosure and labeling, bench acceptance tests, and the steam
 reservation. Parts, prices, and purchase links are in
 [SHOPPING-LIST.md](SHOPPING-LIST.md).
 
-| Subsystem               | Choice                                                                                            |
-| ----------------------- | ------------------------------------------------------------------------------------------------- |
-| Compute                 | Raspberry Pi 4 Model B 2 GB, Rust service, passive cooling, hardware watchdog                     |
-| Valve links             | 2 × Waveshare `USB TO RS485/422` SKU `23949` — one isolated converter per valve                   |
-| Independent temperature | 2 × PT1000 Class A on MAX31865 over SPI, one per zone                                             |
-| Timekeeping             | DS3231 RTC on I2C. NTP sync state is still logged with every wall-clock stamp                     |
-| Enclosure               | IP65 non-metallic, DIN rail, low-voltage only — no mains conductor enters it                      |
-| Steam                   | Reserved only: one USB port, rail space, a blanked gland. Gated — [HARDWARE.md § 12](HARDWARE.md) |
+| Subsystem   | Choice                                                                                            |
+| ----------- | ------------------------------------------------------------------------------------------------- |
+| Compute     | Raspberry Pi 4 Model B 2 GB, Rust service, passive cooling, hardware watchdog                     |
+| Valve links | 2 × Waveshare `USB TO RS485/422` SKU `23949` — one isolated converter per valve                   |
+| Timekeeping | DS3231 RTC on I2C. NTP sync state is still logged with every wall-clock stamp                     |
+| Enclosure   | IP65 non-metallic, DIN rail, low-voltage only — no mains conductor enters it                      |
+| Steam       | Reserved only: one USB port, rail space, a blanked gland. Gated — [HARDWARE.md § 12](HARDWARE.md) |
 
 No custom PCB. No mains work inside the enclosure. No relay, contactor, smart
 plug, or cord switch in either valve's mains path.
 
 **Not orderable from documents.** Valve mating connectors, adapter-lead cable,
-termination and bias components, RTD clamp size, and the manual valve-power
-disconnects all depend on measurements taken in Phase 0 and Phase 1. Each is
+termination and bias components, and the manual valve-power disconnects all
+depend on measurements taken in Phase 0 and Phase 1. Each is
 listed in [SHOPPING-LIST.md](SHOPPING-LIST.md) Group B against the measurement
 that closes it. None is ordered by assumption.
 
@@ -398,7 +373,6 @@ Required logs:
 - wall-clock timestamps paired with NTP sync state. The Pi 4 has no RTC, so
   stamps before first sync are wrong. Fit an RTC module or record sync state
   with each stamp;
-- the independent outlet temperature alongside the valve's reported temperature;
 - local safety clamps and rejection reason;
 - raw RX/TX frame bytes with monotonic and wall-clock timestamps;
 - acknowledgement latency, retry count, actual temperature, flow if supported,
@@ -558,7 +532,7 @@ Procedure:
 2. Disconnect only that valve's Kohler data cable and attach the custom cable.
 3. Restore valve power. Commission at 100 °F on one outlet with the operator
    present and outside the spray path, hand on the manual disconnect, and the
-   independent probe reading the outlet throughout.
+   Therma K probe reading the outlet throughout.
 4. Limit the first active session to two minutes.
 
 Test process kill, forced process hang, Pi power loss, USB disconnect, Pi

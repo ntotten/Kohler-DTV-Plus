@@ -628,15 +628,6 @@ verification = "unit: assert every wall-clock stamp is accompanied by sync state
 hard = false
 
 [[requirement]]
-id = "LOG-03"
-document = "controller/docs/DESIGN.md"
-area = "logging"
-statement = "Log the independent outlet temperature alongside the valve's reported temperature."
-source = "controller/docs/DESIGN.md § Software design → Required logs"
-verification = "unit; emulator e2e with a simulated PT1000 channel"
-hard = false
-
-[[requirement]]
 id = "LOG-04"
 document = "controller/docs/DESIGN.md"
 area = "logging"
@@ -688,42 +679,6 @@ area = "logging/secrets"
 statement = "No credential, access token, or pairing data belongs in the logs."
 source = "controller/docs/DESIGN.md § Software design → Required logs"
 verification = "unit: redaction test; repository scan of committed fixtures"
-hard = true
-
-[[requirement]]
-id = "LOG-10"
-document = "controller/docs/DESIGN.md"
-area = "logging/temperature"
-statement = "Log the independent outlet temperature with every session; the independent sensor has no actuation authority and cannot open an outlet."
-source = "controller/docs/DESIGN.md § Safety boundary → Independent temperature measurement"
-verification = "unit: assert no code path lets the sensor module command an outlet open"
-hard = true
-
-[[requirement]]
-id = "TEMP-01"
-document = "controller/docs/DESIGN.md"
-area = "independent temperature"
-statement = "Wire the permanent outlet temperature sensor into the same `all-off` path as the valve fault flags."
-source = "controller/docs/DESIGN.md § Safety boundary → Independent temperature measurement"
-verification = "emulator e2e: simulate an over-temperature reading and assert all-off"
-hard = true
-
-[[requirement]]
-id = "TEMP-02"
-document = "controller/docs/DESIGN.md"
-area = "independent temperature"
-statement = "Evaluate every threshold on the offset-corrected surface-clamp value, characterized against the Therma K probe at commissioning, because a surface clamp reads pipe wall, lags, and reads low."
-source = "controller/docs/DESIGN.md § Safety boundary → Independent temperature measurement"
-verification = "unit on the correction function; manual commissioning to obtain the offset"
-hard = true
-
-[[requirement]]
-id = "TEMP-03"
-document = "controller/docs/DESIGN.md"
-area = "independent temperature"
-statement = "Treat the interlock as covering only the instrumented outlet — each zone's default outlet — with every other outlet protected only by the setpoint clamp and fault monitoring until further channels are fitted."
-source = "controller/docs/DESIGN.md § Safety boundary → Independent temperature measurement"
-verification = "not-testable-in-software; recorded in the commissioning report"
 hard = true
 
 [[requirement]]
@@ -919,7 +874,7 @@ hard = true
 id = "PH3-01"
 document = "controller/docs/DESIGN.md"
 area = "phase 3 gate"
-statement = "Commission the one-valve pilot at 100 °F on one outlet with the operator present and outside the spray path, hand on the manual disconnect, and the independent probe reading the outlet throughout."
+statement = "Commission the one-valve pilot at 100 °F on one outlet with the operator present and outside the spray path, hand on the manual disconnect, and the Therma K probe reading the outlet throughout."
 source = "controller/docs/DESIGN.md § Delivery phases → Phase 3 procedure (3)"
 verification = "manual commissioning"
 hard = true
@@ -1411,89 +1366,6 @@ verification = "unit (no shared mutable state between link tasks) plus manual in
 hard = true
 
 [[requirement]]
-id = "TEMP-01"
-document = "controller/docs/HARDWARE.md"
-area = "Independent temperature measurement"
-statement = "Fit one PT1000 Class A 3-wire pipe-surface-clamp probe per zone, read through a MAX31865 (Adafruit PID 3648, 4300 Ω 0.1 % reference) on SPI0 with one chip select per channel; two channels fitted, electronics support four."
-source = "controller/docs/HARDWARE.md §7 'Chain'"
-tier = "V"
-verification = "manual commissioning"
-hard = false
-
-[[requirement]]
-id = "TEMP-02"
-document = "controller/docs/HARDWARE.md"
-area = "Independent temperature measurement"
-statement = "Power each MAX31865 VIN from the Pi's 3V3 rail (never 5 V), because the breakout's level shifting follows VIN and SDO would otherwise drive 5 V onto a 3.3 V GPIO; configure each breakout for 3-wire."
-source = "controller/docs/HARDWARE.md §7 'Chain' note"
-tier = "V"
-verification = "not-testable-in-software (wiring); manual commissioning"
-hard = true
-
-[[requirement]]
-id = "TEMP-03"
-document = "controller/docs/HARDWARE.md"
-area = "Independent temperature measurement"
-statement = "Characterise the surface-clamp offset at commissioning against the Therma K immersion probe across the working range, and apply that correction before evaluating any threshold."
-source = "controller/docs/HARDWARE.md §7 'Placement and its limitation', consequence 1"
-verification = "unit (correction applied before threshold evaluation) plus manual commissioning (deriving the offset)"
-hard = true
-
-[[requirement]]
-id = "TEMP-04"
-document = "controller/docs/HARDWARE.md"
-area = "Independent temperature measurement"
-statement = "Log the raw RTD reading alongside the corrected one."
-source = "controller/docs/HARDWARE.md §7 'Placement and its limitation', consequence 1"
-verification = "unit"
-hard = false
-
-[[requirement]]
-id = "TEMP-05"
-document = "controller/docs/HARDWARE.md"
-area = "Independent temperature measurement"
-statement = "Clamp the probe to the supply pipe of that zone's default outlet, as close to the valve as accessible pipe allows; exact location and pipe OD are set at the Phase 0 survey."
-source = "controller/docs/HARDWARE.md §7 'Placement and its limitation'"
-verification = "manual commissioning"
-hard = false
-
-[[requirement]]
-id = "TEMP-06"
-document = "controller/docs/HARDWARE.md"
-area = "Independent temperature measurement"
-statement = "Scope the temperature interlock to the instrumented (default) outlet only; when a non-instrumented outlet is active there is no independent continuous measurement, and this limitation must be recorded in the commissioning report."
-source = "controller/docs/HARDWARE.md §7 'Placement and its limitation', consequence 2"
-verification = "unit (interlock keyed to instrumented outlet) plus manual commissioning (report entry)"
-hard = true
-
-[[requirement]]
-id = "TEMP-07"
-document = "controller/docs/HARDWARE.md"
-area = "Independent temperature measurement"
-statement = "Verify every outlet individually with the immersion probe at Phase 4; the setpoint clamp and valve fault monitoring still apply to non-instrumented outlets."
-source = "controller/docs/HARDWARE.md §7 'Placement and its limitation', consequence 2"
-verification = "manual commissioning"
-hard = true
-
-[[requirement]]
-id = "SAFE-01"
-document = "controller/docs/HARDWARE.md"
-area = "Temperature alarm logic"
-statement = "Give the temperature sensor no authority to open an outlet; its only possible action is to contribute to all-off."
-source = "controller/docs/HARDWARE.md §7 'Alarm logic' preamble"
-verification = "unit / property (no code path from sensor state to an open command)"
-hard = true
-
-[[requirement]]
-id = "SAFE-02"
-document = "controller/docs/HARDWARE.md"
-area = "Temperature alarm logic"
-statement = "If the corrected outlet temperature exceeds 45.0 °C for more than 2 s while the instrumented outlet is on, command all-off on that zone and latch the zone unavailable."
-source = "controller/docs/HARDWARE.md §7 'Alarm logic' table row 1"
-verification = "unit (threshold + dwell) and emulator e2e"
-hard = true
-
-[[requirement]]
 id = "SAFE-03"
 document = "controller/docs/HARDWARE.md"
 area = "Temperature alarm logic"
@@ -1501,42 +1373,6 @@ statement = "If the raw reading exceeds 50.0 °C, regardless of correction and w
 source = "controller/docs/HARDWARE.md §7 'Alarm logic' table row 2"
 verification = "unit"
 hard = true
-
-[[requirement]]
-id = "SAFE-04"
-document = "controller/docs/HARDWARE.md"
-area = "Temperature alarm logic"
-statement = "If the MAX31865 fault register is non-zero (RTD open/short, over/under-voltage), command all-off on that zone and latch the zone unavailable."
-source = "controller/docs/HARDWARE.md §7 'Alarm logic' table row 3"
-verification = "unit plus bench injection (§13 check 9)"
-hard = true
-
-[[requirement]]
-id = "SAFE-05"
-document = "controller/docs/HARDWARE.md"
-area = "Temperature alarm logic"
-statement = "If no RTD sample arrives for more than 5 s, command all-off on that zone and latch the zone unavailable."
-source = "controller/docs/HARDWARE.md §7 'Alarm logic' table row 4"
-verification = "unit (starved sampler) and emulator e2e"
-hard = true
-
-[[requirement]]
-id = "SAFE-06"
-document = "controller/docs/HARDWARE.md"
-area = "Temperature alarm logic"
-statement = "If the corrected reading and the valve-reported temperature differ by more than 5 °C for more than 10 s, command all-off on that zone, latch it unavailable, and record the event as an I5-class finding."
-source = "controller/docs/HARDWARE.md §7 'Alarm logic' table row 5"
-verification = "unit (divergence detector + dwell) and emulator e2e"
-hard = true
-
-[[requirement]]
-id = "SAFE-07"
-document = "controller/docs/HARDWARE.md"
-area = "Temperature alarm logic"
-statement = "Treat 45.0 °C as a fault threshold, not a comfort limit; it sits above the 42.5 °C setpoint ceiling and above the 43 °C scald threshold with margin for sensor lag."
-source = "controller/docs/HARDWARE.md §7 (note under the alarm table)"
-verification = "unit (constants audit; comfort clamp and fault gate are separate)"
-hard = false
 
 [[requirement]]
 id = "TIME-01"
@@ -1561,19 +1397,10 @@ hard = false
 id = "GPIO-01"
 document = "controller/docs/HARDWARE.md"
 area = "GPIO map"
-statement = "Wire the 40-pin header exactly as specified: pin 1 3V3 to both MAX31865 VIN; pin 3 GPIO2 I2C1 SDA to DS3231 SDA; pin 5 GPIO3 I2C1 SCL to DS3231 SCL; pin 6 GND to DS3231 GND; pin 9 GND to MAX31865 #1 GND; pin 14 GND to MAX31865 #2 GND; pin 17 3V3 to DS3231 VIN; pin 19 GPIO10 SPI0 MOSI to both SDI; pin 21 GPIO9 SPI0 MISO to both SDO; pin 23 GPIO11 SPI0 SCLK to both SCK; pin 24 GPIO8 SPI0 CE0 to MAX31865 #1 CS (zone 1); pin 26 GPIO7 SPI0 CE1 to MAX31865 #2 CS (zone 2)."
+statement = "Wire the 40-pin header exactly as specified: pin 3 GPIO2 I2C1 SDA to DS3231 SDA; pin 5 GPIO3 I2C1 SCL to DS3231 SCL; pin 6 GND to DS3231 GND; pin 17 3V3 to DS3231 VIN."
 source = "controller/docs/HARDWARE.md §8 'Pi 40-pin header assignments'"
-verification = "unit (chip-select-to-zone mapping constants) plus manual commissioning"
+verification = "manual commissioning"
 hard = true
-
-[[requirement]]
-id = "GPIO-02"
-document = "controller/docs/HARDWARE.md"
-area = "GPIO map"
-statement = "Reserve SPI1 CE0 (GPIO18, pin 12) and CE1 (GPIO17, pin 11) for expansion RTD channels 3 and 4."
-source = "controller/docs/HARDWARE.md §8 (note after the header table)"
-verification = "unit (config surface allows 4 channels)"
-hard = false
 
 [[requirement]]
 id = "GPIO-03"
@@ -1635,7 +1462,7 @@ id = "PWR-06"
 document = "controller/docs/HARDWARE.md"
 area = "Compute platform"
 statement = "Enable the BCM2711 hardware watchdog and systemd RuntimeWatchdogSec/WatchdogSec; on a watchdog reset the service must boot to READY_OFF with no state restored."
-source = "controller/docs/HARDWARE.md §4 table; §2 table; §13 check 11"
+source = "controller/docs/HARDWARE.md §4 table; §2 table; §13 check 9"
 verification = "emulator e2e (forced hang) plus manual commissioning"
 hard = true
 
@@ -1984,29 +1811,11 @@ verification = "manual commissioning"
 hard = true
 
 [[requirement]]
-id = "TEST-09"
-document = "controller/docs/HARDWARE.md"
-area = "Bench acceptance (§13)"
-statement = "Check 8: RTD channels read ambient and read a known reference against the Therma K probe, within Class A tolerance plus the characterised offset."
-source = "controller/docs/HARDWARE.md §13 table row 8"
-verification = "manual commissioning"
-hard = false
-
-[[requirement]]
-id = "TEST-10"
-document = "controller/docs/HARDWARE.md"
-area = "Bench acceptance (§13)"
-statement = "Check 9: inject RTD open-circuit and short-circuit; the MAX31865 fault register must set and the service must command all-off."
-source = "controller/docs/HARDWARE.md §13 table row 9"
-verification = "unit (fault-register handling) plus manual commissioning (injection)"
-hard = true
-
-[[requirement]]
 id = "TEST-11"
 document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
-statement = "Check 10: the RTC holds time across a full power removal — time correct on the next boot before NTP."
-source = "controller/docs/HARDWARE.md §13 table row 10"
+statement = "Check 8: the RTC holds time across a full power removal — time correct on the next boot before NTP."
+source = "controller/docs/HARDWARE.md §13 table row 8"
 verification = "manual commissioning"
 hard = false
 
@@ -2014,8 +1823,8 @@ hard = false
 id = "TEST-12"
 document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
-statement = "Check 11: the hardware watchdog fires on a forced service hang; the Pi resets and boots to READY_OFF with no state restored."
-source = "controller/docs/HARDWARE.md §13 table row 11"
+statement = "Check 9: the hardware watchdog fires on a forced service hang; the Pi resets and boots to READY_OFF with no state restored."
+source = "controller/docs/HARDWARE.md §13 table row 9"
 verification = "emulator e2e plus manual commissioning"
 hard = true
 
@@ -2023,8 +1832,8 @@ hard = true
 id = "TEST-13"
 document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
-statement = "Check 12: enclosure interior ≤ 40 °C after 7 days sealed, logged from the Pi's own thermal sensor."
-source = "controller/docs/HARDWARE.md §13 table row 12; §10 'Interior ambient'"
+statement = "Check 10: enclosure interior ≤ 40 °C after 7 days sealed, logged from the Pi's own thermal sensor."
+source = "controller/docs/HARDWARE.md §13 table row 10; §10 'Interior ambient'"
 verification = "manual commissioning (7-day soak, with the service logging Pi thermals)"
 hard = false
 
@@ -2032,8 +1841,8 @@ hard = false
 id = "TEST-14"
 document = "controller/docs/HARDWARE.md"
 area = "Bench acceptance (§13)"
-statement = "Check 13: every label present and correct, and the emergency card in the lid."
-source = "controller/docs/HARDWARE.md §13 table row 13; §10 'Labelling and test points'"
+statement = "Check 11: every label present and correct, and the emergency card in the lid."
+source = "controller/docs/HARDWARE.md §13 table row 11; §10 'Labelling and test points'"
 verification = "manual commissioning (visual)"
 hard = false
 
@@ -2092,15 +1901,6 @@ verification = "not-testable-in-software"
 hard = true
 
 [[requirement]]
-id = "EXCL-05"
-document = "controller/docs/HARDWARE.md"
-area = "Deliberately excluded (§14)"
-statement = "Do not add a second temperature sensor on the same element: a redundant sensor is not a redundant measurement; the immersion probe is the reference."
-source = "controller/docs/HARDWARE.md §14 row 10"
-verification = "not-testable-in-software; design review"
-hard = false
-
-[[requirement]]
 id = "OPEN-01"
 document = "controller/docs/HARDWARE.md"
 area = "Open items (§15)"
@@ -2114,7 +1914,7 @@ id = "OPEN-02"
 document = "controller/docs/HARDWARE.md"
 area = "Open items (§15)"
 statement = "Resolve the Saturn response timeout — 320 ms or 400 ms — from the Phase 1 capture (I5) before fixing decoder deadlines."
-source = "controller/docs/HARDWARE.md §15 row 8"
+source = "controller/docs/HARDWARE.md §15 row 7"
 tier = "?"
 verification = "manual commissioning (Phase 1 capture); then unit constants"
 hard = false
@@ -2132,8 +1932,8 @@ hard = false
 id = "OPEN-04"
 document = "controller/docs/HARDWARE.md"
 area = "Open items (§15)"
-statement = "Do not order field cabling by assumption: valve model/nameplate, connector housing/keying/pin count, factory termination and idle bias, outlet pipe OD and sensor location, valve mains voltage/receptacles/circuits/GFCI, and DTV+ peripheral-port pinout each stay open until their named measurement closes them."
-source = "controller/docs/HARDWARE.md §15 rows 1, 2, 4, 5, 6, 10; §11"
+statement = "Do not order field cabling by assumption: valve model/nameplate, connector housing/keying/pin count, factory termination and idle bias, valve mains voltage/receptacles/circuits/GFCI, and DTV+ peripheral-port pinout each stay open until their named measurement closes them."
+source = "controller/docs/HARDWARE.md §15 rows 1, 2, 4, 5, 9; §11"
 verification = "manual commissioning"
 hard = true
 
@@ -2142,7 +1942,7 @@ id = "OPEN-05"
 document = "controller/docs/HARDWARE.md"
 area = "Open items (§15)"
 statement = "Record which FTDI part is fitted, FT232RL or FT232RNL; this blocks nothing but must be recorded."
-source = "controller/docs/HARDWARE.md §15 row 7; §5 'Configuration at assembly' item 4"
+source = "controller/docs/HARDWARE.md §15 row 6; §5 'Configuration at assembly' item 4"
 tier = "?"
 verification = "manual commissioning (inspection on arrival)"
 hard = false
@@ -2152,7 +1952,7 @@ id = "OPEN-06"
 document = "controller/docs/HARDWARE.md"
 area = "Open items (§15)"
 statement = "Measure at Phase 5 what the generator does when the DTV+ link drops mid-session (Kohler case #07797183 runs in parallel); until then the worst case is assumed."
-source = "controller/docs/HARDWARE.md §15 row 11; §12 'Losing the DTV+ link'"
+source = "controller/docs/HARDWARE.md §15 row 10; §12 'Losing the DTV+ link'"
 tier = "?"
 verification = "manual commissioning (Phase 5)"
 hard = true

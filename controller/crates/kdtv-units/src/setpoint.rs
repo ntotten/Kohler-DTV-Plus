@@ -133,9 +133,9 @@ impl ValveSetpoint {
     /// `Cx2` resolves 0.5 °C — about 0.9 °F — so a request in Fahrenheit
     /// generally falls between two representable points. This returns the
     /// **largest representable setpoint at or below the request**. Erring cool
-    /// costs comfort; erring warm costs skin, and water above 43 °C scalds
-    /// ([`crate::independent::SCALD_C`]). [`SteamSetpoint::clamped`] rounds a
-    /// half degree down for the same reason.
+    /// costs comfort; erring warm costs skin, and water above 43 °C scalds.
+    /// [`SteamSetpoint::clamped`] rounds a half degree down for the same
+    /// reason.
     ///
     /// # A request above the ceiling is refused, not rounded into it
     ///
@@ -373,8 +373,9 @@ mod tests {
     fn req_valve_control_temp_03_the_ceiling_sits_below_the_scald_threshold_plus_nothing() {
         // 42.5 C is below 43 C, which is where water begins to scald. The valve's
         // own ceiling of 49 C is far above it and is never used as a limit.
-        assert!(ValveSetpoint::CEILING.celsius() < crate::independent::SCALD_C);
-        assert!(Cx2::MAX_WATER_TEMP.celsius() > crate::independent::SCALD_C);
+        const SCALD_C: f32 = 43.0;
+        assert!(ValveSetpoint::CEILING.celsius() < SCALD_C);
+        assert!(Cx2::MAX_WATER_TEMP.celsius() > SCALD_C);
     }
 
     #[test]

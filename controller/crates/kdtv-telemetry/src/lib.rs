@@ -123,15 +123,6 @@ pub enum LogEvent {
         detail: String,
         at: Stamp,
     },
-    /// The independent outlet temperature alongside the valve's own reported
-    /// temperature. Both, always — one without the other is not evidence.
-    Temperature {
-        link: LinkKind,
-        independent_raw_c: Option<f32>,
-        independent_corrected_c: Option<f32>,
-        valve_reported_c: Option<f32>,
-        at: Stamp,
-    },
     /// A safety escalation: what tripped, what it did, and to which links.
     Safety {
         link: LinkKind,
@@ -160,7 +151,6 @@ pub enum PlatformEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kdtv_units::ZoneId;
 
     fn stamp() -> Stamp {
         Stamp::new(
@@ -199,19 +189,5 @@ mod tests {
         let json = serde_json::to_string(&e).unwrap();
         assert!(json.contains("\"event\":\"platform\""));
         assert!(json.contains("usb_enumeration_lost"));
-    }
-
-    #[test]
-    fn temperature_events_carry_both_numbers_or_say_which_is_missing() {
-        let e = LogEvent::Temperature {
-            link: LinkKind::Zone(ZoneId::Zone1),
-            independent_raw_c: Some(38.2),
-            independent_corrected_c: Some(40.1),
-            valve_reported_c: Some(40.5),
-            at: stamp(),
-        };
-        let json = serde_json::to_string(&e).unwrap();
-        assert!(json.contains("independent_raw_c"));
-        assert!(json.contains("valve_reported_c"));
     }
 }

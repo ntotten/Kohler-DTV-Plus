@@ -1,5 +1,5 @@
-//! One valve bus: its port, its valve family, its master identity, its outlet
-//! table and its instrumented outlet.
+//! One valve bus: its port, its valve family, its master identity and its
+//! outlet table.
 
 use crate::error::ConfigError;
 use crate::port::PortPath;
@@ -62,7 +62,6 @@ pub struct ZoneConfig {
     master: MasterAddr,
     outlets: OutletTable,
     labels: Vec<OutletConfig>,
-    instrumented_slot: Slot,
 }
 
 impl ZoneConfig {
@@ -72,7 +71,6 @@ impl ZoneConfig {
         expected_valve: ConfiguredValve,
         master_address: u8,
         outlets: Vec<OutletConfig>,
-        instrumented_slot: u8,
     ) -> Result<Self, ConfigError> {
         let master = match master_address {
             0x00 => MasterAddr::Dtv,
@@ -102,18 +100,6 @@ impl ZoneConfig {
             source: Box::new(source),
         })?;
 
-        let configured = table.configured_slots();
-        let instrumented = Slot::new(instrumented_slot)
-            .ok()
-            .filter(|s| configured.contains(*s));
-        let Some(instrumented) = instrumented else {
-            return Err(ConfigError::InstrumentedSlotNotConfigured {
-                zone: id,
-                slot: instrumented_slot,
-                configured: ConfigError::slot_list(configured.iter()),
-            });
-        };
-
         Ok(Self {
             id,
             port,
@@ -121,7 +107,6 @@ impl ZoneConfig {
             master,
             outlets: table,
             labels: outlets,
-            instrumented_slot: instrumented,
         })
     }
 
@@ -174,16 +159,6 @@ impl ZoneConfig {
         self.outlets.configured_slots()
     }
 
-    /// The outlet whose supply pipe carries the independent temperature probe.
-    ///
-    /// Continuous independent coverage exists for this outlet only; every other
-    /// outlet is verified individually with an immersion probe at
-    /// commissioning.
-    #[must_use]
-    pub const fn instrumented_slot(&self) -> Slot {
-        self.instrumented_slot
-    }
-
     /// The operator's label for a slot, if it has one.
     #[must_use]
     pub fn label(&self, slot: Slot) -> Option<&str> {
@@ -231,7 +206,6 @@ mod tests {
             ConfiguredValve::Dtv6Port,
             0x00,
             (1u8..=5).map(|n| outlet(n, n, n - 1)).collect(),
-            1,
         )
     }
 
@@ -244,7 +218,6 @@ mod tests {
         assert_eq!(z.master(), MasterAddr::Dtv);
         assert_eq!(z.master().byte(), 0x00);
         assert_eq!(z.configured_slots().len(), 5);
-        assert_eq!(z.instrumented_slot().get(), 1);
         assert_eq!(z.label(Slot::new(3).unwrap()), Some("outlet 3"));
         assert_eq!(z.outlets().valve(), ValveType::Dtv6Port);
     }
@@ -257,7 +230,6 @@ mod tests {
             ConfiguredValve::Prompt3Port,
             0x10,
             (1u8..=3).map(|n| outlet(n, n, n)).collect(),
-            1,
         )
         .unwrap();
         assert_eq!(z.master(), MasterAddr::Prompt);
@@ -273,7 +245,6 @@ mod tests {
                 ConfiguredValve::Dtv6Port,
                 value,
                 vec![outlet(1, 1, 0)],
-                1,
             )
             .unwrap_err();
             assert!(matches!(err, ConfigError::MasterAddress { .. }), "{value}");
@@ -289,7 +260,6 @@ mod tests {
             ConfiguredValve::Dtv6Port,
             0x00,
             vec![outlet(1, 1, 0), outlet(1, 2, 1)],
-            1,
         )
         .unwrap_err();
         let text = err.to_string();
@@ -305,7 +275,6 @@ mod tests {
             ConfiguredValve::Dtv6Port,
             0x00,
             vec![outlet(1, 4, 0), outlet(2, 4, 1)],
-            1,
         )
         .unwrap_err();
         assert!(err.to_string().contains("status index 4"), "{err}");
@@ -319,7 +288,6 @@ mod tests {
             ConfiguredValve::Dtv6Port,
             0x00,
             vec![outlet(1, 1, 0), outlet(2, 2, 0)],
-            1,
         )
         .unwrap_err();
         assert!(err.to_string().contains("wire outlet 0"), "{err}");
@@ -336,7 +304,6 @@ mod tests {
             ConfiguredValve::Prompt3Port,
             0x00,
             vec![outlet(1, 1, 0)],
-            1,
         )
         .unwrap_err();
         let text = err.to_string();
@@ -349,7 +316,6 @@ mod tests {
             ConfiguredValve::Dtv6Port,
             0x00,
             vec![outlet(1, 1, 6)],
-            1,
         )
         .unwrap_err();
         assert!(err.to_string().contains("DTV 6-Port"), "{err}");
@@ -364,42 +330,9 @@ mod tests {
                 ConfiguredValve::Dtv6Port,
                 0x00,
                 vec![],
-                1
             ),
             Err(ConfigError::NoOutlets { .. })
         ));
-    }
-
-    #[test]
-    fn an_instrumented_slot_that_is_not_configured_is_refused() {
-        // Slot 4 is inside 1..=6 but is not in this zone's table.
-        let err = ZoneConfig::build(
-            ZoneId::Zone1,
-            port(),
-            ConfiguredValve::Dtv6Port,
-            0x00,
-            vec![outlet(1, 1, 0), outlet(2, 2, 1)],
-            4,
-        )
-        .unwrap_err();
-        let text = err.to_string();
-        assert!(text.contains("zones.zone1.instrumented_slot = 4"), "{text}");
-        assert!(text.contains("configured: 1, 2"), "{text}");
-
-        // And a slot outside 1..=6 at all, which never reaches the table.
-        for bad in [0u8, 7, 255] {
-            assert!(matches!(
-                ZoneConfig::build(
-                    ZoneId::Zone1,
-                    port(),
-                    ConfiguredValve::Dtv6Port,
-                    0x00,
-                    vec![outlet(1, 1, 0)],
-                    bad
-                ),
-                Err(ConfigError::InstrumentedSlotNotConfigured { .. })
-            ));
-        }
     }
 
     #[test]

@@ -52,7 +52,7 @@ pub const COMMAND_CAPACITY: usize = 16;
 /// distinction the design draws between invalid input and invalid wire data:
 /// bad input is rejected to the caller, bad wire data escalates to all-off.
 ///
-/// Not `Eq`: a [`Denial`] can carry a temperature divergence in degrees, and a
+/// Not `Eq`: a [`Denial`] can carry a temperature in degrees, and a
 /// float has no total equality. Comparing two denials for exact equality is not
 /// something a caller should be doing anyway.
 #[derive(Clone, PartialEq, Debug, thiserror::Error)]
@@ -82,11 +82,6 @@ pub enum CommandError {
     /// anything to stop.
     #[error("{link}: the previous command on this bus has not finished")]
     TooSoon { link: LinkKind },
-    /// The zone's independent temperature channel has never produced a sample,
-    /// so the interlock that would catch a wrong valve thermistor is not there
-    /// to catch it. `SAFE-05`.
-    #[error("{0}: the independent temperature channel has never produced a sample")]
-    NoIndependentReading(ZoneId),
     /// A stop has already been commanded on every link and the service is
     /// waiting for the confirmations. Nothing new is accepted from here.
     #[error("the service is shutting down")]

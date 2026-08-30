@@ -1,8 +1,7 @@
 //! What can go wrong, how far it escalates, and what must be done about it.
 
-use kdtv_units::{CorrectedC, LinkKind, RawC, ZoneId};
+use kdtv_units::{LinkKind, ZoneId};
 use serde::Serialize;
-use std::time::Duration;
 
 /// How far a fault escalates.
 ///
@@ -46,24 +45,6 @@ pub enum LatchReason {
     SteamLinkDegraded {
         why: DegradeReason,
     },
-    IndependentOverTemperature {
-        corrected_c: f32,
-    },
-    IndependentRawOverTemperature {
-        raw_c: f32,
-    },
-    RtdFault {
-        bits: u8,
-    },
-    RtdStarved {
-        since_s: u64,
-    },
-    /// The independent probe and the valve's own thermistor disagree. Recorded
-    /// as a finding as well as latching, because it means one of them is lying
-    /// and this project does not yet know which.
-    TemperatureDivergence {
-        delta_c: f32,
-    },
     ConfigCheckFailed {
         detail: String,
     },
@@ -85,9 +66,6 @@ pub enum DegradeReason {
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum FindingClass {
-    /// The two temperature sources disagree. Relevant to the open question about
-    /// what the valve's reported temperature actually means.
-    TemperatureDivergence,
     /// A response decoded but carried a value no documented table explains.
     UndocumentedWireValue,
 }
@@ -134,37 +112,6 @@ pub enum SafetyEvent {
         why: DegradeReason,
     },
 
-    // ---- the independent temperature chain -------------------------------
-    /// Corrected outlet temperature above the trip, for its dwell, with the
-    /// instrumented outlet on.
-    IndependentOverTemperature {
-        zone: ZoneId,
-        corrected: CorrectedC,
-        dwell: Duration,
-    },
-    /// Raw reading above the absolute backstop, regardless of any correction.
-    /// This one has no dwell: it is the guard against a correction curve that is
-    /// itself wrong.
-    IndependentRawOverTemperature {
-        zone: ZoneId,
-        raw: RawC,
-    },
-    RtdFaultRegister {
-        zone: ZoneId,
-        bits: u8,
-    },
-    RtdStarved {
-        zone: ZoneId,
-        since: Duration,
-    },
-    /// Independent and valve-reported temperatures differ beyond the limit, for
-    /// the dwell.
-    TemperatureDivergence {
-        zone: ZoneId,
-        delta_c: f32,
-        dwell: Duration,
-    },
-
     // ---- the service itself ----------------------------------------------
     SessionExpired {
         zone: ZoneId,
@@ -197,11 +144,6 @@ impl SafetyEvent {
             | Self::MalformedResponse { zone, .. }
             | Self::OutOfRangeValue { zone, .. }
             | Self::SafetyResponseMissed { zone, .. }
-            | Self::IndependentOverTemperature { zone, .. }
-            | Self::IndependentRawOverTemperature { zone, .. }
-            | Self::RtdFaultRegister { zone, .. }
-            | Self::RtdStarved { zone, .. }
-            | Self::TemperatureDivergence { zone, .. }
             | Self::SessionExpired { zone } => FaultScope::Zone(*zone),
 
             // A lost port may be the steam link, which is not a zone.
@@ -251,21 +193,6 @@ impl SafetyEvent {
             }
             Self::PortLost { .. } => LatchReason::PortLost,
             Self::SteamLinkDegraded { why } => LatchReason::SteamLinkDegraded { why: *why },
-            Self::IndependentOverTemperature { corrected, .. } => {
-                LatchReason::IndependentOverTemperature {
-                    corrected_c: corrected.celsius(),
-                }
-            }
-            Self::IndependentRawOverTemperature { raw, .. } => {
-                LatchReason::IndependentRawOverTemperature { raw_c: raw.0 }
-            }
-            Self::RtdFaultRegister { bits, .. } => LatchReason::RtdFault { bits: *bits },
-            Self::RtdStarved { since, .. } => LatchReason::RtdStarved {
-                since_s: since.as_secs(),
-            },
-            Self::TemperatureDivergence { delta_c, .. } => {
-                LatchReason::TemperatureDivergence { delta_c: *delta_c }
-            }
             // A session reaching its limit is not a fault: it stops water and
             // returns the zone to ready, and never latches.
             Self::SessionExpired { .. } => return None,
@@ -336,28 +263,6 @@ mod tests {
             SafetyEvent::SafetyResponseMissed {
                 zone: ZoneId::Zone1,
                 op: "AllOff".into(),
-            },
-            SafetyEvent::IndependentOverTemperature {
-                zone: ZoneId::Zone1,
-                corrected: kdtv_units::OffsetCurve::uncorrected().correct(RawC(46.0)),
-                dwell: Duration::from_secs(3),
-            },
-            SafetyEvent::IndependentRawOverTemperature {
-                zone: ZoneId::Zone1,
-                raw: RawC(51.0),
-            },
-            SafetyEvent::RtdFaultRegister {
-                zone: ZoneId::Zone1,
-                bits: 0x04,
-            },
-            SafetyEvent::RtdStarved {
-                zone: ZoneId::Zone1,
-                since: Duration::from_secs(6),
-            },
-            SafetyEvent::TemperatureDivergence {
-                zone: ZoneId::Zone1,
-                delta_c: 6.0,
-                dwell: Duration::from_secs(11),
             },
             SafetyEvent::SessionExpired {
                 zone: ZoneId::Zone1,

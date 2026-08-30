@@ -31,17 +31,12 @@
 )]
 
 pub mod ids;
-pub mod independent;
 pub mod session;
 pub mod setpoint;
 pub mod temp;
 
 pub use ids::{
     BootId, CommandId, LinkKind, OpenAuthority, PiBootId, SessionId, Slot, SlotSet, ZoneId,
-};
-pub use independent::{
-    CORRECTED_TRIP_C, CORRECTED_TRIP_DWELL, CorrectedC, CurveError, DIVERGENCE_DWELL,
-    DIVERGENCE_LIMIT_C, OffsetCurve, RAW_TRIP_C, RTD_STARVATION, RawC, SCALD_C,
 };
 pub use session::{SessionDuration, SteamMinutes};
 pub use setpoint::{Bound, ClampError, ClampRecord, FahrenheitError, SteamSetpoint, ValveSetpoint};

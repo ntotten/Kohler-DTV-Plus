@@ -11,7 +11,7 @@
 
 use kdtv_proto::dtv::TimingError;
 use kdtv_proto::saturn::OutletError;
-use kdtv_units::{CurveError, Slot, ZoneId};
+use kdtv_units::ZoneId;
 use std::path::PathBuf;
 
 /// Why the configuration was refused.
@@ -80,18 +80,6 @@ pub enum ConfigError {
         source: Box<OutletError>,
     },
 
-    #[error(
-        "zones.{zone}.instrumented_slot = {slot} names a slot that is not in \
-         zones.{zone}.outlets (configured: {configured}). The instrumented \
-         outlet is the one with independent temperature coverage; naming an \
-         absent slot would leave the zone with none"
-    )]
-    InstrumentedSlotNotConfigured {
-        zone: ZoneId,
-        slot: u8,
-        configured: String,
-    },
-
     #[error("steam.enabled = true but steam.port is not set")]
     SteamEnabledWithoutPort,
 
@@ -128,19 +116,6 @@ pub enum ConfigError {
 
     #[error("logging.max_total_mb = 0 leaves no room for the log the service is required to write")]
     LoggingBudgetZero,
-
-    #[error("sensors.{zone}.chip_select is empty")]
-    ChipSelectEmpty { zone: ZoneId },
-
-    #[error("sensors.{zone1}.chip_select and sensors.{zone2}.chip_select are both \"{value}\"")]
-    DuplicateChipSelect {
-        zone1: ZoneId,
-        zone2: ZoneId,
-        value: String,
-    },
-
-    #[error("sensors.{zone}.correction: {source}")]
-    Curve { zone: ZoneId, source: CurveError },
 
     #[error(
         "transmit_gate.{field} is required when transmit_gate.scope = \
@@ -231,23 +206,6 @@ pub enum ConfigError {
     PlaceholderUnbound { link: String },
 }
 
-impl ConfigError {
-    /// The slot list an [`ConfigError::InstrumentedSlotNotConfigured`] prints.
-    pub(crate) fn slot_list(slots: impl IntoIterator<Item = Slot>) -> String {
-        let mut out = String::new();
-        for s in slots {
-            if !out.is_empty() {
-                out.push_str(", ");
-            }
-            out.push_str(&s.get().to_string());
-        }
-        if out.is_empty() {
-            out.push_str("none");
-        }
-        out
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -262,12 +220,5 @@ mod tests {
         assert!(text.contains("zones.zone2.port"));
         assert!(text.contains("/dev/ttyUSB1"));
         assert!(text.contains("by-id"));
-    }
-
-    #[test]
-    fn slot_lists_read_as_lists() {
-        let slots = [1u8, 3, 5].map(|n| Slot::new(n).unwrap());
-        assert_eq!(ConfigError::slot_list(slots), "1, 3, 5");
-        assert_eq!(ConfigError::slot_list([]), "none");
     }
 }

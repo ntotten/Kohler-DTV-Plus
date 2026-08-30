@@ -644,179 +644,7 @@ fn req_controller_design_svc_04_a_wire_fault_on_zone_1_stops_zone_1_and_leaves_z
     );
 }
 
-// --------------------------------------------------- 5. the independent probe
-
-/// **The independent probe can stop water**, both when it reads hot and when it
-/// stops reading at all.
-///
-/// This is the only safety input in the system that does not come from the
-/// valve, and it had no implementation until this week — so it is the path to
-/// trust least until it has been watched failing. Both halves are driven by
-/// writing, or not writing, a file the daemon reads.
-///
-/// Zone 1 takes the temperature: a raw reading over `kdtv_units::RAW_TRIP_C` is
-/// the absolute backstop under the corrected trip. It has no dwell and is not
-/// gated on the outlet being open, because a pipe that hot is a finding
-/// whatever caused it.
-///
-/// Zone 2 takes starvation: the file is removed, every sample after that is a
-/// failed transfer rather than a reading, and the supervisor's own tick is what
-/// has to notice. `SAFE-05` gives it `kdtv_units::RTD_STARVATION`.
-///
-/// The two zones are used at once deliberately: each escalation must stop its
-/// own zone and only its own.
-///
-/// # Why the over-temperature budget is short
-///
-/// **Writing 55.0 °C trips two interlocks, not one.** `RtdWatch::observe`
-/// evaluates divergence from the same sample: 55.0 against the 38 °C the valve
-/// reports is 17 °C of disagreement, and
-/// `kdtv_units::DIVERGENCE_LIMIT_C` is 5 °C. Both paths end in an all-off on
-/// zone 1's wire, so an assertion that only says "some all-off appeared" cannot
-/// tell which one produced it — and with a budget longer than
-/// `kdtv_units::DIVERGENCE_DWELL` it passes with the raw backstop deleted, ten
-/// seconds later, off the divergence latch. The raw trip has **no dwell**: it
-/// fires on the first sample that crosses it, which is one supervisor pass. So
-/// the budget here is bounded well under the divergence dwell, and that bound
-/// is the assertion.
-#[test]
-fn req_controller_design_temp_01_the_independent_probe_stops_water_when_it_reads_hot_and_when_it_stops_reading()
- {
-    let Some(command) = daemon_or_skip("probe") else {
-        return;
-    };
-    let (rig, mut daemon) = boot("probe", &command);
-    let zone1 = LinkKind::Zone(ZoneId::Zone1);
-    let zone2 = LinkKind::Zone(ZoneId::Zone2);
-    let address = rig.valve_address();
-
-    // -- over temperature, on zone 1 ---------------------------------------
-    //
-    // Shorter than DIVERGENCE_DWELL, or the divergence latch answers for the
-    // backstop. Two zone ticks of headroom over "the next supervisor pass",
-    // and nothing else.
-    let raw_trip_budget = Duration::from_secs(4);
-    assert!(
-        raw_trip_budget < kdtv_units::DIVERGENCE_DWELL,
-        "the raw backstop has no dwell and must be shown to fire before the divergence \
-         latch could, or this test measures the wrong interlock"
-    );
-    let hot_mark = rig.elapsed();
-    // Derived from the constant, not remembered. A literal that happens to sit
-    // above today's `RAW_TRIP_C` stops testing the backstop the day the constant
-    // moves past it, and does so silently — the test goes on passing because the
-    // valve is stopped by something else.
-    // Past the raw backstop, and therefore past the corrected trip too:
-    // `kdtv_units` const-asserts `RAW_TRIP_C > CORRECTED_TRIP_C`.
-    let over_the_backstop = kdtv_units::RAW_TRIP_C + 5.0;
-    rig.write_probe(ZoneId::Zone1, &format!("{over_the_backstop}"))
-        .expect("the probe file is writable");
-    rig.wait_for(
-        &mut daemon,
-        "zone 1 to stop on the independent raw over-temperature backstop",
-        raw_trip_budget,
-        |rig| {
-            saturn_since(rig, zone1, hot_mark)
-                .iter()
-                .any(|f| f.is_all_off_to(address))
-        },
-    )
-    .unwrap_or_else(|e| {
-        panic!(
-            "the independent raw over-temperature backstop did not stop zone 1 within \
-             {raw_trip_budget:?}. It has no dwell, so anything slower than a supervisor \
-             pass means the stop came from somewhere else — the {:?} divergence latch \
-             being the candidate, since {over_the_backstop} C against a valve reporting \
-             38 C is {} C of divergence: {e}",
-            kdtv_units::DIVERGENCE_DWELL,
-            over_the_backstop - 38.0
-        )
-    });
-
-    // Zone 2 was reading 38 °C throughout and must not have been touched.
-    //
-    // Two seconds of ordinary running first, because the raw backstop fires
-    // inside one supervisor pass and zone 2's tick is 525 ms: without the
-    // window there may be nothing on zone 2's wire to judge. And `.all()` over
-    // an empty list is vacuously true, so the claim needs zone 2 to have been
-    // there to touch — a widening fault that tore its link down before any
-    // stop was encoded would satisfy the negative on its own.
-    rig.observe(&mut daemon, Duration::from_secs(2))
-        .expect("the daemon stays up");
-    let zone2_during = saturn_since(&rig, zone2, hot_mark);
-    assert!(
-        zone2_during.len() >= 3,
-        "zone 2 went dark when zone 1 read hot, which is the widening fault in its \
-         quietest form\n{}",
-        render(&zone2_during)
-    );
-    assert!(
-        zone2_during
-            .iter()
-            .all(|f| f.control != opcode::WRITE_OUTLET_STATES),
-        "zone 1's over-temperature stopped zone 2 as well\n{}",
-        render(&zone2_during)
-    );
-
-    // -- starvation, on zone 2 ---------------------------------------------
-    let starved_mark = rig.elapsed();
-    rig.remove_probe(ZoneId::Zone2)
-        .expect("the probe file is removable");
-    rig.wait_for(
-        &mut daemon,
-        "zone 2 to stop on independent-probe starvation",
-        Duration::from_secs(25),
-        |rig| {
-            saturn_since(rig, zone2, starved_mark)
-                .iter()
-                .any(|f| f.is_all_off_to(address))
-        },
-    )
-    .unwrap_or_else(|e| {
-        panic!(
-            "a probe that stopped answering did not stop zone 2, and \
-             kdtv_units::RTD_STARVATION is 5 s: {e}"
-        )
-    });
-
-    // Starvation is a fault, not a routine stop: the zone latches, so the link
-    // must go quiet rather than resume polling a valve it can no longer
-    // interlock.
-    let quiet_since = rig.elapsed();
-    rig.observe(&mut daemon, Duration::from_secs(2))
-        .expect("the daemon stays up");
-
-    // "The link went quiet" and "the harness stopped listening" look identical
-    // in a transcript, and they are one `?` apart: the pump thread ends for
-    // **all three links** on the first I/O error, and closing a port behind a
-    // latch — which this test provokes twice — is what produces one. So the
-    // quiet is only evidence once something else is shown to have kept
-    // transmitting through it.
-    let still_running = rig.with(|h| h.links_disturbed_since(zone2, quiet_since));
-    assert!(
-        still_running.contains(&LinkKind::Steam),
-        "nothing was transmitted on any other link after {quiet_since:?}, so zone 2's \
-         silence is the harness's and not the daemon's. Links still carrying traffic: \
-         {still_running:?}{}",
-        rig.pump_failure()
-            .map_or_else(String::new, |why| format!("\nthe pump stopped: {why}"))
-    );
-
-    let after = saturn_since(&rig, zone2, starved_mark);
-    let last = after
-        .last()
-        .expect("zone 2 transmitted after the probe went");
-    assert!(
-        last.is_all_off_to(address) && last.at <= quiet_since,
-        "zone 2 kept driving a valve whose independent probe had stopped answering; the \
-         last frame was {} at {:.3}s\n{}",
-        last.hex(),
-        last.at.as_secs_f64(),
-        render(&after)
-    );
-}
-
-// --------------------------------------------------------------- 6. SIGTERM
+// --------------------------------------------------------------- 5. SIGTERM
 
 /// **`SIGTERM` stops water before the process exits.**
 ///
@@ -977,7 +805,7 @@ fn sigterm_puts_an_all_off_on_the_wire_before_the_process_is_gone() {
     );
 }
 
-// -------------------------------------------------------------- 7. the gate
+// -------------------------------------------------------------- 6. the gate
 
 /// **The gate is closed**: the daemon opened pseudo-terminals and no real
 /// serial port.
@@ -1101,9 +929,8 @@ fn the_transmit_gate_stayed_closed_for_the_whole_run() {
     );
 
     // 3. What the process holds. An **allowlist**: a denylist has to anticipate
-    //    every spelling of a real device, and /dev/spidev0.0 — the MAX31865
-    //    this bench profile exists to avoid — is not spelled /dev/tty, nor is
-    //    /dev/rfcomm0 or /dev/bus/usb/001/002.
+    //    every spelling of a real device, and /dev/spidev0.0 is not spelled
+    //    /dev/tty, nor is /dev/rfcomm0 or /dev/bus/usb/001/002.
     //
     //    A run on this machine holds exactly `/dev/null` (stdin, which
     //    `Daemon::start` supplies) and the three pseudo-terminals. The two

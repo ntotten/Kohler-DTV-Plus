@@ -142,8 +142,7 @@ impl From<CommandError> for ApiError {
             }
             CommandError::Denied(_)
             | CommandError::ZoneRefused(_)
-            | CommandError::SteamRefused(_)
-            | CommandError::NoIndependentReading(_) => Self::Refused(e.to_string()),
+            | CommandError::SteamRefused(_) => Self::Refused(e.to_string()),
         }
     }
 }
@@ -204,10 +203,6 @@ mod tests {
             ),
             (CommandError::ShuttingDown, StatusCode::SERVICE_UNAVAILABLE),
             (CommandError::NotRunning, StatusCode::SERVICE_UNAVAILABLE),
-            (
-                CommandError::NoIndependentReading(ZoneId::Zone2),
-                StatusCode::CONFLICT,
-            ),
         ];
         for (from, want) in cases {
             let rendered = format!("{from}");

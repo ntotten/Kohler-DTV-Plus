@@ -25,6 +25,7 @@ evidence, and record why here.
 | D11                                                                | No relay, contactor, smart plug or cord switch in valve mains, and the rest of the exclusions | [HARDWARE.md § 14](HARDWARE.md)                                           |
 | [W1](#w1--proposed-repository-layout-superseded)                   | Proposed repository layout — superseded                                                       | Below                                                                     |
 | [W2](#w2--the-modular-jack-inference-superseded)                   | The modular-jack inference — superseded                                                       | [STEAM-ADAPTER.md § 5](STEAM-ADAPTER.md)                                  |
+| [W3](#w3--the-independent-temperature-sensor-removed)              | The independent temperature sensor — removed 2026-08-30                                       | Below                                                                     |
 
 D6–D11 are specifications with their evidence attached, so their records live
 in the spec; this index exists so nothing settled has to be rediscovered by
@@ -194,3 +195,32 @@ half-duplex RS-485. The struck-through original text stays where it was
 written, in [STEAM-ADAPTER.md § 5](STEAM-ADAPTER.md), with the correction;
 the measured record is
 [research/reference/steam-adapter/](../../research/reference/steam-adapter/).
+
+## W3 — The independent temperature sensor, removed
+
+**Removed from the plan on 2026-08-30, operator decision.** Through revision A
+the build carried an independent outlet temperature subsystem: one PT1000
+Class A surface-clamp probe per zone on a MAX31865 amplifier over SPI, wired
+into the same `all-off` path as the valve fault flags, with a start refused
+until the channel had spoken and a latch on over-temperature, fault-register,
+starvation and divergence conditions.
+
+**Why it went.** It was not load-bearing for the safety case. The stock system
+runs with no independent measurement at all; the valve owns anti-scald, the
+temperature envelope and fail-closed behaviour, and the replacement's safety
+case rests on the setpoint clamps, the Phase 3 fail-off measurements and the
+Therma K verification of every outlet at commissioning — none of which involve
+the permanent sensor. Its authority was also weaker than it looked: it could
+only command `all-off` through the same valve it was second-guessing, so in the
+one scenario where a valve truly fails hot — a `WELDED` fault — it could do
+nothing either. What it cost was real: ~$130 of probes and amplifiers, the only
+soldering in the build, two enclosure glands, an SPI subsystem in software, and
+a start path that refused without it.
+
+The full implementation shipped and tested before removal — config, HAL
+channel, safety events, supervisor sampling, e2e scenarios — and lives in git
+history if it is ever wanted back.
+
+**Would reopen it.** Evidence that the valve's thermistor self-report cannot be
+trusted — for example a Phase 3 or Phase 4 Therma K measurement that disagrees
+with the reported temperature beyond the sensor's tolerance.

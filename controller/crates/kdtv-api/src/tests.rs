@@ -7,7 +7,7 @@
 //!
 //! **Why a fake and not a `ServiceHandle`.** `ServiceHandle::new` is
 //! crate-private in `kdtv-service`, so obtaining a real one means starting a
-//! supervisor, three link pumps and two RTD samplers. The assertions here are
+//! supervisor and three link pumps. The assertions here are
 //! about the boundary — what reaches a handler, what a handler sends on, and
 //! what it never sends — and a fake is the only way to see "nothing reached the
 //! service" at all. What the service does *with* a command is tested in

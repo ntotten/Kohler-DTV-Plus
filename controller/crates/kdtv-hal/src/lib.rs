@@ -8,7 +8,7 @@
 //! it — the link state machines, the safety kernel, the API — is sans-IO and
 //! takes time as a parameter.
 //!
-//! **The fakes are not here.** `SimLink`, `SimClock`, `SimRtd` and the rest live
+//! **The fakes are not here.** `SimLink`, `SimClock` and the rest live
 //! in `kdtv-emulator`, which `cargo xtask audit-graph` already excludes from the
 //! daemon's dependency graph. That placement is the mechanism: there is no
 //! feature flag on this crate that could leak a fake into production, because
@@ -56,13 +56,17 @@
     )
 )]
 
+/// `GPIO-03` / `PWR-01`. This service drives nothing through GPIO, and the ban
+/// is stated once so the manifest test and the docs can share it.
+pub const NO_GPIO_OUTPUT: &str = "this service drives no relay, contactor or mains path; there is no GPIO output trait \
+     and no GPIO crate in the daemon's dependency graph";
+
 pub mod clock;
 pub mod factory;
 pub mod ids;
 pub mod latency;
 pub mod link;
 pub mod resolve;
-pub mod rtd;
 pub mod sysfs;
 pub mod watchdog;
 
@@ -77,10 +81,6 @@ pub use link::{
 };
 pub use resolve::{
     BridgeKind, PortBinding, ResolveError, ResolvedPort, UsbIdentity, bindings_of, resolve_distinct,
-};
-pub use rtd::{
-    CS_FOR_ZONE, ChipSelect, EXPANSION_CS, FaultRegister, FileRtdChannel, NO_GPIO_OUTPUT,
-    RtdChannel, RtdError, RtdSample, chip_select_for,
 };
 pub use sysfs::{DirSysfs, RealSysfs, SysfsView, TtyCandidate};
 pub use watchdog::{SystemdWatchdog, Watchdog};

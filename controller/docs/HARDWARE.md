@@ -83,16 +83,11 @@ this service moves at most a few hundred bytes per second.
   (PSU outside the      └──>|  Raspberry Pi 4 Model B, 2 GB         |
    enclosure)               |   Rust service · local API · journald |
                             |   BCM2711 hardware watchdog           |
-                            +---+-------+-------+-------+-------+---+
-                            USB3|   USB3|   USB2|   SPI0|   I2C1|
-                                |       |       |       |       |
-                                |       |       |       |       +--> DS3231 RTC
-                                |       |       |       |            + CR1220 cell
+                            +---+-------+-------+-------+---+
+                            USB3|   USB3|   USB2|   I2C1|
                                 |       |       |       |
-                                |       |       |       +--> MAX31865 x 2
-                                |       |       |            +--> PT1000 Class A,
-                                |       |       |                 3-wire, 1 per zone,
-                                |       |       |                 clamped to outlet pipe
+                                |       |       |       +--> DS3231 RTC
+                                |       |       |            + CR1220 cell
                                 |       |       |
           +---------------------+       |       +-----------------------+
           |             +---------------+                               |
@@ -228,65 +223,12 @@ Byte time at 9600 8N1 is ~1.04 ms; a 20-byte frame occupies the wire ~21 ms.
 
 ---
 
-## 7. Subsystem C — independent temperature measurement
+## 7. Removed — independent temperature measurement
 
-Required by [DESIGN.md § Independent temperature measurement](DESIGN.md): the
-sensor is the only independent temperature measurement in the system.
-
-Every other temperature in this system is the valve's own thermistor
-self-report. Per [DISCLAIMER.md](../../DISCLAIMER.md) that is not a
-measurement.
-
-### Chain
-
-| Stage     | Part                                                                    | Specification                                               |
-| --------- | ----------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Element   | PT1000, Class A, 3-wire, pipe-surface clamp, ≥ 2 m lead, ≥ 100 °C rated | Class A at 40 °C is ±0.23 °C                                |
-| Amplifier | Adafruit PT1000 RTD amplifier, MAX31865, PID `3648`                     | 4300 Ω 0.1 % reference resistor; 2/3/4-wire capable **[V]** |
-| Bus       | SPI0, one chip select per channel                                       | See §8                                                      |
-| Channels  | 2 fitted (one per zone). Electronics support 4 (SPI1 `CE0`/`CE1`)       |                                                             |
-
-**Power the MAX31865 `VIN` from the Pi's 3V3 rail.** The breakout accepts
-3–5 VDC and its level shifting follows `VIN`, so `SDO` drives at the `VIN`
-level **[V]**. Powering from 5 V would put 5 V onto a 3.3 V Pi GPIO. Configure
-each breakout for 3-wire per its own documentation.
-
-### Placement and its limitation
-
-One probe per zone, clamped to the supply pipe of that zone's **default
-outlet**, as close to the valve as accessible pipe allows. Exact location and
-pipe OD are set during the Phase 0 survey (§11).
-
-**A surface clamp is not an immersion measurement.** It reads pipe wall, lags
-by seconds, and reads low. Two consequences, both mandatory:
-
-1. **Characterise the offset at commissioning** against the Therma K immersion
-   probe, across the working range, and apply that correction before any
-   threshold is evaluated. The raw reading is logged alongside the corrected
-   one.
-2. **The interlock covers only the instrumented outlet.** When a non-instrumented
-   outlet is active there is no independent continuous measurement. Every outlet
-   is still verified individually with the immersion probe at Phase 4, and the
-   setpoint clamp and valve fault monitoring still apply — but continuous
-   independent coverage is limited to the default outlet until further channels
-   are fitted. This limitation is recorded in the commissioning report.
-
-### Alarm logic
-
-The sensor has **no authority to open an outlet**. It can only contribute to
-`all-off`.
-
-| Condition                                                                | Action                                                 |
-| ------------------------------------------------------------------------ | ------------------------------------------------------ |
-| Corrected outlet temperature > 45.0 °C for > 2 s, instrumented outlet on | `all-off` that zone, latch unavailable                 |
-| Raw reading > 50.0 °C, regardless of correction                          | `all-off` that zone, latch unavailable                 |
-| MAX31865 fault register non-zero (RTD open/short, over/under-voltage)    | `all-off` that zone, latch unavailable                 |
-| No RTD sample for > 5 s                                                  | `all-off` that zone, latch unavailable                 |
-| Corrected reading vs valve-reported differ by > 5 °C for > 10 s          | `all-off` that zone, latch, record as I5-class finding |
-
-45.0 °C sits above the 42.5 °C setpoint ceiling and above the 43 °C scald
-threshold, with margin for sensor lag. It is a fault threshold, not a comfort
-limit.
+A PT1000/MAX31865 outlet temperature subsystem occupied this section through
+revision A and was **removed from the plan on 2026-08-30**, operator decision —
+[DECISIONS.md W3](DECISIONS.md#w3--the-independent-temperature-sensor-removed).
+The section number is kept so every §8–§15 citation stays stable.
 
 ---
 
@@ -306,23 +248,14 @@ the pre-sync window; it does not remove the requirement.
 
 ### Pi 40-pin header assignments
 
-| Header pin | GPIO   | Function  | Destination                   |
-| ---------: | ------ | --------- | ----------------------------- |
-|          1 | —      | 3V3       | MAX31865 #1 `VIN`, #2 `VIN`   |
-|          3 | GPIO2  | I2C1 SDA  | DS3231 `SDA`                  |
-|          5 | GPIO3  | I2C1 SCL  | DS3231 `SCL`                  |
-|          6 | —      | GND       | DS3231 `GND`                  |
-|          9 | —      | GND       | MAX31865 #1 `GND`             |
-|         14 | —      | GND       | MAX31865 #2 `GND`             |
-|         17 | —      | 3V3       | DS3231 `VIN`                  |
-|         19 | GPIO10 | SPI0 MOSI | MAX31865 #1 and #2 `SDI`      |
-|         21 | GPIO9  | SPI0 MISO | MAX31865 #1 and #2 `SDO`      |
-|         23 | GPIO11 | SPI0 SCLK | MAX31865 #1 and #2 `SCK`      |
-|         24 | GPIO8  | SPI0 CE0  | MAX31865 #1 `CS` — **zone 1** |
-|         26 | GPIO7  | SPI0 CE1  | MAX31865 #2 `CS` — **zone 2** |
+| Header pin | GPIO  | Function | Destination  |
+| ---------: | ----- | -------- | ------------ |
+|          3 | GPIO2 | I2C1 SDA | DS3231 `SDA` |
+|          5 | GPIO3 | I2C1 SCL | DS3231 `SCL` |
+|          6 | —     | GND      | DS3231 `GND` |
+|         17 | —     | 3V3      | DS3231 `VIN` |
 
-Expansion channels 3 and 4 use SPI1 `CE0` (GPIO18, pin 12) and `CE1` (GPIO17,
-pin 11). No GPIO drives a relay, a contactor, or anything in a mains path.
+No GPIO drives a relay, a contactor, or anything in a mains path.
 
 ---
 
@@ -330,12 +263,12 @@ pin 11). No GPIO drives a relay, a contactor, or anything in a mains path.
 
 ### Budget
 
-| Load                 | Worst case  | Note                                     |
-| -------------------- | ----------- | ---------------------------------------- |
-| Raspberry Pi 4 2 GB  | ~3.5 W      | This workload; idle ~2.7 W               |
-| Converter × 3        | 3 × 1.0 W   | 200 mA fused each; actual draw is lower  |
-| MAX31865 × 2, DS3231 | < 0.1 W     | On 3V3                                   |
-| **Total**            | **≈ 6.6 W** | Supply is 15.3 W — better than 2× margin |
+| Load                | Worst case  | Note                                     |
+| ------------------- | ----------- | ---------------------------------------- |
+| Raspberry Pi 4 2 GB | ~3.5 W      | This workload; idle ~2.7 W               |
+| Converter × 3       | 3 × 1.0 W   | 200 mA fused each; actual draw is lower  |
+| DS3231              | < 0.1 W     | On 3V3                                   |
+| **Total**           | **≈ 6.6 W** | Supply is 15.3 W — better than 2× margin |
 
 Worst-case downstream USB draw is 600 mA across three converters, inside the
 Pi 4's documented total USB budget **[V]**.
@@ -366,18 +299,18 @@ arrangement, and fit the labelled manual valve-power disconnects that
 
 ## 10. Enclosure, mechanical and environment
 
-| Requirement       | Specification                                                                                |
-| ----------------- | -------------------------------------------------------------------------------------------- |
-| Location          | Dry, serviceable, ventilated. **Not inside the bathroom wet zone**                           |
-| Rating            | IP65 / NEMA 4X wall-mount, hinged or screw lid, non-metallic                                 |
-| Internal size     | ≥ 300 × 200 × 150 mm, with a mounting plate                                                  |
-| Rail              | 35 mm × 7.5 mm DIN, ≥ 200 mm usable length                                                   |
-| Rail budget       | 3 × converter at 81.9 × 54.0 × 32.0 mm, plus terminal blocks                                 |
-| Pi mounting       | DIN-rail carrier or plate standoffs, GPIO header accessible with the lid open                |
-| Breakout mounting | MAX31865 and DS3231 on plate standoffs, not loose                                            |
-| Glands            | 1 × Pi USB-C power, 1 × Ethernet, 2 × valve field cable, 1 × steam field cable, 2 × RTD lead |
-| Interior ambient  | ≤ 40 °C, logged from the Pi's own thermal sensor through the seven-day soak                  |
-| Strain relief     | Every cable, at the gland. No conductor takes tension at a screw terminal                    |
+| Requirement       | Specification                                                                  |
+| ----------------- | ------------------------------------------------------------------------------ |
+| Location          | Dry, serviceable, ventilated. **Not inside the bathroom wet zone**             |
+| Rating            | IP65 / NEMA 4X wall-mount, hinged or screw lid, non-metallic                   |
+| Internal size     | ≥ 300 × 200 × 150 mm, with a mounting plate                                    |
+| Rail              | 35 mm × 7.5 mm DIN, ≥ 200 mm usable length                                     |
+| Rail budget       | 3 × converter at 81.9 × 54.0 × 32.0 mm, plus terminal blocks                   |
+| Pi mounting       | DIN-rail carrier or plate standoffs, GPIO header accessible with the lid open  |
+| Breakout mounting | DS3231 on plate standoffs, not loose                                           |
+| Glands            | 1 × Pi USB-C power, 1 × Ethernet, 2 × valve field cable, 1 × steam field cable |
+| Interior ambient  | ≤ 40 °C, logged from the Pi's own thermal sensor through the seven-day soak    |
+| Strain relief     | Every cable, at the gland. No conductor takes tension at a screw terminal      |
 
 Size for one spare gland and ~55 mm of spare rail beyond this. Re-drilling a
 sealed enclosure in service is worse than buying a larger one now.
@@ -414,7 +347,6 @@ that closes it. Ordering by assumption is prohibited by
 | Adapter lead conductor gauge, length  | Run length, gauge                             | Measure the installed run at Phase 0                                                        |
 | RS-485 termination and bias           | Whether the factory bus terminates, and where | Meter the unpowered bus; capture the original waveform in Phase 1                           |
 | Cable polarity                        | Which conductor is A+                         | Phase 1 capture. The `TA`/`TB` labels are the converter's convention, not Kohler's          |
-| RTD clamp size                        | Outlet pipe OD                                | Phase 0 survey                                                                              |
 | Valve-power disconnect                | Valve voltage, receptacles, circuits, GFCI    | Electrician, after both nameplates are read                                                 |
 | Ferrules, glands, blocks, rail length | Final conductor gauges and layout             | Bench layout, after the above                                                               |
 
@@ -675,21 +607,19 @@ side**. This is Phase 2 of
 [DESIGN.md](DESIGN.md); these are the hardware checks
 inside it.
 
-| #   | Check                                                                            | Pass criterion                                                              |
-| --- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| 1   | Both converters enumerate with **distinct** USB serial numbers                   | Two distinct IDs, or documented port-path binding in use                    |
-| 2   | `latency_timer` reads back 1 ms on both                                          | Service refuses to start otherwise                                          |
-| 3   | Bridge chip identified and recorded                                              | Matches an FTDI part, or the driver's low-latency equivalent is established |
-| 4   | Termination jumpers OFF, verified visually and by resistance                     | No 120 Ω across A/B                                                         |
-| 5   | Field-side `PE` terminals not joined                                             | Open circuit between the two zones' `PE`                                    |
-| 6   | Loopback A↔B per converter, both directions                                      | Frames decode without checksum error                                        |
-| 7   | Zone-to-zone isolation                                                           | No continuity between zone 1 and zone 2 field terminals                     |
-| 8   | RTD channels read ambient, and read a known reference against the Therma K probe | Within Class A tolerance plus the characterised offset                      |
-| 9   | RTD open-circuit and short-circuit injected                                      | MAX31865 fault register set; service commands `all-off`                     |
-| 10  | RTC holds time across a full power removal                                       | Time correct on the next boot before NTP                                    |
-| 11  | Hardware watchdog fires on a forced service hang                                 | Pi resets; boots to `READY_OFF`, no state restored                          |
-| 12  | Enclosure interior ≤ 40 °C after 7 days sealed                                   | Logged from the Pi's thermal sensor                                         |
-| 13  | Every label present and correct; emergency card in the lid                       | Visual                                                                      |
+| #   | Check                                                          | Pass criterion                                                              |
+| --- | -------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 1   | Both converters enumerate with **distinct** USB serial numbers | Two distinct IDs, or documented port-path binding in use                    |
+| 2   | `latency_timer` reads back 1 ms on both                        | Service refuses to start otherwise                                          |
+| 3   | Bridge chip identified and recorded                            | Matches an FTDI part, or the driver's low-latency equivalent is established |
+| 4   | Termination jumpers OFF, verified visually and by resistance   | No 120 Ω across A/B                                                         |
+| 5   | Field-side `PE` terminals not joined                           | Open circuit between the two zones' `PE`                                    |
+| 6   | Loopback A↔B per converter, both directions                    | Frames decode without checksum error                                        |
+| 7   | Zone-to-zone isolation                                         | No continuity between zone 1 and zone 2 field terminals                     |
+| 8   | RTC holds time across a full power removal                     | Time correct on the next boot before NTP                                    |
+| 9   | Hardware watchdog fires on a forced service hang               | Pi resets; boots to `READY_OFF`, no state restored                          |
+| 10  | Enclosure interior ≤ 40 °C after 7 days sealed                 | Logged from the Pi's thermal sensor                                         |
+| 11  | Every label present and correct; emergency card in the lid     | Visual                                                                      |
 
 Checks 6 and 7 catch a wiring error capable of bridging two buses. Neither may
 be skipped.
@@ -703,18 +633,17 @@ it.
 
 ## 14. Deliberately excluded
 
-| Excluded                                                       | Reason                                                                                  |
-| -------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Any relay, contactor, smart plug or cord switch in valve mains | Design rule. A failing stop latency is not solved with an unreviewed relay              |
-| Mains wiring inside the enclosure                              | Keeps the build low-voltage; §9                                                         |
-| UPS on the Pi                                                  | Power loss must reach the valves; §4                                                    |
-| Dual-channel RS-485 converter or HAT                           | One isolation barrier shared by both zones; §5                                          |
-| Bidirectional USB-RS-485 adapter used as a capture tap         | Hardware automatic direction control is not physically receive-only                     |
-| Generic `MAX485` / `MAX3485` / TTL-to-RS485 modules            | Mostly unisolated; some assert the transmitter during boot                              |
-| Wi-Fi in the control path                                      | Wired Ethernet only; radios disabled                                                    |
-| A custom PCB                                                   | Nothing in this build requires one                                                      |
-| An industrial PLC (~$500)                                      | Poor value for two links                                                                |
-| A second temperature sensor on the same element                | A redundant sensor is not a redundant measurement; the immersion probe is the reference |
+| Excluded                                                       | Reason                                                                     |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Any relay, contactor, smart plug or cord switch in valve mains | Design rule. A failing stop latency is not solved with an unreviewed relay |
+| Mains wiring inside the enclosure                              | Keeps the build low-voltage; §9                                            |
+| UPS on the Pi                                                  | Power loss must reach the valves; §4                                       |
+| Dual-channel RS-485 converter or HAT                           | One isolation barrier shared by both zones; §5                             |
+| Bidirectional USB-RS-485 adapter used as a capture tap         | Hardware automatic direction control is not physically receive-only        |
+| Generic `MAX485` / `MAX3485` / TTL-to-RS485 modules            | Mostly unisolated; some assert the transmitter during boot                 |
+| Wi-Fi in the control path                                      | Wired Ethernet only; radios disabled                                       |
+| A custom PCB                                                   | Nothing in this build requires one                                         |
+| An industrial PLC (~$500)                                      | Poor value for two links                                                   |
 
 ---
 
@@ -726,10 +655,9 @@ it.
 | 2   | Valve connector housing, keying, pin count                   | Phase 0 photograph and continuity check                                                      | Adapter leads               |
 | 3   | Cable polarity — which conductor is A+                       | Phase 1 capture                                                                              | First transmission          |
 | 4   | Factory termination and idle bias                            | Phase 1 capture and unpowered measurement                                                    | Termination jumpers         |
-| 5   | Outlet pipe OD and accessible sensor location                | Phase 0 survey                                                                               | RTD clamp order             |
-| 6   | Valve mains voltage, receptacles, circuits, GFCI             | Electrician                                                                                  | Disconnect selection        |
-| 7   | Which FTDI part is fitted — `FT232RL` or `FT232RNL` **[?]**  | Inspection on arrival                                                                        | Nothing; record only        |
-| 8   | Saturn response timeout: 320 ms or 400 ms                    | Phase 1 capture — [I5](../../INVESTIGATIONS.md#i5--the-saturn-register-map-is-contradictory) | Decoder deadlines           |
-| 9   | Whether automatic purge is on                                | [I4](../../INVESTIGATIONS.md#i4--is-automatic-purge-on) — one read-only call                 | Stop-latency definition     |
-| 10  | DTV+ connector pinout on the peripheral port                 | Meter a powered-down port — §12                                                              | Steam adapter lead          |
-| 11  | What the generator does when the DTV+ link drops mid-session | **Measure it at Phase 5** — §12. Kohler case #07797183 in parallel                           | Nothing; worst case assumed |
+| 5   | Valve mains voltage, receptacles, circuits, GFCI             | Electrician                                                                                  | Disconnect selection        |
+| 6   | Which FTDI part is fitted — `FT232RL` or `FT232RNL` **[?]**  | Inspection on arrival                                                                        | Nothing; record only        |
+| 7   | Saturn response timeout: 320 ms or 400 ms                    | Phase 1 capture — [I5](../../INVESTIGATIONS.md#i5--the-saturn-register-map-is-contradictory) | Decoder deadlines           |
+| 8   | Whether automatic purge is on                                | [I4](../../INVESTIGATIONS.md#i4--is-automatic-purge-on) — one read-only call                 | Stop-latency definition     |
+| 9   | DTV+ connector pinout on the peripheral port                 | Meter a powered-down port — §12                                                              | Steam adapter lead          |
+| 10  | What the generator does when the DTV+ link drops mid-session | **Measure it at Phase 5** — §12. Kohler case #07797183 in parallel                           | Nothing; worst case assumed |
