@@ -725,12 +725,14 @@ dependencies = [
 name = "kdtv-engine"
 version = "0.1.0"
 dependencies = [
+ "heapless",
  "kdtv-config",
  "kdtv-proto",
  "kdtv-safety",
  "kdtv-telemetry",
  "kdtv-units",
  "serde",
+ "serde_json",
  "smallvec",
  "thiserror",
 ]
