@@ -1,0 +1,59 @@
+{
+  "capture": "startup-2",
+  "transport": "SCPI over raw TCP, port 5555",
+  "channels": {
+    "CHANnel1": {
+      "file": "startup-2.channel1.raw",
+      "waveform_mode": "MAXimum",
+      "waveform_format": "BYTE",
+      "read": ":WAVeform:DATA? in chunks of 250000 points",
+      "preamble": "0,1,6930000,1,8.000000E-6,-5.544000E+1,0.000000,3.4133E-02,-73,128",
+      "byte_count": 2750000,
+      "sha256": "fc8ebf6492f8212cc87fbbc56996ca5550a082a19ecddc9a1f44d3803f3d151e",
+      "received_byte_count": 6930000,
+      "received_sha256": "c0c0725a19ac75d1ebd98c35692d17ae0d93aff27ef5a27565a35ed829c2a2ef",
+      "slice_first_index": 3242500
+    },
+    "CHANnel2": {
+      "file": "startup-2.channel2.raw",
+      "waveform_mode": "MAXimum",
+      "waveform_format": "BYTE",
+      "read": ":WAVeform:DATA? in chunks of 250000 points",
+      "preamble": "0,1,6930000,1,8.000000E-6,-5.544000E+1,0.000000,3.4133E-02,-73,128",
+      "byte_count": 2750000,
+      "sha256": "24c71aedac0efd5dad4c2e9c74ab1b1e7934c018cbcda04771b311d00a10a9c5",
+      "received_byte_count": 6930000,
+      "received_sha256": "d68727199d46b5710c54f97001958032fb99f4898e9b93cafa78f80d0bcf19d9",
+      "slice_first_index": 3242500
+    }
+  },
+  "started_utc": "2026-10-24T19:34:04Z",
+  "started_local": "2026-10-24T15:34:04-04:00",
+  "scope_settings": {
+    "*IDN?": "RIGOL TECHNOLOGIES,DHO804,DHO8A284M01558,00.01.05",
+    ":ACQuire:MDEPth?": "1.0000E+07",
+    ":ACQuire:SRATe?": "1.250000E+5",
+    ":ACQuire:TYPE?": "NORM",
+    ":TIMebase:MAIN:SCALe?": "5.000000E0",
+    ":TIMebase:MAIN:OFFSet?": "-2.500000E+1",
+    ":TRIGger:MODE?": "EDGE",
+    ":TRIGger:SWEep?": "AUTO",
+    ":TRIGger:EDGE:SOURce?": "CHAN1",
+    ":TRIGger:EDGE:SLOPe?": "NEG",
+    ":TRIGger:EDGE:LEVel?": "1.800000E0",
+    ":CHANnel1:SCALe?": "1.000000E+00",
+    ":CHANnel1:OFFSet?": "-2.500000E+00",
+    ":CHANnel1:PROBe?": "10",
+    ":CHANnel1:COUPling?": "DC",
+    ":CHANnel1:BWLimit?": "OFF",
+    ":CHANnel2:SCALe?": "1.000000E+00",
+    ":CHANnel2:OFFSet?": "-2.500000E+00",
+    ":CHANnel2:PROBe?": "10",
+    ":CHANnel2:COUPling?": "DC",
+    ":CHANnel2:BWLimit?": "OFF"
+  },
+  "completed_utc": "2026-10-24T19:34:18Z",
+  "completed_local": "2026-10-24T15:34:18-04:00",
+  "conversion": "preamble = format,type,points,count,xincrement,xorigin,xreference,yincrement,yorigin,yreference; volts = (byte - yorigin - yreference) * yincrement; seconds = (slice_first_index + index - xreference) * xincrement + xorigin, 0 s at the trigger",
+  "slice": "samples [slice_first_index, slice_first_index + byte_count) of the received record, unchanged; window -29.500 s to -7.500 s"
+}

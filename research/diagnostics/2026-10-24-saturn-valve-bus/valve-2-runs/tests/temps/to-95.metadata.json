@@ -1,0 +1,54 @@
+{
+  "capture": "to-95",
+  "transport": "SCPI over raw TCP, port 5555",
+  "channels": {
+    "CHANnel1": {
+      "file": "to-95.channel1.raw",
+      "waveform_mode": "MAXimum",
+      "waveform_format": "BYTE",
+      "read": ":WAVeform:DATA? in chunks of 250000 points",
+      "preamble": "0,1,8200000,1,8.000000E-7,-6.560000E0,0.000000,3.4133E-02,-73,128",
+      "byte_count": 8200000,
+      "sha256": "0cefe8d61a25b1a825e925b403913b835f2921851242a7831d6e109a7a9411c0",
+      "raw_in_repo": false
+    },
+    "CHANnel2": {
+      "file": "to-95.channel2.raw",
+      "waveform_mode": "MAXimum",
+      "waveform_format": "BYTE",
+      "read": ":WAVeform:DATA? in chunks of 250000 points",
+      "preamble": "0,1,8200000,1,8.000000E-7,-6.560000E0,0.000000,3.4133E-02,-73,128",
+      "byte_count": 8200000,
+      "sha256": "b62c63829b5272b472bac625c15e1119c11af0b1aaebcbe9e6aca48cfdb46d2c",
+      "raw_in_repo": false
+    }
+  },
+  "started_utc": "2026-10-24T20:00:57Z",
+  "started_local": "2026-10-24T16:00:57-04:00",
+  "scope_settings": {
+    "*IDN?": "RIGOL TECHNOLOGIES,DHO804,DHO8A284M01558,00.01.05",
+    ":ACQuire:MDEPth?": "1.0000E+07",
+    ":ACQuire:SRATe?": "1.250000E+6",
+    ":ACQuire:TYPE?": "NORM",
+    ":TIMebase:MAIN:SCALe?": "5.000000E-1",
+    ":TIMebase:MAIN:OFFSet?": "-2.500000E0",
+    ":TRIGger:MODE?": "EDGE",
+    ":TRIGger:SWEep?": "AUTO",
+    ":TRIGger:EDGE:SOURce?": "CHAN1",
+    ":TRIGger:EDGE:SLOPe?": "NEG",
+    ":TRIGger:EDGE:LEVel?": "1.800000E0",
+    ":CHANnel1:SCALe?": "1.000000E+00",
+    ":CHANnel1:OFFSet?": "-2.500000E+00",
+    ":CHANnel1:PROBe?": "10",
+    ":CHANnel1:COUPling?": "DC",
+    ":CHANnel1:BWLimit?": "OFF",
+    ":CHANnel2:SCALe?": "1.000000E+00",
+    ":CHANnel2:OFFSet?": "-2.500000E+00",
+    ":CHANnel2:PROBe?": "10",
+    ":CHANnel2:COUPling?": "DC",
+    ":CHANnel2:BWLimit?": "OFF"
+  },
+  "completed_utc": "2026-10-24T20:01:07Z",
+  "completed_local": "2026-10-24T16:01:07-04:00",
+  "conversion": "preamble = format,type,points,count,xincrement,xorigin,xreference,yincrement,yorigin,yreference; volts = (byte - yorigin - yreference) * yincrement; seconds = (index - xreference) * xincrement + xorigin, 0 s at the trigger"
+}

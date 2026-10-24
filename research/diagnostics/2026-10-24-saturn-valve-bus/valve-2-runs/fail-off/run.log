@@ -1,0 +1,38 @@
+20:32:27 /quick_shower.cgi -> ':)'
+20:32:27 water on
+20:32:52 PULL NOW
+20:32:57 chunk-01: 110 frames, bad 0, non-poll 59, last-2s CH1 2.342 V CH2 2.027 V; last AA 55 01 01 0B 01 01 45 01 51 64 00 06 F0 02 00 FF
+20:32:57    -27.995048  incl  AA 55 13 07 00 E7
+20:32:57    -27.469832  incl  AA 55 13 07 00 E7
+20:32:57    -27.415800  incl  AA 55 1F 3A 01 01 A6
+20:32:57    -26.387000  incl  AA 55 13 07 00 E7
+20:32:57    -25.880008  incl  AA 55 13 07 00 E7
+20:32:57    -25.355000  incl  AA 55 13 07 00 E7
+20:32:57    -25.302112  incl  AA 55 1F 3A 01 01 A6
+20:32:57    -24.252016  incl  AA 55 13 87 06 03 01 45 00 00 00 18
+20:32:57    -24.217592  incl  AA 55 01 01 0C 80 03 01 45 01 43 00 00 00 9E 02 00 46
+20:32:57    -24.153792  incl  AA 55 13 87 06 01 01 45 64 00 00 B6
+20:33:26 chunk-02: 24 frames, bad 0, non-poll 12, last-2s CH1 3.632 V CH2 1.437 V; last AA 55 01 01 0B 01 01 45 01 59 64 00 06 E4 02 00 03
+20:33:26    -24.652328  incl  AA 55 13 07 00 E7
+20:33:26    -24.127304  incl  AA 55 13 07 00 E7
+20:33:26    -23.602304  incl  AA 55 13 07 00 E7
+20:33:26    -23.077288  incl  AA 55 13 07 00 E7
+20:33:26    -22.552296  incl  AA 55 13 07 00 E7
+20:33:26    -22.027272  incl  AA 55 13 07 00 E7
+20:33:26    -21.502256  incl  AA 55 13 07 00 E7
+20:33:26    -20.977256  incl  AA 55 13 07 00 E7
+20:33:26    -20.452256  incl  AA 55 13 07 00 E7
+20:33:26    -19.927240  incl  AA 55 13 07 00 E7
+20:33:28 controller unreachable (power pulled)
+20:33:58 chunk-03: 0 frames, bad 0, non-poll 0, last-2s CH1 3.633 V CH2 1.438 V; last -
+20:34:31 chunk-04: 0 frames, bad 0, non-poll 0, last-2s CH1 3.633 V CH2 1.439 V; last -
+20:35:03 chunk-05: 0 frames, bad 0, non-poll 0, last-2s CH1 3.633 V CH2 1.439 V; last -
+20:35:35 chunk-06: 0 frames, bad 0, non-poll 0, last-2s CH1 1.710 V CH2 1.501 V; last -
+20:36:05 chunk-07: 0 frames, bad 0, non-poll 0, last-2s CH1 1.834 V CH2 1.508 V; last -
+20:36:37 chunk-08: 0 frames, bad 0, non-poll 0, last-2s CH1 3.633 V CH2 -0.024 V; last -
+20:37:09 chunk-09: 0 frames, bad 0, non-poll 0, last-2s CH1 3.634 V CH2 -0.024 V; last -
+20:37:10 controller reachable again
+20:37:16 /stop_shower.cgi -> ':)'
+20:37:48 chunk-10: 0 frames, bad 0, non-poll 0, last-2s CH1 2.342 V CH2 -0.024 V; last -
+20:38:18 chunk-11: 0 frames, bad 0, non-poll 0, last-2s CH1 2.351 V CH2 -0.025 V; last -
+20:38:18 /system_info.cgi -> '{"valve1_Currentstatus":"Off","degree_symbol":"&degF","valve1Setpoint":"96","valve1outlet1":false,"valve1outlet2":false,"valve1outlet3":true,"valve1outlet4":fal'

@@ -8,8 +8,11 @@
       "waveform_format": "BYTE",
       "read": ":WAVeform:DATA? in chunks of 250000 points",
       "preamble": "0,1,10000000,1,8.000000E-7,-8.000000E0,0.000000,3.4133E-02,-73,128",
-      "byte_count": 10000000,
-      "sha256": "053023fedbaf7c7386e8a734745019d5e13638f0ba32e0e4dbbaf688a8191b6a"
+      "byte_count": 1750000,
+      "sha256": "27788ab0908618a34fe229d229b60ee24b4707a77b21451bc37c3fec836ad3fe",
+      "received_byte_count": 10000000,
+      "received_sha256": "053023fedbaf7c7386e8a734745019d5e13638f0ba32e0e4dbbaf688a8191b6a",
+      "slice_first_index": 4925000
     },
     "CHANnel2": {
       "file": "shower-stop.channel2.raw",
@@ -17,8 +20,11 @@
       "waveform_format": "BYTE",
       "read": ":WAVeform:DATA? in chunks of 250000 points",
       "preamble": "0,1,10000000,1,8.000000E-7,-8.000000E0,0.000000,3.4133E-02,-73,128",
-      "byte_count": 10000000,
-      "sha256": "76dca3845a673a7a83f8d61ef226f996820ed5a5fbca4765226eb2233d98ad47"
+      "byte_count": 1750000,
+      "sha256": "2d95c7548faa7c7d11ee4eb287e9353f4b997869ef9a6f5e5862e13a59557bf1",
+      "received_byte_count": 10000000,
+      "received_sha256": "76dca3845a673a7a83f8d61ef226f996820ed5a5fbca4765226eb2233d98ad47",
+      "slice_first_index": 4925000
     }
   },
   "started_utc": "2026-10-24T19:04:30Z",
@@ -48,5 +54,6 @@
   },
   "completed_utc": "2026-10-24T19:05:01Z",
   "completed_local": "2026-10-24T15:05:01-04:00",
-  "conversion": "preamble = format,type,points,count,xincrement,xorigin,xreference,yincrement,yorigin,yreference; volts = (byte - yorigin - yreference) * yincrement; seconds = (index - xreference) * xincrement + xorigin, 0 s at the trigger"
+  "conversion": "preamble = format,type,points,count,xincrement,xorigin,xreference,yincrement,yorigin,yreference; volts = (byte - yorigin - yreference) * yincrement; seconds = (slice_first_index + index - xreference) * xincrement + xorigin, 0 s at the trigger",
+  "slice": "samples [slice_first_index, slice_first_index + byte_count) of the received record, unchanged; window -4.060 s to -2.660 s"
 }

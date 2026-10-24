@@ -1,8 +1,9 @@
 # Saturn valve bus: scope capture, 2026-10-24
 
 The factory K-99695 talking to both of its valves over their Saturn RS-485 buses, captured differentially
-at the valve connectors: valve 2 idle and through a start and stop, then valve 1 through a controller
-restart and two starts and stops. With them are the connector's pinout and the meter readings of both
+at the valve connectors: valve 2 idle and through a start and stop, valve 1 through a controller restart
+and two starts and stops, then valve 2 again through a restart, a 22-minute run, temperature, outlet and
+pause steps, and a controller power cut. With them are the connector's pinout and the meter readings of both
 valves' connectors. The two valves speak different command sets on the same framing; see
 [Valve 1](#valve-1). This answers three of the open items in
 [controller/docs/HARDWARE.md](../../../controller/docs/HARDWARE.md) §15: the pin count from item 2, item 3
@@ -21,12 +22,12 @@ Tiers follow [docs/system-specification.md](../../../docs/system-specification.m
 | Vertical          | 1 V/div, offset −2.5 V, DC coupling, bandwidth limit off, probe ratio 10 on both            |
 | Trigger           | Edge, CH1 falling through 1.8 V, normal sweep, single shot (roll mode for the long records) |
 | Point of contact  | The valve connector, with the cable plugged into the controller                             |
-| Which valve's bus | Valve 2 for the top level and `shower-run/`, valve 1 for `valve-1/`; the operator moved the probes at 18:57 UTC, and the idle levels match each valve's meter readings |
+| Which valve's bus | Valve 2 for the top level, `shower-run/` and `valve-2-runs/`; valve 1 for `valve-1/`. The operator moved the probes to valve 1 at 18:57 UTC and back to valve 2 at about 19:30, and the idle levels match each valve's meter readings |
 
-No HTTP request went to the controller before 18:38 UTC. After that there were fifteen, one at a time and
-at least 5 s apart: `values.cgi` at 18:38:31; the shower run's four in
-[shower-run/controller-calls.log](shower-run/controller-calls.log); `system_info.cgi` at 18:42:26 and at
-19:01:58, after the restart; and the four of each valve-1 run in their own `controller-calls.log`.
+No HTTP request went to the controller before 18:38 UTC. After that there were 41, one at a time and at
+least 5 s apart, all `values.cgi`, `system_info.cgi`, `quick_shower.cgi` or `stop_shower.cgi`: the 37 in
+the runs' `controller-calls.log` files, plus `values.cgi` at 18:38:31 and `system_info.cgi` at 18:42:26,
+19:01:58 and 20:31:10. None during the long run between its start and its stop.
 
 ## Connector `[A]`
 
@@ -94,13 +95,13 @@ From [edge-detail](edge-detail.metadata.json) and [poll-1](poll-1.metadata.json)
   intervals alternate between about 0.55 s and 0.49 s (`idle-roll`; `after-poll-0.3s` and
   `after-poll-0.5s` caught the short one, 0.490 s and 0.488 s). After it they are a steady 0.525 s, with a
   poll slot given up to the `3A` broadcast now and then.
-- Every frame decoded, 834 across both buses (102 on valve 2, 732 on valve 1), carries a valid checksum;
+- Every frame decoded, 6267 across both buses plus 164 decoded from CH1 alone, carries a valid checksum;
   each capture's `.frames.txt` lists them.
 
 ### Checksum
 
 Every frame on this bus checks with the sync bytes **included**: the checksum is the 8-bit two's
-complement of the sum of every byte from SYNC1 through the last data byte. None of the 834 checks with
+complement of the sum of every byte from SYNC1 through the last data byte. None of the 6431 checks with
 them excluded, on either bus.
 
 | Frame                                 | On the wire | Sync excluded | Sync included |
@@ -110,9 +111,10 @@ them excluded, on either bus.
 | Command, `AA 55 13 87 06 01 01 63 64 00 00 …` | `98` | `97`          | `98`          |
 | Reply, `… 4A 00 CF 00 00 07 08 02 00 …` | `C9`      | `C8`          | `C9`          |
 
-`kdtv-proto` CHK-01 and CHK-02 (`controller/crates/kdtv-proto/src/saturn/frame.rs`) exclude the sync
-bytes, following the xagon0 example `AA 55 00 02 01 1E DF`. On this bus that rule computes one less than
-the wire carries, on every frame.
+`kdtv-proto` (`controller/crates/kdtv-proto/src/saturn/frame.rs`) first excluded the sync bytes,
+following the xagon0 example `AA 55 00 02 01 1E DF`, which on this bus computes one less than the wire
+carries on every frame. It includes them since
+[#8](https://github.com/ntotten/Kohler-DTV-Plus/pull/8).
 
 ### Idle
 
@@ -133,8 +135,9 @@ controller's poll changed address from `00` to `13`, the reply's data byte 9 cha
 and a broadcast `AA 55 1F 3A 01 01 A6` began. xagon0 lists control `3A` with data `01` as the
 address enquiry for unaddressed valves. Nothing was sent to the controller in that interval, the operator
 changed nothing on the system, and the idle levels on the scope are unchanged to the millivolt, so the
-probes did not move. The poll was still at `13` at 18:54 (`later-poll`). `[?]` What prompted the
-controller to re-address the valve.
+probes did not move. The poll was still at `13` at 18:54 (`later-poll`). A controller restart puts valve 2
+back at `00` (19:33, 20:37), and it moved to `13` again on its own between 20:05 and 20:32
+(`valve-2-runs/fail-off/chunk-01`). `[?]` What prompts the controller to re-address the valve.
 
 ### Shower run
 
@@ -158,22 +161,21 @@ reply    AA 55 01 01 0C 80 03 01 63 01 64 00 00 07 08 03 00 95
 then     AA 55 01 01 0B 03 01 63 01 64 00 00 07 08 03 00 16       each poll while stopped
 ```
 
-`[I]` Field reading, consistent across all of the above:
+Field layout, confirmed by the later tests in [Valve 2, second session](#valve-2-second-session):
 
-| Frame                   | Bytes                                       | Reading                                                                                |
-| ----------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------- |
-| Command, control `87`   | `mode`, `setpoint` (2), `flow`, `00`, `00`  | mode 00 set up, 01 run, 03 stop; setpoint 0x0163 = 355 = 35.5 °C = 96 °F; flow 0x64 = 100 |
-| Status reply, 11 bytes  | `state`, `setpoint` (2), `temperature` (2), `flow`, `00`, `timer` (2), `03`, `00` | state 00 idle, 01 running, 03 stopped; temperature in 0.1 °C; timer counts down 1 per second from 0x0708 = 1800 |
-| Command reply, 12 bytes | `01` or `80`, then the 11-byte status       | `[?]` What separates 01 from 80                                                        |
+| Frame                   | Bytes                                                                    | Reading                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| Command, control `87`   | `mode`, `setpoint` (2), one flow byte per port (3)                       | `[A]` mode 00 set up, 01 run, 03 stop or pause; flow `64` on each open port, `00` closed; setpoint: see [Temperature](#temperature) |
+| Status reply, 11 bytes  | `state`, `setpoint` (2), `temperature` (2), flow port 1, flow port 2, `timer` (2), `02` or `03`, `00` | `[A]` state 00 idle, 01 running, 03 stopped; the temperature settles on the setpoint's value, so both share a scale; timer counts down 1 per second from 0x0708 = 1800 |
+| Command reply, 12 bytes | `01` or `80`, then the 11-byte status                                    | `[?]` What separates 01 from 80                                                                           |
 
-The temperature field read 0x00D0 (20.8 °C) idle, 0x00C9–0x00D5 in the first seconds of flow and
-0x015B–0x016A (34.7–36.2 °C) 20–27 s in. The timer resets to 1800 on both start and stop and keeps
-counting down after the stop: `after-run-poll` reads `03 01 63 01 20 00 00 05 79 03 00` at 18:47:10,
-timer 0x0579 = 1401, 399 s after the stop, with the temperature down to 0x0120 = 28.8 °C; `later-poll`
-reads 0x03BD = 957 at 18:54:34, 843 s after the stop, and 27.0 °C. While the water ran, `system_info`
-reported both valves `On` (valve 1 95 °F, valve 2 99 °F) although only valve 2 was given an outlet;
-afterwards both read `Paused` with `ui_shower_on` and `devices_running` false. `[I]` Valve 1 ran too: the
-same call repeated with the probes on valve 1's bus (`valve-1/run-valve-2`) opens valve 1's outlet position 1.
+The temperature field read 0x00D0 idle, 0x00C9–0x00D5 in the first seconds of flow and 0x015B–0x016A
+20–27 s in, against a setpoint of 0x0163. The timer restarts at 1800 on start, stop and resume, and keeps
+counting down after a stop: `after-run-poll` reads `03 01 63 01 20 00 00 05 79 03 00` at 18:47:10, timer
+0x0579 = 1401, 399 s after the stop; `later-poll` reads 0x03BD = 957 at 18:54:34, 843 s after it. While
+the water ran, `system_info` reported both valves `On` (valve 1 95 °F, valve 2 99 °F) although only
+valve 2 was given an outlet; afterwards both read `Paused` with `ui_shower_on` and `devices_running`
+false. Valve 1 ran too; see [A start on one valve starts the other](#a-start-on-one-valve-starts-the-other-a).
 
 ## Valve 1
 
@@ -208,10 +210,11 @@ on the network. Times are from that record:
 ```
 
 xagon0 names control `3A` the address enquiry, `40` read extended status and `16` read generic outlet
-status. The enquiry broadcasts stop once start-up is done. On valve 2's bus they have recurred every few
-seconds since its poll address changed at 18:39 (see [Idle](#idle)). `[I]` The controller has not
-finished setting valve 2 up since then; compare
-[I3](../../../INVESTIGATIONS.md#i3--valuescgi-intermittently-drops-a-healthy-valve).
+status. The enquiry broadcasts stop once start-up is done. On valve 2's bus they recur every few seconds
+whenever its poll address is `13` (see [Idle](#idle)). `[I]` The controller treats valve 2 as not fully
+set up in that state; compare
+[I3](../../../INVESTIGATIONS.md#i3--valuescgi-intermittently-drops-a-healthy-valve). Valve 2's own
+start-up is different again: see [Valve 2, second session](#start-up-a-1).
 
 ### Steady state `[A]`
 
@@ -247,48 +250,166 @@ then status   AA 55 01 01 07 03 01 26 01 33 00 00 9A   and   AA 55 01 01 04 00 0
 | Field                                  | Reading                                                                                                         |
 | -------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `81` data byte 0, status byte 0        | Mode: 00 idle or set up, 01 running, 03 stopped, the same codes as valve 2                                      |
-| `81` data bytes 1–2, status bytes 1–2  | 0x0126 = 294 in every command and status frame, idle and running. `[?]` Not the 96 °F setpoint in valve 2's tenths-of-a-degree-C encoding (0x0163) |
+| `81` data bytes 1–2, status bytes 1–2  | 0x0126 = 294 in every command and status frame, idle and running. `[?]` Not valve 2's encoding of 96 °F (0x0163) |
 | `A4` data, outlet reply byte 2         | Outlet bitmask. Position 1 went out as `04`, physical outlet 3, which is what `values.cgi` maps it to (`valve1_outlet1_func` id 3) |
-| Status bytes 3–4                       | `[I]` Water temperature, 0.1 °C: 0x00A1–0x00AA (16.1–17.0 °C) idle, up to 0x0159 (34.5 °C) during flow; `system_info` said 94–95 °F     |
+| Status bytes 3–4                       | `[I]` Water temperature, on valve 2's scale: 0x00A1–0x00AA idle, up to 0x0159 during flow; `system_info` said 94–95 °F |
 
-### A valve 2 start also starts valve 1 `[A]`
+### A start on one valve starts the other `[A]`
 
 `run-valve-2` repeats the valve 2 run (`quick_shower.cgi?valve_num=2&valve1_outlet=&…&valve2_outlet=1`)
 with the probes on valve 1's bus. The controller sends valve 1 `81` mode 03, then mode 01, then `A4 04`:
 valve 1's outlet position 1 opens, and its status reports running and outlet 3 open until the stop.
-`system_info` reported valve 1 `On` at 94 °F alongside valve 2. The reverse does not happen: in
-`run-valve-1` (`valve_num=1`, `valve2_outlet` empty) valve 2 stayed `Paused`. An empty `valve1_outlet`
-is therefore not "no outlet" when the call is for valve 2. `[?]` Which outlet valve 1 gets: position 1
-was both the outlet of the run just before (`run-valve-1`) and possibly valve 1's default
-(`valve1_def_outlet = 1` in the 2026-08-22 `values.raw`, whose indexing is not established), so this
-capture cannot separate "last selection" from "default".
+`system_info` reported valve 1 `On` at 94 °F alongside valve 2.
+
+In `run-valve-1` (`valve_num=1`, `valve2_outlet` empty), right after a restart, valve 2 stayed `Paused`.
+In `valve-2-runs/tests/valve1-alone`, the same call an hour later, valve 2 got the full start (`87` mode
+01, flow `64` on port 1) and ran. The difference is what valve 2 had armed: nothing after the restart
+(`system_info` showed every `valve2outletN` false at 19:01:58), outlet 1 from the earlier tests at 20:04.
+
+So an empty outlet string for the other valve means "keep its armed selection", not "none", and the other
+valve starts on whatever that is. The armed selection is the last outlet run on that valve; after a
+restart, valve 2 had none and valve 1 had positions 1, 3, 4 and 5. This settles the open question left by
+`run-valve-2`, where position 1 was both valve 1's last selection and possibly its default.
+
+## Valve 2, second session
+
+The probes went back to valve 2's connector at about 19:30 UTC and the operator restarted the controller.
+Everything here is in `valve-2-runs/`, run with
+[bus_tests.py](../../tools/saturn-capture/bus_tests.py)'s sequences. Every capture has its `.frames.txt`;
+raw samples are kept as byte-exact slices around the moments named below (see [Files](#files)).
+
+### Start-up `[A]`
+
+`startup/startup-2`, the controller coming up at about 19:33:35, and again at 20:37:17 in
+`fail-off/chunk-10`, identically:
+
+```
+AA 55 1F 3A 01 03 A4                                four times, 3.87 s apart, no reply
+AA 55 00 54 00 AD                                   -> AA 55 01 01 04 00 1E 00 0E CF
+AA 55 00 40 00 C1                                   -> AA 55 01 01 04 00 00 00 19 E2
+AA 55 00 54 00 AD                                   -> AA 55 01 01 04 00 1E 00 0E CF
+AA 55 00 16 00 EB                                   -> AA 55 01 01 04 03 E9 00 03 0C
+AA 55 00 0B 00 F6                                   -> AA 55 01 01 0A 01 1C 00 64 00 C8 01 2C 01 2C 52
+AA 55 00 0F 01 04 ED                                -> AA 55 01 01 0B 04 01 08 08 B4 01 C2 01 2C 01 7C BE
+AA 55 00 8F 0B 08 01 08 08 B4 01 E8 01 00 01 79 36  -> AA 55 01 01 01 01 FD
+AA 55 00 0F 01 08 E9                                -> AA 55 01 01 0B 08 01 08 08 B4 01 E8 01 00 01 79 C3
+AA 55 00 0F 01 10 E1                                -> AA 55 01 01 0B 10 01 08 08 B4 01 C2 01 2C 01 7C B2
+AA 55 00 15 00 EC                                   -> AA 55 01 01 01 A0 5E
+AA 55 00 A9 03 01 07 08 45                          -> AA 55 01 01 01 01 FD
+AA 55 00 07 00 FA                                   steady polling at address 00
+```
+
+Valve 1's start-up opens with `3A 01 01`; valve 2's with `3A 01 03`, the address-clear that
+[DESIGN.md](../../../controller/docs/DESIGN.md) question 11 asks about. Valve 2 also gets a configuration
+block read (`0F 01 04`), written (`8F`, block 08) and read back, a second read (`0F 01 10`), and
+`A9 01 07 08`. `[I]` 0x0708 is the 1800 s runtime the timer counts down from.
+
+### Temperature
+
+`tests/temps`, one `87` frame per change, each with the new setpoint and nothing else changed:
+
+| Setpoint sent | `87` setpoint field |
+| ------------- | ------------------- |
+| 90 °F         | 0x0145 (325)        |
+| 95 °F         | 0x015E (350)        |
+| 96 °F         | 0x0163 (355)        |
+| 99 °F         | 0x0177 (375)        |
+| 100 °F        | 0x0181 (385)        |
+
+`[A]` The valve's temperature field settles on the setpoint field's value (0x0181 throughout the long
+run at 100 °F), so both use one scale. `[?]` What scale. Tenths of a degree Celsius fits 95 and 96 °F
+(350, 355.6) but not 100 °F (377.8 against 385); a lookup table on the controller fits everything so far.
+Smallest change, 99 to 100 °F: one `87 06 01 01 81 64 00 00` frame, acknowledged with the old
+temperature, and the status setpoint updates on the next poll.
+
+### Long run `[A]`
+
+`long-run/`, valve 2 position 1 at 100 °F from 19:36:26 to 19:58:32, 24 chunks, no controller calls in
+between. The timer counted down from 1800 and at 19:51:36, 910 s in, with 899 s left, the controller sent
+the only command of the run:
+
+```
+AA 55 00 81 03 01 01 81 FA          control 81: mode 01, setpoint 0x0181
+AA 55 01 01 0C 01 01 01 81 01 80 64 00 07 08 00 00 7B      timer back to 0x0708
+```
+
+That is the runtime-timer refresh DESIGN.md expects once at least 900 s have passed, and it uses control
+`81`, the command valve 1 is driven with. The stop at the end is `87` mode 03, sent twice.
+
+### Outlets, pause, the other valve `[A]`
+
+- `tests/outlets`: adding position 2 sends `87 06 01 01 63 64 64 00` (flow `64` on ports 1 and 2), and
+  the status carries `64 64`; removing it goes back to `64 00 00`. The same calls also moved the setpoint
+  field to 0x0181 and back. `[?]` Why, at a requested 96 °F.
+- `tests/pause`: pause (`stop_shower.cgi`) is the stop, `87` mode 03 twice; the valve reports state 03.
+  Resume (`quick_shower.cgi` again) is the full start sequence: `87` mode 03, mode 01 with flow 00, mode 01
+  with flow `64` twice. The timer restarts at 1800 on resume, so paused time does not count against the
+  runtime.
+- `tests/valve1-alone`: a valve-1-only start runs valve 2 too; see
+  [A start on one valve starts the other](#a-start-on-one-valve-starts-the-other-a).
+
+### Fail-off `[A]`
+
+`fail-off/`: valve 2 started at 90 °F at 20:32:27 (on address `13`, re-addressed again since 20:05). The
+operator cut the Kohler controller's power at about 20:33:06 and counted until the water stopped.
+
+- The last poll went out at 20:33:06.5 (`chunk-02`). After it, no frames.
+- **The water stopped about 2 s after the power cut**, by the operator's count: within about four missed
+  polls.
+- With the controller unplugged, the pair stayed at CH1 3.63 V, CH2 1.44 V for two minutes: +2.2 V, the
+  controller's own driven-mark level, not the idle bias. Pin 5 to pin 2 read 12.7 V and then 12.82 V on
+  the meter. `[I]` The valve supply and the bus driver are powered apart from the controller's mains, and
+  the driver is held in the mark state; the valve shut off anyway, without any polls.
+- Between 20:35:03 and 20:35:33 the levels sagged to roughly 1.7–1.8 V and 1.5 V, still without frames.
+- The CH2 probe came off pin 3 at about 20:36. The restart at 20:37:17 is decoded from CH1 alone
+  (`saturn_decode.py --single 1 --threshold 2.2`, `.ch1.frames.txt`): the start-up above, then polling at
+  address `00`. The controller answered HTTP at 20:37:10 and the stop went out at 20:37:16.
 
 ## Files
 
-| File                     | Contents                                                                                                                                                                         |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `<capture>.channel1.raw` | CH1 samples exactly as `:WAVeform:DATA?` returned them, BYTE format, full memory (`:WAVeform:MODE MAXimum`), read in 250 000-point chunks and concatenated with the block headers removed |
-| `<capture>.channel2.raw` | The same for CH2                                                                                                                                                                 |
-| `<capture>.metadata.json`| Preamble, scope settings at capture time, timestamps, byte counts, SHA-256                                                                                                       |
-| `<capture>.png`          | The scope screen (`:DISPlay:DATA? PNG`) taken straight after the read                                                                                                            |
-| `<capture>.frames.txt`   | `saturn_decode.py` output: time, checksum rule matched, frame bytes                                                                                                              |
+| File                      | Contents |
+| ------------------------- | -------- |
+| `<capture>.channel1.raw`  | CH1 samples exactly as `:WAVeform:DATA?` returned them, BYTE format, full memory (`:WAVeform:MODE MAXimum`), read in 250 000-point chunks and concatenated with the block headers removed. For the long records, a byte-exact slice of that: see below |
+| `<capture>.channel2.raw`  | The same for CH2 |
+| `<capture>.metadata.json` | Preamble, scope settings at capture time, timestamps, byte counts, SHA-256 |
+| `<capture>.png`           | The scope screen (`:DISPlay:DATA? PNG`) taken straight after the read |
+| `<capture>.frames.txt`    | `saturn_decode.py` output for the whole record: time, checksum rule matched, frame bytes |
+| `<capture>.ch1.frames.txt`| The same, decoded from CH1 alone where the CH2 probe was off |
+| `controller-calls.log`    | Every HTTP call of a run and the controller's reply |
+| `run.log`                 | The run script's own log, with times |
 
-| Capture                    | Timebase  | Sample interval | Record covers         | What it shows                                   |
-| -------------------------- | --------- | --------------- | --------------------- | ----------------------------------------------- |
-| `poll-1` … `poll-4`        | 20 ms/div | 400 ns          | −0.12 s to +0.28 s    | One request and its reply                       |
-| `after-poll-0.3s`          | 20 ms/div | 400 ns          | +0.10 s to +0.50 s    | The next request                                |
-| `after-poll-0.5s`          | 20 ms/div | 400 ns          | +0.30 s to +0.70 s    | The next request and reply                      |
-| `after-poll-0.7s`          | 20 ms/div | 400 ns          | +0.50 s to +0.90 s    | The end of that reply, then idle                |
-| `edge-detail`              | 5 µs/div  | 1.6 ns          | −0.8 ms to +0.8 ms    | The request's first edges at 625 MSa/s          |
-| `idle-roll`                | roll      | 800 ns          | 6.4 s before 18:39:26 | Twelve idle cycles, the last before re-address  |
-| `after-run-poll`           | 20 ms/div | 400 ns          | −0.12 s to +0.28 s    | A poll 6.7 minutes after the stop               |
-| `later-poll`               | 20 ms/div | 400 ns          | −0.12 s to +0.28 s    | A poll 14 minutes after the stop, still at `13` |
-| `valve-1/idle-roll-1`      | roll      | 8 µs            | 71 s to 18:59:01      | Valve 1: the controller's start-up, then idle   |
-| `valve-1/idle-roll-2`, `-3` | roll     | 8 µs            | 55 s to 19:00:12, 19:01:20 | Valve 1 idle                               |
-| `valve-1/run-valve-1/…`    | roll      | 800 ns          | 6.7 s and 8.0 s       | Valve 1 started and stopped                     |
-| `valve-1/run-valve-2/…`    | roll      | 800 ns          | 6.9 s and 8.0 s       | Valve 1's bus while valve 2 starts and stops    |
-| `shower-run/shower-start`  | roll      | 800 ns          | 6.5 s to 18:40:06     | Idle, the start commands, the first seconds of flow |
-| `shower-run/shower-stop`   | roll      | 800 ns          | 8.0 s to 18:40:33     | Flow, the stop commands, stopped                |
+**Slices.** The roll-mode records run 1–80 s at up to 1.25 MSa/s, 2–20 MB per channel, mostly idle
+polling. Their `.raw` files keep only a window around the moment that matters, cut with
+[slice_capture.py](../../tools/saturn-capture/slice_capture.py): the samples are unchanged, and the
+metadata gives `slice_first_index` (where the window starts in the received record), the window in
+seconds, the slice's own `byte_count` and `sha256`, and the full record's `received_byte_count` and
+`received_sha256`. The `.frames.txt` always covers the full record. Captures marked `raw_in_repo: false`
+have frames, metadata and screenshot only; their full records are kept outside the repository.
+
+| Capture                    | Timebase  | Sample interval | Raw samples kept                    | What it shows                                   |
+| -------------------------- | --------- | --------------- | ----------------------------------- | ----------------------------------------------- |
+| `poll-1` … `poll-4`        | 20 ms/div | 400 ns          | full, −0.12 s to +0.28 s            | One request and its reply                       |
+| `after-poll-0.3s`          | 20 ms/div | 400 ns          | full, +0.10 s to +0.50 s            | The next request                                |
+| `after-poll-0.5s`          | 20 ms/div | 400 ns          | full, +0.30 s to +0.70 s            | The next request and reply                      |
+| `after-poll-0.7s`          | 20 ms/div | 400 ns          | full, +0.50 s to +0.90 s            | The end of that reply, then idle                |
+| `edge-detail`              | 5 µs/div  | 1.6 ns          | full, −0.8 ms to +0.8 ms            | The request's first edges at 625 MSa/s          |
+| `after-run-poll`           | 20 ms/div | 400 ns          | full, −0.12 s to +0.28 s            | A poll 6.7 minutes after the stop               |
+| `later-poll`               | 20 ms/div | 400 ns          | full, −0.12 s to +0.28 s            | A poll 14 minutes after the stop, still at `13` |
+| `idle-roll`                | roll      | 800 ns          | 1.3 s of 6.4 s                      | Idle cycles, the last before the re-address     |
+| `shower-run/shower-start`  | roll      | 800 ns          | 1.1 s, the start commands           | The first shower run's start                    |
+| `shower-run/shower-stop`   | roll      | 800 ns          | 0.7 s, the stop commands            | Its stop                                        |
+| `valve-1/idle-roll-1`      | roll      | 8 µs            | 19.4 s, the start-up                | Valve 1: the controller's start-up              |
+| `valve-1/idle-roll-2`, `-3` | roll     | 8 µs            | 1.3 s each                          | Valve 1 idle                                    |
+| `valve-1/run-valve-1/…`    | roll      | 800 ns          | 1.3–1.5 s around each command burst | Valve 1 started and stopped                     |
+| `valve-1/run-valve-2/…`    | roll      | 800 ns          | 1.4–1.7 s around each command burst | Valve 1's bus while valve 2 starts and stops    |
+| `valve-2-runs/startup/startup-2` | roll | 8 µs           | 22 s, the start-up                  | Valve 2's start-up                              |
+| `valve-2-runs/startup/startup-3` | roll | 8 µs           | none                                | Idle after it                                   |
+| `valve-2-runs/long-run/chunk-01`, `-15`, `-23` | roll | 8 µs | 1.5–1.7 s each              | Start, timer refresh, stop                      |
+| `valve-2-runs/long-run/` other chunks | roll | 8 µs      | none                                | The rest of the 22 minutes                      |
+| `valve-2-runs/tests/temps/to-100`, `outlets/add-2`, `pause/resume`, `valve1-alone/start` | roll | 800 ns | 1.1–1.6 s each | Smallest temperature change, added outlet, resume, the other valve's start |
+| `valve-2-runs/tests/` other steps | roll | 800 ns         | none                                | The rest of each test                           |
+| `valve-2-runs/fail-off/chunk-01`, `-02`, `-10` | roll | 8 µs | 1.5 s, 4.5 s, 21.8 s       | Start, the power cut, the restart               |
+| `valve-2-runs/fail-off/` other chunks | roll | 8 µs      | none                                | The outage                                      |
 
 Times in the triggered captures are relative to the trigger; in the roll records, to the moment the scope
 stopped. Convert with the preamble (`format,type,points,count,xincrement,xorigin,xreference,yincrement,yorigin,yreference`):
@@ -300,8 +421,9 @@ meta = json.load(open("poll-1.metadata.json"))
 ch = meta["channels"]["CHANnel1"]
 _, _, _, _, xinc, xorig, xref, yinc, yorig, yref = map(float, ch["preamble"].split(","))
 raw = np.fromfile(ch["file"], dtype=np.uint8).astype(float)
+first = ch.get("slice_first_index", 0)                   # 0 unless the file is a slice
 volts = (raw - yorig - yref) * yinc                      # probe ratio already applied
-seconds = (np.arange(raw.size) - xref) * xinc + xorig
+seconds = (np.arange(raw.size) + first - xref) * xinc + xorig
 ```
 
 `manifest.json` lists every file with its size and SHA-256.
@@ -313,7 +435,7 @@ The working session that led up to the captures, kept as recorded:
 | File                                | Contents                                                                              |
 | ----------------------------------- | ------------------------------------------------------------------------------------- |
 | `meter-readings.csv`                | Every meter reading, with the invalid and superseded ones marked and why              |
-| `scope-commands.csv`                | The settings commands and queries sent to the scope, with replies, in order; trigger polling and waveform reads are not in it |
+| `scope-commands.csv`                | Settings commands and queries sent through the logging client, with replies, in order, to 18:40 UTC. Trigger polling, waveform reads and the run scripts' commands are not in it; each run's metadata records the settings it captured with |
 | `1815-ch2-probe-mismatch.png`       | CH2 at a tenth of its true level: its probe on 10x with the scope set to 1x           |
 | `1815-first-edge.png`               | The first triggered edge: a valve reply bit at 10 µs/div                              |
 | `1816-first-request-200us.png/.csv` | The first request at 200 µs/div; the CSV is the 1000-point screen export (volts)       |

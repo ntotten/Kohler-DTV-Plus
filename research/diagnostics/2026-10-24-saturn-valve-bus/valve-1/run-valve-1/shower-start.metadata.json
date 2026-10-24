@@ -8,8 +8,11 @@
       "waveform_format": "BYTE",
       "read": ":WAVeform:DATA? in chunks of 250000 points",
       "preamble": "0,1,8330000,1,8.000000E-7,-6.664000E0,0.000000,3.4133E-02,-73,128",
-      "byte_count": 8330000,
-      "sha256": "77934ef3e2ded0c3142ebc28be1c20dd689d7fc790d865b64b57231e3e6c89fc"
+      "byte_count": 1812500,
+      "sha256": "a84662fbed42891c7eaaa873d9a95ccf0efc44976b1d86375eec133841128f01",
+      "received_byte_count": 8330000,
+      "received_sha256": "77934ef3e2ded0c3142ebc28be1c20dd689d7fc790d865b64b57231e3e6c89fc",
+      "slice_first_index": 2505000
     },
     "CHANnel2": {
       "file": "shower-start.channel2.raw",
@@ -17,8 +20,11 @@
       "waveform_format": "BYTE",
       "read": ":WAVeform:DATA? in chunks of 250000 points",
       "preamble": "0,1,8330000,1,8.000000E-7,-6.664000E0,0.000000,3.4133E-02,-73,128",
-      "byte_count": 8330000,
-      "sha256": "e9a4607ab22a8c140a78ac49cde819a8cabbae28207d13fdcfc964e8b8a5593f"
+      "byte_count": 1812500,
+      "sha256": "e0c498a7e3aad1414e511602b1f487872d83c7a039701bae70674c597ab28dc6",
+      "received_byte_count": 8330000,
+      "received_sha256": "e9a4607ab22a8c140a78ac49cde819a8cabbae28207d13fdcfc964e8b8a5593f",
+      "slice_first_index": 2505000
     }
   },
   "started_utc": "2026-10-24T19:02:13Z",
@@ -48,5 +54,6 @@
   },
   "completed_utc": "2026-10-24T19:02:35Z",
   "completed_local": "2026-10-24T15:02:35-04:00",
-  "conversion": "preamble = format,type,points,count,xincrement,xorigin,xreference,yincrement,yorigin,yreference; volts = (byte - yorigin - yreference) * yincrement; seconds = (index - xreference) * xincrement + xorigin, 0 s at the trigger"
+  "conversion": "preamble = format,type,points,count,xincrement,xorigin,xreference,yincrement,yorigin,yreference; volts = (byte - yorigin - yreference) * yincrement; seconds = (slice_first_index + index - xreference) * xincrement + xorigin, 0 s at the trigger",
+  "slice": "samples [slice_first_index, slice_first_index + byte_count) of the received record, unchanged; window -4.660 s to -3.210 s"
 }

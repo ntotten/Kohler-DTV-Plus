@@ -1,0 +1,41 @@
+19:36:26 /quick_shower.cgi -> ':)'
+19:36:26 water on
+19:37:30 chunk-01: 210 frames, bad 0, non-poll 6; last status AA 55 01 01 0B 01 01 81 01 81 64 00 06 D6 02 00 AD
+19:37:30    -50.651232  incl  AA 55 00 87 06 00 01 81 00 00 00 F2
+19:37:30    -50.631224  incl  AA 55 01 01 0C 80 00 01 81 01 0F 00 00 07 08 02 00 D0
+19:37:30    -50.552920  incl  AA 55 00 87 06 01 01 81 64 00 00 8D
+19:37:30    -50.535120  incl  AA 55 01 01 0C 01 01 01 81 01 0F 64 00 07 08 02 00 EA
+19:37:30    -50.479280  incl  AA 55 00 87 06 01 01 81 64 00 00 8D
+19:37:30    -50.463120  incl  AA 55 01 01 0C 01 01 01 81 01 0E 64 00 07 08 02 00 EB
+19:38:34 chunk-02: 194 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 80 64 00 06 96 02 00 EE
+19:39:37 chunk-03: 191 frames, bad 0, non-poll 0; last status AA 55 00 07 00 FA
+19:40:40 chunk-04: 190 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 82 64 00 06 17 02 00 6B
+19:41:44 chunk-05: 195 frames, bad 0, non-poll 0; last status AA 55 00 07 00 FA
+19:42:47 chunk-06: 192 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 80 64 00 05 98 02 00 ED
+19:43:50 chunk-07: 192 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 81 64 00 05 59 02 00 2B
+19:44:53 chunk-08: 194 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 83 64 00 05 1A 02 00 68
+19:45:56 chunk-09: 194 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 80 64 00 04 DB 02 00 AB
+19:46:58 chunk-10: 192 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 80 64 00 04 9C 02 00 EA
+19:48:00 chunk-11: 192 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 82 64 00 04 5E 02 00 26
+19:49:02 chunk-12: 190 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 82 64 00 04 21 02 00 63
+19:50:06 chunk-13: 192 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 81 64 00 03 E2 02 00 A4
+19:51:08 chunk-14: 190 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 83 64 00 03 A3 02 00 E1
+19:52:06 chunk-15: 192 frames, bad 0, non-poll 2; last status AA 55 01 01 0B 01 01 81 01 7F 64 00 06 EA 02 00 9B
+19:52:06    -29.562616  incl  AA 55 00 81 03 01 01 81 FA
+19:52:06    -29.541776  incl  AA 55 01 01 0C 01 01 01 81 01 80 64 00 07 08 00 00 7B
+19:53:05 chunk-16: 190 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 82 64 00 06 B0 02 00 D2
+19:54:06 chunk-17: 190 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 81 64 00 06 75 02 00 0E
+19:55:07 chunk-18: 192 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 81 64 00 06 38 02 00 4B
+19:56:06 chunk-19: 192 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 81 64 00 05 FC 02 00 88
+19:57:05 chunk-20: 192 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 80 64 00 05 C0 02 00 C5
+19:58:05 chunk-21: 192 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 01 01 81 01 82 64 00 05 86 02 00 FD
+19:58:31 chunk-22: 81 frames, bad 0, non-poll 0; last status AA 55 00 07 00 FA
+19:58:32 /stop_shower.cgi -> ':)'
+19:58:32 water off sent
+19:59:32 chunk-23: 200 frames, bad 0, non-poll 4; last status AA 55 01 01 0B 03 01 81 01 86 00 00 06 D6 02 00 0A
+19:59:32    -49.751584  incl  AA 55 00 87 06 03 01 81 00 00 00 EF
+19:59:32    -49.719488  incl  AA 55 01 01 0C 01 03 01 81 01 82 00 00 07 08 02 00 D9
+19:59:32    -49.677944  incl  AA 55 00 87 06 03 01 81 00 00 00 EF
+19:59:32    -49.647504  incl  AA 55 01 01 0C 80 03 01 81 01 81 00 00 07 08 02 00 5B
+20:00:30 chunk-24: 190 frames, bad 0, non-poll 0; last status AA 55 01 01 0B 03 01 81 01 7F 00 00 06 9B 02 00 4C
+20:00:30 /system_info.cgi -> '{"valve1_Currentstatus":"Paused","degree_symbol":"&degF","valve1Setpoint":"100","valve1outlet1":fals'
