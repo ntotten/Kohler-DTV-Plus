@@ -10,6 +10,62 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ---
 
+## 2026-10-24
+
+### 15:05 — Valve 1 speaks a different command set, and a valve 2 start opens it
+
+The probes moved to valve 1's connector while the controller restarted, which caught the bus coming up:
+four address-enquiry broadcasts, then one-time reads (`54`, `40`, `16`, `0B`, `0C`, `15`) and steady
+polling, two minutes before the controller was back on the network. Valve 1 stays at address `00` and
+is polled with `01` and `02` and commanded with `81` (mode) and `A4` (outlet bitmask); valve 2 uses `07`
+and `87`. Same framing, baud rate and checksum on both. 834 frames today, every one with the sync bytes
+in the checksum.
+
+Starting valve 2 alone with `quick_shower.cgi` also starts valve 1: the controller sends valve 1 a run
+command and an outlet (position 1, both its last selection and possibly its default; which rule is
+unresolved). Starting valve 1 alone leaves valve 2 off.
+
+**Why it matters:** the replacement controller needs both command sets, not one, and anything that
+calls `quick_shower.cgi` for valve 2 is running valve 1 too.
+
+### 14:40 — First water through the factory bus on the scope
+
+Valve 2's showerhead at 96 °F for 27 seconds, with the scope recording the bus in roll mode. The start is
+three frames from the controller: `AA 55 13 87 06 00 01 63 00 00 00 FD`, then
+`AA 55 13 87 06 01 01 63 64 00 00 98` twice. The stop is `AA 55 13 87 06 03 01 63 00 00 00 FA` twice.
+0x0163 is 355, the 96 °F setpoint as 35.5 °C in tenths; 0x64 is 100. The valve's status reply carries the
+same setpoint, its water temperature in tenths of a degree (20.8 °C idle, 36.2 °C at peak), and a timer
+that counts down one per second from 1800 after both the start and the stop. All 102 frames
+captured today check with the sync bytes in the checksum.
+
+Less than a minute before the run, with nothing sent to the controller and nothing changed by the
+operator, the poll changed address from `00` to `13` and an address-enquiry broadcast
+(`AA 55 1F 3A 01 01 A6`) started. It was still at `13` fourteen minutes after the run. What set it off
+is open.
+
+**Why it matters:** the write command, its fields and the checksum are now read off the wire rather
+than inferred from documents, which is what the replacement controller's Saturn driver has to reproduce.
+The capture tools are in
+[research/tools/saturn-capture/](research/tools/saturn-capture/).
+
+### 14:31 — The factory valve bus is on the scope
+
+The Rigol DHO804 is on a valve connector with the system idle: CH1 on pin 4, CH2 on pin 3, grounds on
+pin 2. The connector has six positions and four wires — ground on 2, the RS-485 pair on 3 and 4, +12.7 V
+on 5. Pin 4 is the positive conductor. The controller polls the valve every ~525 ms with
+`AA 55 00 07 00 FA`, and the valve answers about 10 ms later with a 17-byte frame, at 9600 baud 8N1. The pair
+is loaded at both ends: 55.6 Ω across it with the controller connected, 141.2 Ω at the valve alone, the
+same on both valves.
+
+Every frame's checksum includes the two sync bytes. `kdtv-proto` CHK-01 leaves them out, following the
+xagon0 example, so the replacement controller as written computes checksums one lower than the factory
+bus carries.
+
+**Why it matters:** the first look at the factory bus settles the connector pinout, the polarity and the
+termination the adapter leads were waiting on, and finds the checksum error before the replacement
+controller ever transmits. Data and method:
+[research/diagnostics/2026-10-24-saturn-valve-bus/](research/diagnostics/2026-10-24-saturn-valve-bus/).
+
 ## 2026-08-30
 
 ### 17:05 — The scope is pinned: a like-for-like swap, and steam is out
