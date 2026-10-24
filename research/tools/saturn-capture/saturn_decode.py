@@ -8,6 +8,8 @@
 Input is a <name>.metadata.json written by dho.py, with its .raw (or .raw.gz)
 channel files beside it. The bus is the CH1 - CH2 difference; mark (idle,
 logic 1) is CH1 above CH2. Put CH1 on the positive conductor or pass --invert.
+With --single 1, CH1 alone is compared with --threshold (mark is above it);
+use --single 2 --invert for CH2 alone, since the negative conductor falls for a mark.
 UART is 9600 8N1, LSB first, sampled at mid-bit.
 
 Each frame prints its time (seconds, 0 at the trigger), its bytes, and whether
@@ -26,8 +28,8 @@ from pathlib import Path
 import numpy as np
 
 
-def load(path: Path) -> tuple[np.ndarray, np.ndarray]:
-    """Time (s) and differential volts, CH1 - CH2."""
+def load(path: Path, single: int | None = None, threshold: float = 0.0) -> tuple[np.ndarray, np.ndarray]:
+    """Time (s) and volts relative to the decision level: CH1 - CH2, or one channel minus --threshold."""
     if path.suffix == ".csv":
         with path.open() as f:
             rows = list(csv.reader(f))[1:]
@@ -35,7 +37,9 @@ def load(path: Path) -> tuple[np.ndarray, np.ndarray]:
         return a[:, 0], a[:, 1] - a[:, 2]
     meta = json.loads(path.read_text())
     volts, t = [], None
-    for info in list(meta["channels"].values())[:2]:
+    chans = list(meta["channels"].values())
+    chans = [chans[single - 1]] if single else chans[:2]
+    for info in chans:
         _, _, _, _, xinc, xorig, xref, yinc, yorig, yref = map(float, info["preamble"].split(","))
         f = path.parent / info["file"]
         if not f.exists() and (path.parent / (info["file"] + ".gz")).exists():
@@ -44,8 +48,12 @@ def load(path: Path) -> tuple[np.ndarray, np.ndarray]:
         raw = np.frombuffer(data, dtype=np.uint8).astype(np.float32)
         volts.append((raw - yorig - yref) * yinc)
         if t is None:
-            t = (np.arange(raw.size) - xref) * xinc + xorig
+            # A trimmed capture holds samples from slice_first_index on.
+            first = info.get("slice_first_index", 0)
+            t = (np.arange(raw.size) + first - xref) * xinc + xorig
     n = min(v.size for v in volts)
+    if single:
+        return t[:n], volts[0][:n] - threshold
     return t[:n], volts[0][:n] - volts[1][:n]
 
 
@@ -97,8 +105,12 @@ def main() -> int:
     ap.add_argument("--baud", type=float, default=9600)
     ap.add_argument("--invert", action="store_true", help="CH2 is the positive conductor")
     ap.add_argument("--bytes", action="store_true", help="print every byte, not frames")
+    ap.add_argument("--single", type=int, choices=[1, 2],
+                    help="decode one channel against --threshold (e.g. a probe came off the other conductor)")
+    ap.add_argument("--threshold", type=float, default=2.5,
+                    help="decision level in volts for --single; pick one between that channel's two driven levels")
     args = ap.parse_args()
-    t, v = load(args.capture)
+    t, v = load(args.capture, args.single, args.threshold)
     if args.invert:
         v = -v
     stream = uart(t, v, args.baud)

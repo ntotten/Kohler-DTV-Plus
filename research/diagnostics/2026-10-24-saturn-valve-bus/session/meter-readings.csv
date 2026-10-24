@@ -20,3 +20,5 @@ utc_2026-10-24,valve,cable,system_power,meter_mode,measurement,value,status,note
 18:05:07,2,plugged in,on,DC V,pin 3 to pin 2,2.0 V,valid,valve not restated; continuing the valve 2 set
 18:05:07,2,plugged in,on,DC V,pin 4 to pin 2,2.4 V,valid,valve not restated; continuing the valve 2 set
 18:05:07,2,plugged in,on,DC V,pin 5 to pin 2,12.7 V,valid,valve not restated; continuing the valve 2 set
+20:34:21,2,plugged in,controller power cut,DC V,pin 5 to pin 2,12.7 V,valid,fail-off test
+20:35:30,2,plugged in,controller power cut,DC V,pin 5 to pin 2,12.82 V,valid,fail-off test; second reading

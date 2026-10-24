@@ -8,8 +8,11 @@
       "waveform_format": "BYTE",
       "read": ":WAVeform:DATA? in chunks of 250000 points",
       "preamble": "0,1,7980000,1,8.000000E-7,-6.384000E0,0.000000,3.4133E-02,-73,128",
-      "byte_count": 7980000,
-      "sha256": "172f156cf37b7c587487f5c31f647224abfcbfd3445cf94d1ee443dad1d94528"
+      "byte_count": 1625000,
+      "sha256": "9d866cdb8e5f73a59981ab7b97ff6562aa3c413a3dd3d0f707c3f7d32ef6285b",
+      "received_byte_count": 7980000,
+      "received_sha256": "172f156cf37b7c587487f5c31f647224abfcbfd3445cf94d1ee443dad1d94528",
+      "slice_first_index": 12391
     },
     "CHANnel2": {
       "file": "idle-roll.channel2.raw",
@@ -17,8 +20,11 @@
       "waveform_format": "BYTE",
       "read": ":WAVeform:DATA? in chunks of 250000 points",
       "preamble": "0,1,7980000,1,8.000000E-7,-6.384000E0,0.000000,3.4133E-02,-73,128",
-      "byte_count": 7980000,
-      "sha256": "f2f782aeac246a4add0b61f5dc24922ffed5e7fe2a78d600fab7139a32666b00"
+      "byte_count": 1625000,
+      "sha256": "b2c75c9bf12885015176d74c12662d87ca0805b8d5265b686ba75786bd3b784e",
+      "received_byte_count": 7980000,
+      "received_sha256": "f2f782aeac246a4add0b61f5dc24922ffed5e7fe2a78d600fab7139a32666b00",
+      "slice_first_index": 12391
     }
   },
   "started_utc": "2026-10-24T18:39:12Z",
@@ -48,5 +54,6 @@
   },
   "completed_utc": "2026-10-24T18:39:26Z",
   "completed_local": "2026-10-24T14:39:26-04:00",
-  "conversion": "preamble = format,type,points,count,xincrement,xorigin,xreference,yincrement,yorigin,yreference; volts = (byte - yorigin - yreference) * yincrement; seconds = (index - xreference) * xincrement + xorigin, 0 s at the trigger"
+  "conversion": "preamble = format,type,points,count,xincrement,xorigin,xreference,yincrement,yorigin,yreference; volts = (byte - yorigin - yreference) * yincrement; seconds = (slice_first_index + index - xreference) * xincrement + xorigin, 0 s at the trigger",
+  "slice": "samples [slice_first_index, slice_first_index + byte_count) of the received record, unchanged; window -6.374 s to -5.074 s"
 }

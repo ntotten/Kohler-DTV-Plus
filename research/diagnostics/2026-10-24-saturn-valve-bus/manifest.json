@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "instrument": "Rigol DHO804, firmware 00.01.05, SCPI over raw TCP port 5555",
-  "purpose": "Differential captures of the factory K-99695 Saturn valve buses at both valve connectors: idle, a controller start-up, and outlet starts and stops, plus the connectors' meter readings. See README.md.",
-  "controller_contact": "No HTTP requests before 18:38 UTC. Then fifteen, serialised and at least 5 s apart, all values.cgi, system_info.cgi, quick_shower.cgi or stop_shower.cgi; each run's are in its controller-calls.log. The scope only listened to the buses.",
-  "probing": "CH1 on pin 4, CH2 on pin 3, both 10x, grounds on pin 2; valve 2's connector until 18:57 UTC, then valve 1's",
+  "purpose": "Differential captures of the factory K-99695 Saturn valve buses at both valve connectors: idle, two controller start-ups, outlet starts and stops, a 22-minute run, temperature, outlet and pause steps, and a controller power cut, plus the connectors' meter readings. See README.md.",
+  "controller_contact": "No HTTP requests before 18:38 UTC. Then 41, serialised and at least 5 s apart, all values.cgi, system_info.cgi, quick_shower.cgi or stop_shower.cgi; each run's are in its controller-calls.log. The scope only listened to the buses.",
+  "probing": "CH1 on pin 4, CH2 on pin 3, both 10x, grounds on pin 2; valve 2's connector until 18:57 UTC, valve 1's until about 19:30, then valve 2's again. The CH2 probe was off from about 20:36.",
   "files": [
     {
       "file": "README.md",
-      "byte_count": 23003,
-      "sha256": "e97c7a4968c62dde3e73275eb55665a4a675460c7ffad1af429bbf82fbad6b6c"
+      "byte_count": 31406,
+      "sha256": "a304762704598157d425df3552ea2e89fcf5c67dfa6917882b0386be98bad625"
     },
     {
       "file": "after-poll-0.3s.channel1.raw",
@@ -122,13 +122,13 @@
     },
     {
       "file": "idle-roll.channel1.raw",
-      "byte_count": 7980000,
-      "sha256": "172f156cf37b7c587487f5c31f647224abfcbfd3445cf94d1ee443dad1d94528"
+      "byte_count": 1625000,
+      "sha256": "9d866cdb8e5f73a59981ab7b97ff6562aa3c413a3dd3d0f707c3f7d32ef6285b"
     },
     {
       "file": "idle-roll.channel2.raw",
-      "byte_count": 7980000,
-      "sha256": "f2f782aeac246a4add0b61f5dc24922ffed5e7fe2a78d600fab7139a32666b00"
+      "byte_count": 1625000,
+      "sha256": "b2c75c9bf12885015176d74c12662d87ca0805b8d5265b686ba75786bd3b784e"
     },
     {
       "file": "idle-roll.frames.txt",
@@ -137,8 +137,8 @@
     },
     {
       "file": "idle-roll.metadata.json",
-      "byte_count": 2121,
-      "sha256": "6d505dcb1f02ccb754d0bb89b4e66f8393fd843f2e7fed418003b3e346a2b613"
+      "byte_count": 2608,
+      "sha256": "14e6349ec4a2a2119226794af1e6258ff35eb501ba9220fe8457fe07b6621cf8"
     },
     {
       "file": "later-poll.channel1.raw",
@@ -312,8 +312,8 @@
     },
     {
       "file": "session/meter-readings.csv",
-      "byte_count": 1928,
-      "sha256": "c0786ff03be3ce7e01d17978ec5f749caff0be9d4c509cf34256d3137a65abc0"
+      "byte_count": 2127,
+      "sha256": "72a606ab44990ae882ac2fd8b5ec4d02188fef607a9f9af4df200dcb86fd6497"
     },
     {
       "file": "session/scope-commands.csv",
@@ -327,13 +327,13 @@
     },
     {
       "file": "shower-run/shower-start.channel1.raw",
-      "byte_count": 8170000,
-      "sha256": "6d0333f274871f389c2ec6d759c110bff323685a9115d42e6334881123ae4a0c"
+      "byte_count": 1375000,
+      "sha256": "1795de2a994dd1bece3d818a7ea4da53459ba462f1076b09f2cbd24e9872da98"
     },
     {
       "file": "shower-run/shower-start.channel2.raw",
-      "byte_count": 8170000,
-      "sha256": "2e21dd52f57ff5dd6a341fa6a6b5ede309dfe1b6ac22bb77c3e1d19bd96c8b96"
+      "byte_count": 1375000,
+      "sha256": "1b554872c97d37bbaafb2264c69ea6624f5a7c12106e8e69eac0f0e31f744ab4"
     },
     {
       "file": "shower-run/shower-start.frames.txt",
@@ -342,18 +342,18 @@
     },
     {
       "file": "shower-run/shower-start.metadata.json",
-      "byte_count": 2130,
-      "sha256": "bee08cacda6653da21a33fb305d72d1ad9db1938964f4c925078d44c22bcd44d"
+      "byte_count": 2621,
+      "sha256": "a9f223ba6428900147137285ad6abe1319a13adfd24866314b929428d1514597"
     },
     {
       "file": "shower-run/shower-stop.channel1.raw",
-      "byte_count": 10000000,
-      "sha256": "376b6eb29796e790273ed726dbb94efccc598081ba47e66b0d0c3558fe9fe941"
+      "byte_count": 875000,
+      "sha256": "71d9839b2c519d566e1c4a8e0c09c6b171f99981a26aa6aad671bfe4e06b6f04"
     },
     {
       "file": "shower-run/shower-stop.channel2.raw",
-      "byte_count": 10000000,
-      "sha256": "b0b49ad541d4dff1aec200d109d9d0c573628a5f16b8c1a82ffa071e8a5d23c5"
+      "byte_count": 875000,
+      "sha256": "28c7e55d4fb8486ab3823f8ca7b36575c24879f06b742657d4f1ff1bb97f2d10"
     },
     {
       "file": "shower-run/shower-stop.frames.txt",
@@ -362,18 +362,18 @@
     },
     {
       "file": "shower-run/shower-stop.metadata.json",
-      "byte_count": 2131,
-      "sha256": "39224e442f1f3435730928b483a2100fa66a2131dc3c39afd51bf179ec895d5d"
+      "byte_count": 2620,
+      "sha256": "09007184417482f4ee4fbc6be65720ce90d17c7231a2a834e86cb4ee3b4d39e0"
     },
     {
       "file": "valve-1/idle-roll-1.channel1.raw",
-      "byte_count": 8920000,
-      "sha256": "d9c807826b7d4d1b6fbf848fc29555048b12c25d5d5f232d9d1c30944e6afe53"
+      "byte_count": 2425000,
+      "sha256": "aab03637b8a5cf56c48a029e96bc1b9ca52c227deb2b3155c66650f4b590cf6c"
     },
     {
       "file": "valve-1/idle-roll-1.channel2.raw",
-      "byte_count": 8920000,
-      "sha256": "3302b7a3f97d0e829be691cc7eeb5aa4358d6ac03e0208509213efc2a0a1bb2d"
+      "byte_count": 2425000,
+      "sha256": "09c23d9b96875efde0c70dc4914470cdf37ef750913c67be892e794394588b72"
     },
     {
       "file": "valve-1/idle-roll-1.frames.txt",
@@ -382,8 +382,8 @@
     },
     {
       "file": "valve-1/idle-roll-1.metadata.json",
-      "byte_count": 2129,
-      "sha256": "c166b81601899a52867f5e2955e08df2525138c69ae0f9cc65072cf9964d761e"
+      "byte_count": 2622,
+      "sha256": "f7e6854a3d26c4bb4823ef29c2b390a2319953de8ccb881a4eb0b1d8a4707b48"
     },
     {
       "file": "valve-1/idle-roll-1.png",
@@ -392,13 +392,13 @@
     },
     {
       "file": "valve-1/idle-roll-2.channel1.raw",
-      "byte_count": 6920000,
-      "sha256": "435350bb9c167ea1cda1dba16570dc67afad5bbb3bbacde969012a499d182257"
+      "byte_count": 155961,
+      "sha256": "bff0e48de92e96e657209458659175af33b9e21678a02889c5a4014037541124"
     },
     {
       "file": "valve-1/idle-roll-2.channel2.raw",
-      "byte_count": 6920000,
-      "sha256": "40fa2079fb4c08f8c5b02359849bb90f53cadd44f4bc13b0bd119cea6dc79057"
+      "byte_count": 155961,
+      "sha256": "47fc77c5d4d210d74c294aeba4517512a42d82c9128c524ecf7f2d9260baac05"
     },
     {
       "file": "valve-1/idle-roll-2.frames.txt",
@@ -407,8 +407,8 @@
     },
     {
       "file": "valve-1/idle-roll-2.metadata.json",
-      "byte_count": 2129,
-      "sha256": "bbd70afb1e30219f40ceab850e7fc15f599f0335e1bbdc23ba2bed1fa9ad2ba9"
+      "byte_count": 2608,
+      "sha256": "eb09f48ebccc6f645825021cd61cfe1cda33a7c6dfa09c1f4873749b5d2ffdae"
     },
     {
       "file": "valve-1/idle-roll-2.png",
@@ -417,13 +417,13 @@
     },
     {
       "file": "valve-1/idle-roll-3.channel1.raw",
-      "byte_count": 6900000,
-      "sha256": "130a6b4beefc46c4755000f12f4253b0e5329f735fb6106db119d6155bd6902f"
+      "byte_count": 162500,
+      "sha256": "9d9412c70265d24694bff5f1cea339d2c9437e273e88ae2033750d71ac5c9375"
     },
     {
       "file": "valve-1/idle-roll-3.channel2.raw",
-      "byte_count": 6900000,
-      "sha256": "51aef663a261918934fbc88465d882bcde017f206de8e450c4574e207d016d67"
+      "byte_count": 162500,
+      "sha256": "4e56b80bf7424e7447231de5ecf536b3ffde00ae770c9cf0e8c78c98a557e932"
     },
     {
       "file": "valve-1/idle-roll-3.frames.txt",
@@ -432,8 +432,8 @@
     },
     {
       "file": "valve-1/idle-roll-3.metadata.json",
-      "byte_count": 2129,
-      "sha256": "3254f141d8df2d4ea1f42485862a2e55e177774c880ad8455cfe9bcab97dc07d"
+      "byte_count": 2616,
+      "sha256": "4a517b338dc868d73bd8d86dfc649115a75e500b83b77986443529a51335f7c6"
     },
     {
       "file": "valve-1/idle-roll-3.png",
@@ -447,13 +447,13 @@
     },
     {
       "file": "valve-1/run-valve-1/shower-start.channel1.raw",
-      "byte_count": 8330000,
-      "sha256": "77934ef3e2ded0c3142ebc28be1c20dd689d7fc790d865b64b57231e3e6c89fc"
+      "byte_count": 1812500,
+      "sha256": "a84662fbed42891c7eaaa873d9a95ccf0efc44976b1d86375eec133841128f01"
     },
     {
       "file": "valve-1/run-valve-1/shower-start.channel2.raw",
-      "byte_count": 8330000,
-      "sha256": "e9a4607ab22a8c140a78ac49cde819a8cabbae28207d13fdcfc964e8b8a5593f"
+      "byte_count": 1812500,
+      "sha256": "e0c498a7e3aad1414e511602b1f487872d83c7a039701bae70674c597ab28dc6"
     },
     {
       "file": "valve-1/run-valve-1/shower-start.frames.txt",
@@ -462,8 +462,8 @@
     },
     {
       "file": "valve-1/run-valve-1/shower-start.metadata.json",
-      "byte_count": 2130,
-      "sha256": "7cd96a1fa44a447208b3f5b72b292b0aebce7a7c05e8f556c37bc90e0c8534b9"
+      "byte_count": 2621,
+      "sha256": "ebc85f9d795c909b7d558460f4eca26ea6925cd108ef1d7c9deebae461d7595f"
     },
     {
       "file": "valve-1/run-valve-1/shower-start.png",
@@ -472,13 +472,13 @@
     },
     {
       "file": "valve-1/run-valve-1/shower-stop.channel1.raw",
-      "byte_count": 10000000,
-      "sha256": "89c63de76df1018633c4b7cc39a99f0ca3224fccfd69344600ed0f02e85ec392"
+      "byte_count": 1675000,
+      "sha256": "508c13d68e0fa86d9dadf93606e7d65637c91be04a44def27e04f94bc0b3cb9d"
     },
     {
       "file": "valve-1/run-valve-1/shower-stop.channel2.raw",
-      "byte_count": 10000000,
-      "sha256": "0ddf2f7822b4c12b6847e08356ac9e7b53d44ace65a679a368ef608eb2c01c5f"
+      "byte_count": 1675000,
+      "sha256": "4451e89460edd75faf1faf2f5fedae4acdbccee7b7852726bb7b2048cdeb8617"
     },
     {
       "file": "valve-1/run-valve-1/shower-stop.frames.txt",
@@ -487,8 +487,8 @@
     },
     {
       "file": "valve-1/run-valve-1/shower-stop.metadata.json",
-      "byte_count": 2131,
-      "sha256": "6234523543ddb06b4a7c59c4b05230e87074c52e9f49ba8b738349550e696ee9"
+      "byte_count": 2622,
+      "sha256": "6c04f07b4b0ad3847c196ae7264c07686ab05a6147e1aab6a9a0732430680e7d"
     },
     {
       "file": "valve-1/run-valve-1/shower-stop.png",
@@ -502,13 +502,13 @@
     },
     {
       "file": "valve-1/run-valve-2/shower-start.channel1.raw",
-      "byte_count": 8620000,
-      "sha256": "360151ae040512c082cc1132684f386de9d56e30bb899553559b81a6de48c6f6"
+      "byte_count": 2100000,
+      "sha256": "ff50f2808cf694dfa34395b8a63a231d0cf677edb6c606158f1bbc3135b1269a"
     },
     {
       "file": "valve-1/run-valve-2/shower-start.channel2.raw",
-      "byte_count": 8620000,
-      "sha256": "82d0539aa250700b28bb5ccfc19667fd2754845198511b279bb5e00b7b86039e"
+      "byte_count": 2100000,
+      "sha256": "3003f78b920fac5ee9c42a65b2448a70e461751d5f1fc7f1a2f3539e788174b2"
     },
     {
       "file": "valve-1/run-valve-2/shower-start.frames.txt",
@@ -517,8 +517,8 @@
     },
     {
       "file": "valve-1/run-valve-2/shower-start.metadata.json",
-      "byte_count": 2130,
-      "sha256": "c18ac10df32400d3c2756824a9a73674533d2caad0e4e6f59e380ee00bffce1a"
+      "byte_count": 2621,
+      "sha256": "785193c557458e218e9de0e7e71765285f299e23cfa44d1d65a48e325924661e"
     },
     {
       "file": "valve-1/run-valve-2/shower-start.png",
@@ -527,13 +527,13 @@
     },
     {
       "file": "valve-1/run-valve-2/shower-stop.channel1.raw",
-      "byte_count": 10000000,
-      "sha256": "053023fedbaf7c7386e8a734745019d5e13638f0ba32e0e4dbbaf688a8191b6a"
+      "byte_count": 1750000,
+      "sha256": "27788ab0908618a34fe229d229b60ee24b4707a77b21451bc37c3fec836ad3fe"
     },
     {
       "file": "valve-1/run-valve-2/shower-stop.channel2.raw",
-      "byte_count": 10000000,
-      "sha256": "76dca3845a673a7a83f8d61ef226f996820ed5a5fbca4765226eb2233d98ad47"
+      "byte_count": 1750000,
+      "sha256": "2d95c7548faa7c7d11ee4eb287e9353f4b997869ef9a6f5e5862e13a59557bf1"
     },
     {
       "file": "valve-1/run-valve-2/shower-stop.frames.txt",
@@ -542,13 +542,803 @@
     },
     {
       "file": "valve-1/run-valve-2/shower-stop.metadata.json",
-      "byte_count": 2131,
-      "sha256": "1111ce7193670bcbebaeef3814faa1096a61ce928ba7ad0513c8f5f0a7c7a5d0"
+      "byte_count": 2622,
+      "sha256": "5d3e251792e26b8cec7ff810ac347892a3dc42143da227e5757da1dc517dd6ad"
     },
     {
       "file": "valve-1/run-valve-2/shower-stop.png",
       "byte_count": 139453,
       "sha256": "b5844b2820b97ba7b70408531de33bbbf7517ce34288aadd45836a353fada001"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-01.channel1.raw",
+      "byte_count": 187500,
+      "sha256": "63b7c6f38b4b8362cd7fd067672263b82f9dbbe117cbb881b64f7b70e8f2c7c0"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-01.channel2.raw",
+      "byte_count": 187500,
+      "sha256": "5d5683b7f975244de80c9c0a647372f4bf4e9399c596414131fa2f6f51327956"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-01.frames.txt",
+      "byte_count": 5811,
+      "sha256": "1ca4e3ec356ee0579af7760717bebbd0df84134f51b4897dc636e8bd619a4630"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-01.metadata.json",
+      "byte_count": 2609,
+      "sha256": "24f60df6b5a73b0b7c47677f4f8641e25609412227103c6c25aee8e517299bbb"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-02.channel1.raw",
+      "byte_count": 562500,
+      "sha256": "2160feb43a5fe941264bb18aacdd4e2d67227b68fedb84464b8d2a4373f0ebed"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-02.channel2.raw",
+      "byte_count": 562500,
+      "sha256": "4fadf9d0dce30a60a662b48125244e9baad9fb5ae730710258e6d74826d16e87"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-02.frames.txt",
+      "byte_count": 1260,
+      "sha256": "9739b23b566913d87b9a4f9dea38b789977cc1b1b8e01bc07c78184846bfbde2"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-02.metadata.json",
+      "byte_count": 2609,
+      "sha256": "39fdcaf0e400d744729e308c446a7b644217fe2244ba046ce8b611488cd03a26"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-03.frames.txt",
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-03.metadata.json",
+      "byte_count": 2176,
+      "sha256": "3ddbea24e5ef1d677dc63779791ebe9a243eb121106c83b0993068785a8c70bb"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-04.frames.txt",
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-04.metadata.json",
+      "byte_count": 2176,
+      "sha256": "669cece0f86e5a07a79209ab60ccaa2a6e2f20f78bfb6f8a4e04ba0e55ba78a8"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-05.frames.txt",
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-05.metadata.json",
+      "byte_count": 2176,
+      "sha256": "d8140b8de80c00a8a9bcd9cacbd8cf662b63bc4f2f302ab86d22eb89113e9223"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-06.frames.txt",
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-06.metadata.json",
+      "byte_count": 2176,
+      "sha256": "d9bf8fb9bd9d8d45a34be72d9987a8a9e80273cc54c24fa210b31de74057b5fd"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-07.frames.txt",
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-07.metadata.json",
+      "byte_count": 2176,
+      "sha256": "2f76f98e291fd55dac79061651df4d196d23167f447140e3bd0fa3f0a669be56"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-08.frames.txt",
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-08.metadata.json",
+      "byte_count": 2176,
+      "sha256": "473156930287bff821b79f55ab3f5001bada9fa4da173c97dbaf08f07a42d5db"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-09.ch1.frames.txt",
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-09.frames.txt",
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-09.metadata.json",
+      "byte_count": 2176,
+      "sha256": "0f0604b56755934efe6314956238e4bcaba66f51948b17919887801593e71e9c"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-10.ch1.frames.txt",
+      "byte_count": 3390,
+      "sha256": "5f2d0a5b72cf175d34cb0cfdc344c2b51cd7be44473c2f9c21c25b340cb3ece3"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-10.channel1.raw",
+      "byte_count": 2725000,
+      "sha256": "360f2d1328ce110f6521fe1cb9360cb6f05a07f7e68cf1a6db36c279c651617d"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-10.channel2.raw",
+      "byte_count": 2725000,
+      "sha256": "11fb6015b93c8c54e392147e5119968c4fc7bc5841f4917f52645db8c2f44238"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-10.frames.txt",
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-10.metadata.json",
+      "byte_count": 2608,
+      "sha256": "d41e55599622d9bb19a3e929d8ea47d7ce40155ed205b43318707123a99d2482"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-11.ch1.frames.txt",
+      "byte_count": 5040,
+      "sha256": "455acb18ee2ac3ef6a22f3444f260dc5c1a704ad3d57d71d822f71583c61efe9"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-11.frames.txt",
+      "byte_count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "valve-2-runs/fail-off/chunk-11.metadata.json",
+      "byte_count": 2176,
+      "sha256": "427aa538179960f5c708c95441630a7d6f9a9cfd54e694083c5b1a49f5fe767d"
+    },
+    {
+      "file": "valve-2-runs/fail-off/controller-calls.log",
+      "byte_count": 1038,
+      "sha256": "d97d277a3637a3ca66cc046d6cc3803333c76f8268898c9bddc501687878eef8"
+    },
+    {
+      "file": "valve-2-runs/fail-off/run.log",
+      "byte_count": 2493,
+      "sha256": "2f3c17d48c2ad6548c12aee2976d67baec158e230799293f009d61c19a31b29a"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-01.channel1.raw",
+      "byte_count": 211250,
+      "sha256": "9226321f28e799143772d60565fb5b2a6c93c10c98bcc22314ac28f124330396"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-01.channel2.raw",
+      "byte_count": 211250,
+      "sha256": "4458812b95453fc22aa46f3c67733ef9ad383a131c26ff034d9a466049c67d2d"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-01.frames.txt",
+      "byte_count": 11088,
+      "sha256": "c52a5349f3c716c3dc537640d24c6d763c0c104c38796d75b9abddf1ba4f7721"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-01.metadata.json",
+      "byte_count": 2609,
+      "sha256": "ed187bd79d8bc511524267abc0b6ec60d8e14d70ac1aa0ecd3d60a0002b4ed93"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-02.frames.txt",
+      "byte_count": 10185,
+      "sha256": "c26ead1034d58d536190a5e8e8c0c0f4d5227c1e2fcd2386eaa11e1a23a082ce"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-02.metadata.json",
+      "byte_count": 2176,
+      "sha256": "0059a1b2e651583911108d0ef39024371494c2ca413d2c36b498225b7f0d46f8"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-03.frames.txt",
+      "byte_count": 10011,
+      "sha256": "dc37c440dea59a614a3e58694f7e58bee6a907c89a528c3e85fe31b254fd7c82"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-03.metadata.json",
+      "byte_count": 2176,
+      "sha256": "f7277d20a572099a697a704d61c749549ae95d83ce89266007495e5e99123def"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-04.frames.txt",
+      "byte_count": 9975,
+      "sha256": "3fe88d7ce15ac3786517df5568b16c4f548385d2e5b021f705b14d4d4060fd8e"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-04.metadata.json",
+      "byte_count": 2176,
+      "sha256": "9dae5b7a8f7c60458550d83e5ac7fd40798340ae77f0fa8127a2f23fd4febfa1"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-05.frames.txt",
+      "byte_count": 10221,
+      "sha256": "13025159e2bad01ec6e45d8dabce2aa61a79c43e5667415ea1dbf9e0f2681290"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-05.metadata.json",
+      "byte_count": 2176,
+      "sha256": "a55030004a648ed9f14bccc6e68f61ab8bad3af5af911174857226300e634b2c"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-06.frames.txt",
+      "byte_count": 10080,
+      "sha256": "66bdd40345b34008564e57ec8a4eac2796285d06f40dc2571b59883963b8394d"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-06.metadata.json",
+      "byte_count": 2176,
+      "sha256": "ed0ae1dfef76fede113e682d63ac5232a2fc71b271429b4baa61fadb441cc399"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-07.frames.txt",
+      "byte_count": 10080,
+      "sha256": "ddc05eba1344a64f45281608ecdfce435cbbac6855719aa5ed7c384f15909fb7"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-07.metadata.json",
+      "byte_count": 2176,
+      "sha256": "a81c45fd7f6ca9374e4cde459e45cc7ed630c8027857b42d6f6bc56432ffd1bf"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-08.frames.txt",
+      "byte_count": 10185,
+      "sha256": "b19a3528bde77f7b91b8b9a359807a1c446f82bd133a79e71810178fbf29aef0"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-08.metadata.json",
+      "byte_count": 2176,
+      "sha256": "00bbf814ab2d9cfe12e2a29815413169ecb49107a95be7db2890ccd05bf862b5"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-09.frames.txt",
+      "byte_count": 10185,
+      "sha256": "db64c13502f55ae2046a549b07764488c5ee1aada108aaa8aac514288046df48"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-09.metadata.json",
+      "byte_count": 2176,
+      "sha256": "570b1e52a3aa563c9f11b11dd4d067d3d908271e7b3f4bee3dc9ce68961a38b3"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-10.frames.txt",
+      "byte_count": 10080,
+      "sha256": "ee6074e611ea8c929c15ec933283e23dca147a278307969b81be1b8a13feeafc"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-10.metadata.json",
+      "byte_count": 2176,
+      "sha256": "21a309c091e912dd1c6df9ddb9f3d9fdde0606d69e81085bd92e30dc02503ae9"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-11.frames.txt",
+      "byte_count": 10080,
+      "sha256": "ef6b170134ef98d611e0102560498c8de92e908e1617db085d94df64c077a754"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-11.metadata.json",
+      "byte_count": 2176,
+      "sha256": "e7646205c7c5b5c75ff31a2c8bcb1b5689fcdd6e2bf8514b0b60044fc2da84a8"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-12.frames.txt",
+      "byte_count": 9975,
+      "sha256": "8d0a70f5c71ec3b0d0d7e321ed2fa66e93bb825be5bcee8f02eb18be3473f094"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-12.metadata.json",
+      "byte_count": 2176,
+      "sha256": "a7d986753076d08e874ecfdc17ce43ed6b31ee02309a6d594021ec4c0de55796"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-13.frames.txt",
+      "byte_count": 10080,
+      "sha256": "070581cffdd4b4ecb8e8dd8d89539329d8709c55c4e521211e5350d51504ead6"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-13.metadata.json",
+      "byte_count": 2176,
+      "sha256": "88421697888f9500dd889fb2e267bafb81ec767cbc5db5ff5a12c08ee83e1132"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-14.frames.txt",
+      "byte_count": 9975,
+      "sha256": "719eca3f2ed439970573db56d4980189c5cf33cc2023fa02bb52b159af51d14a"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-14.metadata.json",
+      "byte_count": 2176,
+      "sha256": "8c4c444155d4372e443e02d69b7e1af37c3e2d8cc012354f1dc250aabeb972fb"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-15.channel1.raw",
+      "byte_count": 190000,
+      "sha256": "0010eb911e44445e8b915991eb57c6c92e2e231820bcb871c46588e49e9f6cee"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-15.channel2.raw",
+      "byte_count": 190000,
+      "sha256": "3dc054b0f0e0c49d0766289b953bae37f140e52edb3d9a18b5e21d9dfca8f703"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-15.frames.txt",
+      "byte_count": 10092,
+      "sha256": "c7360656bde638bb56a2f3a93b8be483d96fd11c0461902eaea2584b3604aaca"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-15.metadata.json",
+      "byte_count": 2611,
+      "sha256": "4c529643a8c8c669b90a2b0f74b8e94004f49140a5f4416200bd03323dff53df"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-16.frames.txt",
+      "byte_count": 9975,
+      "sha256": "34dda8cbd094131daea0346547d46c10ebef861bdf15cdb2a4eeb554478750f8"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-16.metadata.json",
+      "byte_count": 2176,
+      "sha256": "0f1277acbcf08a113575c64fdd4748fc4328035f8eb7f7f61953e05c9cb3efaa"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-17.frames.txt",
+      "byte_count": 9975,
+      "sha256": "1c75be8022a334b52c3ce9eb5e9c255e355d6157d603ee7951b4cc3885b005a2"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-17.metadata.json",
+      "byte_count": 2176,
+      "sha256": "5009912d746b7b7be37998e6070edcf5a312d42a0cb34d07097f1f41d158b30f"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-18.frames.txt",
+      "byte_count": 10080,
+      "sha256": "03a09a107b150a83b8fa3ae812a4e8fac99ec94d141349a1e5db53bd89fa56e1"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-18.metadata.json",
+      "byte_count": 2176,
+      "sha256": "55b95fde6931e14f3e05c9918755e804ca7cd4350f35eb124ab9913e673ca62d"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-19.frames.txt",
+      "byte_count": 10080,
+      "sha256": "40159ff3acfa3e4ff4bc6fdc5e94c7800422ef5f6b0e9692937834f0330b7a10"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-19.metadata.json",
+      "byte_count": 2176,
+      "sha256": "578162d9457dd8cedd5a76e1a0bd33dfcbbed84ffb618a6954c5c0f9ce10ee5a"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-20.frames.txt",
+      "byte_count": 10080,
+      "sha256": "2478fc80351ee2353fa1501490677577cdbeab801aa4560975bd78d1dcb87d07"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-20.metadata.json",
+      "byte_count": 2176,
+      "sha256": "954e43d0a5990eea90569678190d820dcef63588c6c8f66c83e0927481d9039e"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-21.frames.txt",
+      "byte_count": 10080,
+      "sha256": "b35c872d8d6ede4f48f9ff7ca9a0ba9bd32e3f1187c2ec45cec7496bd4f0da62"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-21.metadata.json",
+      "byte_count": 2176,
+      "sha256": "e524afa7adc7c091019c1d069623d5b4a06a49fc6e6c337533201e7ea4938459"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-22.frames.txt",
+      "byte_count": 4236,
+      "sha256": "3ae8ea16fa8fa0dadd086491d3b2fcb497abe19ae84f969c935ae7523171463d"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-22.metadata.json",
+      "byte_count": 2176,
+      "sha256": "9535978efc392cb8941e63bd23c7ed05a27627cb18d026dc62d7237af3bb03ce"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-23.channel1.raw",
+      "byte_count": 200000,
+      "sha256": "53406cb6f5706a5732112e8efc40e1b21a2ca74a0826098e50583a21b700fbce"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-23.channel2.raw",
+      "byte_count": 200000,
+      "sha256": "4a10364f6cd6303a6aa41f28259a8b5e2760297d2fc7b2235fe60cc9a8fc452d"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-23.frames.txt",
+      "byte_count": 10542,
+      "sha256": "9106e9db918af1c6e3ea798182532a8764ac5ab2b609c462e89d423dcdf16aee"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-23.metadata.json",
+      "byte_count": 2609,
+      "sha256": "63b0cd7c9ec7fd9999c7acec88a7f52efc7e6146ac475a2ab17bbaab7d377880"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-24.frames.txt",
+      "byte_count": 9975,
+      "sha256": "83ec1087c1e1d2951c2007e69409a9473c80ebca0db1ac85fcf2edeabee98c86"
+    },
+    {
+      "file": "valve-2-runs/long-run/chunk-24.metadata.json",
+      "byte_count": 2176,
+      "sha256": "43692ed920f5b6ba1720d5f195512b35bef608ce12a1223e8f91f3a9cf16a02d"
+    },
+    {
+      "file": "valve-2-runs/long-run/controller-calls.log",
+      "byte_count": 1048,
+      "sha256": "49823a65886c19fa85ebc27381995a225eddcea0f1f710670331430a3344f237"
+    },
+    {
+      "file": "valve-2-runs/long-run/run.log",
+      "byte_count": 3746,
+      "sha256": "74ac307f5132ec79ea73acadff6791d5e24f4233d34aadb97a39d4b3f4bd78dd"
+    },
+    {
+      "file": "valve-2-runs/startup/startup-2.channel1.raw",
+      "byte_count": 2750000,
+      "sha256": "fc8ebf6492f8212cc87fbbc56996ca5550a082a19ecddc9a1f44d3803f3d151e"
+    },
+    {
+      "file": "valve-2-runs/startup/startup-2.channel2.raw",
+      "byte_count": 2750000,
+      "sha256": "24c71aedac0efd5dad4c2e9c74ab1b1e7934c018cbcda04771b311d00a10a9c5"
+    },
+    {
+      "file": "valve-2-runs/startup/startup-2.frames.txt",
+      "byte_count": 2970,
+      "sha256": "2aceae9665d23759f3e448e4f86799ed909ae25d5aed061680242e75fc2ab900"
+    },
+    {
+      "file": "valve-2-runs/startup/startup-2.metadata.json",
+      "byte_count": 2615,
+      "sha256": "e7a7ef5955622f361d7f27cf419c6b742066cb550cd981c78b8226816bd25c7a"
+    },
+    {
+      "file": "valve-2-runs/startup/startup-2.png",
+      "byte_count": 140524,
+      "sha256": "40635117344ac068236628a0b3eeb6deda53f37e213317d2d5ee4ab8144ebac5"
+    },
+    {
+      "file": "valve-2-runs/startup/startup-3.frames.txt",
+      "byte_count": 11025,
+      "sha256": "427b3394d6293c430f5f1f9d91c98cf35e413337b5a95405b26ca09828e22e12"
+    },
+    {
+      "file": "valve-2-runs/startup/startup-3.metadata.json",
+      "byte_count": 2179,
+      "sha256": "4dad756d19df47c154b2bedd7f211cf9a6ec99743ae8a330fa4fff78bdddadeb"
+    },
+    {
+      "file": "valve-2-runs/startup/startup-3.png",
+      "byte_count": 143350,
+      "sha256": "f3836a9697188596b53b1918498fc967865ec82c30b3aed988bdc4fd7730c60c"
+    },
+    {
+      "file": "valve-2-runs/tests/outlets/add-2.channel1.raw",
+      "byte_count": 1437500,
+      "sha256": "d11508834c0df766a22bce61663b8edfbbad0d9701664b45fc6b990a40613827"
+    },
+    {
+      "file": "valve-2-runs/tests/outlets/add-2.channel2.raw",
+      "byte_count": 1437500,
+      "sha256": "846bca3cc39f7e7195b39385abd08b9d727e5350d38ed9e5519d20999b8f638d"
+    },
+    {
+      "file": "valve-2-runs/tests/outlets/add-2.frames.txt",
+      "byte_count": 1743,
+      "sha256": "15e8e96ab343c1135c7de88f8b479124295942b3792a1a005cb1c330ad93f279"
+    },
+    {
+      "file": "valve-2-runs/tests/outlets/add-2.metadata.json",
+      "byte_count": 2600,
+      "sha256": "65b53fc610a9e7c2c736f991d1ef44765920e4629d7e4b9f69b9ebedcac8841d"
+    },
+    {
+      "file": "valve-2-runs/tests/outlets/add-2.png",
+      "byte_count": 143225,
+      "sha256": "1cc1c488a2a1a54ef1ff8acf994cf1586a3b94fb9bd2afab0f914788aa5727dd"
+    },
+    {
+      "file": "valve-2-runs/tests/outlets/controller-calls.log",
+      "byte_count": 1361,
+      "sha256": "85c66eabe8df22a92f47ef8214dec19bb67509f196faaf9d158620eb7fe4bcd4"
+    },
+    {
+      "file": "valve-2-runs/tests/outlets/remove-2.frames.txt",
+      "byte_count": 1743,
+      "sha256": "8678c84ea5dad908411a2b4e9af0bebb118d1fda23a4a984b526eb15bb347d49"
+    },
+    {
+      "file": "valve-2-runs/tests/outlets/remove-2.metadata.json",
+      "byte_count": 2174,
+      "sha256": "38f8ce75d85cdf648cd8b5b1d1e8227d83ac0b491fa6629626e58cfeabc001a9"
+    },
+    {
+      "file": "valve-2-runs/tests/outlets/remove-2.png",
+      "byte_count": 141108,
+      "sha256": "96c3ea19a563ab141fdee2fac5d7aabcf8cde8b2200192ca627f40671acf9445"
+    },
+    {
+      "file": "valve-2-runs/tests/outlets/run.log",
+      "byte_count": 552,
+      "sha256": "83f75a1e2443819a18444d052512b987061dcc37b5072e77a5766a7ee333942d"
+    },
+    {
+      "file": "valve-2-runs/tests/outlets/start-1.frames.txt",
+      "byte_count": 2148,
+      "sha256": "92192eb9ec6a901926428668e5de37f2b8f97d2448bfcf23ce4dabdfd4f38c0e"
+    },
+    {
+      "file": "valve-2-runs/tests/outlets/start-1.metadata.json",
+      "byte_count": 2175,
+      "sha256": "39728043361ef1d9626c62807f88ecea4e2924298a6b637d8f30537dfccc72fb"
+    },
+    {
+      "file": "valve-2-runs/tests/outlets/start-1.png",
+      "byte_count": 142710,
+      "sha256": "851d72c3d5fe682b7162ba523374a3d1ad157a7e3db6984d8738553341c05e74"
+    },
+    {
+      "file": "valve-2-runs/tests/outlets/stop.frames.txt",
+      "byte_count": 1827,
+      "sha256": "ed20a3ec08900d5ba6ae31c16912e27b02c1fa95be515659d0203ef159f81886"
+    },
+    {
+      "file": "valve-2-runs/tests/outlets/stop.metadata.json",
+      "byte_count": 2162,
+      "sha256": "1703855f30c372db34ef519e1cca7f923d362ee90eb20b0fa44196309c5a6420"
+    },
+    {
+      "file": "valve-2-runs/tests/outlets/stop.png",
+      "byte_count": 141245,
+      "sha256": "36340f30cce7074c5111c09a25353ed840ebf780865a71577cd68d99bb4d54ee"
+    },
+    {
+      "file": "valve-2-runs/tests/pause/controller-calls.log",
+      "byte_count": 1252,
+      "sha256": "463e70c96f766b18946fba536159621500233e9fae13d21cc6e22b0ce62c79cb"
+    },
+    {
+      "file": "valve-2-runs/tests/pause/pause.frames.txt",
+      "byte_count": 1827,
+      "sha256": "31c11b6caf1cd35b9962367937f356bae7db819318abd6dc0d0b0f6afa822a49"
+    },
+    {
+      "file": "valve-2-runs/tests/pause/pause.metadata.json",
+      "byte_count": 2165,
+      "sha256": "dcb57678071e0f4eddef4ca918da8181880a052e37ce9827518442172c27eaba"
+    },
+    {
+      "file": "valve-2-runs/tests/pause/pause.png",
+      "byte_count": 142138,
+      "sha256": "a6c37b0c8e217c455c1edeec4f51c69740d89f7ea8b7f8f6358f9de34e82bfa9"
+    },
+    {
+      "file": "valve-2-runs/tests/pause/resume.channel1.raw",
+      "byte_count": 1937500,
+      "sha256": "96ed98df5c7aee467f02b3a9d318fbb89cfee924959c1d08608e68abbb1c1f69"
+    },
+    {
+      "file": "valve-2-runs/tests/pause/resume.channel2.raw",
+      "byte_count": 1937500,
+      "sha256": "1aa8e39d28f75961821bf5c2bce254b223e700a49702411a7c239e1bc4abf865"
+    },
+    {
+      "file": "valve-2-runs/tests/pause/resume.frames.txt",
+      "byte_count": 1833,
+      "sha256": "af0350eaacfb8c17420c002a725a58bafb71773e5d183a7773b14392443a061d"
+    },
+    {
+      "file": "valve-2-runs/tests/pause/resume.metadata.json",
+      "byte_count": 2603,
+      "sha256": "1d28a58d8a53368a77541dd266846dc7735d8d3bf2b8274f8c52b60f4f1efed9"
+    },
+    {
+      "file": "valve-2-runs/tests/pause/resume.png",
+      "byte_count": 142792,
+      "sha256": "fdadf08d5b4a22cbe01fe3f869284ae919306db79e95990875109f6213304ad9"
+    },
+    {
+      "file": "valve-2-runs/tests/pause/run.log",
+      "byte_count": 487,
+      "sha256": "993257bad4fe93ecd8736f1fef160bf33d92eaf96df8a29a5b3af568af7a9002"
+    },
+    {
+      "file": "valve-2-runs/tests/pause/start.frames.txt",
+      "byte_count": 2184,
+      "sha256": "458454d9d6ca09838e1a4cf05ace9463083a3e7fc7e8616fe1bbc90cb09f8a09"
+    },
+    {
+      "file": "valve-2-runs/tests/pause/start.metadata.json",
+      "byte_count": 2169,
+      "sha256": "b59ae9402dca427c3d4889643e51c7263fae00d96b7ef7cb10724f88bc55667e"
+    },
+    {
+      "file": "valve-2-runs/tests/pause/start.png",
+      "byte_count": 142228,
+      "sha256": "2b6eec63dd0537c132a58cf066ed18a31c2b942d58c7a3c5e052cc7375cd18fa"
+    },
+    {
+      "file": "valve-2-runs/tests/pause/stop.frames.txt",
+      "byte_count": 1827,
+      "sha256": "ed0008bbc0f0bf8190a1bece7722586731d181df26da08f57a42fafb75825004"
+    },
+    {
+      "file": "valve-2-runs/tests/pause/stop.metadata.json",
+      "byte_count": 2162,
+      "sha256": "3f137c5fd833908e42352a1a3452cd065c69bfce0b5065db0575259fd8daa5ac"
+    },
+    {
+      "file": "valve-2-runs/tests/pause/stop.png",
+      "byte_count": 142197,
+      "sha256": "e6277a8472def75723f1477f54f34c9b686b31ffae845a8ba9fc8c2a76bb74c2"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/controller-calls.log",
+      "byte_count": 1522,
+      "sha256": "d846f967d1e4dcce75807ea915a2a397218ef26f76b3a91da6abaf45849035a4"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/run.log",
+      "byte_count": 680,
+      "sha256": "53b0ac6947cf413be50e68a893f502efc531d08d1b497f8accf6733f3359f989"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/start-90.frames.txt",
+      "byte_count": 1869,
+      "sha256": "51d23c2478ec9050cb39ca27e51c044cac8c35011f7b41833e00845e8917f42f"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/start-90.metadata.json",
+      "byte_count": 2174,
+      "sha256": "e09beb829afa8dc3a1ecbbf2eb0f59048f306a7f82623872dce5b6f4315cbf4f"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/start-90.png",
+      "byte_count": 144632,
+      "sha256": "6c311f6906eb2c83712a9c6e2f87cd260bd51de33c1f5b93bc96e6514b6ab055"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/stop.frames.txt",
+      "byte_count": 1827,
+      "sha256": "d37f4bd5450e7eed4f465e2f5a87f844c52409c98ad60a80c1c179b44bca93ef"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/stop.metadata.json",
+      "byte_count": 2162,
+      "sha256": "6c0073fc116cb6e00d25ec7b788d066bf8fce16977061073e9d01b9324ffecab"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/stop.png",
+      "byte_count": 141609,
+      "sha256": "f9dd44cd4c8fb02669a044e82af322736b29c57fb60aef75102906cfcee50998"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/to-100.channel1.raw",
+      "byte_count": 1425000,
+      "sha256": "39014199fb76d187c383cf861fd4b2d955dbd352a5884bd02a05f400f1a6cf68"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/to-100.channel2.raw",
+      "byte_count": 1425000,
+      "sha256": "87bf9eec43e4d3aeaa1b552047bb12219577eb6b97381e1f830739701b303597"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/to-100.frames.txt",
+      "byte_count": 1638,
+      "sha256": "c0dfb94217b08b8346cbaf777b7200d8c9e4f5c79f3f8109ca813e974474658e"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/to-100.metadata.json",
+      "byte_count": 2603,
+      "sha256": "8b1173c94c49b35b7d77dbf81861cda99fbb7307b4bf2b4ff34d11405439c33d"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/to-100.png",
+      "byte_count": 139608,
+      "sha256": "89fb49dbff4091e3dd6e1a90c41e19c8de3c2bdf194fc68e5a0c888140a5bf54"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/to-95.frames.txt",
+      "byte_count": 1743,
+      "sha256": "2a8018017fafe2582e98a7f8c8ab0938b7fbf1df8259d89ee8a3c07425810626"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/to-95.metadata.json",
+      "byte_count": 2165,
+      "sha256": "f909c4571515a8bfceab9f6e01fc86b44a80d748dc259f5496f4454253ff15e0"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/to-95.png",
+      "byte_count": 142379,
+      "sha256": "1b2860922dcabf7e05c108da1213237d9609f30009f41f9c0bfc462dbd1ba74e"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/to-99.frames.txt",
+      "byte_count": 1743,
+      "sha256": "a0946c52e78f1ba7c6544f3738f3ecf5dca8b2bd698a061630d8c152542e900e"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/to-99.metadata.json",
+      "byte_count": 2165,
+      "sha256": "208dc302541e8897d52e6c6d8ce44a2c7b2607a35b0a56e78a29dacd3ee28130"
+    },
+    {
+      "file": "valve-2-runs/tests/temps/to-99.png",
+      "byte_count": 140528,
+      "sha256": "824eb51c93473cadabe42bfe2f2e07f3a056a18bd14b6c835f618271ad5aa55e"
+    },
+    {
+      "file": "valve-2-runs/tests/valve1-alone/controller-calls.log",
+      "byte_count": 1044,
+      "sha256": "193a78bdb0babcf6bf082872d17338ee01d8e7f815ae6554fc57039579adffb3"
+    },
+    {
+      "file": "valve-2-runs/tests/valve1-alone/run.log",
+      "byte_count": 289,
+      "sha256": "700cdbd3483f3b2ec70e5a5193b5e24ec8497bca6411e341ca0346be9489d9b3"
+    },
+    {
+      "file": "valve-2-runs/tests/valve1-alone/start.channel1.raw",
+      "byte_count": 1837500,
+      "sha256": "435a02fad6d2961102e4c4480f11e1c5c1d296cca97aa7f865f9ab95b8e5a467"
+    },
+    {
+      "file": "valve-2-runs/tests/valve1-alone/start.channel2.raw",
+      "byte_count": 1837500,
+      "sha256": "6f2507d237e2b78d4d07bf8069e0940a450bbb1f1f3855541db96b1fea59fbd4"
+    },
+    {
+      "file": "valve-2-runs/tests/valve1-alone/start.frames.txt",
+      "byte_count": 2079,
+      "sha256": "46641b71be207aa98c9c6fef1fe156d49488d700b9976a1048f519d8f6bd9f44"
+    },
+    {
+      "file": "valve-2-runs/tests/valve1-alone/start.metadata.json",
+      "byte_count": 2604,
+      "sha256": "d79d2e2f038227542d43c1975ca4b476431f99ada7ccf1a830722ea6b899d0c4"
+    },
+    {
+      "file": "valve-2-runs/tests/valve1-alone/start.png",
+      "byte_count": 143037,
+      "sha256": "5e2cbe95f3d9977f883e029fc3048d7a09cd74ef250719ee4c7c7e1afc4021f2"
+    },
+    {
+      "file": "valve-2-runs/tests/valve1-alone/stop.frames.txt",
+      "byte_count": 1722,
+      "sha256": "fc42249d0b21861c6218e91198a2e2a87cc5f622a282f58b4ee5ed9b2d2d056e"
+    },
+    {
+      "file": "valve-2-runs/tests/valve1-alone/stop.metadata.json",
+      "byte_count": 2162,
+      "sha256": "f55bf2b93c399c28c76050b9b3fcd961bc0ef95cd226d36e5eaa5d3e322ce334"
+    },
+    {
+      "file": "valve-2-runs/tests/valve1-alone/stop.png",
+      "byte_count": 141928,
+      "sha256": "142b860f66f5e277e8c23f458ef3839b0cb0484e0ef803952f6ac8f1af211434"
     }
   ]
 }

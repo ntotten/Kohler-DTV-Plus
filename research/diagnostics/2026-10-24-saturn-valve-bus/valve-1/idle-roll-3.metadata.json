@@ -8,8 +8,11 @@
       "waveform_format": "BYTE",
       "read": ":WAVeform:DATA? in chunks of 250000 points",
       "preamble": "0,1,6900000,1,8.000000E-6,-5.520000E+1,0.000000,3.4133E-02,-73,128",
-      "byte_count": 6900000,
-      "sha256": "130a6b4beefc46c4755000f12f4253b0e5329f735fb6106db119d6155bd6902f"
+      "byte_count": 162500,
+      "sha256": "9d9412c70265d24694bff5f1cea339d2c9437e273e88ae2033750d71ac5c9375",
+      "received_byte_count": 6900000,
+      "received_sha256": "130a6b4beefc46c4755000f12f4253b0e5329f735fb6106db119d6155bd6902f",
+      "slice_first_index": 26356
     },
     "CHANnel2": {
       "file": "idle-roll-3.channel2.raw",
@@ -17,8 +20,11 @@
       "waveform_format": "BYTE",
       "read": ":WAVeform:DATA? in chunks of 250000 points",
       "preamble": "0,1,6900000,1,8.000000E-6,-5.520000E+1,0.000000,3.4133E-02,-73,128",
-      "byte_count": 6900000,
-      "sha256": "51aef663a261918934fbc88465d882bcde017f206de8e450c4574e207d016d67"
+      "byte_count": 162500,
+      "sha256": "4e56b80bf7424e7447231de5ecf536b3ffde00ae770c9cf0e8c78c98a557e932",
+      "received_byte_count": 6900000,
+      "received_sha256": "51aef663a261918934fbc88465d882bcde017f206de8e450c4574e207d016d67",
+      "slice_first_index": 26356
     }
   },
   "started_utc": "2026-10-24T19:01:21Z",
@@ -48,5 +54,6 @@
   },
   "completed_utc": "2026-10-24T19:01:33Z",
   "completed_local": "2026-10-24T15:01:33-04:00",
-  "conversion": "preamble = format,type,points,count,xincrement,xorigin,xreference,yincrement,yorigin,yreference; volts = (byte - yorigin - yreference) * yincrement; seconds = (index - xreference) * xincrement + xorigin, 0 s at the trigger"
+  "conversion": "preamble = format,type,points,count,xincrement,xorigin,xreference,yincrement,yorigin,yreference; volts = (byte - yorigin - yreference) * yincrement; seconds = (slice_first_index + index - xreference) * xincrement + xorigin, 0 s at the trigger",
+  "slice": "samples [slice_first_index, slice_first_index + byte_count) of the received record, unchanged; window -54.989 s to -53.689 s"
 }

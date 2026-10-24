@@ -1,0 +1,5 @@
+20:04:43 /quick_shower.cgi valve_num=1&valve1_outlet=1&valve1_massage=0&valve1_temp=96& -> ':)'
+20:05:00 start: 38 frames, bad 0
+20:05:04 /stop_shower.cgi  -> ':)'
+20:05:21 stop: 32 frames, bad 0
+20:05:21 /system_info.cgi  -> '{"valve1_Currentstatus":"Paused","degree_symbol":"&degF","va'
