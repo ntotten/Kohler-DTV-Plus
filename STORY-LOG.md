@@ -12,6 +12,30 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ## 2026-10-24
 
+### 16:38 — Pulling the controller's power stops the water in about two seconds
+
+The fail-off test: valve 2 running at 90 °F, the operator cut the K-99695's power and counted. The last
+poll went out at the cut and the water stopped about 2 s later, within four missed polls. The valve's
+12.7 V supply stayed up, and the bus stayed held at the controller's driven-mark level for two minutes,
+so the valve shut off with power and a driven line still present, on the silence alone. On power-up the
+controller ran the same start-up as at 15:33: four `3A 01 03` address-clears, the identification reads, a
+configuration block read, written and read back, `A9 01 07 08` setting the 1800 s runtime, then polling.
+
+**Why it matters:** a relay or replacement controller that stops talking leaves the water off, not on.
+
+### 16:05 — The runtime-timer refresh, and what every water command looks like
+
+A 22-minute run at 100 °F with no status polling: the only command in it was at 910 s, control `81` with
+the mode and setpoint, which put the valve's countdown back to 1800, the refresh DESIGN.md expected after
+900 s. Then short tests with the scope on each call. Temperature changes are one `87` frame; the setpoint
+field reads 0x0145, 0x015E, 0x0163, 0x0177 and 0x0181 for 90, 95, 96, 99 and 100 °F, which is not a plain
+tenths-of-a-degree scale. Outlets are one flow byte per port in the same frame. Pause is the stop; resume
+is a full start, and the runtime timer restarts at 1800. A valve 1 start ran valve 2 too, because valve 2
+had an outlet armed: an empty outlet string means "keep the armed selection", for either valve.
+
+**Why it matters:** these are the frames the replacement controller sends, now read off the wire for
+start, stop, temperature, outlets and pause/resume. Massage is the one water operation not captured.
+
 ### 15:05 — Valve 1 speaks a different command set, and a valve 2 start opens it
 
 The probes moved to valve 1's connector while the controller restarted, which caught the bus coming up:
