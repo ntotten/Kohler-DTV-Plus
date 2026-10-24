@@ -53,7 +53,12 @@ once where it belongs, and move on.
 - **The replacement controller drives the two Saturn valve buses**, and that is
   the whole scope: a like-for-like replacement of the K-99695, with no added
   installation equipment and no steam setup (operator decision 2026-08-30 —
-  [controller/docs/DECISIONS.md](controller/docs/DECISIONS.md) D12).
+  [controller/docs/DECISIONS.md](controller/docs/DECISIONS.md) D12), plus a new
+  wall panel in place of the K-99693 (D16, 2026-10-24).
+- **Revision B of the build** (2026-10-24, not yet built): one RP2350 board in
+  line with both valve cables, taking the valves over in stages while the
+  K-99695 keeps working (D13–D15,
+  [controller/docs/BUILD-ORDER.md](controller/docs/BUILD-ORDER.md)).
 - **[I3](INVESTIGATIONS.md#i3--valuescgi-intermittently-drops-a-healthy-valve),
   [I4](INVESTIGATIONS.md#i4--is-automatic-purge-on) and
   [I5](INVESTIGATIONS.md#i5--the-saturn-register-map-is-contradictory)** remain
