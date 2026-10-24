@@ -33,12 +33,12 @@ the runs' `controller-calls.log` files, plus `values.cgi` at 18:38:31 and `syste
 
 Six positions. Pins 1 and 6 are unpopulated; pins 2 to 5 are wired.
 
-| Pin | Function                  | Basis                                                |
-| --- | ------------------------- | ---------------------------------------------------- |
-| 2   | Ground                    | 12.7 V from pin 2 to pin 5                           |
-| 3   | RS-485, negative          | Scope; always the opposite of pin 4                  |
-| 4   | RS-485, positive          | Scope; higher of the two in the mark state           |
-| 5   | +12.7 V supply            | Meter, powered                                       |
+| Pin | Function                       | Basis                                                                           |
+| --- | ------------------------------ | ------------------------------------------------------------------------------- |
+| 2   | Ground                         | 12.7 V from pin 2 to pin 5                                                      |
+| 3   | RS-485, negative               | Scope; always the opposite of pin 4                                             |
+| 4   | RS-485, positive               | Scope; higher of the two in the mark state                                      |
+| 5   | +12.7 V supply, from the valve | Meter, powered; 12.82 V with only the valve connected ([Fail-off](#fail-off-a)) |
 
 Pin 4 is the higher of the two conductors in the mark state, both idle and driven. RS-485 vendors
 disagree on whether to letter the positive line A or B, so wire adapters by the pin numbers, not the
@@ -356,11 +356,16 @@ operator cut the Kohler controller's power at about 20:33:06 and counted until t
 - The last poll went out at 20:33:06.5 (`chunk-02`). After it, no frames.
 - **The water stopped about 2 s after the power cut**, by the operator's count: within about four missed
   polls.
-- With the controller unplugged, the pair stayed at CH1 3.63 V, CH2 1.44 V for two minutes: +2.2 V, the
-  controller's own driven-mark level, not the idle bias. Pin 5 to pin 2 read 12.7 V and then 12.82 V on
-  the meter. `[I]` The valve supply and the bus driver are powered apart from the controller's mains, and
-  the driver is held in the mark state; the valve shut off anyway, without any polls.
+- With the controller's power off and its cable still in, the pair stayed at CH1 3.63 V, CH2 1.44 V for
+  two minutes: +2.2 V, the controller's own driven-mark level, not the idle bias. Pin 5 to pin 2 read
+  12.7 V. The valve shut off anyway, without any polls.
+- **Pin 5 is supplied by the valve.** With the breakout's cable then pulled out of the controller's
+  Valve 2 jack, leaving the valve as the only thing on the line, pin 5 to pin 2 read 12.82 V.
+- `[I]` The driven-mark level with the power off is the controller's side held up from pin 5; not
+  checked.
 - Between 20:35:03 and 20:35:33 the levels sagged to roughly 1.7–1.8 V and 1.5 V, still without frames.
+  `[I]` This is the cable being pulled, and the new levels are the valve's own bias; the pull was not
+  timed.
 - The CH2 probe came off pin 3 at about 20:36. The restart at 20:37:17 is decoded from CH1 alone
   (`saturn_decode.py --single 1 --threshold 2.2`, `.ch1.frames.txt`): the start-up above, then polling at
   address `00`. The controller answered HTTP at 20:37:10 and the stop went out at 20:37:16.
