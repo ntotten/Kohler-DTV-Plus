@@ -21,28 +21,28 @@ LCSC), not a marketplace seller.
 
 ### The controller
 
-| Qty | Item                                        | Part / SKU       | Price                     | Note                                                                                            |
-| --: | ------------------------------------------- | ---------------- | ------------------------- | ----------------------------------------------------------------------------------------------- |
-|   2 | Raspberry Pi Pico 2                         | DigiKey `SC1631` | Not checked               | One installed, one spare. RP2350, not the original Pico                                         |
-|   2 | WIZnet WIZ850io W5500 Ethernet module       | `WIZ850IO`       | Not checked               | Wired to the Pico 2's GPIO16–21, the pins the W5500-EVB-Pico2 uses **[V]**                      |
-|   2 | 2×6 female header, 2.54 mm                  | —                | Not checked               | The WIZ850io plugs in rather than being soldered                                                |
-|   6 | TI THVD1410 RS-485 transceiver, SOIC-8      | `THVD1410DR`     | Not checked               | Five ports and a spare. **Not the THVD1406** — §5                                               |
-|   6 | SOIC-8 to DIP-8 adapter board               | —                | Not checked               | For the protoboard                                                                              |
-|   6 | 120 Ω resistor                              | —                | Not checked               | Termination, one per port                                                                       |
-|   6 | 4.7 kΩ resistor                             | —                | Not checked               | Pull-down on each transceiver's `DE`; anything up to 8.2 kΩ — §5                                |
-|   6 | 100 nF ceramic capacitor                    | —                | Not checked               | Decoupling, one per transceiver                                                                 |
-|   1 | Resistor assortment                         | —                | Not checked               | Valve-segment bias, values chosen in Phase 3 — §5                                               |
-|   1 | Protoboard, two 20-pin female header strips | —                | Not checked               | The board plugs into the headers rather than being soldered in                                  |
-|   1 | RJ45 jack, board mount                      | —                | Not checked               | Panel port                                                                                      |
-|   1 | DC jack, 2.1 mm                             | —                | Not checked               | Panel adapter input, wired only to the panel jack — §16                                         |
-|   1 | Header pins for test points                 | —                | Not checked               | Pins 2, 3, 4 of each of the four valve segments — §10                                           |
-|   1 | Official Raspberry Pi 15 W USB-C supply, US | PiShop `1660`    | $8.80, PiShop, 2026-08-29 | Any isolated 5 V USB-C supply of 1 A or more works                                              |
-|   1 | Hammond 1591DSBK ABS box, 150 × 80 × 50 mm  | `1591DSBK`       | Not checked               | Dry location beside the K-99695 — §10. Inside fit of the protoboard not checked; trim it to fit |
-|   1 | Ethernet patch cable                        | —                | Not checked               | To the house network                                                                            |
+|     Qty | Item                                            | Part / SKU                               | Price                             | Note                                                                                                                                           |
+| ------: | ----------------------------------------------- | ---------------------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+|       2 | Raspberry Pi Pico 2                             | DigiKey `SC1631`                         | Not checked                       | One installed, one spare. RP2350, not the original Pico                                                                                        |
+|       2 | WIZnet WIZ850io W5500 Ethernet module           | `WIZ850IO`                               | Not checked                       | Wired to the Pico 2's GPIO16–21, the pins the W5500-EVB-Pico2 uses **[V]**                                                                     |
+|       2 | 2×6 female header, 2.54 mm                      | —                                        | Not checked                       | The WIZ850io plugs in rather than being soldered                                                                                               |
+|       6 | TI THVD1410 RS-485 transceiver, VSSOP-8         | `THVD1410DGK` (Mouser `595-THVD1410DGK`) | $4.96, Mouser, 2026-10-24 **[V]** | Five ports and a spare. Same part as the SOIC `THVD1410DR`, which DigiKey and Mouser had none of until mid-November. **Not the THVD1406** — §5 |
+|       1 | Adafruit 1212 SOIC/MSOP/TSSOP-8 adapter, 6-pack | Mouser `485-1212`                        | $2.95, Mouser, 2026-10-24 **[V]** | Takes the VSSOP-8 (0.65 mm pitch)                                                                                                              |
+|       6 | 120 Ω resistor                                  | —                                        | Not checked                       | Termination, one per port                                                                                                                      |
+|       6 | 4.7 kΩ resistor                                 | —                                        | Not checked                       | Pull-down on each transceiver's `DE`; anything up to 8.2 kΩ — §5                                                                               |
+|       6 | 100 nF ceramic capacitor                        | —                                        | Not checked                       | Decoupling, one per transceiver                                                                                                                |
+| 10 each | 220, 330, 470, 680 Ω and 1 kΩ resistors         | Yageo CFR-25JB                           | Not checked                       | Valve-segment bias candidates, value chosen in Phase 3 — §5                                                                                    |
+|       1 | Protoboard, two 20-pin female header strips     | —                                        | Not checked                       | The board plugs into the headers rather than being soldered in                                                                                 |
+|       1 | RJ45 jack, board mount                          | —                                        | Not checked                       | Panel port                                                                                                                                     |
+|       1 | DC jack, 2.1 mm                                 | —                                        | Not checked                       | Panel adapter input, wired only to the panel jack — §16                                                                                        |
+|       1 | Header pins for test points                     | —                                        | Not checked                       | Pins 2, 3, 4 of each of the four valve segments — §10                                                                                          |
+|       1 | Official Raspberry Pi 15 W USB-C supply, US     | PiShop `1660`                            | $8.80, PiShop, 2026-08-29         | Any isolated 5 V USB-C supply of 1 A or more works                                                                                             |
+|       1 | Hammond 1591DSBK ABS box, 150 × 80 × 50 mm      | `1591DSBK`                               | Not checked                       | Dry location beside the K-99695 — §10. Inside fit of the protoboard not checked; trim it to fit                                                |
+|       1 | Ethernet patch cable                            | —                                        | Not checked                       | To the house network                                                                                                                           |
 
 - [Raspberry Pi Pico 2, DigiKey](https://www.digikey.com/en/products/detail/raspberry-pi/SC1631/24627142)
 - [WIZnet WIZ850io, DigiKey](https://www.digikey.com/en/products/detail/wiznet/WIZ850IO/8789619)
-- [TI THVD1410DR, DigiKey](https://www.digikey.com/en/products/detail/texas-instruments/THVD1410DR/10434695)
+- [TI THVD1410DGK, Mouser](https://www.mouser.com/ProductDetail/Texas-Instruments/THVD1410DGK?qs=chTDxNqvsyml7%252BOzp%2FJQSQ%3D%3D)
 - [TI THVD1410 datasheet](https://www.ti.com/lit/gpn/THVD1410)
 - [15 W USB-C power supply, PiShop](https://www.pishop.us/product/raspberry-pi-15w-power-supply-us-white/)
 
