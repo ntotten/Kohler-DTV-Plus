@@ -12,11 +12,29 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ## 2026-10-24
 
+### 14:40 — First water through the factory bus on the scope
+
+Valve 2's showerhead at 96 °F for 27 seconds, with the scope recording the bus in roll mode. The start is
+three frames from the controller: `AA 55 13 87 06 00 01 63 00 00 00 FD`, then
+`AA 55 13 87 06 01 01 63 64 00 00 98` twice. The stop is `AA 55 13 87 06 03 01 63 00 00 00 FA` twice.
+0x0163 is 355, the 96 °F setpoint as 35.5 °C in tenths; 0x64 is 100. The valve's status reply carries the
+same setpoint, its water temperature in tenths of a degree (20.8 °C idle, 36.2 °C at peak), and a timer
+that counts down one per second from 1800 after both the start and the stop. All 100 frames
+captured today check with the sync bytes in the checksum.
+
+Less than a minute before the run, with nothing sent to the controller, the poll changed address from `00` to `13`
+and an address-enquiry broadcast (`AA 55 1F 3A 01 01 A6`) started. What set that off is open.
+
+**Why it matters:** the write command, its fields and the checksum are now read off the wire rather
+than inferred from documents, which is what the replacement controller's Saturn driver has to reproduce.
+The capture tools are in
+[research/tools/saturn-capture/](research/tools/saturn-capture/).
+
 ### 14:31 — The factory valve bus is on the scope
 
 The Rigol DHO804 is on a valve connector with the system idle: CH1 on pin 4, CH2 on pin 3, grounds on
 pin 2. The connector has six positions and four wires — ground on 2, the RS-485 pair on 3 and 4, +12.7 V
-on 5. Pin 4 is the positive conductor. The controller polls the valve every ~490 ms with
+on 5. Pin 4 is the positive conductor. The controller polls the valve every ~525 ms with
 `AA 55 00 07 00 FA`, and the valve answers about 10 ms later with a 17-byte frame, at 9600 baud 8N1. The pair
 is loaded at both ends: 55.6 Ω across it with the controller connected, 141.2 Ω at the valve alone, the
 same on both valves.
