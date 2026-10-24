@@ -12,6 +12,21 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ## 2026-10-24
 
+### 15:05 — Valve 1 speaks a different command set, and a valve 2 start opens it
+
+The probes moved to valve 1's connector while the controller restarted, which caught the bus coming up:
+four address-enquiry broadcasts, then one-time reads (`54`, `40`, `16`, `0B`, `0C`, `15`) and steady
+polling, two minutes before the controller was back on the network. Valve 1 stays at address `00` and
+is polled with `01` and `02` and commanded with `81` (mode) and `A4` (outlet bitmask); valve 2 uses `07`
+and `87`. Same framing, baud rate and checksum on both. 834 frames today, every one with the sync bytes
+in the checksum.
+
+Starting valve 2 alone with `quick_shower.cgi` also starts valve 1: the controller sends valve 1 a run
+command and its last outlet selection. Starting valve 1 alone leaves valve 2 off.
+
+**Why it matters:** the replacement controller needs both command sets, not one, and anything that
+calls `quick_shower.cgi` for valve 2 is running valve 1 too.
+
 ### 14:40 — First water through the factory bus on the scope
 
 Valve 2's showerhead at 96 °F for 27 seconds, with the scope recording the bus in roll mode. The start is
