@@ -1,0 +1,187 @@
+utc,host,command,reply,note
+2026-10-24T17:35:14.000+00:00,192.168.4.120,*IDN?,"RIGOL TECHNOLOGIES,DHO804,DHO8A284M01558,00.01.05",
+2026-10-24T17:35:22.412+00:00,192.168.4.120,*IDN?,"RIGOL TECHNOLOGIES,DHO804,DHO8A284M01558,00.01.05",
+2026-10-24T17:35:22.449+00:00,192.168.4.120,:CHANnel1:DISPlay?,1,
+2026-10-24T17:35:22.495+00:00,192.168.4.120,:CHANnel2:DISPlay?,0,
+2026-10-24T17:35:22.623+00:00,192.168.4.120,:CHANnel1:SCALe?,5.000000E-02,
+2026-10-24T17:35:22.792+00:00,192.168.4.120,:CHANnel2:SCALe?,5.000000E-02,
+2026-10-24T17:35:23.001+00:00,192.168.4.120,:CHANnel1:PROBe?,1,
+2026-10-24T17:35:23.039+00:00,192.168.4.120,:CHANnel2:PROBe?,1,
+2026-10-24T17:35:23.199+00:00,192.168.4.120,:TIMebase:MAIN:SCALe?,2.000000E-6,
+2026-10-24T17:35:23.240+00:00,192.168.4.120,:TRIGger:SWEep?,AUTO,
+2026-10-24T17:35:23.282+00:00,192.168.4.120,:ACQuire:SRATe?,3.125000E+8,
+2026-10-24T17:35:32.211+00:00,192.168.4.120,:CHANnel3:DISPlay?,0,
+2026-10-24T17:35:32.273+00:00,192.168.4.120,:CHANnel4:DISPlay?,0,
+2026-10-24T17:35:32.407+00:00,192.168.4.120,:CHANnel1:COUPling?,DC,
+2026-10-24T17:35:32.442+00:00,192.168.4.120,:CHANnel1:OFFSet?,0.000000E+00,
+2026-10-24T17:35:32.611+00:00,192.168.4.120,:CHANnel1:BWLimit?,OFF,
+2026-10-24T17:35:32.648+00:00,192.168.4.120,:TRIGger:MODE?,EDGE,
+2026-10-24T17:35:32.822+00:00,192.168.4.120,:TRIGger:EDGE:SOURce?,CHAN1,
+2026-10-24T17:35:32.855+00:00,192.168.4.120,:TRIGger:EDGE:SLOPe?,POS,
+2026-10-24T17:35:32.892+00:00,192.168.4.120,:TRIGger:EDGE:LEVel?,0.000000,
+2026-10-24T17:35:32.927+00:00,192.168.4.120,:TRIGger:STATus?,AUTO,
+2026-10-24T17:35:32.961+00:00,192.168.4.120,:ACQuire:TYPE?,NORM,
+2026-10-24T17:35:32.995+00:00,192.168.4.120,:ACQuire:MDEPth?,1.0000E+04,
+2026-10-24T17:35:33.031+00:00,192.168.4.120,:SYSTem:ERRor?,"0,""No error""",
+2026-10-24T17:41:00.008+00:00,192.168.4.120,*IDN?,"RIGOL TECHNOLOGIES,DHO804,DHO8A284M01558,00.01.05","connector: 6 positions, pins 1 and 6 empty, 2-5 wired (operator)"
+2026-10-24T18:08:10.778+00:00,192.168.4.120,:CHANnel1:DISPlay?,1,
+2026-10-24T18:08:10.816+00:00,192.168.4.120,:CHANnel2:DISPlay?,0,
+2026-10-24T18:08:11.059+00:00,192.168.4.120,:CHANnel1:SCALe?,5.000000E-02,
+2026-10-24T18:08:11.090+00:00,192.168.4.120,:CHANnel1:PROBe?,1,
+2026-10-24T18:08:11.120+00:00,192.168.4.120,:CHANnel2:PROBe?,1,
+2026-10-24T18:08:11.150+00:00,192.168.4.120,:TIMebase:MAIN:SCALe?,2.000000E-6,
+2026-10-24T18:08:11.184+00:00,192.168.4.120,:TRIGger:SWEep?,AUTO,
+2026-10-24T18:08:11.219+00:00,192.168.4.120,:SYSTem:ERRor?,"0,""No error""",
+2026-10-24T18:15:08.080+00:00,192.168.4.120,:CHANnel1:DISPlay ON,(sent),"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2"
+2026-10-24T18:15:08.081+00:00,192.168.4.120,:CHANnel2:DISPlay ON,(sent),"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2"
+2026-10-24T18:15:08.082+00:00,192.168.4.120,:CHANnel1:SCALe 1,(sent),"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2"
+2026-10-24T18:15:08.082+00:00,192.168.4.120,:CHANnel2:SCALe 1,(sent),"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2"
+2026-10-24T18:15:08.082+00:00,192.168.4.120,:CHANnel1:OFFSet -2.5,(sent),"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2"
+2026-10-24T18:15:08.082+00:00,192.168.4.120,:CHANnel2:OFFSet -2.5,(sent),"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2"
+2026-10-24T18:15:08.082+00:00,192.168.4.120,:TIMebase:MAIN:SCALe 1e-5,(sent),"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2"
+2026-10-24T18:15:08.453+00:00,192.168.4.120,:SYSTem:ERRor?,"0,""No error""","setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2"
+2026-10-24T18:15:10.116+00:00,192.168.4.120,:CHANnel1:SCALe?,1.000000E+00,"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2; probe set 1x on scope"
+2026-10-24T18:15:10.146+00:00,192.168.4.120,:CHANnel1:OFFSet?,-2.500000E+00,"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2; probe set 1x on scope"
+2026-10-24T18:15:10.177+00:00,192.168.4.120,:TIMebase:MAIN:SCALe?,1.000000E-5,"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2; probe set 1x on scope"
+2026-10-24T18:15:10.177+00:00,192.168.4.120,":MEASure:ITEM? VMAX,CHANnel1",(reply misread: script treated it as a set command),"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2; probe set 1x on scope"
+2026-10-24T18:15:10.177+00:00,192.168.4.120,":MEASure:ITEM? VMIN,CHANnel1",(reply misread: script treated it as a set command),"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2; probe set 1x on scope"
+2026-10-24T18:15:10.177+00:00,192.168.4.120,":MEASure:ITEM? VAVG,CHANnel1",(reply misread: script treated it as a set command),"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2; probe set 1x on scope"
+2026-10-24T18:15:10.177+00:00,192.168.4.120,":MEASure:ITEM? VMAX,CHANnel2",(reply misread: script treated it as a set command),"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2; probe set 1x on scope"
+2026-10-24T18:15:10.177+00:00,192.168.4.120,":MEASure:ITEM? VMIN,CHANnel2",(reply misread: script treated it as a set command),"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2; probe set 1x on scope"
+2026-10-24T18:15:10.177+00:00,192.168.4.120,":MEASure:ITEM? VAVG,CHANnel2",(reply misread: script treated it as a set command),"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2; probe set 1x on scope"
+2026-10-24T18:15:10.247+00:00,192.168.4.120,:SYSTem:ERRor?,(reply misread: 2.4303E+00 was the CH1 VMAX reply),"setup step 1: CH1 pin 4, CH2 pin 3, grounds pin 2; probe set 1x on scope"
+2026-10-24T18:15:26.163+00:00,192.168.4.120,":MEASure:ITEM? VMAX,CHANnel1",2.4393E+00,"setup step 1, AUTO sweep, 10 us/div"
+2026-10-24T18:15:26.198+00:00,192.168.4.120,":MEASure:ITEM? VMIN,CHANnel1",2.3683E+00,"setup step 1, AUTO sweep, 10 us/div"
+2026-10-24T18:15:26.230+00:00,192.168.4.120,":MEASure:ITEM? VAVG,CHANnel1",2.4051E+00,"setup step 1, AUTO sweep, 10 us/div"
+2026-10-24T18:15:26.262+00:00,192.168.4.120,":MEASure:ITEM? VMAX,CHANnel2",2.2893E-01,"setup step 1, AUTO sweep, 10 us/div"
+2026-10-24T18:15:26.298+00:00,192.168.4.120,":MEASure:ITEM? VMIN,CHANnel2",1.8227E-01,"setup step 1, AUTO sweep, 10 us/div"
+2026-10-24T18:15:26.336+00:00,192.168.4.120,":MEASure:ITEM? VAVG,CHANnel2",2.0547E-01,"setup step 1, AUTO sweep, 10 us/div"
+2026-10-24T18:15:26.370+00:00,192.168.4.120,:TRIGger:STATus?,AUTO,"setup step 1, AUTO sweep, 10 us/div"
+2026-10-24T18:15:26.405+00:00,192.168.4.120,:SYSTem:ERRor?,"0,""No error""","setup step 1, AUTO sweep, 10 us/div"
+2026-10-24T18:15:50.388+00:00,192.168.4.120,:CHANnel2:PROBe 10,(sent),setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter)
+2026-10-24T18:15:50.388+00:00,192.168.4.120,:CHANnel2:SCALe 1,(sent),setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter)
+2026-10-24T18:15:50.388+00:00,192.168.4.120,:CHANnel2:OFFSet -2.5,(sent),setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter)
+2026-10-24T18:15:50.388+00:00,192.168.4.120,:TRIGger:EDGE:SOURce CHANnel1,(sent),setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter)
+2026-10-24T18:15:50.388+00:00,192.168.4.120,:TRIGger:EDGE:SLOPe NEGative,(sent),setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter)
+2026-10-24T18:15:50.388+00:00,192.168.4.120,:TRIGger:EDGE:LEVel 1.8,(sent),setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter)
+2026-10-24T18:15:50.388+00:00,192.168.4.120,:TRIGger:SWEep NORMal,(sent),setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter)
+2026-10-24T18:15:50.632+00:00,192.168.4.120,:SYSTem:ERRor?,"0,""No error""",setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter)
+2026-10-24T18:15:50.668+00:00,192.168.4.120,:CHANnel2:PROBe?,10,setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter)
+2026-10-24T18:15:50.721+00:00,192.168.4.120,:CHANnel2:SCALe?,1.000000E+00,setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter)
+2026-10-24T18:15:50.923+00:00,192.168.4.120,:CHANnel2:OFFSet?,-2.500000E+00,setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter)
+2026-10-24T18:15:50.958+00:00,192.168.4.120,:TRIGger:EDGE:LEVel?,1.800000E0,setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter)
+2026-10-24T18:15:51.002+00:00,192.168.4.120,:TRIGger:SWEep?,NORM,setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter)
+2026-10-24T18:15:54.657+00:00,192.168.4.120,:TRIGger:STATus?,WAIT,"setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter); NORMAL sweep, CH1 falling 1.8 V"
+2026-10-24T18:15:54.708+00:00,192.168.4.120,":MEASure:ITEM? VAVG,CHANnel2",1.8637E+00,"setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter); NORMAL sweep, CH1 falling 1.8 V"
+2026-10-24T18:15:54.741+00:00,192.168.4.120,":MEASure:ITEM? VMIN,CHANnel1",9.3453E-01,"setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter); NORMAL sweep, CH1 falling 1.8 V"
+2026-10-24T18:15:54.770+00:00,192.168.4.120,":MEASure:ITEM? VMAX,CHANnel1",2.9380E+00,"setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter); NORMAL sweep, CH1 falling 1.8 V"
+2026-10-24T18:15:54.803+00:00,192.168.4.120,":MEASure:ITEM? VMIN,CHANnel2",8.6813E-01,"setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter); NORMAL sweep, CH1 falling 1.8 V"
+2026-10-24T18:15:54.836+00:00,192.168.4.120,":MEASure:ITEM? VMAX,CHANnel2",2.9107E+00,"setup step 2: CH2 probe switch found at 10x (0.205 V vs 2.0 V on meter); NORMAL sweep, CH1 falling 1.8 V"
+2026-10-24T18:16:11.495+00:00,192.168.4.120,:TIMebase:MAIN:SCALe 2e-4,(sent),step 3: longer window to catch whole bytes
+2026-10-24T18:16:11.496+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 8e-4,(sent),step 3: longer window to catch whole bytes
+2026-10-24T18:16:11.496+00:00,192.168.4.120,:SINGle,(sent),step 3: longer window to catch whole bytes
+2026-10-24T18:16:11.834+00:00,192.168.4.120,:SYSTem:ERRor?,"0,""No error""",step 3: longer window to catch whole bytes
+2026-10-24T18:17:10.400+00:00,192.168.4.120,:ACQuire:MDEPth 100k,(sent),"step 4: 50 ms window, 100k memory, single"
+2026-10-24T18:17:10.401+00:00,192.168.4.120,:TIMebase:MAIN:SCALe 5e-3,(sent),"step 4: 50 ms window, 100k memory, single"
+2026-10-24T18:17:10.401+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 2e-2,(sent),"step 4: 50 ms window, 100k memory, single"
+2026-10-24T18:17:10.401+00:00,192.168.4.120,:SINGle,(sent),"step 4: 50 ms window, 100k memory, single"
+2026-10-24T18:17:10.512+00:00,192.168.4.120,:SYSTem:ERRor?,"0,""No error""","step 4: 50 ms window, 100k memory, single"
+2026-10-24T18:17:27.959+00:00,192.168.4.120,:ACQuire:MDEPth?,1.0000E+05,"step 4: 50 ms window, 100k memory, single"
+2026-10-24T18:17:27.990+00:00,192.168.4.120,:ACQuire:SRATe?,1.250000E+6,"step 4: 50 ms window, 100k memory, single"
+2026-10-24T18:19:36.117+00:00,192.168.4.120,:STOP,(sent),"step 5: 500 ms window, 1M memory, single, waiting for operator to use the interface"
+2026-10-24T18:19:36.118+00:00,192.168.4.120,:ACQuire:MDEPth 1M,(sent),"step 5: 500 ms window, 1M memory, single, waiting for operator to use the interface"
+2026-10-24T18:19:36.118+00:00,192.168.4.120,:TIMebase:MAIN:SCALe 5e-2,(sent),"step 5: 500 ms window, 1M memory, single, waiting for operator to use the interface"
+2026-10-24T18:19:36.118+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 0.2,(sent),"step 5: 500 ms window, 1M memory, single, waiting for operator to use the interface"
+2026-10-24T18:19:36.118+00:00,192.168.4.120,:SINGle,(sent),"step 5: 500 ms window, 1M memory, single, waiting for operator to use the interface"
+2026-10-24T18:19:36.314+00:00,192.168.4.120,:SYSTem:ERRor?,"0,""No error""","step 5: 500 ms window, 1M memory, single, waiting for operator to use the interface"
+2026-10-24T18:19:36.346+00:00,192.168.4.120,:ACQuire:MDEPth?,1.0000E+06,"step 5: 500 ms window, 1M memory, single, waiting for operator to use the interface"
+2026-10-24T18:19:36.379+00:00,192.168.4.120,:ACQuire:SRATe?,2.500000E+6,"step 5: 500 ms window, 1M memory, single, waiting for operator to use the interface"
+2026-10-24T18:19:36.413+00:00,192.168.4.120,:TRIGger:STATus?,STOP,"step 5: 500 ms window, 1M memory, single, waiting for operator to use the interface"
+2026-10-24T18:19:53.731+00:00,192.168.4.120,:STOP,(sent),"step 5b: 200 ms window (50 ms/div went into roll mode), 1M memory, single"
+2026-10-24T18:19:53.731+00:00,192.168.4.120,:TIMebase:MAIN:SCALe 2e-2,(sent),"step 5b: 200 ms window (50 ms/div went into roll mode), 1M memory, single"
+2026-10-24T18:19:53.732+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 8e-2,(sent),"step 5b: 200 ms window (50 ms/div went into roll mode), 1M memory, single"
+2026-10-24T18:19:53.732+00:00,192.168.4.120,:SINGle,(sent),"step 5b: 200 ms window (50 ms/div went into roll mode), 1M memory, single"
+2026-10-24T18:19:53.814+00:00,192.168.4.120,:SYSTem:ERRor?,"0,""No error""","step 5b: 200 ms window (50 ms/div went into roll mode), 1M memory, single"
+2026-10-24T18:19:53.861+00:00,192.168.4.120,:ACQuire:SRATe?,2.500000E+6,"step 5b: 200 ms window (50 ms/div went into roll mode), 1M memory, single"
+2026-10-24T18:21:01.933+00:00,192.168.4.120,:STOP,(sent),step 6: operator switched CH1 probe to 10x too (18:17); matching scope
+2026-10-24T18:21:01.933+00:00,192.168.4.120,:CHANnel1:PROBe 10,(sent),step 6: operator switched CH1 probe to 10x too (18:17); matching scope
+2026-10-24T18:21:01.934+00:00,192.168.4.120,:CHANnel1:SCALe 1,(sent),step 6: operator switched CH1 probe to 10x too (18:17); matching scope
+2026-10-24T18:21:01.934+00:00,192.168.4.120,:CHANnel1:OFFSet -2.5,(sent),step 6: operator switched CH1 probe to 10x too (18:17); matching scope
+2026-10-24T18:21:01.934+00:00,192.168.4.120,:TIMebase:MAIN:SCALe 1e-3,(sent),step 6: operator switched CH1 probe to 10x too (18:17); matching scope
+2026-10-24T18:21:01.934+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 0,(sent),step 6: operator switched CH1 probe to 10x too (18:17); matching scope
+2026-10-24T18:21:01.934+00:00,192.168.4.120,:TRIGger:SWEep AUTO,(sent),step 6: operator switched CH1 probe to 10x too (18:17); matching scope
+2026-10-24T18:21:01.934+00:00,192.168.4.120,:RUN,(sent),step 6: operator switched CH1 probe to 10x too (18:17); matching scope
+2026-10-24T18:21:02.686+00:00,192.168.4.120,:SYSTem:ERRor?,"0,""No error""",step 6: operator switched CH1 probe to 10x too (18:17); matching scope
+2026-10-24T18:21:05.886+00:00,192.168.4.120,:CHANnel1:PROBe?,10,"step 6: operator switched CH1 probe to 10x too (18:17); matching scope; AUTO sweep, 1 ms/div check"
+2026-10-24T18:21:05.930+00:00,192.168.4.120,:CHANnel1:SCALe?,1.000000E+00,"step 6: operator switched CH1 probe to 10x too (18:17); matching scope; AUTO sweep, 1 ms/div check"
+2026-10-24T18:21:05.962+00:00,192.168.4.120,":MEASure:ITEM? VAVG,CHANnel1",2.3965E+00,"step 6: operator switched CH1 probe to 10x too (18:17); matching scope; AUTO sweep, 1 ms/div check"
+2026-10-24T18:21:05.993+00:00,192.168.4.120,":MEASure:ITEM? VMIN,CHANnel1",2.2911E+00,"step 6: operator switched CH1 probe to 10x too (18:17); matching scope; AUTO sweep, 1 ms/div check"
+2026-10-24T18:21:06.032+00:00,192.168.4.120,":MEASure:ITEM? VMAX,CHANnel1",2.5379E+00,"step 6: operator switched CH1 probe to 10x too (18:17); matching scope; AUTO sweep, 1 ms/div check"
+2026-10-24T18:21:06.067+00:00,192.168.4.120,":MEASure:ITEM? VAVG,CHANnel2",2.0449E+00,"step 6: operator switched CH1 probe to 10x too (18:17); matching scope; AUTO sweep, 1 ms/div check"
+2026-10-24T18:21:06.102+00:00,192.168.4.120,":MEASure:ITEM? VMIN,CHANnel2",1.9544E+00,"step 6: operator switched CH1 probe to 10x too (18:17); matching scope; AUTO sweep, 1 ms/div check"
+2026-10-24T18:21:06.145+00:00,192.168.4.120,":MEASure:ITEM? VMAX,CHANnel2",2.1605E+00,"step 6: operator switched CH1 probe to 10x too (18:17); matching scope; AUTO sweep, 1 ms/div check"
+2026-10-24T18:21:06.203+00:00,192.168.4.120,:TRIGger:STATus?,AUTO,"step 6: operator switched CH1 probe to 10x too (18:17); matching scope; AUTO sweep, 1 ms/div check"
+2026-10-24T18:21:15.409+00:00,192.168.4.120,:STOP,(sent),"step 7: re-armed 200 ms single, both probes 10x"
+2026-10-24T18:21:15.409+00:00,192.168.4.120,:TIMebase:MAIN:SCALe 2e-2,(sent),"step 7: re-armed 200 ms single, both probes 10x"
+2026-10-24T18:21:15.410+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 8e-2,(sent),"step 7: re-armed 200 ms single, both probes 10x"
+2026-10-24T18:21:15.410+00:00,192.168.4.120,:TRIGger:SWEep NORMal,(sent),"step 7: re-armed 200 ms single, both probes 10x"
+2026-10-24T18:21:15.410+00:00,192.168.4.120,:SINGle,(sent),"step 7: re-armed 200 ms single, both probes 10x"
+2026-10-24T18:21:15.543+00:00,192.168.4.120,:SYSTem:ERRor?,"0,""No error""","step 7: re-armed 200 ms single, both probes 10x"
+2026-10-24T18:21:15.580+00:00,192.168.4.120,:ACQuire:MDEPth?,1.0000E+06,"step 7: re-armed 200 ms single, both probes 10x"
+2026-10-24T18:23:09.286+00:00,192.168.4.120,:STOP,(sent),idle check: 20 ms/div AUTO
+2026-10-24T18:23:09.286+00:00,192.168.4.120,:ACQuire:MDEPth 1M,(sent),idle check: 20 ms/div AUTO
+2026-10-24T18:23:09.286+00:00,192.168.4.120,:TIMebase:MAIN:SCALe 2e-2,(sent),idle check: 20 ms/div AUTO
+2026-10-24T18:23:09.286+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 0,(sent),idle check: 20 ms/div AUTO
+2026-10-24T18:23:09.286+00:00,192.168.4.120,:TRIGger:SWEep AUTO,(sent),idle check: 20 ms/div AUTO
+2026-10-24T18:23:09.286+00:00,192.168.4.120,:RUN,(sent),idle check: 20 ms/div AUTO
+2026-10-24T18:23:13.619+00:00,192.168.4.120,:STOP,(sent),idle check: 20 ms/div AUTO
+2026-10-24T18:23:13.814+00:00,192.168.4.120,:TRIGger:STATus?,STOP,idle check: 20 ms/div AUTO
+2026-10-24T18:25:26.306+00:00,192.168.4.120,:TRIGger:EDGE:LEVel 1.8,(sent),restore trigger level after probe change; multi-capture
+2026-10-24T18:25:26.306+00:00,192.168.4.120,:TRIGger:SWEep NORMal,(sent),restore trigger level after probe change; multi-capture
+2026-10-24T18:25:26.307+00:00,192.168.4.120,:TIMebase:MAIN:SCALe 2e-2,(sent),restore trigger level after probe change; multi-capture
+2026-10-24T18:25:26.307+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 8e-2,(sent),restore trigger level after probe change; multi-capture
+2026-10-24T18:25:26.602+00:00,192.168.4.120,:TRIGger:EDGE:LEVel?,1.800000E0,restore trigger level after probe change; multi-capture
+2026-10-24T18:25:26.633+00:00,192.168.4.120,:SYSTem:ERRor?,"-200,""Command execute failed""",restore trigger level after probe change; multi-capture
+2026-10-24T18:26:12.435+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 8e-2,(sent),period probe done; offset back to 80 ms
+2026-10-24T18:27:47.858+00:00,192.168.4.120,:CHANnel1:SCALe?,1.000000E+00,after operator turned the scale knob (18:25)
+2026-10-24T18:27:47.892+00:00,192.168.4.120,:CHANnel2:SCALe?,1.000000E+00,after operator turned the scale knob (18:25)
+2026-10-24T18:27:48.049+00:00,192.168.4.120,:CHANnel1:OFFSet?,-2.500000E+00,after operator turned the scale knob (18:25)
+2026-10-24T18:27:48.080+00:00,192.168.4.120,:CHANnel2:OFFSet?,-2.500000E+00,after operator turned the scale knob (18:25)
+2026-10-24T18:27:48.114+00:00,192.168.4.120,:CHANnel1:PROBe?,10,after operator turned the scale knob (18:25)
+2026-10-24T18:27:48.150+00:00,192.168.4.120,:CHANnel2:PROBe?,10,after operator turned the scale knob (18:25)
+2026-10-24T18:27:48.252+00:00,192.168.4.120,:TIMebase:MAIN:SCALe?,2.000000E-2,after operator turned the scale knob (18:25)
+2026-10-24T18:27:48.283+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet?,3.000000E-1,after operator turned the scale knob (18:25)
+2026-10-24T18:27:48.322+00:00,192.168.4.120,:TRIGger:EDGE:LEVel?,1.800000E0,after operator turned the scale knob (18:25)
+2026-10-24T18:27:48.547+00:00,192.168.4.120,:TRIGger:EDGE:SOURce?,CHAN1,after operator turned the scale knob (18:25)
+2026-10-24T18:27:48.667+00:00,192.168.4.120,:TRIGger:EDGE:SLOPe?,NEG,after operator turned the scale knob (18:25)
+2026-10-24T18:27:48.703+00:00,192.168.4.120,:TRIGger:SWEep?,NORM,after operator turned the scale knob (18:25)
+2026-10-24T18:27:48.737+00:00,192.168.4.120,:ACQuire:MDEPth?,1.0000E+06,after operator turned the scale knob (18:25)
+2026-10-24T18:27:57.356+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 8e-2,(sent),restore horizontal position after knob turn
+2026-10-24T18:27:57.456+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet?,3.000000E-1,restore horizontal position after knob turn
+2026-10-24T18:30:09.030+00:00,192.168.4.120,:TIMebase:MAIN:SCALe 2e-2,(sent),dataset capture: idle polls
+2026-10-24T18:30:09.031+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 8e-2,(sent),dataset capture: idle polls
+2026-10-24T18:30:09.031+00:00,192.168.4.120,:TRIGger:EDGE:LEVel 1.8,(sent),dataset capture: idle polls
+2026-10-24T18:30:09.031+00:00,192.168.4.120,:TRIGger:SWEep NORMal,(sent),dataset capture: idle polls
+2026-10-24T18:30:26.883+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 0.3,(sent),dataset capture: window after a poll
+2026-10-24T18:30:31.206+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 0.5,(sent),dataset capture: window after a poll
+2026-10-24T18:30:35.330+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 0.7,(sent),dataset capture: window after a poll
+2026-10-24T18:30:40.810+00:00,192.168.4.120,:TIMebase:MAIN:SCALe 5e-6,(sent),dataset capture: edge detail
+2026-10-24T18:30:40.810+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 0,(sent),dataset capture: edge detail
+2026-10-24T18:30:45.161+00:00,192.168.4.120,:TIMebase:MAIN:SCALe 2e-2,(sent),restore after dataset captures
+2026-10-24T18:30:45.161+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 8e-2,(sent),restore after dataset captures
+2026-10-24T18:30:45.223+00:00,192.168.4.120,:SYSTem:ERRor?,"-200,""Command execute failed""",restore after dataset captures
+2026-10-24T18:31:22.553+00:00,192.168.4.120,:RUN,(sent),fixing horizontal offset
+2026-10-24T18:31:22.553+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 0.08,(sent),fixing horizontal offset
+2026-10-24T18:31:22.636+00:00,192.168.4.120,:SYSTem:ERRor?,"0,""No error""",fixing horizontal offset
+2026-10-24T18:31:22.670+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet?,8.000000E-2,fixing horizontal offset
+2026-10-24T18:31:22.711+00:00,192.168.4.120,:TIMebase:MAIN:SCALe?,2.000000E-2,fixing horizontal offset
+2026-10-24T18:31:51.650+00:00,192.168.4.120,:RUN,(sent),dataset capture: edge detail
+2026-10-24T18:31:51.651+00:00,192.168.4.120,:TIMebase:MAIN:SCALe 5e-6,(sent),dataset capture: edge detail
+2026-10-24T18:31:51.651+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 0,(sent),dataset capture: edge detail
+2026-10-24T18:31:51.749+00:00,192.168.4.120,:SYSTem:ERRor?,"0,""No error""",dataset capture: edge detail
+2026-10-24T18:31:51.779+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet?,0.000000,dataset capture: edge detail
+2026-10-24T18:31:56.495+00:00,192.168.4.120,:RUN,(sent),restore after dataset captures
+2026-10-24T18:31:56.495+00:00,192.168.4.120,:TIMebase:MAIN:SCALe 2e-2,(sent),restore after dataset captures
+2026-10-24T18:31:56.495+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 8e-2,(sent),restore after dataset captures
+2026-10-24T18:31:56.607+00:00,192.168.4.120,:SYSTem:ERRor?,"0,""No error""",restore after dataset captures
+2026-10-24T18:31:56.648+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet?,8.000000E-2,restore after dataset captures

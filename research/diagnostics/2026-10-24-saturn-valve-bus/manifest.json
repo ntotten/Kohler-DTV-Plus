@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "instrument": "Rigol DHO804, firmware 00.01.05, SCPI over raw TCP port 5555",
+  "purpose": "Differential capture of the factory K-99695 Saturn valve bus at the valve connector, system idle, plus the connector's meter readings. See README.md.",
+  "controller_contact": "None. No CGI calls were made to the controller during the session; the controller was the bus master and the scope only listened.",
+  "probing": "CH1 on pin 4, CH2 on pin 3, both 10x, grounds on pin 2",
+  "files": [
+    {
+      "file": "README.md",
+      "byte_count": 11678,
+      "sha256": "ef67bbd293ae8188f5acb61c1ca055bb21abfb251aaa46870703805d1e9d443f"
+    },
+    {
+      "file": "after-poll-0.3s.channel1.raw",
+      "byte_count": 1000000,
+      "sha256": "49cf5bf8a7bd21d085e5f38094a468f953a23c6bf2ee3833f3f7903279f7c40b"
+    },
+    {
+      "file": "after-poll-0.3s.channel2.raw",
+      "byte_count": 1000000,
+      "sha256": "ac993edf2664dfb8eac4ec66073edb598fd23479c09421095ddb24948c1e6efe"
+    },
+    {
+      "file": "after-poll-0.3s.metadata.json",
+      "byte_count": 2139,
+      "sha256": "c017401de8e5a4be264c56871438b96b919b117464b0a2350fbd47395e591864"
+    },
+    {
+      "file": "after-poll-0.3s.png",
+      "byte_count": 134564,
+      "sha256": "6cf84c685e1f4034cfb7b62a85ec834680e562dd5267453b581340cd331927d1"
+    },
+    {
+      "file": "after-poll-0.5s.channel1.raw",
+      "byte_count": 1000000,
+      "sha256": "7431bd876e9a20acabff3877d95211684b3ff84baf31fc1c3dd8a80bc1326369"
+    },
+    {
+      "file": "after-poll-0.5s.channel2.raw",
+      "byte_count": 1000000,
+      "sha256": "496d367065cacd6e9fe7e92ff3009cee76305cf1894941d3e8914085df950482"
+    },
+    {
+      "file": "after-poll-0.5s.metadata.json",
+      "byte_count": 2139,
+      "sha256": "b2eb4eb3f70a2d75ce7d9e007f5392e8a717a5e33c6dd7b23487dc645b8bf6a9"
+    },
+    {
+      "file": "after-poll-0.5s.png",
+      "byte_count": 140166,
+      "sha256": "ef02a00e702eee4486ad6dcb6a9e6155124ad45164d15436d7c09d59aa9dc8f3"
+    },
+    {
+      "file": "after-poll-0.7s.channel1.raw",
+      "byte_count": 1000000,
+      "sha256": "88bfa8f155e370abd22547e2b9e1896c1445cf48a6148ffea8ab2d874aa5035f"
+    },
+    {
+      "file": "after-poll-0.7s.channel2.raw",
+      "byte_count": 1000000,
+      "sha256": "4849af8936c1d2b560e3e58c80160af3a0820a63f409ff91b5c1cc8433ffb56c"
+    },
+    {
+      "file": "after-poll-0.7s.metadata.json",
+      "byte_count": 2139,
+      "sha256": "f42eff4ce586d99b1dae8e6df63f9c8f39a5afe033814bc048a558c5ecc7a79d"
+    },
+    {
+      "file": "after-poll-0.7s.png",
+      "byte_count": 133636,
+      "sha256": "126bd83703bd65efd6bb87bf6c3aab767738c11c0cfa22b8c5c100b65763fda3"
+    },
+    {
+      "file": "edge-detail.channel1.raw",
+      "byte_count": 1000000,
+      "sha256": "ef6ae0edcf6410bb622bb8fabd6d7c052c087728a653ad61ee9f62b9fbc7482a"
+    },
+    {
+      "file": "edge-detail.channel2.raw",
+      "byte_count": 1000000,
+      "sha256": "917928fa32377527381aa29f252faa56d0aa96538e417eb93c77390666c0a18c"
+    },
+    {
+      "file": "edge-detail.metadata.json",
+      "byte_count": 2126,
+      "sha256": "d75fe4a20d0046b21a1423be796bf9cca14bce860aa1d59f054419a409752762"
+    },
+    {
+      "file": "edge-detail.png",
+      "byte_count": 133994,
+      "sha256": "17e7fcdb21a6f77e99be7ba49218fd28783ad453b08d00eaa4f08e05a1b169b2"
+    },
+    {
+      "file": "poll-1.channel1.raw",
+      "byte_count": 1000000,
+      "sha256": "097508186ed55e6fd636ab7e6c962f52c6717261231324e215eee357ff19c945"
+    },
+    {
+      "file": "poll-1.channel2.raw",
+      "byte_count": 1000000,
+      "sha256": "d488ef7663aaf2ec16f39fe2d17a6267d9419fd06b44701437f5b54936f4a4c9"
+    },
+    {
+      "file": "poll-1.metadata.json",
+      "byte_count": 2114,
+      "sha256": "0cb5efbdaebaa987ea428dde70ed0a320ee80fe1abc7e8f69ba8e6bda8998f58"
+    },
+    {
+      "file": "poll-1.png",
+      "byte_count": 140883,
+      "sha256": "d39b7bab381cd4836152d23544e30a4c23d55616ac53ef0363d12ce6974c8f2c"
+    },
+    {
+      "file": "poll-2.channel1.raw",
+      "byte_count": 1000000,
+      "sha256": "750ce698a7a0caac65e43bf48f9a7abc27e3369bda8ef090943ffe4131deada4"
+    },
+    {
+      "file": "poll-2.channel2.raw",
+      "byte_count": 1000000,
+      "sha256": "42b8784e3b77e74345e166ede23e153b637a3d8112f82e3898fc0d7d47d50458"
+    },
+    {
+      "file": "poll-2.metadata.json",
+      "byte_count": 2114,
+      "sha256": "c68ab88389233b1fc449186af5541cdde0964a2882ebe71ea77b7ef24aafb772"
+    },
+    {
+      "file": "poll-2.png",
+      "byte_count": 138713,
+      "sha256": "cea6686d55ea8239f6c302962a227abf13b6b14e7acf5d276e9ae35d9226ce29"
+    },
+    {
+      "file": "poll-3.channel1.raw",
+      "byte_count": 1000000,
+      "sha256": "6ca6eaa644b6872b77d2f55b9f085a06d8d1777648d6ab95eaf4ebcc015f1b71"
+    },
+    {
+      "file": "poll-3.channel2.raw",
+      "byte_count": 1000000,
+      "sha256": "d66c4eeba9a8a1cce4e88b3b0b615ebc85fd1eb10e4d57adf8e6ffc3062a897c"
+    },
+    {
+      "file": "poll-3.metadata.json",
+      "byte_count": 2114,
+      "sha256": "62de232bdf4d932ee6c58ece2bdd257e70004a7a24e5c334743300a1e936f1aa"
+    },
+    {
+      "file": "poll-3.png",
+      "byte_count": 141627,
+      "sha256": "ffc7b89208994a458921c7657679932007997ab64a96e0111a1e3f7601246164"
+    },
+    {
+      "file": "poll-4.channel1.raw",
+      "byte_count": 1000000,
+      "sha256": "c791e5627c89078b0a7e12b589b46ada7a5eb4a1f532da46c2c388f5c9e9bee1"
+    },
+    {
+      "file": "poll-4.channel2.raw",
+      "byte_count": 1000000,
+      "sha256": "687c92cd3138a17431029fe6a91c00a7103a85138ab20982cd84858ad6cef028"
+    },
+    {
+      "file": "poll-4.metadata.json",
+      "byte_count": 2114,
+      "sha256": "0e7e71a14b0b8d9cbf2c6bada52863d5969386e81927b7c33a3e113d8322219f"
+    },
+    {
+      "file": "poll-4.png",
+      "byte_count": 137189,
+      "sha256": "960487e0b71369d78c95790e4dd06a9f5bb8858feade3edef080b57143d4be42"
+    },
+    {
+      "file": "session/1808-before-setup.png",
+      "byte_count": 128296,
+      "sha256": "577689302da29ad468a833ca034ce57b6ba4b0dfefba2acc4945d24bba5a461a"
+    },
+    {
+      "file": "session/1815-ch2-probe-mismatch.png",
+      "byte_count": 137861,
+      "sha256": "9afa0bf804f8e809a7566452d59ecbd54e05edd6237c91f26fdb8b0d853d659d"
+    },
+    {
+      "file": "session/1815-first-edge.png",
+      "byte_count": 140678,
+      "sha256": "754f9f8af450451a27680f017da5d9017b28ef3dd721a84fe1727efeb64a297d"
+    },
+    {
+      "file": "session/1816-first-request-200us.csv",
+      "byte_count": 31124,
+      "sha256": "d85cfd6e595cab345fddb59d1bc93fdf8f9597b55349121eec38d84706a6e9c4"
+    },
+    {
+      "file": "session/1816-first-request-200us.png",
+      "byte_count": 136901,
+      "sha256": "7950e2012b67ac5d5add00b08385185ba96284974a50bdf7dca5d6a106ef29f1"
+    },
+    {
+      "file": "session/1819-armed-waiting.png",
+      "byte_count": 118270,
+      "sha256": "8b13b05535b6d95ed19bad99d09777a23b2b5798197978b0abb5b0ac167b86c8"
+    },
+    {
+      "file": "session/1819-roll-mode-no-data.png",
+      "byte_count": 114329,
+      "sha256": "b8e3e5c6f9ed8b12219509f43b6afb19afb3d95c153d7a091d3d58ed18cdae9e"
+    },
+    {
+      "file": "session/1821-both-probes-10x.png",
+      "byte_count": 148259,
+      "sha256": "d2bc6614254e5f4735cbee377404287d0ce4d3fb5da4d5886934ddea3bab3c7b"
+    },
+    {
+      "file": "session/1823-request-and-reply-20ms.png",
+      "byte_count": 152773,
+      "sha256": "051eab608552a98fabd6182ebcbbf239cadb612a23e967987d6f41c433251c98"
+    },
+    {
+      "file": "session/meter-readings.csv",
+      "byte_count": 1928,
+      "sha256": "c0786ff03be3ce7e01d17978ec5f749caff0be9d4c509cf34256d3137a65abc0"
+    },
+    {
+      "file": "session/scope-commands.csv",
+      "byte_count": 23070,
+      "sha256": "7dd10406e237cf9a267c11bbabbf806ec05ceed5bac0d87ee2945133ae05d357"
+    }
+  ]
+}
