@@ -19,11 +19,13 @@ three frames from the controller: `AA 55 13 87 06 00 01 63 00 00 00 FD`, then
 `AA 55 13 87 06 01 01 63 64 00 00 98` twice. The stop is `AA 55 13 87 06 03 01 63 00 00 00 FA` twice.
 0x0163 is 355, the 96 °F setpoint as 35.5 °C in tenths; 0x64 is 100. The valve's status reply carries the
 same setpoint, its water temperature in tenths of a degree (20.8 °C idle, 36.2 °C at peak), and a timer
-that counts down one per second from 1800 after both the start and the stop. All 100 frames
+that counts down one per second from 1800 after both the start and the stop. All 102 frames
 captured today check with the sync bytes in the checksum.
 
-Less than a minute before the run, with nothing sent to the controller, the poll changed address from `00` to `13`
-and an address-enquiry broadcast (`AA 55 1F 3A 01 01 A6`) started. What set that off is open.
+Less than a minute before the run, with nothing sent to the controller and nothing changed by the
+operator, the poll changed address from `00` to `13` and an address-enquiry broadcast
+(`AA 55 1F 3A 01 01 A6`) started. It was still at `13` fourteen minutes after the run. What set it off
+is open.
 
 **Why it matters:** the write command, its fields and the checksum are now read off the wire rather
 than inferred from documents, which is what the replacement controller's Saturn driver has to reproduce.

@@ -91,13 +91,13 @@ From [edge-detail](edge-detail.metadata.json) and [poll-1](poll-1.metadata.json)
   intervals alternate between about 0.55 s and 0.49 s (`idle-roll`; `after-poll-0.3s` and
   `after-poll-0.5s` caught the short one, 0.490 s and 0.488 s). After it they are a steady 0.525 s, with a
   poll slot given up to the `3A` broadcast now and then.
-- Every frame decoded, 100 across the captures, carries a valid checksum; each capture's `.frames.txt`
+- Every frame decoded, 102 across the captures, carries a valid checksum; each capture's `.frames.txt`
   lists them.
 
 ### Checksum
 
 Every frame on this bus checks with the sync bytes **included**: the checksum is the 8-bit two's
-complement of the sum of every byte from SYNC1 through the last data byte. None of the 100 checks with
+complement of the sum of every byte from SYNC1 through the last data byte. None of the 102 checks with
 them excluded.
 
 | Frame                                 | On the wire | Sync excluded | Sync included |
@@ -128,8 +128,9 @@ reply    AA 55 01 01 0B 00 01 4A 00 D0 00 00 07 08 03 00 C7
 Between the end of `idle-roll` (18:39:26) and the start of `shower-run/shower-start` (18:40:00) the
 controller's poll changed address from `00` to `13`, the reply's data byte 9 changed from `02` to `03`,
 and a broadcast `AA 55 1F 3A 01 01 A6` began. xagon0 lists control `3A` with data `01` as the
-address enquiry for unaddressed valves. Nothing was sent to the controller in that interval and the idle
-levels on the scope are unchanged to the millivolt, so the probes did not move. `[?]` What prompted the
+address enquiry for unaddressed valves. Nothing was sent to the controller in that interval, the operator
+changed nothing on the system, and the idle levels on the scope are unchanged to the millivolt, so the
+probes did not move. The poll was still at `13` at 18:54 (`later-poll`). `[?]` What prompted the
 controller to re-address the valve.
 
 ### Shower run
@@ -165,7 +166,8 @@ then     AA 55 01 01 0B 03 01 63 01 64 00 00 07 08 03 00 16       each poll whil
 The temperature field read 0x00D0 (20.8 °C) idle, 0x00C9–0x00D5 in the first seconds of flow and
 0x015B–0x016A (34.7–36.2 °C) 20–27 s in. The timer resets to 1800 on both start and stop and keeps
 counting down after the stop: `after-run-poll` reads `03 01 63 01 20 00 00 05 79 03 00` at 18:47:10,
-timer 0x0579 = 1401, 399 s after the stop, with the temperature down to 0x0120 = 28.8 °C. While the water ran, `system_info`
+timer 0x0579 = 1401, 399 s after the stop, with the temperature down to 0x0120 = 28.8 °C; `later-poll`
+reads 0x03BD = 957 at 18:54:34, 843 s after the stop, and 27.0 °C. While the water ran, `system_info`
 reported both valves `On` (valve 1 95 °F, valve 2 99 °F) although only valve 2 was given an outlet;
 afterwards both read `Paused` with `ui_shower_on` and `devices_running` false.
 
@@ -189,6 +191,7 @@ afterwards both read `Paused` with `ui_shower_on` and `devices_running` false.
 | `edge-detail`              | 5 µs/div  | 1.6 ns          | −0.8 ms to +0.8 ms    | The request's first edges at 625 MSa/s          |
 | `idle-roll`                | roll      | 800 ns          | 6.4 s before 18:39:26 | Twelve idle cycles, the last before re-address  |
 | `after-run-poll`           | 20 ms/div | 400 ns          | −0.12 s to +0.28 s    | A poll 6.7 minutes after the stop               |
+| `later-poll`               | 20 ms/div | 400 ns          | −0.12 s to +0.28 s    | A poll 14 minutes after the stop, still at `13` |
 | `shower-run/shower-start`  | roll      | 800 ns          | 6.5 s to 18:40:06     | Idle, the start commands, the first seconds of flow |
 | `shower-run/shower-stop`   | roll      | 800 ns          | 8.0 s to 18:40:33     | Flow, the stop commands, stopped                |
 
