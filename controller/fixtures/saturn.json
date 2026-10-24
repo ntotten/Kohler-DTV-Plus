@@ -3,7 +3,7 @@
     "id": "saturn.address_allocate",
     "link": { "zone": "zone1" },
     "direction": "to_device",
-    "bytes": "aa550f3a020203b0",
+    "bytes": "aa550f3a020203b1",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -16,11 +16,11 @@
     "id": "saturn.address_clear",
     "link": { "zone": "zone1" },
     "direction": "to_device",
-    "bytes": "aa550f3a0103b3",
+    "bytes": "aa550f3a0103b4",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
-        "section": "§ Annotated Packet Captures, Example 3: Address Clear Broadcast — checksum recomputed; the printed 0xAE is stale"
+        "section": "§ Annotated Packet Captures, Example 3: Address Clear Broadcast — checksum recomputed with the sync bytes included (CHK-01); the printed 0xAE and its correction 0xB3 both leave them out"
       }
     },
     "decoded": { "address": 15, "control": 58, "data": "03", "direction": "MasterToValve" }
@@ -29,7 +29,7 @@
     "id": "saturn.address_enquiry",
     "link": { "zone": "zone1" },
     "direction": "to_device",
-    "bytes": "aa550f3a0101b5",
+    "bytes": "aa550f3a0101b6",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -42,7 +42,7 @@
     "id": "saturn.all_off",
     "link": { "zone": "zone2" },
     "direction": "to_device",
-    "bytes": "aa55038702000074",
+    "bytes": "aa55038702000075",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -55,7 +55,7 @@
     "id": "saturn.pause",
     "link": { "zone": "zone2" },
     "direction": "to_device",
-    "bytes": "aa550399010261",
+    "bytes": "aa550399010262",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -68,7 +68,7 @@
     "id": "saturn.read_calibration",
     "link": { "zone": "zone1" },
     "direction": "to_device",
-    "bytes": "aa55031000ed",
+    "bytes": "aa55031000ee",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -81,7 +81,7 @@
     "id": "saturn.read_configuration",
     "link": { "zone": "zone1" },
     "direction": "to_device",
-    "bytes": "aa55031500e8",
+    "bytes": "aa55031500e9",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -94,7 +94,7 @@
     "id": "saturn.read_diagnostics",
     "link": { "zone": "zone1" },
     "direction": "to_device",
-    "bytes": "aa55035400a9",
+    "bytes": "aa55035400aa",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -107,7 +107,7 @@
     "id": "saturn.read_extended_status",
     "link": { "zone": "zone1" },
     "direction": "to_device",
-    "bytes": "aa55034000bd",
+    "bytes": "aa55034000be",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -120,7 +120,7 @@
     "id": "saturn.read_faults",
     "link": { "zone": "zone1" },
     "direction": "to_device",
-    "bytes": "aa55030f00ee",
+    "bytes": "aa55030f00ef",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -133,11 +133,11 @@
     "id": "saturn.read_firmware_type",
     "link": { "zone": "zone1" },
     "direction": "to_device",
-    "bytes": "aa55030200fb",
+    "bytes": "aa55030200fc",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
-        "section": "§ Annotated Packet Captures, Example 1: Read Valve Firmware Type — checksum recomputed per § Checksum Calculation; the printed 0xA1 is stale"
+        "section": "§ Annotated Packet Captures, Example 1: Read Valve Firmware Type — checksum recomputed with the sync bytes included (CHK-01); the printed 0xA1 and its correction 0xFB both leave them out"
       }
     },
     "decoded": { "address": 3, "control": 2, "data": "", "direction": "MasterToValve" }
@@ -146,7 +146,7 @@
     "id": "saturn.read_firmware_version",
     "link": { "zone": "zone1" },
     "direction": "to_device",
-    "bytes": "aa55030100fc",
+    "bytes": "aa55030100fd",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -159,7 +159,7 @@
     "id": "saturn.read_flow",
     "link": { "zone": "zone1" },
     "direction": "to_device",
-    "bytes": "aa55030c00f1",
+    "bytes": "aa55030c00f2",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -172,7 +172,7 @@
     "id": "saturn.read_generic_outlets",
     "link": { "zone": "zone1" },
     "direction": "to_device",
-    "bytes": "aa55031600e7",
+    "bytes": "aa55031600e8",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -185,7 +185,7 @@
     "id": "saturn.read_outlets",
     "link": { "zone": "zone1" },
     "direction": "to_device",
-    "bytes": "aa55030700f6",
+    "bytes": "aa55030700f7",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -198,7 +198,7 @@
     "id": "saturn.read_serial_number",
     "link": { "zone": "zone1" },
     "direction": "to_device",
-    "bytes": "aa55031100ec",
+    "bytes": "aa55031100ed",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -211,7 +211,7 @@
     "id": "saturn.read_temperature",
     "link": { "zone": "zone1" },
     "direction": "to_device",
-    "bytes": "aa55030b00f2",
+    "bytes": "aa55030b00f3",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -224,7 +224,7 @@
     "id": "saturn.response.allocate_ack",
     "link": { "zone": "zone1" },
     "direction": "from_device",
-    "bytes": "aa55003a00c6",
+    "bytes": "aa55003a00c7",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -237,11 +237,11 @@
     "id": "saturn.response.firmware_type",
     "link": { "zone": "zone1" },
     "direction": "from_device",
-    "bytes": "aa550002011edf",
+    "bytes": "aa550002011ee0",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
-        "section": "§ Annotated Packet Captures, Example 1 — the valve's reply, and the worked case in § Checksum Calculation that proves the sync bytes are excluded"
+        "section": "§ Annotated Packet Captures, Example 1 — the valve's reply, checksum recomputed with the sync bytes included (CHK-01); the printed 0xDF leaves them out, and was the superseded CHK-02 proof case"
       }
     },
     "decoded": { "address": 0, "control": 2, "data": "1e", "direction": "ValveToMaster" }
@@ -250,7 +250,7 @@
     "id": "saturn.resume",
     "link": { "zone": "zone2" },
     "direction": "to_device",
-    "bytes": "aa550399010063",
+    "bytes": "aa550399010064",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
@@ -263,11 +263,11 @@
     "id": "saturn.set_outlets",
     "link": { "zone": "zone2" },
     "direction": "to_device",
-    "bytes": "aa55038702040070",
+    "bytes": "aa55038702040071",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",
-        "section": "§ Annotated Packet Captures, Example 2: Turn On Valve Outlet (Prompt 3)"
+        "section": "§ Annotated Packet Captures, Example 2: Turn On Valve Outlet (Prompt 3) — checksum recomputed with the sync bytes included (CHK-01); the printed 0x70 leaves them out"
       }
     },
     "decoded": { "address": 3, "control": 135, "data": "0400", "direction": "MasterToValve" }
@@ -276,7 +276,7 @@
     "id": "saturn.set_temperature",
     "link": { "zone": "zone1" },
     "direction": "to_device",
-    "bytes": "aa55038b014c25",
+    "bytes": "aa55038b014c26",
     "provenance": {
       "documented": {
         "source": "research/xagon0/docs/protocols/saturn-protocol.md",

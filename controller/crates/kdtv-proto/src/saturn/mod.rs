@@ -49,8 +49,8 @@
 //! ```
 //!
 //! Total length is `6 + DATA_LEN`, capped at 20 bytes. The checksum is the two's
-//! complement of `ADDRESS + CONTROL + DATA_LEN + DATA`, **excluding the sync
-//! bytes** — see [`checksum`].
+//! complement of the sum of every byte before it, **sync bytes included**, so a
+//! whole frame sums to zero — see [`checksum`].
 //!
 //! `ADDRESS` is the **destination**, not the sender, so a valve's reply carries
 //! the master's address. There is no sender field at all, which is why the
@@ -189,7 +189,7 @@ mod tests {
     #[test]
     fn a_decoded_frame_cannot_become_a_transmittable_one() {
         let mut rx = RxBuffer::new();
-        rx.extend(&[0xAA, 0x55, 0x00, 0x02, 0x01, 0x1E, 0xDF]);
+        rx.extend(&[0xAA, 0x55, 0x00, 0x02, 0x01, 0x1E, 0xE0]);
         let d = decode(&mut rx, &Expectation::capture(MasterAddr::Dtv))
             .unwrap()
             .unwrap();
@@ -213,8 +213,8 @@ mod tests {
         assert_eq!(denied_control_bytes().len(), 10);
         assert_eq!(SaturnOp::ALL.len(), 20);
         assert_eq!(Timings::DOCUMENTED.tick.as_millis(), 525);
-        assert_eq!(checksum(0x00, 0x02, 0x01, &[0x1E]), 0xDF);
-        assert!(checksum_valid(0x03, 0x87, 0x02, &[0x04, 0x00], 0x70));
+        assert_eq!(checksum(0x00, 0x07, 0x00, &[]), 0xFA);
+        assert!(checksum_valid(0x03, 0x87, 0x02, &[0x04, 0x00], 0x71));
         assert_eq!(MAX_FRAME, 20);
         assert_eq!(usize::from(MAX_DATA_LEN), MAX_FRAME - FRAME_OVERHEAD);
         assert_eq!(HEADER_LEN, 5);

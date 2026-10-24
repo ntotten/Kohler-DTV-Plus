@@ -391,11 +391,11 @@ mod tests {
         Harness::new(vec![
             (
                 LinkKind::Zone(ZoneId::Zone1),
-                Box::new(Parrot(vec![0xAA, 0x55, 0x00, 0x01, 0x00, 0xFF])),
+                Box::new(Parrot(vec![0xAA, 0x55, 0x00, 0x01, 0x00, 0x00])),
             ),
             (
                 LinkKind::Zone(ZoneId::Zone2),
-                Box::new(Parrot(vec![0xAA, 0x55, 0x00, 0x02, 0x00, 0xFE])),
+                Box::new(Parrot(vec![0xAA, 0x55, 0x00, 0x02, 0x00, 0xFF])),
             ),
             (LinkKind::Steam, Box::new(Mute)),
         ])
@@ -469,7 +469,7 @@ mod tests {
         assert_eq!(running.pump_failure(), None, "it has not failed yet");
 
         follower
-            .write_all(&[0xAA, 0x55, 0x03, 0x21, 0x00, 0xDC])
+            .write_all(&[0xAA, 0x55, 0x03, 0x21, 0x00, 0xDD])
             .expect("write to the follower");
 
         let mut why = None;
@@ -495,14 +495,14 @@ mod tests {
         let mut one = open_follower(&paths[&LinkKind::Zone(ZoneId::Zone1)]);
         let mut running = h.start_real_time();
 
-        one.write_all(&[0xAA, 0x55, 0x03, 0x21, 0x00, 0xDC])
+        one.write_all(&[0xAA, 0x55, 0x03, 0x21, 0x00, 0xDD])
             .expect("write to the follower");
         let got = read_up_to(&mut one, 6, Duration::from_secs(2));
 
         running.stop().expect("the pump ran clean");
         assert_eq!(
             got,
-            vec![0xAA, 0x55, 0x00, 0x01, 0x00, 0xFF],
+            vec![0xAA, 0x55, 0x00, 0x01, 0x00, 0x00],
             "nothing called run_for; the background pump is what delivered this"
         );
         assert!(
@@ -522,7 +522,7 @@ mod tests {
         let _two = open_follower(&paths[&LinkKind::Zone(ZoneId::Zone2)]);
         let mut running = h.start_real_time();
 
-        one.write_all(&[0xAA, 0x55, 0x03, 0x21, 0x00, 0xDC])
+        one.write_all(&[0xAA, 0x55, 0x03, 0x21, 0x00, 0xDD])
             .expect("write to the follower");
         let answered = read_up_to(&mut one, 6, Duration::from_secs(2));
 
@@ -531,7 +531,7 @@ mod tests {
         // ran, so establish that something crossed zone 1 first.
         assert_eq!(
             answered,
-            vec![0xAA, 0x55, 0x00, 0x01, 0x00, 0xFF],
+            vec![0xAA, 0x55, 0x00, 0x01, 0x00, 0x00],
             "zone 1 must actually have carried traffic for the scoping check to mean anything"
         );
         assert_eq!(
@@ -550,7 +550,7 @@ mod tests {
         let mut running = h.start_real_time();
 
         running.with(|h| h.inject(LinkKind::Zone(ZoneId::Zone1), WireFault::Drop));
-        one.write_all(&[0xAA, 0x55, 0x03, 0x21, 0x00, 0xDC])
+        one.write_all(&[0xAA, 0x55, 0x03, 0x21, 0x00, 0xDD])
             .expect("write to the follower");
         let dropped = read_up_to(&mut one, 6, Duration::from_millis(400));
 
@@ -558,7 +558,7 @@ mod tests {
         // is unfaulted. Without this the test passes on a pump that never ran:
         // "nothing arrived" is what both a working Drop and a dead thread look
         // like.
-        one.write_all(&[0xAA, 0x55, 0x03, 0x21, 0x00, 0xDC])
+        one.write_all(&[0xAA, 0x55, 0x03, 0x21, 0x00, 0xDD])
             .expect("write to the follower");
         let after = read_up_to(&mut one, 6, Duration::from_secs(2));
 
@@ -569,7 +569,7 @@ mod tests {
         );
         assert_eq!(
             after,
-            vec![0xAA, 0x55, 0x00, 0x01, 0x00, 0xFF],
+            vec![0xAA, 0x55, 0x00, 0x01, 0x00, 0x00],
             "the pump was alive; only the faulted reply was suppressed"
         );
     }
@@ -581,7 +581,7 @@ mod tests {
         let mut one = open_follower(&paths[&LinkKind::Zone(ZoneId::Zone1)]);
         let mut running = h.start_real_time();
 
-        one.write_all(&[0xAA, 0x55, 0x03, 0x21, 0x00, 0xDC])
+        one.write_all(&[0xAA, 0x55, 0x03, 0x21, 0x00, 0xDD])
             .expect("write to the follower");
         drop(one); // the daemon exiting
         std::thread::sleep(Duration::from_millis(50));
@@ -631,8 +631,8 @@ mod tests {
             .open(&paths[&LinkKind::Zone(ZoneId::Zone2)])
             .unwrap();
 
-        one.write_all(b"\xAA\x55\x03\x02\x00\xFB").unwrap();
-        two.write_all(b"\xAA\x55\x03\x02\x00\xFB").unwrap();
+        one.write_all(b"\xAA\x55\x03\x02\x00\xFC").unwrap();
+        two.write_all(b"\xAA\x55\x03\x02\x00\xFC").unwrap();
         one.flush().ok();
         two.flush().ok();
         h.run_for(Duration::from_millis(30)).unwrap();
@@ -695,7 +695,7 @@ mod tests {
         let mark = h.now();
 
         // Only zone 1 speaks after the mark.
-        one.write_all(b"\xAA\x55\x03\x02\x00\xFB").unwrap();
+        one.write_all(b"\xAA\x55\x03\x02\x00\xFC").unwrap();
         one.flush().ok();
         h.run_for(Duration::from_millis(30)).unwrap();
         assert!(
@@ -705,7 +705,7 @@ mod tests {
         );
 
         // Now zone 2 speaks too, and the check names it.
-        two.write_all(b"\xAA\x55\x03\x02\x00\xFB").unwrap();
+        two.write_all(b"\xAA\x55\x03\x02\x00\xFC").unwrap();
         two.flush().ok();
         h.run_for(Duration::from_millis(30)).unwrap();
         assert_eq!(
@@ -723,7 +723,7 @@ mod tests {
             .write(true)
             .open(&paths[&LinkKind::Zone(ZoneId::Zone1)])
             .unwrap();
-        one.write_all(b"\xAA\x55\x03\x02\x00\xFB").unwrap();
+        one.write_all(b"\xAA\x55\x03\x02\x00\xFC").unwrap();
         one.flush().ok();
         h.run_for(Duration::from_millis(20)).unwrap();
 

@@ -71,8 +71,9 @@ fn raw_frame(address: u8, control: u8, data: &[u8]) -> Vec<u8> {
 }
 
 proptest! {
-    /// `CHK-01` / `CHK-03`. The defining property: the covered bytes plus the
-    /// checksum sum to zero modulo 256, for any field values at all.
+    /// `CHK-01` / `CHK-03`. The defining property: every byte of the frame,
+    /// sync through checksum, sums to zero modulo 256, for any field values at
+    /// all.
     #[test]
     fn checksum_closes_the_frame_to_zero(
         address in any::<u8>(),
@@ -81,33 +82,32 @@ proptest! {
     ) {
         let len = u8::try_from(data.len()).unwrap();
         let chk = checksum(address, control, len, &data);
-        let sum = data
-            .iter()
-            .fold(address.wrapping_add(control).wrapping_add(len), |a, b| {
-                a.wrapping_add(*b)
-            })
-            .wrapping_add(chk);
+        let frame = raw_frame(address, control, &data);
+        prop_assert_eq!(frame.last(), Some(&chk));
+        let sum = frame.iter().fold(0u8, |a, b| a.wrapping_add(*b));
         prop_assert_eq!(sum, 0);
         prop_assert!(checksum_valid(address, control, len, &data, chk));
     }
 
-    /// `CHK-02`. Folding the sync bytes into the covered range changes the
-    /// answer for every frame whose sync-inclusive sum differs — which is every
-    /// frame, since `0xAA + 0x55` is `0xFF`, not zero.
+    /// `CHK-01`. The sync pair is in the sum, and since `0xAA + 0x55` is
+    /// `0xFF`, the checksum is always exactly one more than the superseded
+    /// sync-excluded rule gives, which the wire never carries.
     #[test]
-    fn including_the_sync_bytes_always_changes_the_checksum(
+    fn the_sync_pair_moves_the_checksum_by_one(
         address in any::<u8>(),
         control in any::<u8>(),
         data in prop::collection::vec(any::<u8>(), 0..=14usize),
     ) {
         let len = u8::try_from(data.len()).unwrap();
-        let excluded = checksum(address, control, len, &data);
-        let mut with_sync = vec![address, control, len];
-        with_sync.extend_from_slice(&data);
-        let included = checksum(SYNC1, SYNC2, 0, &with_sync);
-        prop_assert_ne!(excluded, included);
-        // The difference is exactly the sync pair, every time.
-        prop_assert_eq!(included, excluded.wrapping_sub(SYNC1).wrapping_sub(SYNC2));
+        let excluded = data
+            .iter()
+            .fold(address.wrapping_add(control).wrapping_add(len), |a, b| {
+                a.wrapping_add(*b)
+            })
+            .wrapping_neg();
+        let included = checksum(address, control, len, &data);
+        prop_assert_eq!(included, excluded.wrapping_add(1));
+        prop_assert!(!checksum_valid(address, control, len, &data, excluded));
     }
 
     /// `CHK-03`. Any single-byte mutation of a covered field breaks the frame.

@@ -838,8 +838,9 @@ mod tests {
 
     // ---- Golden frames -----------------------------------------------------
 
-    /// `saturn-protocol.md` Example 2, the only captured outlet-open frame.
-    /// Turning on Prompt 3 outlet 1, mask `0x04`, with `DATA[1]` = `0x00`.
+    /// `saturn-protocol.md` Example 2, the source's only outlet-open frame,
+    /// checksum recomputed under `CHK-01` (it prints `0x70`). Turning on
+    /// Prompt 3 outlet 1, mask `0x04`, with `DATA[1]` = `0x00`.
     /// `OUT-03` / `OUT-04`.
     #[test]
     fn golden_write_outlet_states_prompt3_outlet_1() {
@@ -855,11 +856,11 @@ mod tests {
                 Some(&TestAuthority(ZoneId::Zone2)),
             )
             .unwrap();
-        assert_eq!(f.bytes(), &[0xAA, 0x55, 0x03, 0x87, 0x02, 0x04, 0x00, 0x70]);
+        assert_eq!(f.bytes(), &[0xAA, 0x55, 0x03, 0x87, 0x02, 0x04, 0x00, 0x71]);
     }
 
-    /// `saturn-protocol.md` Example 1, with its own correction applied.
-    /// `CHK-04`: the stale `0xA1` must never appear.
+    /// `saturn-protocol.md` Example 1, checksum recomputed under `CHK-01`.
+    /// `CHK-04`: neither the printed `0xA1` nor its correction `0xFB`.
     #[test]
     fn golden_read_firmware_type() {
         let f = zone1()
@@ -871,11 +872,13 @@ mod tests {
                 None,
             )
             .unwrap();
-        assert_eq!(f.bytes(), &[0xAA, 0x55, 0x03, 0x02, 0x00, 0xFB]);
+        assert_eq!(f.bytes(), &[0xAA, 0x55, 0x03, 0x02, 0x00, 0xFC]);
         assert_ne!(f.bytes().last(), Some(&0xA1));
+        assert_ne!(f.bytes().last(), Some(&0xFB));
     }
 
-    /// `saturn-protocol.md` Example 3, corrected. `CHK-04`: not `0xAE`.
+    /// `saturn-protocol.md` Example 3, checksum recomputed under `CHK-01`.
+    /// `CHK-04`: neither the printed `0xAE` nor its correction `0xB3`.
     #[test]
     fn golden_address_clear_broadcast() {
         let e = zone1();
@@ -889,8 +892,9 @@ mod tests {
                 None,
             )
             .unwrap();
-        assert_eq!(f.bytes(), &[0xAA, 0x55, 0x0F, 0x3A, 0x01, 0x03, 0xB3]);
+        assert_eq!(f.bytes(), &[0xAA, 0x55, 0x0F, 0x3A, 0x01, 0x03, 0xB4]);
         assert_ne!(f.bytes().last(), Some(&0xAE));
+        assert_ne!(f.bytes().last(), Some(&0xB3));
         assert_eq!(f.dest(), BROADCAST);
     }
 
@@ -900,15 +904,15 @@ mod tests {
         for (op, expected) in [
             (
                 SaturnOp::ReadFirmwareVersion,
-                &[0xAA, 0x55, 0x03, 0x01, 0x00, 0xFC][..],
+                &[0xAA, 0x55, 0x03, 0x01, 0x00, 0xFD][..],
             ),
             (
                 SaturnOp::ReadTemperature,
-                &[0xAA, 0x55, 0x03, 0x0B, 0x00, 0xF2][..],
+                &[0xAA, 0x55, 0x03, 0x0B, 0x00, 0xF3][..],
             ),
             (
                 SaturnOp::ReadFaults,
-                &[0xAA, 0x55, 0x03, 0x0F, 0x00, 0xEE][..],
+                &[0xAA, 0x55, 0x03, 0x0F, 0x00, 0xEF][..],
             ),
         ] {
             let f = e
@@ -941,7 +945,7 @@ mod tests {
                 None,
             )
             .unwrap();
-        assert_eq!(enquiry.bytes(), &[0xAA, 0x55, 0x0F, 0x3A, 0x01, 0x01, 0xB5]);
+        assert_eq!(enquiry.bytes(), &[0xAA, 0x55, 0x0F, 0x3A, 0x01, 0x01, 0xB6]);
 
         let allocate = e
             .encode(
@@ -954,15 +958,15 @@ mod tests {
             .unwrap();
         // DATA_LEN 0x02, not the diagram's 0x01: with DATA_LEN 1 the frame is
         // seven bytes and carries the subcommand but not the address, which is
-        // untenable. The alternate seven-byte reading has checksum 0xB4 and is
+        // untenable. The alternate seven-byte reading has checksum 0xB5 and is
         // recorded as the fallback to try at commissioning if allocation is
         // refused.
         assert_eq!(
             allocate.bytes(),
-            &[0xAA, 0x55, 0x0F, 0x3A, 0x02, 0x02, 0x03, 0xB0]
+            &[0xAA, 0x55, 0x0F, 0x3A, 0x02, 0x02, 0x03, 0xB1]
         );
         assert_eq!(allocate.bytes().get(4), Some(&0x02));
-        assert_eq!(checksum(0x0F, 0x3A, 0x01, &[0x02]), 0xB4);
+        assert_eq!(checksum(0x0F, 0x3A, 0x01, &[0x02]), 0xB5);
 
         // Every discovery frame is addressed to the broadcast address. DISC-09.
         for f in [&enquiry, &allocate] {
@@ -971,7 +975,7 @@ mod tests {
     }
 
     /// `FRAME-02` / `CHK-01`. Every frame the encoder emits is self-consistent:
-    /// the length formula holds and the covered bytes sum to zero.
+    /// the length formula holds and every byte, sync included, sums to zero.
     #[test]
     fn every_encoded_frame_is_well_formed() {
         for (e, valve_slots) in [(zone1(), &[1u8, 2, 3, 4, 5][..]), (zone2(), &[1, 2, 3][..])] {
@@ -995,10 +999,7 @@ mod tests {
                     assert_eq!(b.len(), FRAME_OVERHEAD + data_len);
                     assert!(b.len() <= MAX_FRAME);
                     assert!(data_len <= usize::from(MAX_DATA_LEN));
-                    let sum = b
-                        .iter()
-                        .skip(2)
-                        .fold(0u8, |acc, byte| acc.wrapping_add(*byte));
+                    let sum = b.iter().fold(0u8, |acc, byte| acc.wrapping_add(*byte));
                     assert_eq!(sum, 0, "checksum does not close for {op:?}: {f:?}");
                 }
             }
