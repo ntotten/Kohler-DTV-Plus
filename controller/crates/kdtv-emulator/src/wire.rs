@@ -279,7 +279,7 @@ mod tests {
     }
 
     fn wire() -> (Wire, std::fs::File) {
-        let w = Wire::new(Box::new(Parrot(vec![0xAA, 0x55, 0x00, 0x01, 0x00, 0xFF])))
+        let w = Wire::new(Box::new(Parrot(vec![0xAA, 0x55, 0x00, 0x01, 0x00, 0x00])))
             .expect("open a wire");
         let f = OpenOptions::new()
             .read(true)
@@ -313,7 +313,7 @@ mod tests {
     #[test]
     fn a_reply_does_not_arrive_before_its_bytes_could_have() {
         let (mut w, mut f) = wire();
-        f.write_all(b"\xAA\x55\x03\x02\x00\xFB")
+        f.write_all(b"\xAA\x55\x03\x02\x00\xFC")
             .expect("daemon transmits");
         f.flush().ok();
         // Six bytes take ~6.25 ms. At 3 ms nothing can have arrived yet.
@@ -330,14 +330,14 @@ mod tests {
         run(&mut w, Duration::from_millis(20));
         let mut got = [0u8; 6];
         f.read_exact(&mut got).expect("the reply arrives");
-        assert_eq!(got, [0xAA, 0x55, 0x00, 0x01, 0x00, 0xFF]);
+        assert_eq!(got, [0xAA, 0x55, 0x00, 0x01, 0x00, 0x00]);
     }
 
     #[test]
     fn drop_swallows_the_reply_and_the_daemon_sees_a_missed_response() {
         let (mut w, mut f) = wire();
         w.inject(WireFault::Drop);
-        f.write_all(b"\xAA\x55\x03\x02\x00\xFB").unwrap();
+        f.write_all(b"\xAA\x55\x03\x02\x00\xFC").unwrap();
         f.flush().ok();
         run(&mut w, Duration::from_millis(50));
         assert!(
@@ -352,13 +352,14 @@ mod tests {
     fn bit_flip_corrupts_exactly_one_bit() {
         let (mut w, mut f) = wire();
         w.inject(WireFault::BitFlip { byte: 5, bit: 0 });
-        f.write_all(b"\xAA\x55\x03\x02\x00\xFB").unwrap();
+        f.write_all(b"\xAA\x55\x03\x02\x00\xFC").unwrap();
         f.flush().ok();
         run(&mut w, Duration::from_millis(30));
         let mut got = [0u8; 6];
         f.read_exact(&mut got)
             .expect("a corrupted reply still arrives");
-        assert_eq!(got[5], 0xFF ^ 0x01, "the checksum byte is wrong by one bit");
+        // The reply's checksum is 0x00; bit 0 flipped.
+        assert_eq!(got[5], 0x01, "the checksum byte is wrong by one bit");
         assert_eq!(
             &got[..5],
             &[0xAA, 0x55, 0x00, 0x01, 0x00],
@@ -370,7 +371,7 @@ mod tests {
     fn truncate_delivers_a_partial_frame() {
         let (mut w, mut f) = wire();
         w.inject(WireFault::Truncate { after: 3 });
-        f.write_all(b"\xAA\x55\x03\x02\x00\xFB").unwrap();
+        f.write_all(b"\xAA\x55\x03\x02\x00\xFC").unwrap();
         f.flush().ok();
         run(&mut w, Duration::from_millis(30));
         let mut got = [0u8; 3];
@@ -382,7 +383,7 @@ mod tests {
     fn delay_pushes_the_reply_past_a_deadline() {
         let (mut w, mut f) = wire();
         w.inject(WireFault::Delay(Duration::from_millis(500)));
-        f.write_all(b"\xAA\x55\x03\x02\x00\xFB").unwrap();
+        f.write_all(b"\xAA\x55\x03\x02\x00\xFC").unwrap();
         f.flush().ok();
         // Past the 400 ms response timeout, nothing has arrived.
         run(&mut w, Duration::from_millis(400));
@@ -409,7 +410,7 @@ mod tests {
     fn duplicate_sends_the_reply_twice() {
         let (mut w, mut f) = wire();
         w.inject(WireFault::Duplicate);
-        f.write_all(b"\xAA\x55\x03\x02\x00\xFB").unwrap();
+        f.write_all(b"\xAA\x55\x03\x02\x00\xFC").unwrap();
         f.flush().ok();
         run(&mut w, Duration::from_millis(40));
         let mut got = [0u8; 12];
@@ -421,24 +422,24 @@ mod tests {
     fn echo_returns_the_daemons_own_bytes_and_the_device_still_answers() {
         let (mut w, mut f) = wire();
         w.inject(WireFault::Echo);
-        f.write_all(b"\xAA\x55\x03\x02\x00\xFB").unwrap();
+        f.write_all(b"\xAA\x55\x03\x02\x00\xFC").unwrap();
         f.flush().ok();
         run(&mut w, Duration::from_millis(40));
         let mut got = [0u8; 12];
         f.read_exact(&mut got).expect("echo then reply");
         assert_eq!(
             &got[..6],
-            b"\xAA\x55\x03\x02\x00\xFB",
+            b"\xAA\x55\x03\x02\x00\xFC",
             "the echo comes first"
         );
-        assert_eq!(&got[6..], &[0xAA, 0x55, 0x00, 0x01, 0x00, 0xFF]);
+        assert_eq!(&got[6..], &[0xAA, 0x55, 0x00, 0x01, 0x00, 0x00]);
     }
 
     #[test]
     fn going_silent_stops_the_link_without_hanging_it_up() {
         let (mut w, mut f) = wire();
         w.inject(WireFault::GoSilent);
-        f.write_all(b"\xAA\x55\x03\x02\x00\xFB").unwrap();
+        f.write_all(b"\xAA\x55\x03\x02\x00\xFC").unwrap();
         f.flush().ok();
         run(&mut w, Duration::from_millis(60));
         assert!(
@@ -456,7 +457,7 @@ mod tests {
     #[test]
     fn the_transcript_records_both_directions_with_their_times() {
         let (mut w, mut f) = wire();
-        f.write_all(b"\xAA\x55\x03\x02\x00\xFB").unwrap();
+        f.write_all(b"\xAA\x55\x03\x02\x00\xFC").unwrap();
         f.flush().ok();
         run(&mut w, Duration::from_millis(30));
         let e = w.transcript().entries();

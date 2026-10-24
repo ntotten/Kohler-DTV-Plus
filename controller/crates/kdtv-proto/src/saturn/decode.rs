@@ -437,8 +437,8 @@ mod tests {
         rx
     }
 
-    const FW_TYPE_RESPONSE: &[u8] = &[0xAA, 0x55, 0x00, 0x02, 0x01, 0x1E, 0xDF];
-    const ALLOCATE_ACK: &[u8] = &[0xAA, 0x55, 0x00, 0x3A, 0x00, 0xC6];
+    const FW_TYPE_RESPONSE: &[u8] = &[0xAA, 0x55, 0x00, 0x02, 0x01, 0x1E, 0xE0];
+    const ALLOCATE_ACK: &[u8] = &[0xAA, 0x55, 0x00, 0x3A, 0x00, 0xC7];
 
     #[test]
     fn decodes_the_documented_firmware_type_response() {
@@ -464,7 +464,6 @@ mod tests {
             &[0xAA][..],
             &[0x55, 0xAA][..],
             &[0xFF, 0xFF, 0xAA, 0x00][..],
-            &[0xAA, 0x55][..], // a bare sync pair, which is not a frame
         ] {
             let mut bytes = prefix.to_vec();
             bytes.extend_from_slice(FW_TYPE_RESPONSE);
@@ -487,12 +486,48 @@ mod tests {
         }
     }
 
+    /// `FRAME-04`. A bare sync pair before this response reads as a frame of
+    /// its own: `AA 55 AA 55 00 02` closes under `CHK-01`, because the sync
+    /// pair is counted twice and `0xFF + 0xFF + 0x02` is zero modulo 256. Any
+    /// frame whose ADDRESS and CONTROL are `00 02` collides this way (under the
+    /// superseded sync-excluded rule it was `00 01`). Capture mode takes the
+    /// phantom and loses the real frame; the strict address check refuses the
+    /// phantom's `0xAA` and the real response survives.
+    #[test]
+    fn a_bare_sync_pair_before_a_frame() {
+        let mut bytes = vec![0xAA, 0x55];
+        bytes.extend_from_slice(FW_TYPE_RESPONSE);
+
+        let mut rx = feed(&bytes);
+        let phantom = decode(&mut rx, &Expectation::capture(MasterAddr::Dtv))
+            .unwrap()
+            .unwrap();
+        assert_eq!(phantom.address, 0xAA);
+        assert_eq!(phantom.control, ControlByte(0x55));
+        assert!(phantom.data.as_slice().is_empty());
+
+        let mut rx = feed(&bytes);
+        let expect = Expectation::response_to(MasterAddr::Dtv, SaturnOpKind::ReadFirmwareType);
+        let mut got = None;
+        for _ in 0..8 {
+            match decode(&mut rx, &expect) {
+                Ok(Some(f)) => {
+                    got = Some(f);
+                    break;
+                }
+                Ok(None) => break,
+                Err(_) => {}
+            }
+        }
+        assert_eq!(got.unwrap().data.as_slice(), &[0x1E]);
+    }
+
     /// The specific hazard the resync exists for: a converter that echoes our
     /// own transmission back at us. This build's converters do not, but the
     /// decoder must survive one that does. `CORRECTIONS.md` item 3.
     #[test]
     fn req_design_proto_06_echo_bleed_before_a_response_still_decodes() {
-        let echo: &[u8] = &[0xAA, 0x55, 0x03, 0x02, 0x00, 0xFB];
+        let echo: &[u8] = &[0xAA, 0x55, 0x03, 0x02, 0x00, 0xFC];
         let mut bytes = echo.to_vec();
         bytes.extend_from_slice(FW_TYPE_RESPONSE);
         let mut rx = feed(&bytes);
@@ -548,7 +583,7 @@ mod tests {
         assert_eq!(
             e,
             DecodeError::BadChecksum {
-                computed: 0xDF,
+                computed: 0xE0,
                 found: 0x00
             }
         );

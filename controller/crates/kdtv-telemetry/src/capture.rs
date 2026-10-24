@@ -144,10 +144,10 @@ mod tests {
         let r = FrameRecord::new(
             LinkKind::Zone(ZoneId::Zone1),
             Direction::Tx,
-            &[0xAA, 0x55, 0x03, 0x02, 0x00, 0xFB],
+            &[0xAA, 0x55, 0x03, 0x02, 0x00, 0xFC],
             at(1),
         );
-        assert_eq!(r.bytes_hex, "AA 55 03 02 00 FB");
+        assert_eq!(r.bytes_hex, "AA 55 03 02 00 FC");
         assert!(r.decode_error.is_none());
     }
 

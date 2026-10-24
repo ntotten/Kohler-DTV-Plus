@@ -203,11 +203,11 @@ mod tests {
             .open(pty.follower_path())
             .expect("open the follower");
 
-        pty.write_all(b"\xAA\x55\x03\x02\x00\xFB")
+        pty.write_all(b"\xAA\x55\x03\x02\x00\xFC")
             .expect("write towards the daemon");
         let mut got = [0u8; 6];
         follower.read_exact(&mut got).expect("read at the follower");
-        assert_eq!(got, [0xAA, 0x55, 0x03, 0x02, 0x00, 0xFB]);
+        assert_eq!(got, [0xAA, 0x55, 0x03, 0x02, 0x00, 0xFC]);
         // Nothing came back at the leader: echo is off, so the emulator does not
         // see its own transmission. A converter with automatic direction control
         // presents no echo either, which is why the codec must not expect one.
@@ -215,13 +215,13 @@ mod tests {
         assert_eq!(pty.read_available(&mut echo).expect("no echo"), 0);
 
         follower
-            .write_all(b"\xAA\x55\x00\x02\x01\x1E\xDF")
+            .write_all(b"\xAA\x55\x00\x02\x01\x1E\xE0")
             .expect("write at the follower");
         follower.flush().ok();
         let mut buf = [0u8; 7];
         pty.read_exact_before(&mut buf, Duration::from_secs(5))
             .expect("reply reaches the leader");
-        assert_eq!(&buf, b"\xAA\x55\x00\x02\x01\x1E\xDF");
+        assert_eq!(&buf, b"\xAA\x55\x00\x02\x01\x1E\xE0");
     }
 
     #[test]

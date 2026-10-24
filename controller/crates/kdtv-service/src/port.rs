@@ -568,7 +568,7 @@ mod tests {
     #[tokio::test]
     async fn bytes_read_are_forwarded_verbatim() {
         let (script, _watch) = PipeScript::new();
-        script.push_read(vec![0xAA, 0x55, 0x00, 0x02, 0x01, 0x1E, 0xDF]);
+        script.push_read(vec![0xAA, 0x55, 0x00, 0x02, 0x01, 0x1E, 0xE0]);
         let (reports_tx, mut reports) = mpsc::channel(8);
         let _handle = spawn(Z1, Box::new(FakePipe::new(Z1, script)), reports_tx);
 

@@ -1,7 +1,9 @@
 //! Framing, addressing and the checksum.
 //!
-//! All tier `[C]`, from `research/xagon0/docs/protocols/saturn-protocol.md`
-//! § Frame Format, § Addressing and § Checksum Calculation.
+//! Tier `[C]`, from `research/xagon0/docs/protocols/saturn-protocol.md`
+//! § Frame Format and § Addressing, except the checksum, which is `[A]`: it was
+//! measured on the installed valve bus on 2026-10-24
+//! (`research/diagnostics/2026-10-24-saturn-valve-bus/README.md` § Checksum).
 
 use core::fmt;
 
@@ -36,19 +38,32 @@ pub const VALVE_ADDR_MIN: u8 = 0x03;
 /// Highest assignable valve address. `ADDR-02`.
 pub const VALVE_ADDR_MAX: u8 = 0x07;
 
-/// The checksum over `ADDRESS + CONTROL + DATA_LEN + DATA`, as the 8-bit two's
-/// complement of their sum. `CHK-01`.
+/// The checksum over `SYNC1 + SYNC2 + ADDRESS + CONTROL + DATA_LEN + DATA`, as
+/// the 8-bit two's complement of their sum, so every byte of a frame sums to
+/// zero modulo 256. `CHK-01`, tier `[A]`.
 ///
-/// **`SYNC1` and `SYNC2` are excluded.** This is not a stylistic choice: the
-/// documented response `AA 55 00 02 01 1E DF` carries checksum `0xDF`, which is
-/// only correct with the sync bytes omitted. Including them yields `0xE0`.
-/// `CHK-02`, and `checksum_excludes_sync_bytes` proves it.
+/// **`SYNC1` and `SYNC2` are included.** Every frame captured on the installed
+/// valve bus closes only that way — the K-99695's idle poll
+/// `AA 55 00 07 00 FA`, the valve's replies, and the frames around a start and
+/// a stop — each carrying a checksum one above the sync-excluded sum.
+/// `captured_frames_close_with_the_sync_bytes` holds all of them.
+///
+/// Until 2026-10-24 this function left the sync bytes out (the superseded
+/// `CHK-02`), on the strength of xagon0's response `AA 55 00 02 01 1E DF`. That
+/// frame is not a capture: the document's "Annotated Packet Captures" are
+/// computed from its own stated formula, so the example could only ever agree
+/// with it. `SYNC1 + SYNC2` is `0xFF`, so the two rules differ by exactly one
+/// on every frame.
 ///
 /// Wrapping arithmetic throughout — the sum is defined modulo 256, and
 /// `wrapping_neg` is exactly `(!total + 1) & 0xFF`.
 #[must_use]
 pub const fn checksum(address: u8, control: u8, data_len: u8, data: &[u8]) -> u8 {
-    let mut total = address.wrapping_add(control).wrapping_add(data_len);
+    let mut total = SYNC1
+        .wrapping_add(SYNC2)
+        .wrapping_add(address)
+        .wrapping_add(control)
+        .wrapping_add(data_len);
     let mut rest = data;
     // A `const fn` cannot use an iterator; `split_first` walks the slice without
     // indexing it.
@@ -59,8 +74,8 @@ pub const fn checksum(address: u8, control: u8, data_len: u8, data: &[u8]) -> u8
     total.wrapping_neg()
 }
 
-/// True when the covered bytes and the checksum sum to zero modulo 256.
-/// `CHK-03`.
+/// True when every byte of the frame, sync through checksum, sums to zero
+/// modulo 256. `CHK-03`.
 #[must_use]
 pub const fn checksum_valid(
     address: u8,
@@ -217,45 +232,110 @@ impl Direction {
 mod tests {
     use super::*;
 
-    /// `CHK-02`. The single arithmetic fact that pins the algorithm down.
+    /// Every byte of `frame` summed modulo 256.
+    fn frame_sum(frame: &[u8]) -> u8 {
+        frame.iter().fold(0u8, |acc, b| acc.wrapping_add(*b))
+    }
+
+    /// Every distinct frame captured on Valve 2's bus on 2026-10-24
+    /// (`research/diagnostics/2026-10-24-saturn-valve-bus/`): the idle poll and
+    /// its two replies, and the frames around one start and one stop.
+    const CAPTURED: [&[u8]; 8] = [
+        // Idle: the K-99695's poll and the valve's reply, before and after
+        // data byte 3 moved CF -> D0.
+        &[0xAA, 0x55, 0x00, 0x07, 0x00, 0xFA],
+        &[
+            0xAA, 0x55, 0x01, 0x01, 0x0B, 0x00, 0x01, 0x4A, 0x00, 0xCF, 0x00, 0x00, 0x07, 0x08,
+            0x02, 0x00, 0xC9,
+        ],
+        &[
+            0xAA, 0x55, 0x01, 0x01, 0x0B, 0x00, 0x01, 0x4A, 0x00, 0xD0, 0x00, 0x00, 0x07, 0x08,
+            0x02, 0x00, 0xC8,
+        ],
+        // Start.
+        &[
+            0xAA, 0x55, 0x13, 0x87, 0x06, 0x00, 0x01, 0x63, 0x00, 0x00, 0x00, 0xFD,
+        ],
+        &[
+            0xAA, 0x55, 0x13, 0x87, 0x06, 0x01, 0x01, 0x63, 0x64, 0x00, 0x00, 0x98,
+        ],
+        // Stop.
+        &[
+            0xAA, 0x55, 0x13, 0x87, 0x06, 0x03, 0x01, 0x63, 0x00, 0x00, 0x00, 0xFA,
+        ],
+        // A later poll, and a broadcast.
+        &[0xAA, 0x55, 0x13, 0x07, 0x00, 0xE7],
+        &[0xAA, 0x55, 0x1F, 0x3A, 0x01, 0x01, 0xA6],
+    ];
+
+    /// `CHK-01`, tier `[A]`. Every captured frame closes with the sync bytes
+    /// in the sum, and none closes with them left out.
     #[test]
-    fn checksum_excludes_sync_bytes() {
-        // AA 55 00 02 01 1E DF — the documented read-firmware-type response.
-        let with_sync_excluded = checksum(0x00, 0x02, 0x01, &[0x1E]);
-        assert_eq!(with_sync_excluded, 0xDF);
+    fn captured_frames_close_with_the_sync_bytes() {
+        for frame in CAPTURED {
+            let [_, _, address, control, data_len, rest @ ..] = frame else {
+                panic!("short frame {frame:02X?}");
+            };
+            let Some((chk, data)) = rest.split_last() else {
+                panic!("no checksum in {frame:02X?}");
+            };
+            assert_eq!(usize::from(*data_len), data.len(), "{frame:02X?}");
+            assert_eq!(frame_sum(frame), 0, "{frame:02X?}");
+            assert_eq!(
+                checksum(*address, *control, *data_len, data),
+                *chk,
+                "{frame:02X?}"
+            );
+            assert!(checksum_valid(*address, *control, *data_len, data, *chk));
 
-        // Folding the sync bytes into the covered range gives 0xE0, which is
-        // not what the wire carries. This is the whole proof.
-        let with_sync_included = checksum(SYNC1, SYNC2, 0x00, &[0x02, 0x01, 0x1E]);
-        assert_eq!(with_sync_included, 0xE0);
-        assert_ne!(with_sync_included, 0xDF);
+            // The superseded sync-excluded rule gives one less on every frame,
+            // and the wire never carries that value.
+            assert!(!checksum_valid(
+                *address,
+                *control,
+                *data_len,
+                data,
+                chk.wrapping_sub(1)
+            ));
+        }
+    }
 
-        assert!(checksum_valid(0x00, 0x02, 0x01, &[0x1E], 0xDF));
-        assert!(!checksum_valid(0x00, 0x02, 0x01, &[0x1E], 0xE0));
+    /// The superseded `CHK-02` example. xagon0's `AA 55 00 02 01 1E DF` was
+    /// computed with the sync bytes left out; under the captured rule the same
+    /// fields carry `0xE0`.
+    #[test]
+    fn the_xagon0_response_example_does_not_close() {
+        assert_eq!(checksum(0x00, 0x02, 0x01, &[0x1E]), 0xE0);
+        assert!(!checksum_valid(0x00, 0x02, 0x01, &[0x1E], 0xDF));
+        assert_ne!(frame_sum(&[0xAA, 0x55, 0x00, 0x02, 0x01, 0x1E, 0xDF]), 0);
     }
 
     #[test]
     fn checksum_worked_examples_from_the_documents() {
-        // Read firmware type, valve 0x03. saturn-protocol.md Example 1 prints
-        // 0xA1 on its first TX line and then corrects itself to 0xFB. CHK-04:
-        // the stale value must never appear.
-        assert_eq!(checksum(0x03, 0x02, 0x00, &[]), 0xFB);
+        // saturn-protocol.md's examples, recomputed with the sync bytes
+        // included. Every value the document prints, corrected or not, was
+        // computed with them left out, so each is one less than below. CHK-04.
+
+        // Read firmware type, valve 0x03. Example 1 prints 0xA1, then 0xFB.
+        assert_eq!(checksum(0x03, 0x02, 0x00, &[]), 0xFC);
         assert_ne!(checksum(0x03, 0x02, 0x00, &[]), 0xA1);
+        assert_ne!(checksum(0x03, 0x02, 0x00, &[]), 0xFB);
 
-        // Write outlet states, Prompt 3 outlet 1. Example 2, correct as printed.
-        assert_eq!(checksum(0x03, 0x87, 0x02, &[0x04, 0x00]), 0x70);
+        // Write outlet states, Prompt 3 outlet 1. Example 2 prints 0x70.
+        assert_eq!(checksum(0x03, 0x87, 0x02, &[0x04, 0x00]), 0x71);
 
-        // Address clear broadcast. Example 3 prints 0xAE, then corrects to 0xB3.
-        assert_eq!(checksum(0x0F, 0x3A, 0x01, &[0x03]), 0xB3);
+        // Address clear broadcast. Example 3 prints 0xAE, then 0xB3.
+        assert_eq!(checksum(0x0F, 0x3A, 0x01, &[0x03]), 0xB4);
         assert_ne!(checksum(0x0F, 0x3A, 0x01, &[0x03]), 0xAE);
+        assert_ne!(checksum(0x0F, 0x3A, 0x01, &[0x03]), 0xB3);
 
-        // Derived frames, checksums recomputed in ARITHMETIC-NOTES.md.
-        assert_eq!(checksum(0x0F, 0x3A, 0x01, &[0x01]), 0xB5);
-        assert_eq!(checksum(0x0F, 0x3A, 0x02, &[0x02, 0x03]), 0xB0);
-        assert_eq!(checksum(0x03, 0x01, 0x00, &[]), 0xFC);
-        assert_eq!(checksum(0x03, 0x0B, 0x00, &[]), 0xF2);
-        assert_eq!(checksum(0x03, 0x0F, 0x00, &[]), 0xEE);
-        assert_eq!(checksum(0x00, 0x3A, 0x00, &[]), 0xC6);
+        // Derived frames.
+        assert_eq!(checksum(0x0F, 0x3A, 0x01, &[0x01]), 0xB6);
+        assert_eq!(checksum(0x0F, 0x3A, 0x02, &[0x02, 0x03]), 0xB1);
+        assert_eq!(checksum(0x03, 0x01, 0x00, &[]), 0xFD);
+        assert_eq!(checksum(0x03, 0x0B, 0x00, &[]), 0xF3);
+        assert_eq!(checksum(0x03, 0x0F, 0x00, &[]), 0xEF);
+        assert_eq!(checksum(0x00, 0x3A, 0x00, &[]), 0xC7);
     }
 
     #[test]

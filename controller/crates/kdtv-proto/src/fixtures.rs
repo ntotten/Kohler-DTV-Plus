@@ -1081,44 +1081,44 @@ mod tests {
         assert!(seen >= 4, "expected response fixtures, found {seen}");
     }
 
-    /// `CHK-02`, the proof case, is in the evidence base: `AA 55 00 02 01 1E DF`
-    /// validates only with the sync bytes excluded from the checksum. Including
-    /// them yields `0xE0`.
+    /// xagon0's firmware-type response, the superseded `CHK-02` proof case,
+    /// is carried with the checksum recomputed under `CHK-01`: `0xE0`, where
+    /// the document prints `0xDF`.
     #[test]
-    fn the_checksum_proof_case_is_a_fixture() {
+    fn the_firmware_type_response_carries_the_recomputed_checksum() {
         let f = FixtureSet::embedded()
             .get("saturn.response.firmware_type")
             .unwrap();
-        assert_eq!(f.bytes(), &[0xAA, 0x55, 0x00, 0x02, 0x01, 0x1E, 0xDF]);
-        assert_eq!(saturn::checksum(0x00, 0x02, 0x01, &[0x1E]), 0xDF);
-        assert_eq!(
-            saturn::checksum(0xAA, 0x55, 0x00, &[0x02, 0x01, 0x1E]),
-            0xE0
-        );
+        assert_eq!(f.bytes(), &[0xAA, 0x55, 0x00, 0x02, 0x01, 0x1E, 0xE0]);
+        assert_eq!(saturn::checksum(0x00, 0x02, 0x01, &[0x1E]), 0xE0);
     }
 
-    /// `CHK-04`: the source prints checksums `0xA1` and `0xAE` for two of its
-    /// own examples, and both are stale. The corrected `0xFB` and `0xB3` are
-    /// what the fixtures carry.
+    /// `CHK-04`: no checksum the source prints is carried. Its stale `0xA1` and
+    /// `0xAE`, and the `0xFB` and `0xB3` it corrects them to, were all computed
+    /// with the sync bytes left out; the fixtures carry `0xFC` and `0xB4`.
     #[test]
-    fn the_corrected_checksums_are_what_the_fixtures_record() {
+    fn the_recomputed_checksums_are_what_the_fixtures_record() {
         let set = FixtureSet::embedded();
         let fw = set.get("saturn.read_firmware_type").unwrap();
-        assert_eq!(fw.bytes(), &[0xAA, 0x55, 0x03, 0x02, 0x00, 0xFB]);
-        assert_ne!(fw.bytes().last(), Some(&0xA1));
+        assert_eq!(fw.bytes(), &[0xAA, 0x55, 0x03, 0x02, 0x00, 0xFC]);
+        for printed in [0xA1, 0xFB] {
+            assert_ne!(fw.bytes().last(), Some(&printed));
+        }
 
         let clear = set.get("saturn.address_clear").unwrap();
-        assert_eq!(clear.bytes(), &[0xAA, 0x55, 0x0F, 0x3A, 0x01, 0x03, 0xB3]);
-        assert_ne!(clear.bytes().last(), Some(&0xAE));
+        assert_eq!(clear.bytes(), &[0xAA, 0x55, 0x0F, 0x3A, 0x01, 0x03, 0xB4]);
+        for printed in [0xAE, 0xB3] {
+            assert_ne!(clear.bytes().last(), Some(&printed));
+        }
     }
 
-    /// The one captured outlet-open frame in the sources, and the one place
-    /// where the Prompt 3 bitmap differs from the DTV+ one: outlet 1 is mask
-    /// `0x04`. `OUT-01`.
+    /// The one outlet-open frame in the sources (xagon0 Example 2, checksum
+    /// recomputed under `CHK-01`), and the one place where the Prompt 3 bitmap
+    /// differs from the DTV+ one: outlet 1 is mask `0x04`. `OUT-01`.
     #[test]
     fn the_outlet_write_fixture_is_the_prompt_3_mask() {
         let f = FixtureSet::embedded().get("saturn.set_outlets").unwrap();
-        assert_eq!(f.bytes(), &[0xAA, 0x55, 0x03, 0x87, 0x02, 0x04, 0x00, 0x70]);
+        assert_eq!(f.bytes(), &[0xAA, 0x55, 0x03, 0x87, 0x02, 0x04, 0x00, 0x71]);
         assert_eq!(f.link(), LinkKind::Zone(ZoneId::Zone2));
     }
 

@@ -222,21 +222,22 @@ the unit is used.
 
 ### Protocol parameters
 
-All `[C]` — third-party reverse engineering, unverified against this hardware.
-Confirm each from the Phase 1 capture before the encoder transmits.
+All `[C]` — third-party reverse engineering, unverified against this hardware —
+except where marked `[A]`. Confirm each from the Phase 1 capture before the
+encoder transmits.
 
-| Parameter        | Value                                           | Note                                             |
-| ---------------- | ----------------------------------------------- | ------------------------------------------------ |
-| Line             | 9600 8N1, no flow control                       | RS-485 half-duplex                               |
-| Max frame        | 20 bytes                                        | `AA 55` sync, addr, control, len, data, checksum |
-| Checksum         | 2's complement over addr + control + len + data |                                                  |
-| Valve tick       | 525 ms                                          | Master poll cadence                              |
-| Response timeout | 400 ms                                          | Time to wait for a valve response                |
-| Message timeout  | 320 ms                                          | Maximum time for a complete message to arrive    |
-| Echo timeout     | 20 ms                                           | See the note on echo below                       |
-| Enquiry rate     | 2000 ms                                         | Between address-discovery attempts               |
-| Clear delay      | 2000 ms                                         | After address clear, before re-discovery         |
-| Retries          | 3                                               | Read, write, and address management alike        |
+| Parameter        | Value                                                  | Note                                                                                                           |
+| ---------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| Line             | 9600 8N1, no flow control                              | RS-485 half-duplex                                                                                             |
+| Max frame        | 20 bytes                                               | `AA 55` sync, addr, control, len, data, checksum                                                               |
+| Checksum         | 2's complement over sync + addr + control + len + data | `[A]`, measured 2026-10-24 (`research/diagnostics/2026-10-24-saturn-valve-bus/`): the whole frame sums to zero |
+| Valve tick       | 525 ms                                                 | Master poll cadence                                                                                            |
+| Response timeout | 400 ms                                                 | Time to wait for a valve response                                                                              |
+| Message timeout  | 320 ms                                                 | Maximum time for a complete message to arrive                                                                  |
+| Echo timeout     | 20 ms                                                  | See the note on echo below                                                                                     |
+| Enquiry rate     | 2000 ms                                                | Between address-discovery attempts                                                                             |
+| Clear delay      | 2000 ms                                                | After address clear, before re-discovery                                                                       |
+| Retries          | 3                                                      | Read, write, and address management alike                                                                      |
 
 Response timing is contradicted between sources and is tracked as
 [I5](../../INVESTIGATIONS.md#i5--the-saturn-register-map-is-contradictory).

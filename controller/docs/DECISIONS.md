@@ -27,6 +27,7 @@ evidence, and record why here.
 | [W2](#w2--the-modular-jack-inference-superseded)                   | The modular-jack inference — superseded                                                       | [STEAM-ADAPTER.md § 5](STEAM-ADAPTER.md)  |
 | [W3](#w3--the-independent-temperature-sensor-removed)              | The independent temperature sensor — removed 2026-08-30                                       | Below                                     |
 | [D12](#d12--like-for-like-scope-no-added-equipment-no-steam-setup) | Like-for-like scope: no added equipment, no steam setup — operator decision 2026-08-30        | Below                                     |
+| [W4](#w4--the-sync-excluded-saturn-checksum-superseded)            | The sync-excluded Saturn checksum — superseded 2026-10-24                                     | Below                                     |
 
 D6–D11 are specifications with their evidence attached, so their records live
 in the spec; this index exists so nothing settled has to be rediscovered by
@@ -272,3 +273,22 @@ was complete and tested before the descope and costs nothing to keep —
 
 **Would reopen it.** A steam generator actually being installed reopens the
 steam link, via [STEAM-ADAPTER.md § 12](STEAM-ADAPTER.md). Nothing else does.
+
+## W4 — The sync-excluded Saturn checksum, superseded
+
+Until 2026-10-24 `kdtv-proto` computed the Saturn checksum over `ADDRESS`
+through `DATA` and left `SYNC1` and `SYNC2` out (`CHK-02` as first written).
+The evidence was xagon0's response `AA 55 00 02 01 1E DF`, whose `0xDF` holds
+only without the sync bytes. That frame is not a capture: the source's
+"Annotated Packet Captures" are worked from its own stated formula, so it could
+only ever agree with that formula.
+
+**Superseded by measurement `[A]`.** Every frame captured on Valve 2's bus on
+2026-10-24 — the K-99695's idle poll, the valve's replies, and the frames
+around a start and a stop — closes only with the sync bytes in the sum
+([research/diagnostics/2026-10-24-saturn-valve-bus/](../../research/diagnostics/2026-10-24-saturn-valve-bus/README.md)).
+`0xAA + 0x55` is `0xFF`, so the old rule computed one less than the wire
+carries on every frame, and a valve would have rejected every frame the
+encoder built `[I]`. `CHK-01` is now the sync-inclusive rule, every fixture and
+test vector carries the recomputed checksum, and the printed checksums in
+xagon0's examples are not ported (`CHK-04`).

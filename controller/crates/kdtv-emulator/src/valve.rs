@@ -1003,7 +1003,7 @@ mod tests {
             replies[0]
         );
         // Six bytes: control echoed, no data.
-        assert_eq!(replies[1], "AA 55 00 3A 00 C6");
+        assert_eq!(replies[1], "AA 55 00 3A 00 C7");
 
         assert_eq!(
             link.valve.with(|v| v.address()),
@@ -1171,7 +1171,7 @@ mod tests {
         let e1 = zone1_encoder();
         discover(&mut dtv, &e1);
         open_slot_one(&mut dtv, &e1);
-        assert_eq!(dtv.last_reply(), "AA 55 00 87 00 79", "write ACK");
+        assert_eq!(dtv.last_reply(), "AA 55 00 87 00 7A", "write ACK");
         // Slot 1 on the DTV is wire outlet 0, mask 0x01.
         assert_eq!(dtv.valve.with(|v| v.open_outlets()), 0x01);
 
@@ -1187,7 +1187,7 @@ mod tests {
 
         // And the valve reports it back over the wire, not just in its state.
         prompt.exchange(&encode(&e2, &SaturnOp::ReadOutlets, LinkPhase::Running));
-        assert_eq!(prompt.last_reply(), "AA 55 00 07 02 04 00 F3");
+        assert_eq!(prompt.last_reply(), "AA 55 00 07 02 04 00 F4");
     }
 
     #[test]
@@ -1229,7 +1229,7 @@ mod tests {
             &SaturnOp::SetTemperature(sp),
             LinkPhase::ReadyOff,
         ));
-        assert_eq!(link.last_reply(), "AA 55 00 8B 00 75", "write ACK");
+        assert_eq!(link.last_reply(), "AA 55 00 8B 00 76", "write ACK");
         assert_eq!(link.valve.with(|v| v.setpoint().raw()), 80);
 
         link.exchange(&encode(
@@ -1239,7 +1239,7 @@ mod tests {
         ));
         assert_eq!(
             link.last_reply(),
-            "AA 55 00 0B 02 00 50 A3",
+            "AA 55 00 0B 02 00 50 A4",
             "0x50 is Cx2 80, which is 40.0 C"
         );
     }
@@ -1254,7 +1254,7 @@ mod tests {
         assert!(link.valve.with(|v| v.is_paused()));
         link.exchange(&encode(&enc, &SaturnOp::ReadOutlets, LinkPhase::Paused));
         assert!(
-            link.last_reply().ends_with("02 00 02 F5"),
+            link.last_reply().ends_with("02 00 02 F6"),
             "PAUSE set: {}",
             link.last_reply()
         );
@@ -1287,7 +1287,7 @@ mod tests {
             &SaturnOp::ReadTemperature,
             LinkPhase::ReadyOff,
         ));
-        assert_eq!(link.last_reply(), "AA 55 00 80 01 0E 71");
+        assert_eq!(link.last_reply(), "AA 55 00 80 01 0E 72");
         assert_ne!(link.last_reply(), healthy);
     }
 
@@ -1302,7 +1302,7 @@ mod tests {
         link.valve.with(SaturnValveModel::weld);
         link.exchange(&encode(&enc, &SaturnOp::AllOff, LinkPhase::Faulted));
         // 0x80 carrying 35 = 0x23.
-        assert_eq!(link.last_reply(), "AA 55 00 80 01 23 5C");
+        assert_eq!(link.last_reply(), "AA 55 00 80 01 23 5D");
         assert_eq!(link.valve.with(|v| v.open_outlets()), 0x01, "still open");
 
         // Clearing the reported byte does not un-weld the mechanism.
@@ -1322,7 +1322,7 @@ mod tests {
         discover(&mut link, &enc);
         link.valve.with(|v| v.set_fault_bitmap(0x0140));
         link.exchange(&encode(&enc, &SaturnOp::ReadFaults, LinkPhase::ReadyOff));
-        assert_eq!(link.last_reply(), "AA 55 00 0F 02 01 40 AE");
+        assert_eq!(link.last_reply(), "AA 55 00 0F 02 01 40 AF");
     }
 
     // -- Communication loss ---------------------------------------------------
@@ -1352,7 +1352,7 @@ mod tests {
 
         // And it says so when asked, so the daemon can see it too.
         link.exchange(&encode(&enc, &SaturnOp::ReadOutlets, LinkPhase::Running));
-        assert_eq!(link.last_reply(), "AA 55 00 07 02 00 00 F7");
+        assert_eq!(link.last_reply(), "AA 55 00 07 02 00 00 F8");
     }
 
     /// **The case that matters.** A valve with no communication-loss shutdown
@@ -1379,7 +1379,7 @@ mod tests {
         // land: a service that believed the valve had closed itself would be
         // reading its own hope rather than the bus.
         link.exchange(&encode(&enc, &SaturnOp::ReadOutlets, LinkPhase::Running));
-        assert_eq!(link.last_reply(), "AA 55 00 07 02 01 00 F6");
+        assert_eq!(link.last_reply(), "AA 55 00 07 02 01 00 F7");
     }
 
     // -- The Prompt 3 runtime timer -------------------------------------------
@@ -1547,7 +1547,7 @@ mod tests {
         link.exchange(&noisy);
 
         assert!(
-            link.replies().iter().any(|r| r == "AA 55 00 02 01 06 F7"),
+            link.replies().iter().any(|r| r == "AA 55 00 02 01 06 F8"),
             "{:?}",
             link.replies()
         );
@@ -1561,22 +1561,24 @@ mod tests {
         // 0xF4 FACTORY_RESET. `SaturnOp` has no variant for it, so this frame
         // can only exist here.
         link.exchange(&raw_saturn(0x03, opcode::FACTORY_RESET, &[]));
-        assert_eq!(link.last_reply(), "AA 55 00 FF 00 01");
+        assert_eq!(link.last_reply(), "AA 55 00 FF 00 02");
     }
 
     // -- Raw builders --------------------------------------------------------
 
     #[test]
     fn raw_saturn_reproduces_the_documented_frames() {
-        // saturn-protocol.md Example 2, correct as printed.
+        // saturn-protocol.md Example 2, checksum recomputed under CHK-01 (the
+        // document prints 0x70, without the sync bytes).
         assert_eq!(
             raw_saturn(0x03, 0x87, &[0x04, 0x00]),
-            vec![0xAA, 0x55, 0x03, 0x87, 0x02, 0x04, 0x00, 0x70]
+            vec![0xAA, 0x55, 0x03, 0x87, 0x02, 0x04, 0x00, 0x71]
         );
-        // Example 3, after the document corrects its own checksum from 0xAE.
+        // Example 3, checksum recomputed under CHK-01 (the document prints
+        // 0xAE, then corrects it to 0xB3; both leave the sync bytes out).
         assert_eq!(
             raw_saturn(0x0F, 0x3A, &[0x03]),
-            vec![0xAA, 0x55, 0x0F, 0x3A, 0x01, 0x03, 0xB3]
+            vec![0xAA, 0x55, 0x0F, 0x3A, 0x01, 0x03, 0xB4]
         );
         // The malformed builder is free of all of it.
         assert_eq!(
@@ -1585,7 +1587,7 @@ mod tests {
         );
         assert_ne!(
             raw_saturn_bad_checksum(0x03, 0x87, &[0x04, 0x00]).last(),
-            Some(&0x70)
+            Some(&0x71)
         );
     }
 
@@ -1617,7 +1619,7 @@ mod tests {
             &SaturnOp::ReadFirmwareType,
             LinkPhase::ReadyOff,
         ));
-        assert_eq!(link.last_reply(), "AA 55 00 02 01 42 BB");
+        assert_eq!(link.last_reply(), "AA 55 00 02 01 42 BC");
     }
 
     /// I5. The reply address is configuration, because the sources disagree
