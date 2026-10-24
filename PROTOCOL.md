@@ -101,6 +101,12 @@ equally the "start", "change outlets" and "change temperature" command.
 string** — outlets 1, 3 and 4 are sent as `134`. An empty string means none; the
 controller's own UI calls `stop_shower.cgi` instead of sending an empty set.
 
+> **Measured on the valve bus, 2026-10-24.** An empty `valve1_outlet` is not
+> "none" when `valve_num=2`: the controller also starts valve 1, on its
+> previously selected outlets, alongside valve 2. With `valve_num=1` an empty
+> `valve2_outlet` does leave valve 2 off. See
+> [research/diagnostics/2026-10-24-saturn-valve-bus/](research/diagnostics/2026-10-24-saturn-valve-bus/README.md#a-valve-2-start-also-starts-valve-1-a).
+
 ```
 GET /quick_shower.cgi?valve_num=1
       &valve1_outlet=134&valve1_massage=0&valve1_temp=101
