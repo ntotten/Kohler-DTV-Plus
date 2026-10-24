@@ -3,24 +3,22 @@
   "transport": "SCPI over raw TCP, port 5555",
   "channels": {
     "CHANnel1": {
-      "file": "shower-start.channel1.raw.gz",
+      "file": "shower-start.channel1.raw",
       "waveform_mode": "MAXimum",
       "waveform_format": "BYTE",
       "read": ":WAVeform:DATA? in chunks of 250000 points",
       "preamble": "0,1,8170000,1,8.000000E-7,-6.536000E0,0.000000,3.4133E-02,-73,128",
       "byte_count": 8170000,
-      "sha256": "6d0333f274871f389c2ec6d759c110bff323685a9115d42e6334881123ae4a0c",
-      "compression": "gzip -9; byte_count and sha256 are of the decompressed samples"
+      "sha256": "6d0333f274871f389c2ec6d759c110bff323685a9115d42e6334881123ae4a0c"
     },
     "CHANnel2": {
-      "file": "shower-start.channel2.raw.gz",
+      "file": "shower-start.channel2.raw",
       "waveform_mode": "MAXimum",
       "waveform_format": "BYTE",
       "read": ":WAVeform:DATA? in chunks of 250000 points",
       "preamble": "0,1,8170000,1,8.000000E-7,-6.536000E0,0.000000,3.4133E-02,-73,128",
       "byte_count": 8170000,
-      "sha256": "2e21dd52f57ff5dd6a341fa6a6b5ede309dfe1b6ac22bb77c3e1d19bd96c8b96",
-      "compression": "gzip -9; byte_count and sha256 are of the decompressed samples"
+      "sha256": "2e21dd52f57ff5dd6a341fa6a6b5ede309dfe1b6ac22bb77c3e1d19bd96c8b96"
     }
   },
   "started_utc": "2026-10-24T18:40:07Z",

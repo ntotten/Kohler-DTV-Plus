@@ -269,7 +269,6 @@ capture cannot separate "last selection" from "default".
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `<capture>.channel1.raw` | CH1 samples exactly as `:WAVeform:DATA?` returned them, BYTE format, full memory (`:WAVeform:MODE MAXimum`), read in 250 000-point chunks and concatenated with the block headers removed |
 | `<capture>.channel2.raw` | The same for CH2                                                                                                                                                                 |
-| `….raw.gz`               | The roll-mode records, gzipped; `byte_count` and `sha256` in the metadata are of the decompressed samples                                                                        |
 | `<capture>.metadata.json`| Preamble, scope settings at capture time, timestamps, byte counts, SHA-256                                                                                                       |
 | `<capture>.png`          | The scope screen (`:DISPlay:DATA? PNG`) taken straight after the read                                                                                                            |
 | `<capture>.frames.txt`   | `saturn_decode.py` output: time, checksum rule matched, frame bytes                                                                                                              |
@@ -295,15 +294,12 @@ Times in the triggered captures are relative to the trigger; in the roll records
 stopped. Convert with the preamble (`format,type,points,count,xincrement,xorigin,xreference,yincrement,yorigin,yreference`):
 
 ```python
-import gzip, json, numpy as np
+import json, numpy as np
 
 meta = json.load(open("poll-1.metadata.json"))
 ch = meta["channels"]["CHANnel1"]
 _, _, _, _, xinc, xorig, xref, yinc, yorig, yref = map(float, ch["preamble"].split(","))
-data = open(ch["file"], "rb").read()
-if ch["file"].endswith(".gz"):
-    data = gzip.decompress(data)
-raw = np.frombuffer(data, dtype=np.uint8).astype(float)
+raw = np.fromfile(ch["file"], dtype=np.uint8).astype(float)
 volts = (raw - yorig - yref) * yinc                      # probe ratio already applied
 seconds = (np.arange(raw.size) - xref) * xinc + xorig
 ```

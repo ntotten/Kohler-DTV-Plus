@@ -3,24 +3,22 @@
   "transport": "SCPI over raw TCP, port 5555",
   "channels": {
     "CHANnel1": {
-      "file": "idle-roll.channel1.raw.gz",
+      "file": "idle-roll.channel1.raw",
       "waveform_mode": "MAXimum",
       "waveform_format": "BYTE",
       "read": ":WAVeform:DATA? in chunks of 250000 points",
       "preamble": "0,1,7980000,1,8.000000E-7,-6.384000E0,0.000000,3.4133E-02,-73,128",
       "byte_count": 7980000,
-      "sha256": "172f156cf37b7c587487f5c31f647224abfcbfd3445cf94d1ee443dad1d94528",
-      "compression": "gzip -9; byte_count and sha256 are of the decompressed samples"
+      "sha256": "172f156cf37b7c587487f5c31f647224abfcbfd3445cf94d1ee443dad1d94528"
     },
     "CHANnel2": {
-      "file": "idle-roll.channel2.raw.gz",
+      "file": "idle-roll.channel2.raw",
       "waveform_mode": "MAXimum",
       "waveform_format": "BYTE",
       "read": ":WAVeform:DATA? in chunks of 250000 points",
       "preamble": "0,1,7980000,1,8.000000E-7,-6.384000E0,0.000000,3.4133E-02,-73,128",
       "byte_count": 7980000,
-      "sha256": "f2f782aeac246a4add0b61f5dc24922ffed5e7fe2a78d600fab7139a32666b00",
-      "compression": "gzip -9; byte_count and sha256 are of the decompressed samples"
+      "sha256": "f2f782aeac246a4add0b61f5dc24922ffed5e7fe2a78d600fab7139a32666b00"
     }
   },
   "started_utc": "2026-10-24T18:39:12Z",
