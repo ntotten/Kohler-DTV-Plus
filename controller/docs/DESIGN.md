@@ -6,17 +6,20 @@ This document is the current plan. What happens in what order is
 [BUILD-ORDER.md](BUILD-ORDER.md); options considered and not built are
 [DECISIONS.md](DECISIONS.md), not here.
 
-An open replacement master for the Kohler DTV+. A Raspberry Pi drives the two
-Saturn valve buses over isolated serial links. The K-99695 and wall interface
-become disconnected cold spares.
-Returning to Kohler is a deliberate power-off cable swap, not an automatic
-handoff.
+An open replacement master for the Kohler DTV+. One microcontroller board sits
+in line with both Saturn valve cables and takes the valves over in stages,
+while the K-99695 and its wall interface keep working; a new wall panel
+replaces the K-99693 at cut-over, and the K-99695 and K-99693 become cold
+spares. Returning to Kohler is a deliberate power-off plug move, not an
+automatic handoff.
 
 ### Scope
 
 Goals:
 
 - Control that does not depend on the K-99693 wall interface.
+- A new wall panel that works with the internet down —
+  [DECISIONS.md D16](DECISIONS.md#d16--a-new-wall-panel-on-its-own-board-wired).
 - A documented, inspectable protocol implementation.
 - Instrumentation of the Saturn valve link.
 
@@ -39,59 +42,62 @@ repository.
 
 The valve nameplates have not yet been photographed. The likely models are
 K-682-K (six-port) and K-557-K1 (three-port), but those identities must be
-confirmed before ordering connectors or doing any line-power work.
+confirmed before ordering connectors.
 
 ## Decision
 
-Disconnect both valve data cables from the K-99695 and connect them only to a
-Raspberry Pi through two packaged, isolated USB-to-RS-485 converters—one per
-valve. Never electrically join the original and replacement controllers.
+Put the controller in line with each valve cable: one port faces the K-99695's
+valve jack, the other faces the valve. The RS-485 pair (pins 3 and 4) is split
+at the controller; ground (pin 2) and the valve's +12.7 V (pin 5) pass straight
+through. Operator decision 2026-10-24 —
+[DECISIONS.md D13](DECISIONS.md#d13--in-line-through-the-k-99695-staged-no-bypass).
 
 ```text
-                             wired Ethernet
-                                   |
-                     +-------------v--------------+
-                     | Raspberry Pi 4             |
-                     | API, logs, Homebridge      |
-                     +--+---------+---------------+
-                    USB |     USB |
-              +---------v-+ +-----v-----+
-              | Waveshare | | Waveshare |
-              | 23949     | | 23949     |
-              | isolated  | | isolated  |
-              +-----+-----+ +-----+-----+
-                    |             |
-             RS-485 |      RS-485 |
-              +-----v----+  +-----v----+
-              | 6-port   |  | 3-port   |
-              | valve    |  | valve    |
-              | Saturn   |  | Saturn   |
-              +----------+  +----------+
+                               wired Ethernet: LAN API
+                                         |
+  K-99695            +-------------------v--------------------+        valves
+  valve 1 jack <---->| K1 ── W5500-EVB-Pico2 (RP2350) ── V1    |<----> six-port
+  valve 2 jack <---->| K2 ── Rust firmware on Embassy ── V2    |<----> three-port Prompt
+                     |                     P                   |
+                     +---------------------+-------------------+
+                                           |
+                             in-wall cable to the new wall panel
 
-K-99695 ports:      disconnected, capped, and labeled
-K-99695 controller: powered down after packet capture
+  pins 2 and 5: straight through, K1 to V1 and K2 to V2
 ```
 
-The selected interface is two Waveshare `USB TO RS485/422` converters, SKU
-`23949` — one per valve. Each receives its own packaged isolation barrier, automatic
-direction control, protection circuitry, screw terminals, selectable 120-ohm
-termination, USB cable, and DIN-rail enclosure. Only low-voltage adapter cables
-and enclosure wiring remain custom.
+Each valve moves through three stages, set per valve in the controller's
+configuration:
 
-The alternatives — a dual-controller selector, a dual-channel converter or HAT,
-a bare-metal MCU, an industrial PLC — were each considered against this design
-and rejected. [DECISIONS.md](DECISIONS.md) records every one, with the evidence
-and the condition that would reopen it.
+| Stage        | Valve segment (`V`)                                      | K-99695 segment (`K`)                                                 | Wall interface                                                                   |
+| ------------ | -------------------------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Pass-through | The controller retransmits the K-99695's bytes unchanged | The K-99695 is master; the controller retransmits the valve's replies | K-99693, through the K-99695                                                     |
+| Take-over    | The controller is master, from its own state machine     | The K-99695 is master; the controller answers it for the valve        | K-99693; its commands become API operations under the controller's rails **[I]** |
+| Cut-over     | The controller is master                                 | Unplugged; the K-99695 is powered down                                | The new panel                                                                    |
+
+The selected hardware is one WIZnet W5500-EVB-Pico2 — an RP2350 and a W5500
+Ethernet controller — with one TI THVD1410 transceiver per port: two per valve
+and one for the panel
+([DECISIONS.md D14](DECISIONS.md#d14--rp2350-firmware-in-rust-not-a-linux-computer),
+[D15](DECISIONS.md#d15--one-board-for-both-valves-and-the-panel-plain-transceivers)).
+
+The alternatives — the direct cable swap, a dual-controller selector, a
+bypass relay, USB converters on a Linux computer, an isolated part per link,
+an industrial PLC — were each considered and rejected. [DECISIONS.md](DECISIONS.md)
+records every one, with the evidence and the condition that would reopen it.
 
 The tradeoffs are explicit:
 
-- the Pi and Linux service directly own both Saturn sessions;
-- there is no automatic fallback to the wall interface; and
+- the controller firmware owns every valve segment it has taken over;
+- from pass-through on, the controller is in both valves' signal path, and a
+  dead controller stops both;
+- there is no automatic fallback to the K-99695; and
 - safety depends on measured proof that each valve closes when controller
-  traffic disappears.
+  traffic disappears. For the K-99695's own power loss it does, in about 2 s
+  **[A]**.
 
-If the replacement fails, stop valve power and reconnect the labeled Kohler
-cables manually.
+If the replacement fails, stop valve power and plug the labeled Kohler cables
+back into the K-99695.
 
 ## Safety boundary
 
@@ -109,14 +115,14 @@ by measurement — commissioning must show each valve stops on controller
 communication loss and power loss.
 
 A `WELDED` fault (35) is a mechanically stuck mixing valve that no controller
-can close; the service surfaces it as exactly that, and the remedy is removing
+can close; the controller surfaces it as exactly that, and the remedy is removing
 valve power.
 
 ### Acceptance thresholds
 
-Commissioning must show each valve closes when Saturn traffic stops, the USB
-adapter is unplugged, the controller process is killed or wedged, and Pi power
-is removed.
+Commissioning must show each valve closes when Saturn traffic stops, the
+controller's firmware hangs or resets, its valve-side cable is pulled, and its
+power is removed.
 
 Fail-off latency is measured at the outlet, from the last transmitted frame to
 observed flow stop, on every fault path in the Phase 3 test list:
@@ -132,19 +138,25 @@ valve's mains circuit.
 
 Non-negotiable rules:
 
-1. The K-99695 and replacement controller are never connected to the same valve
-   bus.
+1. Every bus segment has exactly one master. The K-99695 and the controller
+   never both transmit as master on one segment: in pass-through the K-99695
+   masters the `K` segment and the controller the `V` segment; in take-over the
+   controller never forwards the K-99695's frames to the valve. _Revision A
+   read "the K-99695 and replacement controller are never connected to the same
+   valve bus"; superseded 2026-10-24 by D13, which connects them through the
+   pass-through conductors on purpose._
 2. Cable swaps happen only with both valves off and valve power removed.
-3. The permanent valve master is the local Pi service, not Homebridge, a cloud
-   service, or an AI system.
-4. Pi boot, service restart, and watchdog-reset state is `OFF`; no prior
-   water-on state is restored.
-5. Loss of a valid response makes the service attempt `all-off` on the affected
+3. The permanent valve master is the controller's firmware, not the wall
+   panel, Homebridge, a cloud service, or an AI system.
+4. Controller boot, firmware restart, and watchdog-reset state is `OFF`; no
+   prior water-on state is restored. A valve in pass-through resumes
+   forwarding, so what happens next is the K-99695's own behaviour.
+5. Loss of a valid response makes the controller attempt `all-off` on the affected
    zone, close that zone's serial port, and latch that zone unavailable. The
    physical safety backstop is the valve's measured communication-loss shutdown.
    Escalation is scoped: a link fault takes one zone down; only a shared fault —
-   the service process, the watchdog, the USB controller, or a failed
-   configuration check — takes both down.
+   the firmware, the watchdog, or a failed configuration check — takes both
+   down. Losing the network or the wall panel is not a valve fault.
 6. Setpoints are clamped at both ends before transmission:
 
    | Bound   | Value                           | Source                                                                             |
@@ -166,9 +178,13 @@ Non-negotiable rules:
    | Request fails API validation — temperature outside the clamp, unconfigured outlet bit, unknown zone                      | Rejected to the caller. No valve state changes.        |
    | Reported fault, checksum failure on a write, malformed or out-of-range value in a valve response, missed safety response | `all-off`, zone latched unavailable until acknowledged |
 
-10. AI, Homebridge, the Worker, and remote clients cannot send raw valve frames.
+10. AI, Homebridge, the Worker, the wall panel, and remote clients cannot send
+    raw valve frames. In pass-through the controller forwards the K-99695's
+    frames unmodified and originates none.
 11. Existing automated HTTP reads against the K-99695 remain disabled. After
-    cutover, the K-99695 is powered down.
+    cut-over, the K-99695 is powered down.
+12. The controller never takes power from pin 5 and never feeds it; the valve
+    supplies it **[A]**.
 
 ## Hardware
 
@@ -177,20 +193,20 @@ decision, per-subsystem specification, GPIO map, power budget, isolation and
 grounding policy, enclosure and labeling, and bench acceptance tests. Parts,
 prices, and purchase links are in [SHOPPING-LIST.md](SHOPPING-LIST.md).
 
-| Subsystem   | Choice                                                                          |
-| ----------- | ------------------------------------------------------------------------------- |
-| Compute     | Raspberry Pi 4 Model B 2 GB, Rust service, passive cooling, hardware watchdog   |
-| Valve links | 2 × Waveshare `USB TO RS485/422` SKU `23949` — one isolated converter per valve |
-| Timekeeping | DS3231 RTC on I2C. NTP sync state is still logged with every wall-clock stamp   |
-| Enclosure   | IP65 non-metallic, DIN rail, low-voltage only — no mains conductor enters it    |
+| Subsystem   | Choice                                                                                     |
+| ----------- | ------------------------------------------------------------------------------------------ |
+| Compute     | WIZnet W5500-EVB-Pico2: RP2350 and W5500 wired Ethernet, Rust firmware, hardware watchdog  |
+| Valve links | 4 × TI THVD1410, one per segment, 120 Ω at each; pins 2 and 5 straight through             |
+| Panel link  | 1 × TI THVD1410 on the in-wall cable, passive DC from the panel's own adapter              |
+| Timekeeping | Monotonic timer; wall clock from SNTP, sync state logged with every wall-clock stamp       |
+| Enclosure   | Small non-metallic box beside the K-99695, low-voltage only — no mains conductor enters it |
 
-No custom PCB. No mains work inside the enclosure. No relay, contactor, smart
-plug, or cord switch in either valve's mains path.
+No mains work inside the box. No relay, contactor, smart plug, or cord switch
+in either valve's mains path, and no bypass relay around the controller.
 
-**Not orderable from documents.** The valve mating connectors wait for the
-Phase 0 photographs, and any termination or bias component waits for the
-Phase 1 capture — most likely none is needed. Everything else is ordered up
-front; [SHOPPING-LIST.md](SHOPPING-LIST.md).
+**Not orderable from documents.** The valve connectors wait for the Phase 0
+photograph of the plug, and the valve-segment bias values are set in Phase 3.
+Everything else is ordered up front; [SHOPPING-LIST.md](SHOPPING-LIST.md).
 
 Official valve references:
 
@@ -200,25 +216,27 @@ Official valve references:
 
 ## Software design
 
-### Pi controller service
+### Controller firmware
 
-Run one small controller daemon on the Pi, written in Rust. The platform
-decision — Linux on a Pi rather than a bare-metal MCU — is recorded in
-[HARDWARE.md § 2](HARDWARE.md), together with the condition that
-would overturn it. The safety contract matters more than the language.
+Rust firmware on the RP2350, built on Embassy. The platform decision is
+recorded in [HARDWARE.md § 2](HARDWARE.md) and
+[DECISIONS.md D14](DECISIONS.md#d14--rp2350-firmware-in-rust-not-a-linux-computer),
+together with what would overturn it. The safety contract matters more than
+the language.
 
-The two converters appear as separate USB serial interfaces. Bind logical zones
-to stable device paths using each adapter's identity or physical USB path, not
-incidental `/dev/ttyUSB0` enumeration order. Label each adapter after mapping
-it. Refuse to start if both expected interfaces are not present and distinct.
+Ports are fixed by the board's wiring ([HARDWARE.md § 8](HARDWARE.md)), so
+there is no enumeration step: `V1` and `V2` are always the valves, `K1` and
+`K2` always the K-99695's jacks. Every port starts with its driver disabled,
+and a resetting board cannot enable one (HARDWARE.md § 5).
 
-**Set the USB-serial latency timer to 1 ms** (`latency_timer`, and
-`ASYNC_LOW_LATENCY` where the driver offers it), and refuse to start if it does
-not read back. The FTDI default is 16 ms, which adds up to that much delay to
-every transaction and quantizes arrival times too coarsely to measure jitter
-against the deadlines in the table below. `latency_timer` is FTDI-specific; if a
-unit ships with a different bridge, establish that driver's equivalent before
-the unit is used.
+The bus tasks — forwarding, the per-valve state machines, the panel link —
+run at a higher interrupt priority than the network stack, and only they feed
+the watchdog **[I]**. A wedged network task cannot delay a frame, and a wedged
+bus task resets the board.
+
+In pass-through the firmware forwards byte by byte: each byte received on one
+port of a zone is sent on the other as soon as it has arrived, adding about one
+byte time, ~1.04 ms, per hop **[I]**. It never forwards its own echo.
 
 ### Protocol parameters
 
@@ -231,7 +249,7 @@ encoder transmits.
 | Line             | 9600 8N1, no flow control                              | RS-485 half-duplex                                                                                             |
 | Max frame        | 20 bytes                                               | `AA 55` sync, addr, control, len, data, checksum                                                               |
 | Checksum         | 2's complement over sync + addr + control + len + data | `[A]`, measured 2026-10-24 (`research/diagnostics/2026-10-24-saturn-valve-bus/`): the whole frame sums to zero |
-| Valve tick       | 525 ms                                                 | Master poll cadence                                                                                            |
+| Valve tick       | 525 ms                                                 | Master poll cadence; `[A]` as an average, 2026-10-24                                                           |
 | Response timeout | 400 ms                                                 | Time to wait for a valve response                                                                              |
 | Message timeout  | 320 ms                                                 | Maximum time for a complete message to arrive                                                                  |
 | Echo timeout     | 20 ms                                                  | See the note on echo below                                                                                     |
@@ -243,10 +261,12 @@ Response timing is contradicted between sources and is tracked as
 [I5](../../INVESTIGATIONS.md#i5--the-saturn-register-map-is-contradictory).
 
 Echo: the stock master waits 20 ms for its own transmission to return on the
-half-duplex bus. A converter with automatic direction control does not present
-a local echo, so the replacement has no equivalent signal. The decoder and
-emulator must not require one. The passive tap cannot distinguish master from
-valve electrically; direction is inferred from address and content.
+half-duplex bus. Each of the controller's ports keeps its receiver enabled, so
+it hears its own bytes, and the firmware compares them with what it sent
+([HARDWARE.md § 5](HARDWARE.md)). The capture decoder must not require an echo:
+a passive tap cannot distinguish master from valve electrically, and direction
+is inferred from address and content. In pass-through the controller knows
+which port each byte arrived on.
 
 ### Outlet index spaces
 
@@ -272,9 +292,12 @@ test does not exercise the code path — see
 [`model.ts`](../../app/src/api/model.ts) and FIELD-NOTES §2, which records this
 mapping dereferencing a null in a shipped Hubitat driver.
 
-The service owns:
+The firmware owns:
 
-- discovery and one independent Saturn state machine per valve;
+- each valve's stage — pass-through, take-over or cut-over — from
+  configuration, changed only with that valve off;
+- forwarding for every valve in pass-through;
+- discovery and one independent Saturn state machine per valve it masters;
 - exact request/response deadlines and checksum validation;
 - the authoritative desired and actual state;
 - the 20-minute monotonic runtime timer;
@@ -282,18 +305,24 @@ The service owns:
 - valve fault polling and all-off escalation;
 - a monotonically increasing boot ID and command ID, so a restart cannot replay
   `start`;
-- a local authenticated API and read-only event stream.
+- a local authenticated API and read-only event stream;
+- the wall-panel link ([HARDWARE.md § 16](HARDWARE.md));
+- in take-over, answering the K-99695 for the valve.
 
 Safe boot sequence:
 
-1. Open both serial interfaces without restoring or transmitting a start state.
-2. Validate configuration, adapter identity, and physical port mapping.
-3. Discover each valve using only the captured, approved startup sequence.
+1. Bring up all five ports with every driver disabled, restoring and
+   transmitting nothing.
+2. Validate configuration and each valve's stage.
+3. For a valve in pass-through, start forwarding; the K-99695 runs it as it
+   does today, and steps 4–6 do not apply. For a valve the controller masters,
+   discover it using only the captured, approved startup sequence.
 4. Read identity, firmware, outlets, temperature, and faults.
 5. Send the captured all-off command and require acknowledgement.
-6. Enter `READY_OFF` only after both zones are confirmed off.
-7. Accept a start only after a fresh authenticated session and explicit user
-   command.
+6. Enter `READY_OFF` only after every zone the controller masters is
+   confirmed off.
+7. Accept a start only after a fresh authenticated API session or a wall-panel
+   command, and an explicit user command.
 
 If a valve cannot be confirmed off, that zone remains unavailable and the
 operator is told to remove valve power.
@@ -335,32 +364,38 @@ the deployed configuration):
 `stop_all()` stops steam as well as both valve zones. Power clean, deluge and
 spa are denied in the encoder — [HARDWARE.md § 12](HARDWARE.md).
 
-Homebridge and Worker status reads use the service cache. External callers
+The wall panel calls the same operations over its own link, and in take-over
+a K-99695 command decoded off the `K` segment is mapped to one of them; both
+are checked against the same clamps as the API. A K-99695 command that maps to
+none is not sent to the valve, and is logged **[I]**.
+
+Homebridge and Worker status reads use the firmware's cache. External callers
 cannot trigger an extra valve transaction or send a raw Saturn frame. Commands
 to the two valves are independently serialized, with at most one request
 awaiting a response on each bus.
 
-Configure the daemon as a hardened `systemd` service with no water-state
-restoration, restart only into the OFF boot sequence, `WatchdogSec` application
-heartbeats, the Pi hardware watchdog enabled, and bounded persistent logs. The
-watchdog supports recovery and diagnosis; it does not replace the valve's
+A firmware reset boots only into the OFF sequence and restores no water state.
+The watchdog supports recovery and diagnosis; it does not replace the valve's
 measured communication-loss shutdown.
 
 Required logs:
 
-- Pi boot ID, service boot ID, command ID, request source, and requested state;
-- wall-clock timestamps paired with NTP sync state. The Pi 4 has no RTC, so
-  stamps before first sync are wrong. Fit an RTC module or record sync state
-  with each stamp;
+- boot ID, reset reason, command ID, request source (API, wall panel,
+  K-99695), and requested state;
+- monotonic microsecond timestamps, and wall-clock time with its SNTP sync
+  state once synced. The board has no battery-backed clock;
 - local safety clamps and rejection reason;
-- raw RX/TX frame bytes with monotonic and wall-clock timestamps;
+- raw RX/TX frame bytes with monotonic and wall-clock timestamps, and in
+  pass-through the port each byte arrived on;
 - acknowledgement latency, retry count, actual temperature, flow if supported,
   and valve fault flags;
-- serial, watchdog, USB, service-restart, controller-power, and valve-power-loss
-  events;
+- serial, watchdog, reset, stage-change, controller-power, and
+  valve-power-loss events;
 - session start, stop reason, duration, and maximum observed temperature.
 
-No credential, access token, or pairing data belongs in these logs.
+The logs live in RAM and are read over the LAN API; nothing is written to
+flash ([HARDWARE.md § 4](HARDWARE.md)). No credential, access token, or pairing
+data belongs in these logs.
 
 ## Packet capture questions
 
@@ -382,8 +417,11 @@ from receive-only captures, not guesses:
 5. Which traffic refreshes the Prompt runtime timer, and when?
 6. Does K-99695 continuously rewrite desired state or poll actual state?
 7. What fault frames are observable?
-8. Where are termination and idle bias applied?
-9. What are the verified A/B/ground pins and polarity?
+8. Where are termination and idle bias applied? _Termination answered
+   2026-10-24: both ends **[A]**. The valve's own bias is not settled._
+9. ~~What are the verified A/B/ground pins and polarity?~~ _Answered
+   2026-10-24: pin 2 ground, pin 3 negative, pin 4 positive **[A]**
+   ([bus capture](../../research/diagnostics/2026-10-24-saturn-valve-bus/README.md#connector-a))._
 10. What is the register/control-byte map? Questions 1-9 resolve the frames;
     this resolves the numbering. Tracked with question 1 as
     [I5](../../INVESTIGATIONS.md#i5--the-saturn-register-map-is-contradictory).
@@ -393,6 +431,10 @@ from receive-only captures, not guesses:
     after the first discovery.
 12. Is automatic purge enabled? Tracked as
     [I4](../../INVESTIGATIONS.md#i4--is-automatic-purge-on).
+
+In pass-through the controller records both segments from inside the path,
+which serves the questions above without a parallel tap **[I]**. A parallel
+tap, if one is used again, follows the rules below.
 
 Capture one valve at a time with no HTTP polling or other automation:
 
@@ -449,7 +491,12 @@ parallel — is [BUILD-ORDER.md](BUILD-ORDER.md).
 - Revalidate the recovery backup and print the manual recovery instructions.
 - Photograph both valve nameplates, plugs, controller ports, and connectors.
 - Label every cable at both ends before disconnecting anything.
-- Obtain or build two adapter leads so the original cables are not cut.
+- Obtain or build the two `K` leads, so the original cables are not cut.
+- With both valves' power off and their cables out, check continuity between
+  pin 2 of the K-99695's two valve jacks
+  ([HARDWARE.md § 15](HARDWARE.md) item 8).
+- Count the wired contacts on the in-wall panel cable's plug at the controller
+  end (item 13).
 - Record the recovery baseline: both valve calibration codes (`v1_cal_code = 173`,
   zone 2 `160`), configured outlet slots and types, per-zone default and maximum
   temperatures, purge and runtime settings. Discovery is permitted to broadcast
@@ -461,57 +508,65 @@ minutes with power off.
 
 ### Phase 1 — passive capture
 
-- Attach the physically receive-only front end in parallel temporarily.
 - Capture the sequences above on both original buses.
 - Implement a decoder and golden-frame fixtures.
 - Quantify cadence, response deadlines, retry behavior, and bus utilization.
+
+Most of it was done with the scope on 2026-10-24 **[A]**
+([bus capture](../../research/diagnostics/2026-10-24-saturn-valve-bus/README.md)).
+What remains is recorded by the controller itself in Phase 3's pass-through.
 
 Gate: repeated captures decode without checksum errors and produce the same
 state transitions.
 
 ### Phase 2 — offline controller and emulator
 
-- Connect both packaged converters to the Pi without attaching either installed
-  valve.
+- Build the controller on the bench with nothing installed attached. The two
+  revision A USB converters play the K-99695 and the valve
+  ([HARDWARE.md § 13](HARDWARE.md)).
 - Implement the allowlisted protocol and a valve emulator from captures.
 - Test malformed lengths, checksum faults, delay, duplicates, partial frames,
-  missing responses, address conflicts, service failure, Pi reset, and USB
-  loss.
-- Run the Pi, adapters, watchdog, service, and emulator continuously for seven
+  missing responses, address conflicts, firmware hangs, resets, power loss,
+  and network loss, in pass-through and in take-over.
+- Run the controller, the bench rig and the emulator continuously for seven
   days.
 
 Gate: every injected failure ends in `OFF` without an unallowlisted write.
 
-### Phase 3 — one-valve manual pilot
+### Phase 3 — in line: pass-through, then one valve taken over
 
-Prefer a matching donor valve on a bench, which avoids the mixed-state condition
-below entirely.
+**3a, pass-through.** Both valves.
 
-**Mixed-state condition.** Moving one valve to the Pi leaves the K-99695 running
-with a valve missing from one Saturn port. Its behaviour in that state is
-unknown. Known: it detects device detachment within seconds and logs it
-([I2](../../INVESTIGATIONS.md#i2--the-k-99693-interface-was-disconnected)), and
-FIELD-NOTES §4 records that command experimentation can leave the system stuck.
-The K-99693 wall interface shares that controller.
+1. Stop both valves and remove their power.
+2. Unplug each valve cable from the K-99695 and plug it into its `V` port; plug
+   the `K` leads into the K-99695's valve jacks.
+3. Set the valve-segment bias against the factory idle level
+   ([HARDWARE.md § 5](HARDWARE.md)), then restore valve power with both valves
+   in pass-through.
+4. Use the shower as normal through the K-99693. The controller forwards and
+   logs, and originates nothing.
 
-Select one option and record which:
+Measure the delay added per frame, the longest reply delay the K-99695
+tolerates ([HARDWARE.md § 15](HARDWARE.md) item 6), and anything the K-99695
+logs. Gate: a week of normal use with no checksum error and no K-99695 detach
+event the factory bus does not have **[I]**.
 
-| Option                                           | Cost                               | Condition                                                                                                                                         |
-| ------------------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Power the K-99695 down for the pilot (preferred) | No shower available during Phase 3 | Removes the unknown                                                                                                                               |
-| Leave the K-99695 running                        | Zone 2 remains available           | Zone 2 locked out for the duration; controller error log and `values.cgi` monitored for the detach and subsequent behaviour, recorded as a result |
+**3b, take-over.** One valve.
 
-Procedure:
+1. With that valve off, set its stage to take-over.
+2. Commission at 100 °F on one outlet with the operator present and a
+   thermometer on the outlet.
+3. Limit the first active session to two minutes.
 
-1. Stop and remove power from the pilot valve.
-2. Disconnect only that valve's Kohler data cable and attach the custom cable.
-3. Restore valve power. Commission at 100 °F on one outlet with the operator
-   present and a thermometer on the outlet.
-4. Limit the first active session to two minutes.
+The mixed-state condition revision A planned around — the K-99695 running with
+a valve missing, behaviour unknown, the K-99693 sharing that controller — does
+not arise if the K-99695 accepts the controller's answers for the valve (item
+9). If it does not, 3b runs with the K-99695 powered down, revision A's
+preferred option, and that valve returns to pass-through until cut-over.
 
-Test process kill, forced process hang, Pi power loss, USB disconnect, Pi
-watchdog reset, A-wire open, B-wire open, bus short, and manual valve-power
-removal.
+Test firmware hang, controller reset, controller power loss, `V` cable pulled,
+A-wire open, B-wire open, bus short, network loss, K-99695 power loss, and
+manual valve-power removal.
 
 Run the full manual rollback drill from the section below, timed, before leaving
 this phase.
@@ -519,16 +574,15 @@ this phase.
 Gate: every failure stops flow or reaches the valve's measured fail-off path
 within the acceptance threshold above, records a diagnostic reason, and requires
 a deliberate new start. Record stop latency per fault path, maximum physical
-temperature, and the K-99695's behaviour with a missing valve.
+temperature, and the K-99695's behaviour while it is answered for the valve.
 
 ### Phase 4 — second valve and all outlets
 
-- Repeat Phase 3 for the other valve.
+- Repeat Phase 3b for the other valve.
 - Verify every configured outlet independently with a thermometer.
 - Run one zone at a time, then both zones, at 100 °F.
-- Confirm the original K-99695 cables are capped, labeled, and stored at the
-  controller.
-- Power down the K-99695 and wall interface.
+- Keep the K-99695 and K-99693 powered: until Phase 7 they are the wall
+  interface.
 
 Gate: every outlet passes temperature and stop testing, and the manual rollback
 drill succeeds.
@@ -549,15 +603,30 @@ The phase number is kept so later phases and their citations stay stable.
 - Keep automatic shower actuation disabled unless separately and explicitly
   approved.
 
-Gate: the commissioning record is complete.
+Gate: the commissioning record for the in-line stages is complete.
+
+### Phase 7 — cut-over to the new wall panel
+
+- Pass the panel's bench checks P1–P4 ([HARDWARE.md § 16](HARDWARE.md)).
+- With both valves off and their power removed, install the panel on the
+  in-wall cable, unplug the `K` leads, and store them with the K-99695's
+  labels.
+- Power down the K-99695 and the K-99693, and set both valves to cut-over.
+
+Gate: P1–P4 pass in place, and the commissioning record is complete.
 
 ## Manual rollback to Kohler
 
+A valve not yet at cut-over can go back to the K-99695 without touching a
+cable: with it off, set its stage to pass-through, and the K-99695 runs it
+again **[I]**. The full rollback:
+
 1. Send `stop_all` and verify physical flow has stopped.
 2. Remove power from both valve receptacles.
-3. Remove power from the Pi and both USB converters.
-4. Disconnect and cap the two custom valve data leads.
-5. Reconnect each labeled OEM data cable to its original K-99695 valve port.
+3. Remove power from the controller.
+4. Unplug the valve cables from `V1` and `V2`, and the `K` leads from the
+   K-99695.
+5. Plug each labeled OEM valve cable into its original K-99695 valve jack.
 6. Restore K-99695 and wall-interface power.
 7. Restore valve power.
 8. Wait for discovery and confirm both valves appear, on the wall interface and
