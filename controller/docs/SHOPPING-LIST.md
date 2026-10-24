@@ -42,11 +42,21 @@ LCSC), not a marketplace seller.
 - [TI THVD1410 datasheet](https://www.ti.com/lit/gpn/THVD1410)
 - [15 W USB-C power supply, PiShop](https://www.pishop.us/product/raspberry-pi-15w-power-supply-us-white/)
 
+**A Pico already owned works instead of the EVB.** The W5500-EVB-Pico2 is a
+Pico 2 with a W5500 on GPIO16–21 **[V]**, so a Pico 2 with a W5500 Ethernet
+module wired to those six pins is the same board to the firmware **[I]**. Swap
+the EVB line for one W5500 module (WIZnet's WIZ850io, or a generic W5500 board;
+price not checked). An original Pico (RP2040) works the same way with 264 kB of
+SRAM instead of 520 kB **[V]**
+([CNX Software](https://www.cnx-software.com/2023/02/21/raspberry-pi-debug-probe-eases-bare-metal-development/)),
+which tightens [HARDWARE.md § 15](HARDWARE.md) item 10; the bus log buffer is
+the largest user.
+
 ### Optional
 
-| Qty | Item                     | Note                                                                              |
-| --: | ------------------------ | --------------------------------------------------------------------------------- |
-|   1 | Raspberry Pi Debug Probe | SWD flashing and `defmt` logs. Price not checked. USB-C flashing works without it |
+| Qty | Item                     | Note                                                                                                                                                         |
+| --: | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|   1 | Raspberry Pi Debug Probe | SWD flashing and `defmt` logs. Price not checked. A spare Pico running the probe firmware does the same job **[V]**, and USB-C flashing works without either |
 
 ### Already owned
 

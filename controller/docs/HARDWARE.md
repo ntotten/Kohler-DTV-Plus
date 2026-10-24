@@ -107,6 +107,9 @@ No mains conductor enters the controller's box (§9).
 | Debug    | USB-C for flashing (UF2); SWD header for a debug probe and `defmt` logs                        |
 
 Board data: [The Pi Hut](https://thepihut.com/products/wiznet-w5500-evb-pico2).
+A Pico 2 with a W5500 module wired to GPIO16–21 is the same circuit **[I]**,
+and an original Pico (RP2040, 264 kB SRAM) is the same with less memory —
+[SHOPPING-LIST.md](SHOPPING-LIST.md).
 RP2350 data: [Adafruit](https://learn.adafruit.com/adafruit-feather-rp2350/overview).
 
 **Logs.** Frame and session logs live in a RAM ring buffer and are read over
