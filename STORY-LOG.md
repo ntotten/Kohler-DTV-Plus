@@ -22,7 +22,8 @@ and `87`. Same framing, baud rate and checksum on both. 834 frames today, every 
 in the checksum.
 
 Starting valve 2 alone with `quick_shower.cgi` also starts valve 1: the controller sends valve 1 a run
-command and its last outlet selection. Starting valve 1 alone leaves valve 2 off.
+command and an outlet (position 1, both its last selection and possibly its default; which rule is
+unresolved). Starting valve 1 alone leaves valve 2 off.
 
 **Why it matters:** the replacement controller needs both command sets, not one, and anything that
 calls `quick_shower.cgi` for valve 2 is running valve 1 too.

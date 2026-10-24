@@ -173,7 +173,7 @@ timer 0x0579 = 1401, 399 s after the stop, with the temperature down to 0x0120 =
 reads 0x03BD = 957 at 18:54:34, 843 s after the stop, and 27.0 °C. While the water ran, `system_info`
 reported both valves `On` (valve 1 95 °F, valve 2 99 °F) although only valve 2 was given an outlet;
 afterwards both read `Paused` with `ui_shower_on` and `devices_running` false. `[I]` Valve 1 ran too: the
-same call repeated with the probes on valve 1's bus (`valve-1/run-valve-2`) opens valve 1's last outlet.
+same call repeated with the probes on valve 1's bus (`valve-1/run-valve-2`) opens valve 1's outlet position 1.
 
 ## Valve 1
 
@@ -255,11 +255,13 @@ then status   AA 55 01 01 07 03 01 26 01 33 00 00 9A   and   AA 55 01 01 04 00 0
 
 `run-valve-2` repeats the valve 2 run (`quick_shower.cgi?valve_num=2&valve1_outlet=&…&valve2_outlet=1`)
 with the probes on valve 1's bus. The controller sends valve 1 `81` mode 03, then mode 01, then `A4 04`:
-valve 1's last outlet opens, and its status reports running and outlet 3 open until the stop.
+valve 1's outlet position 1 opens, and its status reports running and outlet 3 open until the stop.
 `system_info` reported valve 1 `On` at 94 °F alongside valve 2. The reverse does not happen: in
 `run-valve-1` (`valve_num=1`, `valve2_outlet` empty) valve 2 stayed `Paused`. An empty `valve1_outlet`
-is therefore not "no outlet" when the call is for valve 2; it leaves valve 1's previous selection armed and
-starts it.
+is therefore not "no outlet" when the call is for valve 2. `[?]` Which outlet valve 1 gets: position 1
+was both the outlet of the run just before (`run-valve-1`) and possibly valve 1's default
+(`valve1_def_outlet = 1` in the 2026-08-22 `values.raw`, whose indexing is not established), so this
+capture cannot separate "last selection" from "default".
 
 ## Files
 
