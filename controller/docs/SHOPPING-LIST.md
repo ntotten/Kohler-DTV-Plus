@@ -1,178 +1,109 @@
 # Kohler replacement controller — parts list
 
-Two orders, and the second one is small. The list optimizes for wall-clock
-time: shipping is the slow part, so everything orderable goes in one sitting
-today, and the only items that wait are the ones that physically cannot be
-ordered yet — nobody knows the valve connector part until the plugs are
-photographed. When each order happens is [BUILD-ORDER.md](BUILD-ORDER.md); why
-each part was chosen is [HARDWARE.md](HARDWARE.md).
+Revision B, 2026-10-24: one microcontroller board in line with both valve
+cables. The revision A list — a Raspberry Pi 4, microSD cards, an RTC and USB
+converters — is superseded,
+[DECISIONS.md W5](DECISIONS.md#w5--revision-a-build-superseded). When each
+order happens is [BUILD-ORDER.md](BUILD-ORDER.md); why each part was chosen is
+[HARDWARE.md](HARDWARE.md).
 
-Prices and stock checked **2026-08-29** except where marked as estimates. Use
-manufacturer-direct stores and approved or authorized resellers; avoid
-marketplace inventory for the controller, storage, and valve interface.
+Two orders now and a third later. Everything orderable goes in now. The valve
+connectors wait for a photograph of the plug, and the wall panel's parts wait
+for the panel's design.
 
----
-
-## Order now — one sitting
-
-### Cart 1: PiShop US
-
-| Qty | Item                                     | SKU      |   Unit |  Total |
-| --: | ---------------------------------------- | -------- | -----: | -----: |
-|   1 | Raspberry Pi 4 Model B, 2 GB             | `SC0193` | $55.00 | $55.00 |
-|   1 | Official Raspberry Pi 15 W USB-C PSU, US | `1660`   |  $8.80 |  $8.80 |
-|   1 | PiShop Premium Metal Case for Pi 4       | `9013`   | $16.95 | $16.95 |
-
-The metal case is a passive heat spreader — no fan, per
-[HARDWARE.md § 4](HARDWARE.md). It mounts to the enclosure backplate on
-standoffs with the GPIO header accessible.
-
-- [Raspberry Pi 4 Model B 2GB](https://www.pishop.us/product/raspberry-pi-4-model-b-2gb/)
-- [15 W USB-C power supply](https://www.pishop.us/product/raspberry-pi-15w-power-supply-us-white/)
-- [Premium metal case](https://www.pishop.us/product/pishop-premium-metal-case-for-raspberry-pi-4/)
-
-### Cart 2: B&H Photo
-
-| Qty | Item                                 | Manufacturer number  |   Unit |  Total |
-| --: | ------------------------------------ | -------------------- | -----: | -----: |
-|   2 | SanDisk 64 GB High Endurance microSD | `SDSQQNR-064G-GN6IA` | $26.99 | $53.98 |
-
-One installed, one imaged recovery spare held offline. The exact manufacturer
-number matters — the High Endurance line is specified for continuous write.
-
-[B&H, authorized dealer](https://www.bhphotovideo.com/c/product/1987067-REG/sandisk_sdsqqnr_064g_gn6ia_64gb_high_endurance_microsdhc.html/overview)
-
-### Cart 3: Waveshare direct
-
-The exact converter was not found at DigiKey, Mouser, or PiShop US. Buy from the
-manufacturer rather than a marketplace seller.
-
-| Qty | Item                                  | SKU     | Unit | Total |
-| --: | ------------------------------------- | ------- | ---: | ----: |
-|   2 | `USB TO RS485/422` isolated converter | `23949` | ~$18 |  ~$36 |
-
-One per valve, never shared. The $17.09 unit price on the page is the
-three-unit break; two units land slightly higher. FT232R family + SP485EEN,
-galvanically isolated, 15 kV ESD, 600 W surge, jumper-selectable 120 Ω
-termination, `PE`/`TA`/`TB`/`RA`/`RB` screw terminals, 35 mm DIN case. A
-USB-A-to-USB-B cable is included with each unit — **order no separate USB
-cable**.
-
-Every multi-channel alternative is rejected — one isolation barrier shared
-between the zones — see [DECISIONS.md D3](DECISIONS.md).
-
-On arrival: confirm both units report **distinct** USB serial numbers, and
-record whether the fitted bridge is `FT232RL` or `FT232RNL` — Waveshare's own
-page names both.
-
-[Waveshare direct](https://www.waveshare.com/usb-to-rs485-422.htm) ·
-[wiki](https://www.waveshare.com/wiki/USB_TO_RS485/422)
-
-### Cart 4: Adafruit direct
-
-| Qty | Item                                          | PID    |   Unit |  Total |
-| --: | --------------------------------------------- | ------ | -----: | -----: |
-|   1 | DS3231 Precision RTC — STEMMA QT              | `5188` | $13.95 | $13.95 |
-|   1 | STEMMA QT 4-pin to premium male headers cable | —      |  $0.95 |  $0.95 |
-|   1 | Female-to-female jumper wire bundle           | —      |    ~$2 |    ~$2 |
-
-**Also required, any source:** one **CR1220** coin cell — the DS3231 board does
-not include one, and without it the RTC does not survive a power removal.
-
-No soldering: the RTC connects with the STEMMA QT-to-headers cable.
-
-[DS3231 Precision RTC — STEMMA QT, PID 5188](https://www.adafruit.com/product/5188)
-
-### Cart 5: build hardware, any electrical supplier
-
-Commodity parts, sized generously instead of waiting to measure. Worst case a
-guess is wrong and ~$50 of it is re-bought; that beats a second
-order-and-shipping cycle.
-
-| Item                                    | Specification                                                      | Rough |
-| --------------------------------------- | ------------------------------------------------------------------ | ----: |
-| Enclosure                               | IP65 / NEMA 4X, non-metallic, ≥ 300 × 200 × 150 mm, mounting plate |  ~$80 |
-| DIN rail                                | 35 × 7.5 mm, ≥ 200 mm usable                                       |  ~$10 |
-| Cable gland assortment                  | Covers PSU, Ethernet, 2 × valve cable, plus spares                 |  ~$20 |
-| DIN terminal blocks, end stops, markers | Field-side A/B/PE per zone                                         |  ~$30 |
-| Ferrule kit and crimp tool              | Assorted sizes                                                     |  ~$40 |
-| Pi DIN carrier or standoff set          | GPIO header must stay accessible                                   |  ~$15 |
-| A/B test posts, 2 pairs                 | Insulated, labeled, meterable without unlanding a conductor        |  ~$15 |
-| Shielded twisted-pair cable, one spool  | For the adapter leads; cut to length after measuring the runs      |  ~$25 |
-
-### Capture equipment — pick the method first
-
-Needed for Phase 1. Do not connect a bidirectional converter in parallel with
-the operating K-99695: hardware automatic direction control is not physically
-receive-only.
-
-Requirements:
-
-- A professional isolated analyzer with a hardware listen-only mode, or a
-  temporary isolated receiver whose driver enable is physically strapped
-  inactive.
-- **Hardware timestamping.** A USB-serial front end quantizes arrival times at
-  its latency-timer interval — 16 ms by default — which does not resolve jitter
-  on a 525 ms tick or a 320 ms deadline. Use a logic analyzer on the
-  differential pair, or an analyzer with a hardware listen-only mode.
-
-Wiring the tap, whatever front end is chosen:
-
-- **Strap `RE` as well as `DE`.** Tying the driver enable inactive stops the
-  transmitter; tying the receiver enable asserted is what makes the part a
-  listener rather than a device that can be commanded into driving.
-- **Add no termination at the tap.** The bus is already terminated by the
-  controller and the valve.
-- **Add no fail-safe bias at the tap.** The existing bias network sets the idle
-  level; a parallel one shifts it.
-- **Keep the stub to inches, not feet.** A long spur off a terminated pair is an
-  unterminated reflection path.
-
-On price: a commodity 8-channel 24 MHz USB analyzer — the FX2 class,
-`sigrok`/PulseView supported,
-[SparkFun `TOL-18627`](https://www.sparkfun.com/usb-logic-analyzer-24mhz-8-channel.html),
-$26.95 — samples fast enough for 9600 baud a thousand times over and satisfies
-the timestamping requirement, but **not** the isolation requirement. It is a
-candidate only behind an isolated front end, or on a bench rig where our own
-emulator drives both ends. A professional isolated analyzer is roughly 20×
-this. Capture equipment is not part of the permanent controller.
-
-### Tools — only if not already owned
-
-| Item                                      | Note                                                                          |
-| ----------------------------------------- | ----------------------------------------------------------------------------- |
-| Thermometer                               | Any accurate one; used to check delivered water at every outlet in Phases 3–4 |
-| True-RMS multimeter                       | Continuity and bus checks                                                     |
-| Bench DC supply, adjustable current limit | General bench work                                                            |
-
-Borrow or rent an oscilloscope and isolated differential probe if one is ever
-needed; do not buy a cheap marketplace probe.
+Prices are marked with the date they were checked; "not checked" means
+exactly that. Buy the transceivers from a distributor (TI, DigiKey, Mouser,
+LCSC), not a marketplace seller.
 
 ---
 
-## Order after the Phase 0 photographs
+## Order now
 
-The one follow-up order — the parts that cannot be known from documents:
+### The controller
 
-| Item                                 | Closed by                                                       |
-| ------------------------------------ | --------------------------------------------------------------- |
-| Valve mating connectors or pigtails  | Photograph both ends; verify A/B/ground continuity unpowered    |
-| RS-485 termination / bias components | Meter the unpowered bus; Phase 1 capture — most likely **none** |
+| Qty | Item                                        | Part / SKU      | Price                                  | Note                                                                                                        |
+| --: | ------------------------------------------- | --------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+|   2 | WIZnet W5500-EVB-Pico2                      | Pi Hut `106079` | £11.20, The Pi Hut, 2026-10-24 **[V]** | One installed, one spare. The **Pico2** (RP2350) board, not the RP2040 W5500-EVB-Pico. US price not checked |
+|   6 | TI THVD1410 RS-485 transceiver, SOIC-8      | `THVD1410DR`    | Not checked                            | Five ports and a spare. **Not the THVD1406** — §5                                                           |
+|   6 | SOIC-8 to DIP-8 adapter board               | —               | Not checked                            | For the protoboard                                                                                          |
+|   6 | 120 Ω resistor                              | —               | Not checked                            | Termination, one per port                                                                                   |
+|   6 | 4.7 kΩ resistor                             | —               | Not checked                            | Pull-down on each transceiver's `DE`; anything up to 8.2 kΩ — §5                                            |
+|   6 | 100 nF ceramic capacitor                    | —               | Not checked                            | Decoupling, one per transceiver                                                                             |
+|   1 | Resistor assortment                         | —               | Not checked                            | Valve-segment bias, values chosen in Phase 3 — §5                                                           |
+|   1 | Protoboard, two 20-pin female header strips | —               | Not checked                            | The board plugs into the headers rather than being soldered in                                              |
+|   1 | RJ45 jack, board mount                      | —               | Not checked                            | Panel port                                                                                                  |
+|   1 | DC jack, 2.1 mm                             | —               | Not checked                            | Panel adapter input, wired only to the panel jack — §16                                                     |
+|   1 | Header pins for test points                 | —               | Not checked                            | Pins 2, 3, 4 of each of the four valve segments — §10                                                       |
+|   1 | Official Raspberry Pi 15 W USB-C supply, US | PiShop `1660`   | $8.80, PiShop, 2026-08-29              | Any isolated 5 V USB-C supply of 1 A or more works                                                          |
+|   1 | Small non-metallic box                      | —               | Not checked                            | Dry location beside the K-99695 — §10                                                                       |
+|   1 | Ethernet patch cable                        | —               | Not checked                            | To the house network                                                                                        |
 
-**Never cut the original Kohler cables.** They are the rollback path. Build
-adapter leads instead.
+- [WIZnet W5500-EVB-Pico2, The Pi Hut](https://thepihut.com/products/wiznet-w5500-evb-pico2)
+- [TI THVD1410 datasheet](https://www.ti.com/lit/gpn/THVD1410)
+- [15 W USB-C power supply, PiShop](https://www.pishop.us/product/raspberry-pi-15w-power-supply-us-white/)
+
+### Optional
+
+| Qty | Item                     | Note                                                                              |
+| --: | ------------------------ | --------------------------------------------------------------------------------- |
+|   1 | Raspberry Pi Debug Probe | SWD flashing and `defmt` logs. Price not checked. USB-C flashing works without it |
+
+### Already owned
+
+| Item                                          | Use                                                     |
+| --------------------------------------------- | ------------------------------------------------------- |
+| 2 × Waveshare `USB TO RS485/422`, SKU `23949` | The bench rig: plays the K-99695 and the valve — §13    |
+| Rigol DHO804 oscilloscope                     | Bench checks 1 and 7; the valve-segment bias in Phase 3 |
+| Logic analyzer                                | Timing on the bench                                     |
+| Multimeter                                    | Continuity, termination, the K-99695 ground check       |
+
+---
+
+## Order after the Phase 0 photograph
+
+The parts that cannot be known from documents
+([HARDWARE.md § 11](HARDWARE.md)):
+
+| Item                                                  | Qty               | Closed by                                                                                                   |
+| ----------------------------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------- |
+| Jacks matching the valve cable's six-position plug    | 2, plus a spare   | A photograph of the plug: housing and part number                                                           |
+| Leads from `K1` and `K2` to the K-99695's valve jacks | 2                 | The same photograph, and the length at the controller                                                       |
+| An isolated transceiver with its own isolated supply  | 2, only if needed | The K-99695 ground check, [HARDWARE.md § 15](HARDWARE.md) item 8: only if its two jacks' pin 2 are separate |
+
+**Never cut the original Kohler cables.** They are the rollback path.
+
+---
+
+## Later — the wall panel
+
+Chosen with the panel's design ([HARDWARE.md § 15](HARDWARE.md) item 11): its
+board and display, its own THVD1410 and 120 Ω, and its DC adapter, whose
+voltage the panel hardware sets ([HARDWARE.md § 16](HARDWARE.md)).
+
+---
+
+## Tools — only if not already owned
+
+| Item        | Note                                                                          |
+| ----------- | ----------------------------------------------------------------------------- |
+| Thermometer | Any accurate one; used to check delivered water at every outlet in Phases 3–4 |
+
+Any further parallel capture on a live factory bus follows the tap rules in
+[DESIGN.md § Packet capture questions](DESIGN.md): a physically receive-only
+front end, no termination, no bias, a short stub.
 
 ---
 
 ## Do not buy
 
-| Excluded                                              | Reason                                                                                                               |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Unipi Patron or another ~$500 PLC                     | Poor value for a two-link system                                                                                     |
-| Any multi-channel RS-485 converter or HAT             | One isolation barrier shared between zones — [DECISIONS.md D3](DECISIONS.md)                                         |
-| Generic `MAX485`, `MAX3485`, TTL-to-RS485 modules     | Mostly unisolated; some assert the transmitter during boot                                                           |
-| Bidirectional USB-RS-485 adapters for passive capture | Automatic direction control is not physically receive-only                                                           |
-| Hobby relays, smart plugs, inline cord switches       | Never in either valve's mains path                                                                                   |
-| A UPS for the Pi                                      | Power loss must reach the valves; see [HARDWARE.md § 4](HARDWARE.md)                                                 |
-| Additional protection components                      | The packaged converter already includes isolation and transient protection; add nothing without an electrical review |
-| A PoE HAT                                             | Adds a second power path and a mains-adjacent module inside the enclosure                                            |
+| Excluded                                                        | Reason                                                                                                |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| A Raspberry Pi, microSD cards, an RTC, more USB converters      | Revision A parts — [DECISIONS.md W5](DECISIONS.md#w5--revision-a-build-superseded)                    |
+| Auto-direction transceivers, including the THVD1406             | They drive a mark for microseconds and leave it to the bias — [DECISIONS.md D15](DECISIONS.md)        |
+| Generic `MAX485` / TTL-to-RS485 modules                         | No controlled driver enable; some assert the transmitter during boot                                  |
+| An ESP32 board                                                  | [DECISIONS.md D14](DECISIONS.md)                                                                      |
+| A PoE injector, splitter or HAT                                 | The panel takes passive DC — [DECISIONS.md D16](DECISIONS.md)                                         |
+| Hobby relays, smart plugs, inline cord switches, a bypass relay | Never in a valve's mains path, and no bypass around the controller — [DECISIONS.md D13](DECISIONS.md) |
+| A UPS                                                           | Power loss must reach the valves — [HARDWARE.md § 4](HARDWARE.md)                                     |
+| Unipi Patron or another ~$500 PLC                               | Poor value for a two-link system                                                                      |
+| Bidirectional USB-RS-485 adapters for passive capture           | Automatic direction control is not physically receive-only                                            |
