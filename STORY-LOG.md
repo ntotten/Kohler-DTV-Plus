@@ -10,6 +10,26 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ---
 
+## 2026-10-24
+
+### 14:31 — The factory valve bus is on the scope
+
+The Rigol DHO804 is on a valve connector with the system idle: CH1 on pin 4, CH2 on pin 3, grounds on
+pin 2. The connector has six positions and four wires — ground on 2, the RS-485 pair on 3 and 4, +12.7 V
+on 5. Pin 4 is the positive conductor. The controller polls the valve every ~490 ms with
+`AA 55 00 07 00 FA`, and the valve answers about 10 ms later with a 17-byte frame, at 9600 baud 8N1. The pair
+is loaded at both ends: 55.6 Ω across it with the controller connected, 141.2 Ω at the valve alone, the
+same on both valves.
+
+Every frame's checksum includes the two sync bytes. `kdtv-proto` CHK-01 leaves them out, following the
+xagon0 example, so the replacement controller as written computes checksums one lower than the factory
+bus carries.
+
+**Why it matters:** the first look at the factory bus settles the connector pinout, the polarity and the
+termination the adapter leads were waiting on, and finds the checksum error before the replacement
+controller ever transmits. Data and method:
+[research/diagnostics/2026-10-24-saturn-valve-bus/](research/diagnostics/2026-10-24-saturn-valve-bus/).
+
 ## 2026-08-30
 
 ### 17:05 — The scope is pinned: a like-for-like swap, and steam is out
