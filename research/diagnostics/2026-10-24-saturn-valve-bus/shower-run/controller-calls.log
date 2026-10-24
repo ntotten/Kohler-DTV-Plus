@@ -1,0 +1,12 @@
+2026-10-24T14:40:02-0400 GET /quick_shower.cgi?valve_num=2&valve1_outlet=&valve1_massage=0&valve1_temp=96&valve2_outlet=1&valve2_massage=0&valve2_temp=96
+:)
+
+2026-10-24T14:40:22-0400 GET /system_info.cgi
+{"valve1_Currentstatus":"On","valve1Temp":"95","degree_symbol":"&degF","valve1Setpoint":"96","valve1outlet1":true,"valve1outlet2":false,"valve1outlet3":true,"valve1outlet4":true,"valve1outlet5":true,"valve1outlet6":false,"valve1_massage":0,"valve2_Currentstatus":"On","valve2Temp":"99","valve2Setpoint":"96","valve2outlet1":true,"valve2outlet2":false,"valve2outlet3":false,"valve2outlet4":false,"valve2outlet5":false,"valve2outlet6":false,"valve2_massage":0,"steamStatus":"","steamTempStatus":"110","steamTimeStatus":"-9:00","steamTimeMinutes":"-9","LZ1Status":"Off","LZ2Status":"Off","LZ3Status":"Off","RainpanelStatus":"Off","light_attach":"0","light_remove":"0","light_turnoff1":"0","light_turnoff2":"0","light_turnoff3":"0","spa_on":false,"ui_shower_on":true,"ui_steam_running":false,"devices_running":true}
+
+2026-10-24T14:40:29-0400 GET /stop_shower.cgi
+:)
+
+2026-10-24T14:40:50-0400 GET /system_info.cgi
+{"valve1_Currentstatus":"Paused","degree_symbol":"&degF","valve1Setpoint":"96","valve1outlet1":true,"valve1outlet2":false,"valve1outlet3":true,"valve1outlet4":true,"valve1outlet5":true,"valve1outlet6":false,"valve1_massage":0,"valve2_Currentstatus":"Paused","valve2Setpoint":"96","valve2outlet1":true,"valve2outlet2":false,"valve2outlet3":false,"valve2outlet4":false,"valve2outlet5":false,"valve2outlet6":false,"valve2_massage":0,"steamStatus":"","steamTempStatus":"110","steamTimeStatus":"-9:00","steamTimeMinutes":"-9","LZ1Status":"Off","LZ2Status":"Off","LZ3Status":"Off","RainpanelStatus":"Off","light_attach":"0","light_remove":"0","light_turnoff1":"0","light_turnoff2":"0","light_turnoff3":"0","spa_on":false,"ui_shower_on":false,"ui_steam_running":false,"devices_running":false}
+

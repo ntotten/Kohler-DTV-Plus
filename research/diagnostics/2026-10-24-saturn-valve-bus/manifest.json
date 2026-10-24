@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "instrument": "Rigol DHO804, firmware 00.01.05, SCPI over raw TCP port 5555",
-  "purpose": "Differential capture of the factory K-99695 Saturn valve bus at the valve connector, system idle, plus the connector's meter readings. See README.md.",
-  "controller_contact": "None. No CGI calls were made to the controller during the session; the controller was the bus master and the scope only listened.",
+  "purpose": "Differential capture of the factory K-99695 Saturn valve bus at the valve connector, idle and through one outlet start and stop, plus the connector's meter readings. See README.md.",
+  "controller_contact": "No HTTP requests before 18:38 UTC. Then six, serialised and at least 5 s apart: values.cgi 18:38:31, quick_shower.cgi 18:40:02, system_info.cgi 18:40:22, stop_shower.cgi 18:40:29, system_info.cgi 18:40:50 and 18:42:26. The scope only listened to the bus.",
   "probing": "CH1 on pin 4, CH2 on pin 3, both 10x, grounds on pin 2",
   "files": [
     {
       "file": "README.md",
-      "byte_count": 11678,
-      "sha256": "ef67bbd293ae8188f5acb61c1ca055bb21abfb251aaa46870703805d1e9d443f"
+      "byte_count": 16727,
+      "sha256": "e6680a920b2071818258412eee3d3096d96a58ae56afd1e1d4cb42d39deb48d3"
     },
     {
       "file": "after-poll-0.3s.channel1.raw",
@@ -19,6 +19,11 @@
       "file": "after-poll-0.3s.channel2.raw",
       "byte_count": 1000000,
       "sha256": "ac993edf2664dfb8eac4ec66073edb598fd23479c09421095ddb24948c1e6efe"
+    },
+    {
+      "file": "after-poll-0.3s.frames.txt",
+      "byte_count": 36,
+      "sha256": "866d537a1d8b78fc562aa7ac7424b2045662b393a3ce8f927dfbe53d00e6eb9e"
     },
     {
       "file": "after-poll-0.3s.metadata.json",
@@ -39,6 +44,11 @@
       "file": "after-poll-0.5s.channel2.raw",
       "byte_count": 1000000,
       "sha256": "496d367065cacd6e9fe7e92ff3009cee76305cf1894941d3e8914085df950482"
+    },
+    {
+      "file": "after-poll-0.5s.frames.txt",
+      "byte_count": 105,
+      "sha256": "e200bd3c34b57ea3e2ba643b1c6d236ea0c42fd6105c3d889a2f152b967c54f0"
     },
     {
       "file": "after-poll-0.5s.metadata.json",
@@ -71,6 +81,26 @@
       "sha256": "126bd83703bd65efd6bb87bf6c3aab767738c11c0cfa22b8c5c100b65763fda3"
     },
     {
+      "file": "after-run-poll.channel1.raw",
+      "byte_count": 1000000,
+      "sha256": "29adc67a77c72ff6f65f04c7ffbdc0760f8cc500ede714d83075e0e6117230a0"
+    },
+    {
+      "file": "after-run-poll.channel2.raw",
+      "byte_count": 1000000,
+      "sha256": "bbbea9d471eebbb5d962ec030ab2ca1b5f5878c80fe87b5fa4f41a7de094de01"
+    },
+    {
+      "file": "after-run-poll.frames.txt",
+      "byte_count": 105,
+      "sha256": "abed417ca678d16004815bb33a32992770338e725609e9954cef0d4781524e38"
+    },
+    {
+      "file": "after-run-poll.metadata.json",
+      "byte_count": 2138,
+      "sha256": "bca56c35b1fe68ecdeb5cc6e67c0f351902f55894bb86320f714445164cb8efb"
+    },
+    {
       "file": "edge-detail.channel1.raw",
       "byte_count": 1000000,
       "sha256": "ef6ae0edcf6410bb622bb8fabd6d7c052c087728a653ad61ee9f62b9fbc7482a"
@@ -91,6 +121,26 @@
       "sha256": "17e7fcdb21a6f77e99be7ba49218fd28783ad453b08d00eaa4f08e05a1b169b2"
     },
     {
+      "file": "idle-roll.channel1.raw.gz",
+      "byte_count": 1276442,
+      "sha256": "36c6c068284cdf666bd9df55c360767d7d6cbbea86eb8d313a66d92571cf9829"
+    },
+    {
+      "file": "idle-roll.channel2.raw.gz",
+      "byte_count": 1172881,
+      "sha256": "24fc99b2585cf29c8747cfc63e174c1757ce0e0ba1c75e8af5b2d1da5417be06"
+    },
+    {
+      "file": "idle-roll.frames.txt",
+      "byte_count": 1260,
+      "sha256": "f2bb248ff3e6dd00d4bb75dafcc1cea28784fcd323ddc72b17336fc61f6314d5"
+    },
+    {
+      "file": "idle-roll.metadata.json",
+      "byte_count": 2301,
+      "sha256": "6ac91f7dea0712897304c30171bf6aa8ad9d74ef424445017b2466533afe2bf1"
+    },
+    {
       "file": "poll-1.channel1.raw",
       "byte_count": 1000000,
       "sha256": "097508186ed55e6fd636ab7e6c962f52c6717261231324e215eee357ff19c945"
@@ -99,6 +149,11 @@
       "file": "poll-1.channel2.raw",
       "byte_count": 1000000,
       "sha256": "d488ef7663aaf2ec16f39fe2d17a6267d9419fd06b44701437f5b54936f4a4c9"
+    },
+    {
+      "file": "poll-1.frames.txt",
+      "byte_count": 105,
+      "sha256": "251f56e03ec849a46de3e27eab6da8d9db5dc47f43a47793cbeb37277d542c63"
     },
     {
       "file": "poll-1.metadata.json",
@@ -121,6 +176,11 @@
       "sha256": "42b8784e3b77e74345e166ede23e153b637a3d8112f82e3898fc0d7d47d50458"
     },
     {
+      "file": "poll-2.frames.txt",
+      "byte_count": 105,
+      "sha256": "7237d9f4469461f3d5b8cacd2294e7cd7c443b4fbea9deba3ce77f3c87a1287e"
+    },
+    {
       "file": "poll-2.metadata.json",
       "byte_count": 2114,
       "sha256": "c68ab88389233b1fc449186af5541cdde0964a2882ebe71ea77b7ef24aafb772"
@@ -141,6 +201,11 @@
       "sha256": "d66c4eeba9a8a1cce4e88b3b0b615ebc85fd1eb10e4d57adf8e6ffc3062a897c"
     },
     {
+      "file": "poll-3.frames.txt",
+      "byte_count": 105,
+      "sha256": "55585df2bf97bf31d98d56ffad6a3bbe1370dec186f3b124161d1a3720a634c4"
+    },
+    {
       "file": "poll-3.metadata.json",
       "byte_count": 2114,
       "sha256": "62de232bdf4d932ee6c58ece2bdd257e70004a7a24e5c334743300a1e936f1aa"
@@ -159,6 +224,11 @@
       "file": "poll-4.channel2.raw",
       "byte_count": 1000000,
       "sha256": "687c92cd3138a17431029fe6a91c00a7103a85138ab20982cd84858ad6cef028"
+    },
+    {
+      "file": "poll-4.frames.txt",
+      "byte_count": 105,
+      "sha256": "9515de8b654e8be7efd522490458b4e95d296267fd53e41a8c178c36fbd45e0a"
     },
     {
       "file": "poll-4.metadata.json",
@@ -222,8 +292,53 @@
     },
     {
       "file": "session/scope-commands.csv",
-      "byte_count": 23070,
-      "sha256": "7dd10406e237cf9a267c11bbabbf806ec05ceed5bac0d87ee2945133ae05d357"
+      "byte_count": 24353,
+      "sha256": "ff5986f12f0191d1c65b884a50edf6df014e08584197b1f14ad0889f70385127"
+    },
+    {
+      "file": "shower-run/controller-calls.log",
+      "byte_count": 1900,
+      "sha256": "e8d91c38e1444d1f6cbaa3fb9155324f84986c2471a7191120374226c702c3ae"
+    },
+    {
+      "file": "shower-run/shower-start.channel1.raw.gz",
+      "byte_count": 1380942,
+      "sha256": "5635979119d5edfd8a83700950878e75e1ace8f10eb099c3d83fff3d663d4b82"
+    },
+    {
+      "file": "shower-run/shower-start.channel2.raw.gz",
+      "byte_count": 1270379,
+      "sha256": "b0e93b1e4c14c6a22194488ea11f36aed6614f12893dca49851588b51f71e08d"
+    },
+    {
+      "file": "shower-run/shower-start.frames.txt",
+      "byte_count": 1572,
+      "sha256": "3cf16db34ae924fe71351140a9fdedbd4fb58f7c99bcd9858b0395f004988f4d"
+    },
+    {
+      "file": "shower-run/shower-start.metadata.json",
+      "byte_count": 2310,
+      "sha256": "8a075b9663611f9a7db5a191388d318b1cae4c5be709238b62c1fd3d4b34b52c"
+    },
+    {
+      "file": "shower-run/shower-stop.channel1.raw.gz",
+      "byte_count": 1788932,
+      "sha256": "929d370804e33dec35c0260d791798c146313e682dec487cbbaa71d5f9413bef"
+    },
+    {
+      "file": "shower-run/shower-stop.channel2.raw.gz",
+      "byte_count": 1633154,
+      "sha256": "793362079862fe6c0c86122ab9961edaabdc6a5f45a00826848d7ae6b13ffcb7"
+    },
+    {
+      "file": "shower-run/shower-stop.frames.txt",
+      "byte_count": 1800,
+      "sha256": "0fd77a75128215ac8042a3145c43fcf88ae41b414194ac5b2dc9d65b00fa9d07"
+    },
+    {
+      "file": "shower-run/shower-stop.metadata.json",
+      "byte_count": 2311,
+      "sha256": "e24a4e064990d5d5c463f74af1f08b5e21421aa413ff26daaa262fff499c87f0"
     }
   ]
 }

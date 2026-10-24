@@ -1,2 +1,3 @@
 # Raw scope samples: keep byte-for-byte, never diff or normalise.
 *.raw binary
+*.raw.gz binary

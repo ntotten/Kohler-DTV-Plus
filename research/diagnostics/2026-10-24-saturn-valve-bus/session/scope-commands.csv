@@ -185,3 +185,17 @@ utc,host,command,reply,note
 2026-10-24T18:31:56.495+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 8e-2,(sent),restore after dataset captures
 2026-10-24T18:31:56.607+00:00,192.168.4.120,:SYSTem:ERRor?,"0,""No error""",restore after dataset captures
 2026-10-24T18:31:56.648+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet?,8.000000E-2,restore after dataset captures
+2026-10-24T18:39:05.408+00:00,192.168.4.120,:RUN,(sent),roll-mode test before shower run
+2026-10-24T18:39:05.409+00:00,192.168.4.120,:TIMebase:MAIN:SCALe 0.5,(sent),roll-mode test before shower run
+2026-10-24T18:39:05.409+00:00,192.168.4.120,:TIMebase:MAIN:OFFSet 0,(sent),roll-mode test before shower run
+2026-10-24T18:39:05.409+00:00,192.168.4.120,:ACQuire:MDEPth 10M,(sent),roll-mode test before shower run
+2026-10-24T18:39:05.548+00:00,192.168.4.120,:SYSTem:ERRor?,"0,""No error""",roll-mode test before shower run
+2026-10-24T18:39:05.589+00:00,192.168.4.120,:ACQuire:MDEPth?,1.0000E+07,roll-mode test before shower run
+2026-10-24T18:39:05.620+00:00,192.168.4.120,:ACQuire:SRATe?,1.250000E+6,roll-mode test before shower run
+2026-10-24T18:39:05.649+00:00,192.168.4.120,:TIMebase:MAIN:SCALe?,5.000000E-1,roll-mode test before shower run
+2026-10-24T18:39:11.961+00:00,192.168.4.120,:STOP,(sent),roll-mode test
+2026-10-24T18:39:12.387+00:00,192.168.4.120,:ACQuire:SRATe?,1.250000E+6,roll-mode test
+2026-10-24T18:40:00.105+00:00,192.168.4.120,:RUN,(sent),shower run
+2026-10-24T18:40:06.863+00:00,192.168.4.120,:STOP,(sent),shower run
+2026-10-24T18:40:22.882+00:00,192.168.4.120,:RUN,(sent),shower run
+2026-10-24T18:40:33.272+00:00,192.168.4.120,:STOP,(sent),shower run
