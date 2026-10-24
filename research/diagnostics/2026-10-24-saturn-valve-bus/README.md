@@ -1,8 +1,10 @@
 # Saturn valve bus: scope capture, 2026-10-24
 
-The factory K-99695 talking to a valve over its Saturn RS-485 bus, captured differentially at the valve
-connector: idle, and through one start and stop of an outlet. With it are the connector's pinout and the
-meter readings of both valves' connectors. This answers three of the open items in
+The factory K-99695 talking to both of its valves over their Saturn RS-485 buses, captured differentially
+at the valve connectors: valve 2 idle and through a start and stop, then valve 1 through a controller
+restart and two starts and stops. With them are the connector's pinout and the meter readings of both
+valves' connectors. The two valves speak different command sets on the same framing; see
+[Valve 1](#valve-1). This answers three of the open items in
 [controller/docs/HARDWARE.md](../../../controller/docs/HARDWARE.md) §15: the pin count from item 2, item 3
 (which conductor is positive) and item 4 (factory termination and idle bias). The tools that took and
 decoded it are in [research/tools/saturn-capture/](../../tools/saturn-capture/).
@@ -19,11 +21,12 @@ Tiers follow [docs/system-specification.md](../../../docs/system-specification.m
 | Vertical          | 1 V/div, offset −2.5 V, DC coupling, bandwidth limit off, probe ratio 10 on both            |
 | Trigger           | Edge, CH1 falling through 1.8 V, normal sweep, single shot (roll mode for the long records) |
 | Point of contact  | The valve connector, with the cable plugged into the controller                             |
-| Which valve's bus | `[I]` Valve 2: the idle levels on the scope match valve 2's meter readings, not valve 1's   |
+| Which valve's bus | Valve 2 for the top level and `shower-run/`, valve 1 for `valve-1/`; the operator moved the probes at 18:57 UTC, and the idle levels match each valve's meter readings |
 
-No HTTP request went to the controller before 18:38 UTC. After that there were six, one at a time and at
-least 5 s apart: `values.cgi` at 18:38:31, the four of the shower run in
-[shower-run/controller-calls.log](shower-run/controller-calls.log), and `system_info.cgi` at 18:42:26.
+No HTTP request went to the controller before 18:38 UTC. After that there were fifteen, one at a time and
+at least 5 s apart: `values.cgi` at 18:38:31; the shower run's four in
+[shower-run/controller-calls.log](shower-run/controller-calls.log); `system_info.cgi` at 18:42:26 and at
+19:01:58, after the restart; and the four of each valve-1 run in their own `controller-calls.log`.
 
 ## Connector `[A]`
 
@@ -80,7 +83,7 @@ From [edge-detail](edge-detail.metadata.json) and [poll-1](poll-1.metadata.json)
 - The two transmitters sit at different common modes, about 2.6 V for the controller and 1.9 V for the
   valve, which is how the request and the reply can be told apart on the screenshots.
 
-## Protocol `[A]`
+## Protocol: valve 2 `[A]`
 
 - 9600 baud, 8 data bits, no parity, 1 stop bit, least significant bit first. Mark (idle, logic 1) is
   pin 4 above pin 3.
@@ -91,14 +94,14 @@ From [edge-detail](edge-detail.metadata.json) and [poll-1](poll-1.metadata.json)
   intervals alternate between about 0.55 s and 0.49 s (`idle-roll`; `after-poll-0.3s` and
   `after-poll-0.5s` caught the short one, 0.490 s and 0.488 s). After it they are a steady 0.525 s, with a
   poll slot given up to the `3A` broadcast now and then.
-- Every frame decoded, 102 across the captures, carries a valid checksum; each capture's `.frames.txt`
-  lists them.
+- Every frame decoded, 834 across both buses (102 on valve 2, 732 on valve 1), carries a valid checksum;
+  each capture's `.frames.txt` lists them.
 
 ### Checksum
 
 Every frame on this bus checks with the sync bytes **included**: the checksum is the 8-bit two's
-complement of the sum of every byte from SYNC1 through the last data byte. None of the 102 checks with
-them excluded.
+complement of the sum of every byte from SYNC1 through the last data byte. None of the 834 checks with
+them excluded, on either bus.
 
 | Frame                                 | On the wire | Sync excluded | Sync included |
 | ------------------------------------- | ----------- | ------------- | ------------- |
@@ -169,7 +172,94 @@ counting down after the stop: `after-run-poll` reads `03 01 63 01 20 00 00 05 79
 timer 0x0579 = 1401, 399 s after the stop, with the temperature down to 0x0120 = 28.8 °C; `later-poll`
 reads 0x03BD = 957 at 18:54:34, 843 s after the stop, and 27.0 °C. While the water ran, `system_info`
 reported both valves `On` (valve 1 95 °F, valve 2 99 °F) although only valve 2 was given an outlet;
-afterwards both read `Paused` with `ui_shower_on` and `devices_running` false.
+afterwards both read `Paused` with `ui_shower_on` and `devices_running` false. `[I]` Valve 1 ran too: the
+same call repeated with the probes on valve 1's bus (`valve-1/run-valve-2`) opens valve 1's last outlet.
+
+## Valve 1
+
+The probes moved to valve 1's connector at 18:57 UTC, same pins, while the controller restarted; it
+dropped off the network and came back at 19:00:22.
+
+### Electrical `[A]`
+
+| Quantity                  | CH1 (pin 4) | CH2 (pin 3) | Differential (4 − 3) |
+| ------------------------- | ----------- | ----------- | -------------------- |
+| Idle                      | 2.67 V      | 2.27 V      | +0.40 V              |
+| Driven mark, 2nd–98th pct.  | 3.62–3.69 V | 1.02–1.47 V |                      |
+| Driven space, 2nd–98th pct. | 1.13–1.67 V | 3.45–3.52 V |                      |
+
+The idle levels match valve 1's meter readings (2.7 V and 2.4 V) within 0.15 V, not valve 2's.
+
+### Start-up `[A]`
+
+`idle-roll-1` caught the controller bringing the bus up, at about 18:58:01, two minutes before it was back
+on the network. Times are from that record:
+
+```
+-59.82 s  AA 55 1F 3A 01 01 A6                          four times, 3.87 s apart, no reply
+-45.97 s  AA 55 00 54 00 AD                             -> AA 55 01 01 04 00 06 00 0C E9
+-45.94 s  AA 55 00 40 00 C1                             -> AA 55 01 01 04 00 02 26 BF 14
+-45.44 s  AA 55 00 54 00 AD                             -> AA 55 01 01 04 00 06 00 0C E9
+-44.92 s  AA 55 00 16 00 EB                             -> AA 55 01 01 04 03 09 00 04 EB
+-44.39 s  AA 55 00 0B 00 F6                             -> AA 55 01 01 0A 01 02 00 64 00 C8 01 2C 01 2C 6C
+-43.87 s  AA 55 00 0C 00 F5                             -> AA 55 01 01 0B 02 01 00 3F 00 02 76 00 00 01 5C DD
+-43.34 s  AA 55 00 15 00 EC                             -> AA 55 01 01 01 AD 51
+-41.77 s  steady polling begins
+```
+
+xagon0 names control `3A` the address enquiry, `40` read extended status and `16` read generic outlet
+status. The enquiry broadcasts stop once start-up is done. On valve 2's bus they have recurred every few
+seconds since its poll address changed at 18:39 (see [Idle](#idle)). `[I]` The controller has not
+finished setting valve 2 up since then; compare
+[I3](../../../INVESTIGATIONS.md#i3--valuescgi-intermittently-drops-a-healthy-valve).
+
+### Steady state `[A]`
+
+Valve 1 stays at address `00` and is polled with two requests, alternating every 0.525 s:
+
+```
+AA 55 00 01 00 00    -> AA 55 01 01 07 <state> 00 00 00 <b4> 00 00 <chk>     idle: state 00, b4 A1-AA
+AA 55 00 02 00 FF    -> AA 55 01 01 04 <state> 00 <outlets> 00 <chk>         idle: 00 00 00 00
+```
+
+Valve 2 at `13` (earlier `00`) gets one request, control `07`, with an 11-byte status reply. The framing,
+baud rate, polarity and checksum are the same on both buses.
+
+### Commands `[A]`
+
+Valve 1 is commanded with controls `81` and `A4`, not valve 2's `87`, and answers every command with
+`AA 55 01 01 01 01 FD`.
+
+```
+run-valve-1, start (valve 1 position 1, 96 °F)
+AA 55 00 81 03 00 01 26 56      mode 00
+AA 55 00 81 03 01 01 26 55      mode 01
+AA 55 00 A4 01 00 5C            outlets 00
+AA 55 00 A4 01 04 58            outlets 04
+then status   AA 55 01 01 07 01 01 26 00 A1 00 00 2F   and   AA 55 01 01 04 01 00 04 00 F6
+
+run-valve-1, stop
+AA 55 00 A4 01 00 5C            outlets 00
+AA 55 00 81 03 03 01 26 53      mode 03
+then status   AA 55 01 01 07 03 01 26 01 33 00 00 9A   and   AA 55 01 01 04 00 00 00 00 FB
+```
+
+| Field                                  | Reading                                                                                                         |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `81` data byte 0, status byte 0        | Mode: 00 idle or set up, 01 running, 03 stopped, the same codes as valve 2                                      |
+| `81` data bytes 1–2, status bytes 1–2  | 0x0126 = 294 in every command and status frame, idle and running. `[?]` Not the 96 °F setpoint in valve 2's tenths-of-a-degree-C encoding (0x0163) |
+| `A4` data, outlet reply byte 2         | Outlet bitmask. Position 1 went out as `04`, physical outlet 3, which is what `values.cgi` maps it to (`valve1_outlet1_func` id 3) |
+| Status bytes 3–4                       | `[I]` Water temperature, 0.1 °C: 0x00A1–0x00AA (16.1–17.0 °C) idle, up to 0x0159 (34.5 °C) during flow; `system_info` said 94–95 °F     |
+
+### A valve 2 start also starts valve 1 `[A]`
+
+`run-valve-2` repeats the valve 2 run (`quick_shower.cgi?valve_num=2&valve1_outlet=&…&valve2_outlet=1`)
+with the probes on valve 1's bus. The controller sends valve 1 `81` mode 03, then mode 01, then `A4 04`:
+valve 1's last outlet opens, and its status reports running and outlet 3 open until the stop.
+`system_info` reported valve 1 `On` at 94 °F alongside valve 2. The reverse does not happen: in
+`run-valve-1` (`valve_num=1`, `valve2_outlet` empty) valve 2 stayed `Paused`. An empty `valve1_outlet`
+is therefore not "no outlet" when the call is for valve 2; it leaves valve 1's previous selection armed and
+starts it.
 
 ## Files
 
@@ -192,6 +282,10 @@ afterwards both read `Paused` with `ui_shower_on` and `devices_running` false.
 | `idle-roll`                | roll      | 800 ns          | 6.4 s before 18:39:26 | Twelve idle cycles, the last before re-address  |
 | `after-run-poll`           | 20 ms/div | 400 ns          | −0.12 s to +0.28 s    | A poll 6.7 minutes after the stop               |
 | `later-poll`               | 20 ms/div | 400 ns          | −0.12 s to +0.28 s    | A poll 14 minutes after the stop, still at `13` |
+| `valve-1/idle-roll-1`      | roll      | 8 µs            | 71 s to 18:59:01      | Valve 1: the controller's start-up, then idle   |
+| `valve-1/idle-roll-2`, `-3` | roll     | 8 µs            | 55 s to 19:00:12, 19:01:20 | Valve 1 idle                               |
+| `valve-1/run-valve-1/…`    | roll      | 800 ns          | 6.7 s and 8.0 s       | Valve 1 started and stopped                     |
+| `valve-1/run-valve-2/…`    | roll      | 800 ns          | 6.9 s and 8.0 s       | Valve 1's bus while valve 2 starts and stops    |
 | `shower-run/shower-start`  | roll      | 800 ns          | 6.5 s to 18:40:06     | Idle, the start commands, the first seconds of flow |
 | `shower-run/shower-stop`   | roll      | 800 ns          | 8.0 s to 18:40:33     | Flow, the stop commands, stopped                |
 

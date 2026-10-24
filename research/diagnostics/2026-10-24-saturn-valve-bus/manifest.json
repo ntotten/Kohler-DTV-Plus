@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "instrument": "Rigol DHO804, firmware 00.01.05, SCPI over raw TCP port 5555",
-  "purpose": "Differential capture of the factory K-99695 Saturn valve bus at the valve connector, idle and through one outlet start and stop, plus the connector's meter readings. See README.md.",
-  "controller_contact": "No HTTP requests before 18:38 UTC. Then six, serialised and at least 5 s apart: values.cgi 18:38:31, quick_shower.cgi 18:40:02, system_info.cgi 18:40:22, stop_shower.cgi 18:40:29, system_info.cgi 18:40:50 and 18:42:26. The scope only listened to the bus.",
-  "probing": "CH1 on pin 4, CH2 on pin 3, both 10x, grounds on pin 2",
+  "purpose": "Differential captures of the factory K-99695 Saturn valve buses at both valve connectors: idle, a controller start-up, and outlet starts and stops, plus the connectors' meter readings. See README.md.",
+  "controller_contact": "No HTTP requests before 18:38 UTC. Then fifteen, serialised and at least 5 s apart, all values.cgi, system_info.cgi, quick_shower.cgi or stop_shower.cgi; each run's are in its controller-calls.log. The scope only listened to the buses.",
+  "probing": "CH1 on pin 4, CH2 on pin 3, both 10x, grounds on pin 2; valve 2's connector until 18:57 UTC, then valve 1's",
   "files": [
     {
       "file": "README.md",
-      "byte_count": 17042,
-      "sha256": "4cd382a3e8e6cc5216ae6a83cbeb8344da01db16e6a8de33d4dfbccb9045396e"
+      "byte_count": 23072,
+      "sha256": "8e40ff563ce14f3f820dd47f1433391009f850b243b34c2926a6c50e8fcc8c4f"
     },
     {
       "file": "after-poll-0.3s.channel1.raw",
@@ -364,6 +364,191 @@
       "file": "shower-run/shower-stop.metadata.json",
       "byte_count": 2311,
       "sha256": "e24a4e064990d5d5c463f74af1f08b5e21421aa413ff26daaa262fff499c87f0"
+    },
+    {
+      "file": "valve-1/idle-roll-1.channel1.raw.gz",
+      "byte_count": 1314785,
+      "sha256": "e9c78e98614da055328e743a7d08a05b53d6d035b7955f847f56a48a5ed822a4"
+    },
+    {
+      "file": "valve-1/idle-roll-1.channel2.raw.gz",
+      "byte_count": 1435683,
+      "sha256": "802f136b65eb5f930b55b98d073e284d4b01aed11df81f9ff2b87f25141a5e94"
+    },
+    {
+      "file": "valve-1/idle-roll-1.frames.txt",
+      "byte_count": 7854,
+      "sha256": "45a359fefbe9b7a4b87e1e281c0b118ba210977a3843fe01fc12442a63cd90ca"
+    },
+    {
+      "file": "valve-1/idle-roll-1.metadata.json",
+      "byte_count": 2309,
+      "sha256": "17bad150f2e0370c8ea82c7043bfe72c0bd1ddcaac351253857120254a63f5a5"
+    },
+    {
+      "file": "valve-1/idle-roll-1.png",
+      "byte_count": 144932,
+      "sha256": "396dd68d9263e8ce6f9e1a1c71a7c2ce972f314b2676ac861eb40239e140d983"
+    },
+    {
+      "file": "valve-1/idle-roll-2.channel1.raw.gz",
+      "byte_count": 1036867,
+      "sha256": "869fd40740280646a2cb6a56e5ef9d81685e8690e8f7848d46cb2fd32ee44f24"
+    },
+    {
+      "file": "valve-1/idle-roll-2.channel2.raw.gz",
+      "byte_count": 1144988,
+      "sha256": "7cc04900403de22d2544d550938905e01cb4c14a6c7ef12a392b00d7203160e9"
+    },
+    {
+      "file": "valve-1/idle-roll-2.frames.txt",
+      "byte_count": 9381,
+      "sha256": "41b651ed446def614ff4ceb5226697900de6fc7e21adfc4516e77e80f42715c3"
+    },
+    {
+      "file": "valve-1/idle-roll-2.metadata.json",
+      "byte_count": 2309,
+      "sha256": "8f74a80649dc4ff0bee063469c3b66ab72b722de6573ad65e2ab9620c856d906"
+    },
+    {
+      "file": "valve-1/idle-roll-2.png",
+      "byte_count": 147188,
+      "sha256": "345df8e4a4e933d31df04966ed026764c440942647ba5918f9e2c4a1e8558f8c"
+    },
+    {
+      "file": "valve-1/idle-roll-3.channel1.raw.gz",
+      "byte_count": 1038575,
+      "sha256": "d4eead5216367423b288cc10965c0570a42bb10bf5482910169ab4188f0d765e"
+    },
+    {
+      "file": "valve-1/idle-roll-3.channel2.raw.gz",
+      "byte_count": 1143077,
+      "sha256": "76771f1ca6b070b4a9450d5e39bb2f6cd40a83d331c3464b5837bffbcd3c2fde"
+    },
+    {
+      "file": "valve-1/idle-roll-3.frames.txt",
+      "byte_count": 9297,
+      "sha256": "e691b948d1957ad12bc0c78c9a5bba6e9a0b9a22c566a19de2c39f1090780bc8"
+    },
+    {
+      "file": "valve-1/idle-roll-3.metadata.json",
+      "byte_count": 2309,
+      "sha256": "989798e2c89d241b82611a1d625ff477da7576da84f7a0226855160ebbceb286"
+    },
+    {
+      "file": "valve-1/idle-roll-3.png",
+      "byte_count": 145777,
+      "sha256": "5aa7403d429d2da6295c30982722380ad51bf908fcb2d990aca88ed707b57b47"
+    },
+    {
+      "file": "valve-1/run-valve-1/controller-calls.log",
+      "byte_count": 1896,
+      "sha256": "8225d2c37643c2ce80d39549cbc9cc2e09b1349b67fb36e881abe3615bb4f8be"
+    },
+    {
+      "file": "valve-1/run-valve-1/shower-start.channel1.raw.gz",
+      "byte_count": 1276769,
+      "sha256": "01f7b681e99baf7aa888b8ec084f5e67d32dd2be37676f1bf822230287244a43"
+    },
+    {
+      "file": "valve-1/run-valve-1/shower-start.channel2.raw.gz",
+      "byte_count": 1371677,
+      "sha256": "7ceaaff94d861684afa8b46f167e081177f8ddcc3ed377200da79e4f4025d16e"
+    },
+    {
+      "file": "valve-1/run-valve-1/shower-start.frames.txt",
+      "byte_count": 1386,
+      "sha256": "3b96f758da564dccde5168a8908652cb74313ab85483a0ceb50972e4af42cee8"
+    },
+    {
+      "file": "valve-1/run-valve-1/shower-start.metadata.json",
+      "byte_count": 2310,
+      "sha256": "52d9e3279d5a074b684e81be29fe94aaba2dcfbf8351e11e4f22913d7acc441c"
+    },
+    {
+      "file": "valve-1/run-valve-1/shower-start.png",
+      "byte_count": 142152,
+      "sha256": "3cf828174d8dc1a1692e621d3084319d2be17192f2c0f3b42c7e302f62b3050d"
+    },
+    {
+      "file": "valve-1/run-valve-1/shower-stop.channel1.raw.gz",
+      "byte_count": 1565332,
+      "sha256": "b50e04158365ec5730c84bba1ca5392f51b8a419bff44e5cf480b5fadb7f1457"
+    },
+    {
+      "file": "valve-1/run-valve-1/shower-stop.channel2.raw.gz",
+      "byte_count": 1690409,
+      "sha256": "8039f6a3b5ef84b5e89bfb632cf0f6d408c1e866dafb1e97a33f32db6527e4fd"
+    },
+    {
+      "file": "valve-1/run-valve-1/shower-stop.frames.txt",
+      "byte_count": 1578,
+      "sha256": "b72bb6c8f95ac99961919f11e8c9ef8dfc4d8aa3f2f0a85ae95f3c3069d7bde2"
+    },
+    {
+      "file": "valve-1/run-valve-1/shower-stop.metadata.json",
+      "byte_count": 2311,
+      "sha256": "0a4f872dfa30c90216d1ae6e30e35c74d20cc0e1eabd2773c166cf70f27a0e64"
+    },
+    {
+      "file": "valve-1/run-valve-1/shower-stop.png",
+      "byte_count": 142684,
+      "sha256": "2b8357a0dcd768e6782e117de98b1153704fe94519c5d848e62a1505a32efb7a"
+    },
+    {
+      "file": "valve-1/run-valve-2/controller-calls.log",
+      "byte_count": 1906,
+      "sha256": "75b10c42740c5297ccf27dde8ff40d51d7bfefd49f30cea5aee53552f0e3f792"
+    },
+    {
+      "file": "valve-1/run-valve-2/shower-start.channel1.raw.gz",
+      "byte_count": 1407073,
+      "sha256": "9ab280d2774984acd2cbce4182eac77c12aaeb170820b21d24e9cf3e2d2cd7a6"
+    },
+    {
+      "file": "valve-1/run-valve-2/shower-start.channel2.raw.gz",
+      "byte_count": 1497557,
+      "sha256": "c232f0bd5febe3022022fd1a36d18e65ff847e98b4027754f537fc72db609dcd"
+    },
+    {
+      "file": "valve-1/run-valve-2/shower-start.frames.txt",
+      "byte_count": 1392,
+      "sha256": "690d62cddaa621ae488fb9a3e7728f6257c06f111a1a418f11fc219572147e29"
+    },
+    {
+      "file": "valve-1/run-valve-2/shower-start.metadata.json",
+      "byte_count": 2310,
+      "sha256": "561f48f137f3e1e20207eb73370a425e873537342f789028c51abddd2f4acaf0"
+    },
+    {
+      "file": "valve-1/run-valve-2/shower-start.png",
+      "byte_count": 142430,
+      "sha256": "364b7a73fc76a61156f0e1fed2b21c9a1a160daf459c5dd73d2d7a2048d9b157"
+    },
+    {
+      "file": "valve-1/run-valve-2/shower-stop.channel1.raw.gz",
+      "byte_count": 1583115,
+      "sha256": "854edee3d507a40debda1255f4cca141eadead2c7289df67f600f9646778cabd"
+    },
+    {
+      "file": "valve-1/run-valve-2/shower-stop.channel2.raw.gz",
+      "byte_count": 1695183,
+      "sha256": "4107e817033a02b915c9102118debdd1a5ab75badb3e059a56d4e01d4c5cb7de"
+    },
+    {
+      "file": "valve-1/run-valve-2/shower-stop.frames.txt",
+      "byte_count": 1410,
+      "sha256": "5b17e81b5ab66672eb288e6330e19d30cd510fe25475480ced78173961d46e10"
+    },
+    {
+      "file": "valve-1/run-valve-2/shower-stop.metadata.json",
+      "byte_count": 2311,
+      "sha256": "6992ffb9518674ff8487e0bf1f55ac1d7c9515f5088526a209f09c6659ed0a40"
+    },
+    {
+      "file": "valve-1/run-valve-2/shower-stop.png",
+      "byte_count": 139453,
+      "sha256": "b5844b2820b97ba7b70408531de33bbbf7517ce34288aadd45836a353fada001"
     }
   ]
 }

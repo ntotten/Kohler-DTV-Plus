@@ -1,0 +1,54 @@
+{
+  "capture": "idle-roll-1",
+  "transport": "SCPI over raw TCP, port 5555",
+  "channels": {
+    "CHANnel1": {
+      "file": "idle-roll-1.channel1.raw.gz",
+      "waveform_mode": "MAXimum",
+      "waveform_format": "BYTE",
+      "read": ":WAVeform:DATA? in chunks of 250000 points",
+      "preamble": "0,1,8920000,1,8.000000E-6,-7.136000E+1,0.000000,3.4133E-02,-73,128",
+      "byte_count": 8920000,
+      "sha256": "d9c807826b7d4d1b6fbf848fc29555048b12c25d5d5f232d9d1c30944e6afe53",
+      "compression": "gzip -9; byte_count and sha256 are of the decompressed samples"
+    },
+    "CHANnel2": {
+      "file": "idle-roll-1.channel2.raw.gz",
+      "waveform_mode": "MAXimum",
+      "waveform_format": "BYTE",
+      "read": ":WAVeform:DATA? in chunks of 250000 points",
+      "preamble": "0,1,8920000,1,8.000000E-6,-7.136000E+1,0.000000,3.4133E-02,-73,128",
+      "byte_count": 8920000,
+      "sha256": "3302b7a3f97d0e829be691cc7eeb5aa4358d6ac03e0208509213efc2a0a1bb2d",
+      "compression": "gzip -9; byte_count and sha256 are of the decompressed samples"
+    }
+  },
+  "started_utc": "2026-10-24T18:59:01Z",
+  "started_local": "2026-10-24T14:59:01-04:00",
+  "scope_settings": {
+    "*IDN?": "RIGOL TECHNOLOGIES,DHO804,DHO8A284M01558,00.01.05",
+    ":ACQuire:MDEPth?": "1.0000E+07",
+    ":ACQuire:SRATe?": "1.250000E+5",
+    ":ACQuire:TYPE?": "NORM",
+    ":TIMebase:MAIN:SCALe?": "5.000000E0",
+    ":TIMebase:MAIN:OFFSet?": "-2.500000E+1",
+    ":TRIGger:MODE?": "EDGE",
+    ":TRIGger:SWEep?": "NORM",
+    ":TRIGger:EDGE:SOURce?": "CHAN1",
+    ":TRIGger:EDGE:SLOPe?": "NEG",
+    ":TRIGger:EDGE:LEVel?": "1.800000E0",
+    ":CHANnel1:SCALe?": "1.000000E+00",
+    ":CHANnel1:OFFSet?": "-2.500000E+00",
+    ":CHANnel1:PROBe?": "10",
+    ":CHANnel1:COUPling?": "DC",
+    ":CHANnel1:BWLimit?": "OFF",
+    ":CHANnel2:SCALe?": "1.000000E+00",
+    ":CHANnel2:OFFSet?": "-2.500000E+00",
+    ":CHANnel2:PROBe?": "10",
+    ":CHANnel2:COUPling?": "DC",
+    ":CHANnel2:BWLimit?": "OFF"
+  },
+  "completed_utc": "2026-10-24T18:59:16Z",
+  "completed_local": "2026-10-24T14:59:16-04:00",
+  "conversion": "preamble = format,type,points,count,xincrement,xorigin,xreference,yincrement,yorigin,yreference; volts = (byte - yorigin - yreference) * yincrement; seconds = (index - xreference) * xincrement + xorigin, 0 s at the trigger"
+}
