@@ -101,12 +101,15 @@ equally the "start", "change outlets" and "change temperature" command.
 string** — outlets 1, 3 and 4 are sent as `134`. An empty string means none; the
 controller's own UI calls `stop_shower.cgi` instead of sending an empty set.
 
-> **Measured on the valve bus, 2026-10-24.** An empty `valve1_outlet` is not
-> "none" when `valve_num=2`: the controller also starts valve 1 alongside valve 2,
-> on outlet position 1. That was both its previous selection and possibly its
-> default, so which rule applies is unresolved. With `valve_num=1` an empty
-> `valve2_outlet` does leave valve 2 off. See
-> [research/diagnostics/2026-10-24-saturn-valve-bus/](research/diagnostics/2026-10-24-saturn-valve-bus/README.md#a-valve-2-start-also-starts-valve-1-a).
+> **Measured on the valve bus, 2026-10-24.** An empty outlet string for the
+> other valve is not "none": it keeps that valve's armed selection, and the
+> controller starts it alongside the valve the call is for. The armed selection
+> is the last outlet run on that valve; after a controller restart, valve 2 had
+> none and valve 1 had positions 1, 3, 4 and 5. A valve 2 start opened valve 1's
+> last outlet, and a valve 1 start opened valve 2's once it had one armed, but not
+> straight after a restart. No call found so far starts one valve alone while the
+> other has an armed outlet. See
+> [research/diagnostics/2026-10-24-saturn-valve-bus/](research/diagnostics/2026-10-24-saturn-valve-bus/README.md#a-start-on-one-valve-starts-the-other-a).
 
 ```
 GET /quick_shower.cgi?valve_num=1
