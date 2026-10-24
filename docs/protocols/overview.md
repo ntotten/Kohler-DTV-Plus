@@ -34,8 +34,12 @@ on the two dedicated valve UARTs (not the DTV+ ports).
 SYNC1(0xAA) SYNC2(0x55) ADDRESS CONTROL DATA_LEN [DATA] CHECKSUM
 ```
 
-- Checksum: 2's complement of (ADDRESS + CONTROL + DATA_LEN + DATA),
-  i.e. the full frame sums to `0x00` mod 256.
+- Checksum: 2's complement of (SYNC1 + SYNC2 + ADDRESS + CONTROL + DATA_LEN
+  - DATA), so the full frame sums to `0x00` mod 256. Measured on an installed
+    valve bus `[A]`
+    ([capture](../../research/diagnostics/2026-10-24-saturn-valve-bus/README.md#checksum)).
+    The upstream protocol document leaves the sync bytes out, which gives one
+    less on every frame.
 - Max packet ~20 bytes; valve tick 525 ms; response timeout ~320 ms; a
   handful of retries per command.
 - **Master address depends on valve family** — get it wrong and the valve
