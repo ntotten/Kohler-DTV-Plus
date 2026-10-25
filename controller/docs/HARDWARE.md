@@ -69,7 +69,7 @@ is [DECISIONS.md D14](DECISIONS.md#d14--rp2350-firmware-in-rust-not-a-linux-comp
 ```text
                        LAN: API and log drain (wired Ethernet)
                                         |
-  5 V USB-C ──────>  +------------------v---------------------+
+  5 V micro-USB ──>  +------------------v---------------------+
   (adapter outside   | W5500-EVB-Pico2: RP2350 + W5500         |
    the box)          | Rust firmware on Embassy, watchdog      |
                      +--+-------+-------+-------+-------+------+
@@ -95,16 +95,16 @@ No mains conductor enters the controller's box (§9).
 
 ## 4. Subsystem A — compute
 
-| Item     | Specification                                                                                  |
-| -------- | ---------------------------------------------------------------------------------------------- |
-| Board    | WIZnet W5500-EVB-Pico2, Pico 2 footprint **[V]**                                               |
-| MCU      | RP2350: two Cortex-M33 cores at 150 MHz, 520 kB SRAM, 2 UARTs, 12 PIO state machines **[V]**   |
-| Flash    | 2 MB on the board **[V]**: firmware and configuration only. Nothing is logged to flash         |
-| Network  | W5500, 10/100 wired Ethernet, on GPIO16–21 **[V]**. No radio on the board                      |
-| Power in | 5 V over USB-C (VBUS 5 V ± 10 %) **[V]**, from an external adapter                             |
-| Watchdog | RP2350 hardware watchdog, fed by the bus tasks; a reset boots to `OFF` (DESIGN.md rule 4)      |
-| Firmware | Rust, Embassy (`embassy-rp`, `embassy-net`, `embassy-net-wiznet`), `picoserve` for the LAN API |
-| Debug    | USB-C for flashing (UF2); SWD header for a debug probe and `defmt` logs                        |
+| Item     | Specification                                                                                                                                        |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Board    | Raspberry Pi Pico 2 with a WIZnet WIZ850io (W5500) on GPIO16–21, as ordered 2026-10-25; the W5500-EVB-Pico2 is the same circuit on one board **[V]** |
+| MCU      | RP2350: two Cortex-M33 cores at 150 MHz, 520 kB SRAM, 2 UARTs, 12 PIO state machines **[V]**                                                         |
+| Flash    | 2 MB on the board **[V]**: firmware and configuration only. Nothing is logged to flash                                                               |
+| Network  | W5500, 10/100 wired Ethernet, on GPIO16–21 **[V]**. No radio on the board                                                                            |
+| Power in | 5 V over the Pico 2's micro-USB, from an external adapter (Raspberry Pi SC0623, 5.1 V 2.5 A) **[V]**                                                 |
+| Watchdog | RP2350 hardware watchdog, fed by the bus tasks; a reset boots to `OFF` (DESIGN.md rule 4)                                                            |
+| Firmware | Rust, Embassy (`embassy-rp`, `embassy-net`, `embassy-net-wiznet`), `picoserve` for the LAN API                                                       |
+| Debug    | Micro-USB for flashing (UF2); SWD header for a debug probe and `defmt` logs                                                                          |
 
 Board data: [The Pi Hut](https://thepihut.com/products/wiznet-w5500-evb-pico2).
 A Pico 2 with a W5500 module wired to GPIO16–21 is the same circuit **[I]**,
@@ -292,14 +292,14 @@ runs three ports driving continuously and checks 3.3 V stays in regulation.
    is not measured (§15 item 8). If it does not, one zone's two ports take an
    isolated transceiver with its own isolated supply instead of the THVD1410
    — [DECISIONS.md D15](DECISIONS.md#d15--one-board-for-both-valves-and-the-panel-plain-transceivers).
-3. The Ethernet port is transformer-coupled and the USB-C adapter's output
+3. The Ethernet port is transformer-coupled and the USB adapter's output
    floats from mains **[I]**, so the board's only ground reference is the
    valves' pin 2. A laptop on USB for flashing ties its own ground in; run it
    on battery.
 
 ### Mains policy
 
-**No mains conductor enters the controller's box.** The USB-C adapter, and the
+**No mains conductor enters the controller's box.** The USB adapter, and the
 panel's DC adapter (§16), plug into an existing receptacle outside it; only
 their low-voltage cables come in. This project does no mains work anywhere:
 the valves stay in their existing receptacles and circuits, untouched.
@@ -313,7 +313,7 @@ the valves stay in their existing receptacles and circuits, untouched.
 | Location      | Beside the K-99695: dry, serviceable. **Not inside the bathroom wet zone**                    |
 | Box           | Small, non-metallic, with a mounting plate; the board sockets into a carrier, not soldered in |
 | Carrier       | Protoboard for the bench build. Whether the installed unit gets a carrier PCB is §15 item 12  |
-| Cable entries | USB-C power, Ethernet, `K1`, `V1`, `K2`, `V2`, panel cable, panel DC                          |
+| Cable entries | Micro-USB power, Ethernet, `K1`, `V1`, `K2`, `V2`, panel cable, panel DC                      |
 | Strain relief | Every cable. No conductor takes tension at a solder joint or a jack                           |
 
 ### Labelling and test points

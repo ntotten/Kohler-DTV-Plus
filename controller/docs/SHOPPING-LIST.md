@@ -7,8 +7,9 @@ converters — is superseded,
 order happens is [BUILD-ORDER.md](BUILD-ORDER.md); why each part was chosen is
 [HARDWARE.md](HARDWARE.md).
 
-Two orders now and a third later. Everything orderable goes in now. The valve
-connectors wait for a photograph of the plug, and the wall panel's parts wait
+Two orders now and a third later. Everything orderable goes in now, including
+the 6P6C valve jacks. The leads from the controller to the K-99695 wait on
+whether the valve end of each cable unplugs, and the wall panel's parts wait
 for the panel's design.
 
 Prices are marked with the date they were checked; "not checked" means
@@ -21,30 +22,31 @@ LCSC), not a marketplace seller.
 
 ### The controller
 
-|     Qty | Item                                            | Part / SKU                               | Price                             | Note                                                                                                                                           |
-| ------: | ----------------------------------------------- | ---------------------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-|       2 | Raspberry Pi Pico 2                             | DigiKey `SC1631`                         | Not checked                       | One installed, one spare. RP2350, not the original Pico                                                                                        |
-|       2 | WIZnet WIZ850io W5500 Ethernet module           | `WIZ850IO`                               | Not checked                       | Wired to the Pico 2's GPIO16–21, the pins the W5500-EVB-Pico2 uses **[V]**                                                                     |
-|       2 | 2×6 female header, 2.54 mm                      | —                                        | Not checked                       | The WIZ850io plugs in rather than being soldered                                                                                               |
-|       6 | TI THVD1410 RS-485 transceiver, VSSOP-8         | `THVD1410DGK` (Mouser `595-THVD1410DGK`) | $4.96, Mouser, 2026-10-24 **[V]** | Five ports and a spare. Same part as the SOIC `THVD1410DR`, which DigiKey and Mouser had none of until mid-November. **Not the THVD1406** — §5 |
-|       1 | Adafruit 1212 SOIC/MSOP/TSSOP-8 adapter, 6-pack | Mouser `485-1212`                        | $2.95, Mouser, 2026-10-24 **[V]** | Takes the VSSOP-8 (0.65 mm pitch)                                                                                                              |
-|       6 | 120 Ω resistor                                  | —                                        | Not checked                       | Termination, one per port                                                                                                                      |
-|       6 | 4.7 kΩ resistor                                 | —                                        | Not checked                       | Pull-down on each transceiver's `DE`; anything up to 8.2 kΩ — §5                                                                               |
-|       6 | 100 nF ceramic capacitor                        | —                                        | Not checked                       | Decoupling, one per transceiver                                                                                                                |
-| 10 each | 220, 330, 470, 680 Ω and 1 kΩ resistors         | Yageo CFR-25JB                           | Not checked                       | Valve-segment bias candidates, value chosen in Phase 3 — §5                                                                                    |
-|       1 | Protoboard, two 20-pin female header strips     | —                                        | Not checked                       | The board plugs into the headers rather than being soldered in                                                                                 |
-|       1 | RJ45 jack, board mount                          | —                                        | Not checked                       | Panel port                                                                                                                                     |
-|       1 | DC jack, 2.1 mm                                 | —                                        | Not checked                       | Panel adapter input, wired only to the panel jack — §16                                                                                        |
-|       1 | Header pins for test points                     | —                                        | Not checked                       | Pins 2, 3, 4 of each of the four valve segments — §10                                                                                          |
-|       1 | Official Raspberry Pi 15 W USB-C supply, US     | PiShop `1660`                            | $8.80, PiShop, 2026-08-29         | Any isolated 5 V USB-C supply of 1 A or more works                                                                                             |
-|       1 | Hammond 1591DSBK ABS box, 150 × 80 × 50 mm      | `1591DSBK`                               | Not checked                       | Dry location beside the K-99695 — §10. Inside fit of the protoboard not checked; trim it to fit                                                |
-|       1 | Ethernet patch cable                            | —                                        | Not checked                       | To the house network                                                                                                                           |
+|     Qty | Item                                                                | Part / SKU                                                                           | Price                                         | Note                                                                                                                                           |
+| ------: | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+|       2 | Raspberry Pi Pico 2                                                 | DigiKey `2648-SC1631CT-ND`                                                           | $6.12, DigiKey, 2026-10-24 **[V]**            | One installed, one spare. RP2350, not the original Pico. Micro-USB                                                                             |
+|       2 | WIZnet WIZ850io W5500 Ethernet module                               | DigiKey `1278-1043-ND`                                                               | $24.52, DigiKey, 2026-10-24 **[V]**           | Wired to the Pico 2's GPIO16–21, the pins the W5500-EVB-Pico2 uses **[V]**                                                                     |
+|       2 | 2×6 female header, 2.54 mm                                          | Sullins PPPC062LFBN-RC, DigiKey `S7109-ND`                                           | $0.78, DigiKey, 2026-10-25 **[V]**            | The WIZ850io plugs in rather than being soldered                                                                                               |
+|       6 | TI THVD1410 RS-485 transceiver, VSSOP-8                             | `THVD1410DGK` (Mouser `595-THVD1410DGK`)                                             | $4.96, Mouser, 2026-10-24 **[V]**             | Five ports and a spare. Same part as the SOIC `THVD1410DR`, which DigiKey and Mouser had none of until mid-November. **Not the THVD1406** — §5 |
+|       1 | Adafruit 1212 SOIC/MSOP/TSSOP-8 adapter, 6-pack                     | DigiKey `1528-1071-ND` (Mouser `485-1212`)                                           | $2.95, 2026-10-25 **[V]**                     | Takes the VSSOP-8 (0.65 mm pitch)                                                                                                              |
+|      10 | 120 Ω resistor                                                      | Yageo CFR-25JB-52-120R, DigiKey `120QBK-ND`                                          | $0.10, DigiKey, 2026-10-25 **[V]**            | Termination, one per port                                                                                                                      |
+|      10 | 4.7 kΩ resistor                                                     | Yageo CFR-25JB-52-4K7, DigiKey `13-CFR-25JB-52-4K7-ND`                               | $0.10, DigiKey, 2026-10-25 **[V]**            | Pull-down on each transceiver's `DE`; anything up to 8.2 kΩ — §5                                                                               |
+|      10 | 100 nF ceramic capacitor                                            | Vishay K104K15X7RF5TL2, DigiKey `BC1084CT-ND`                                        | $0.31, DigiKey, 2026-10-25 **[V]**            | Decoupling, one per transceiver                                                                                                                |
+| 10 each | 220, 330, 470, 680 Ω and 1 kΩ resistors                             | Yageo CFR-25JB, DigiKey `220QBK-ND` `330QBK-ND` `470QBK-ND` `680QBK-ND` `1.0KQBK-ND` | $0.10–0.11, DigiKey, 2026-10-25 **[V]**       | Valve-segment bias candidates, value chosen in Phase 3 — §5                                                                                    |
+|       2 | Adafruit Perma-Proto full-size protoboard; 20-pin female headers ×2 | DigiKey `1528-1100-ND`; Sullins PPPC201LFBN-RC, DigiKey `S7053-ND`                   | $10.95 and $1.23, DigiKey, 2026-10-25 **[V]** | The board plugs into the headers rather than being soldered in. A perfboard already owned can replace the Perma-Proto                          |
+|       2 | RJ45 jack, through hole                                             | Amphenol 54602-908LF, DigiKey `609-1046-ND`                                          | $0.78, DigiKey, 2026-10-25 **[V]**            | Panel port, one spare. Pins are off the 0.1" grid: wire it in                                                                                  |
+|       1 | DC jack, 2.1 mm, panel mount                                        | Switchcraft 721A, DigiKey `SC3508-ND`                                                | $5.06, DigiKey, 2026-10-25 **[V]**            | Panel adapter input, wired only to the panel jack — §16                                                                                        |
+|       1 | Header pins for test points                                         | —                                                                                    | Already owned                                 | Pins 2, 3, 4 of each of the four valve segments — §10                                                                                          |
+|       1 | Raspberry Pi 13 W micro-USB supply, US                              | Raspberry Pi SC0623, DigiKey `2648-SC0623-ND`                                        | $8.00, DigiKey, 2026-10-25 **[V]**            | The Pico 2 is micro-USB. Any isolated 5 V micro-USB supply of 1 A or more works                                                                |
+|       1 | Hammond 1591DSBK ABS box, 150 × 80 × 50 mm                          | DigiKey `HM105-ND`                                                                   | $9.83, DigiKey, 2026-10-25 **[V]**            | Dry location beside the K-99695 — §10. Inside fit of the protoboard not checked; trim it to fit                                                |
+|       6 | 6P6C modular jack, through hole                                     | Würth 615006138421, DigiKey `732-2113-ND`                                            | $0.60, DigiKey, 2026-10-25 **[V]**            | Valve segments K1, V1, K2, V2 and two spares, so the original cables plug in uncut. Pins are off the 0.1" grid: wire them in                   |
+|       1 | Ethernet patch cable                                                | —                                                                                    | Not checked                                   | To the house network                                                                                                                           |
 
 - [Raspberry Pi Pico 2, DigiKey](https://www.digikey.com/en/products/detail/raspberry-pi/SC1631/24627142)
 - [WIZnet WIZ850io, DigiKey](https://www.digikey.com/en/products/detail/wiznet/WIZ850IO/8789619)
 - [TI THVD1410DGK, Mouser](https://www.mouser.com/ProductDetail/Texas-Instruments/THVD1410DGK?qs=chTDxNqvsyml7%252BOzp%2FJQSQ%3D%3D)
 - [TI THVD1410 datasheet](https://www.ti.com/lit/gpn/THVD1410)
-- [15 W USB-C power supply, PiShop](https://www.pishop.us/product/raspberry-pi-15w-power-supply-us-white/)
+- [Raspberry Pi SC0623 micro-USB supply, DigiKey](https://www.digikey.com/en/products/detail/raspberry-pi/SC0623/15298153)
 
 **Why not the W5500-EVB-Pico2.** It is the same board in one piece, but on
 2026-10-24 Mouser had none until about 2026-11-20 **[V]**, DigiKey didn't list it,
@@ -63,9 +65,9 @@ the largest user.
 
 ### Optional
 
-| Qty | Item                     | Note                                                                                                                                                         |
-| --: | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-|   1 | Raspberry Pi Debug Probe | SWD flashing and `defmt` logs. Price not checked. A spare Pico running the probe firmware does the same job **[V]**, and USB-C flashing works without either |
+| Qty | Item                     | Note                                                                                                                                                             |
+| --: | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|   1 | Raspberry Pi Debug Probe | SWD flashing and `defmt` logs. Price not checked. A spare Pico running the probe firmware does the same job **[V]**, and micro-USB flashing works without either |
 
 ### Already owned
 
@@ -83,11 +85,10 @@ the largest user.
 The parts that cannot be known from documents
 ([HARDWARE.md § 11](HARDWARE.md)):
 
-| Item                                                  | Qty               | Closed by                                                                                                   |
-| ----------------------------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------- |
-| Jacks matching the valve cable's six-position plug    | 2, plus a spare   | A photograph of the plug: housing and part number                                                           |
-| Leads from `K1` and `K2` to the K-99695's valve jacks | 2                 | The same photograph, and the length at the controller                                                       |
-| An isolated transceiver with its own isolated supply  | 2, only if needed | The K-99695 ground check, [HARDWARE.md § 15](HARDWARE.md) item 8: only if its two jacks' pin 2 are separate |
+| Item                                                  | Qty               | Closed by                                                                                                                                                  |
+| ----------------------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Leads from `K1` and `K2` to the K-99695's valve jacks | 2                 | Whether the valve cables unplug at the valve end, and the length at the controller. A 6P lead must be straight-through: an ordinary phone cord is reversed |
+| An isolated transceiver with its own isolated supply  | 2, only if needed | The K-99695 ground check, [HARDWARE.md § 15](HARDWARE.md) item 8: only if its two jacks' pin 2 are separate                                                |
 
 **Never cut the original Kohler cables.** They are the rollback path.
 
