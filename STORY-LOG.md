@@ -12,6 +12,23 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ## 2026-10-24
 
+### 17:28 — The controller moves in line, onto one microcontroller
+
+The operator chose to put the replacement controller in the middle of each valve cable instead of
+swapping the cables over: the K-99695 stays master while the new controller copies its traffic, then
+each valve is handed over in turn, and the K-99693 keeps working until a new wall panel replaces it. No
+bypass relay, because 16:38 showed the valve stops the water about 2 s after its master goes quiet. In
+line needs five serial ports, so revision A's Raspberry Pi with USB converters gave way to one WIZnet
+W5500-EVB-Pico2, an RP2350 with wired Ethernet, running Rust firmware.
+
+One wrong turn on the way: the first transceiver recommended was TI's THVD1406, picked for its automatic
+direction control. Its datasheet says it drives a high bit for only 4 to 14 µs and then leaves the line
+to the bus bias, while the K-99695 drives every bit. The THVD1410, which has a driver-enable pin,
+replaced it before anything was bought.
+
+**Why it matters:** the shower stays in service through the whole build, and the controller records
+both buses from inside the path before it sends a frame of its own.
+
 ### 16:38 — Pulling the controller's power stops the water in about two seconds
 
 The fail-off test: valve 2 running at 90 °F, the operator cut the K-99695's power and counted. The last

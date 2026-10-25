@@ -1,34 +1,41 @@
 # Replacement controller — hardware specification
 
-Status: **build specification, revision A.** Not yet built.
+Status: **build specification, revision B (2026-10-24).** Not yet built.
+Revision A, a Raspberry Pi with two USB converters, is superseded —
+[DECISIONS.md W5](DECISIONS.md#w5--revision-a-build-superseded).
 
-An open replacement master for the Kohler DTV+: two isolated Saturn valve
-links driven from a Raspberry Pi. This specifies the unit described in
-[DESIGN.md](DESIGN.md). That document owns the architecture, the safety rules
-and the delivery phases; this one owns the hardware. Purchase links and prices
-are in [SHOPPING-LIST.md](SHOPPING-LIST.md), and the order in which parts are
-bought and phases run is [BUILD-ORDER.md](BUILD-ORDER.md). §12 documents the
-dormant DTV+ steam stack the codebase carries; steam is otherwise out of
-scope.
+An open replacement master for the Kohler DTV+: one microcontroller board in
+line with both Saturn valve cables, with a wired port for a new wall panel.
+This specifies the unit described in [DESIGN.md](DESIGN.md). That document
+owns the architecture, the safety rules and the delivery phases; this one owns
+the hardware. Purchase links and prices are in
+[SHOPPING-LIST.md](SHOPPING-LIST.md), and the order in which parts are bought
+and phases run is [BUILD-ORDER.md](BUILD-ORDER.md). §12 documents the dormant
+DTV+ steam stack the codebase carries; steam is otherwise out of scope.
 
 Evidence tiers follow [system-specification.md](../../docs/system-specification.md) —
 **[A]** ours/measured, **[B]** shipped code, **[K]** Kohler primary, **[C]**
 reverse-engineered, **[?]** unresolved, **[I]** inference. Component data cited
-from a manufacturer's own published page is marked **[V]** and linked.
+from a manufacturer's or reseller's own published page is marked **[V]** and
+linked.
 
 ---
 
 ## 1. Links
 
-| Link | Device            | Bus    | Protocol | Encoding | Subsystem |
-| ---- | ----------------- | ------ | -------- | -------- | --------- |
-| 1    | Valve, six-port   | RS-485 | Saturn   | Cx2      | §5        |
-| 2    | Valve, three-port | RS-485 | Saturn   | Cx2      | §5        |
+| Link | Far ends                              | Bus    | Protocol  | Encoding | Subsystem |
+| ---- | ------------------------------------- | ------ | --------- | -------- | --------- |
+| 1    | K-99695 valve 1 jack · six-port valve | RS-485 | Saturn    | Cx2      | §5        |
+| 2    | K-99695 valve 2 jack · Prompt valve   | RS-485 | Saturn    | Cx2      | §5        |
+| 3    | New wall panel                        | RS-485 | Ours, §16 | —        | §16       |
 
-Each link gets its own converter, its own isolation barrier, and its own state
-machine. Nothing is shared between them. The codebase also carries a dormant
-DTV+ steam stack — §12 — which is out of scope of this plan and drives no
-hardware.
+Each valve link is cut into two **segments** at the controller: `K`, between
+the K-99695 and the controller, and `V`, between the controller and the valve.
+Each segment has one transceiver at the controller's end, and exactly one
+master at any time ([DESIGN.md § Safety boundary](DESIGN.md), rule 1). Each
+valve link has its own state machine; the two zones share the board, its supply
+and its ground (§9). The codebase also carries a dormant DTV+ steam stack — §12
+— which is out of scope of this plan and drives no hardware.
 
 ### Reference configuration
 
@@ -41,171 +48,187 @@ document that comes from hardware comes from it:
 | 2    | Three-port "Prompt" | `0.14`   | 3                  | 113 °F     | `160`       |
 
 Valve models are most likely K-682-K and K-557-K1. Read the nameplates before
-ordering connectors or doing mains work — §11.
+ordering connectors — §11.
 
 ---
 
 ## 2. Platform decision
 
-**Raspberry Pi 4 Model B, 2 GB, running a Rust service on Linux. Not a
-microcontroller.**
+**A WIZnet W5500-EVB-Pico2 — an RP2350 microcontroller and a W5500 wired
+Ethernet controller on one board — running Rust firmware on Embassy.**
 
-Every deadline that binds is ≥ 150 ms (§6), the wire rather than the scheduler
-dominates at 9600 baud, and the valve — not the master — owns the safety
-envelope, so an MCU would buy determinism the failure model does not need. The
-full comparison against a bare-metal MCU, and the reasoning, are
-[DECISIONS.md D2](DECISIONS.md#d2--raspberry-pi--rust-on-linux-not-a-bare-metal-mcu).
-
-**[I]** An MCU becomes the right answer only if Phase 3 measures that a valve
-does **not** close on communication loss. In that case the acceptance
-thresholds in [DESIGN.md](DESIGN.md) reject this
-architecture outright, and a redesign — not a platform swap — is required.
-
-**Pi 4 over Pi 5:** the enclosure is sealed and passively cooled (§10). The Pi 4
-2 GB dissipates ~3 W at this workload; the Pi 5 draws more and its documentation
-calls for active cooling under sustained load. Compute is not a constraint —
-this service moves at most a few hundred bytes per second.
+The in-line design needs five serial ports, and every deadline that binds is
+≥ 150 ms (§6), so the choice is about ports, parts and the size of the trusted
+base, not speed. The comparison with the revision A Pi, and why an ESP32 lost,
+is [DECISIONS.md D14](DECISIONS.md#d14--rp2350-firmware-in-rust-not-a-linux-computer).
 
 ---
 
 ## 3. Block diagram
 
 ```text
-                    wired Ethernet (control path; Wi-Fi disabled)
-                                      |
-  5.1 V 3 A USB-C ──────┐   +---------v-----------------------------+
-  (PSU outside the      └──>|  Raspberry Pi 4 Model B, 2 GB         |
-   enclosure)               |   Rust service · local API · journald |
-                            |   BCM2711 hardware watchdog           |
-                            +---+-------+-------+---+
-                            USB3|   USB3|   I2C1|
-                                |       |       |
-                                |       |       +--> DS3231 RTC
-                                |       |            + CR1220 cell
-                                |       |
-          +---------------------+       |
-          |                             |
- +--------v--------+           +--------v--------+
- | Waveshare 23949 |           | Waveshare 23949 |
- | FT232R+SP485EEN |           | (same part)     |
- | isolated        |           | isolated        |
- +--------+--------+           +--------+--------+
-          | RS-485                      | RS-485
-  +-------v-------+             +-------v-------+
-  | Valve link 1  |             | Valve link 2  |
-  | 6-port        |             | 3-port Prompt |
-  | Saturn · Cx2  |             | Saturn · Cx2  |
-  +---------------+             +---------------+
+                       LAN: API and log drain (wired Ethernet)
+                                        |
+  5 V USB-C ──────>  +------------------v---------------------+
+  (adapter outside   | W5500-EVB-Pico2: RP2350 + W5500         |
+   the box)          | Rust firmware on Embassy, watchdog      |
+                     +--+-------+-------+-------+-------+------+
+                        |       |       |       |       |
+                      [K1]    [V1]    [K2]    [V2]     [P]     one THVD1410 per port
+                        |       |       |       |       |
+  K-99695, valve 1 jack-+       |       |       |       |
+  valve 1, six-port ------------+       |       |       |
+  K-99695, valve 2 jack ----------------+       |       |
+  valve 2, three-port Prompt -------------------+       |
+  new wall panel, over the in-wall RJ45 cable ----------+
 
-  K-99695 ports:     disconnected, capped, labeled
-  K-99695 + K-99693: powered down after Phase 1 capture
+  Pin 2 (ground) and pin 5 (+12.7 V, supplied by the valve) run straight
+  through K1 to V1 and K2 to V2. Only pins 3 and 4 reach a transceiver.
+  The panel's DC comes from its own adapter onto the panel jack, not
+  through the board (§16).
 ```
 
 Line power to both valves stays in the original listed receptacles and wiring.
-No mains conductor enters this enclosure (§9).
+No mains conductor enters the controller's box (§9).
 
 ---
 
 ## 4. Subsystem A — compute
 
-| Item     | Specification                                                           |
-| -------- | ----------------------------------------------------------------------- |
-| Board    | Raspberry Pi 4 Model B, 2 GB LPDDR4                                     |
-| Ambient  | 0–50 °C **[V]**; enclosure interior held ≤ 40 °C, verified in soak      |
-| Cooling  | Passive metal case or heatsink. No fan — no moving part in a sealed box |
-| Power in | Official Raspberry Pi 15 W USB-C supply, 5.1 V / 3 A                    |
-| Network  | On-board Gigabit Ethernet. **Wi-Fi and Bluetooth disabled in firmware** |
-| Storage  | 64 GB high-endurance microSD, plus one imaged spare held offline        |
-| Watchdog | BCM2711 hardware watchdog enabled; `systemd` `RuntimeWatchdogSec`       |
+| Item     | Specification                                                                                  |
+| -------- | ---------------------------------------------------------------------------------------------- |
+| Board    | WIZnet W5500-EVB-Pico2, Pico 2 footprint **[V]**                                               |
+| MCU      | RP2350: two Cortex-M33 cores at 150 MHz, 520 kB SRAM, 2 UARTs, 12 PIO state machines **[V]**   |
+| Flash    | 2 MB on the board **[V]**: firmware and configuration only. Nothing is logged to flash         |
+| Network  | W5500, 10/100 wired Ethernet, on GPIO16–21 **[V]**. No radio on the board                      |
+| Power in | 5 V over USB-C (VBUS 5 V ± 10 %) **[V]**, from an external adapter                             |
+| Watchdog | RP2350 hardware watchdog, fed by the bus tasks; a reset boots to `OFF` (DESIGN.md rule 4)      |
+| Firmware | Rust, Embassy (`embassy-rp`, `embassy-net`, `embassy-net-wiznet`), `picoserve` for the LAN API |
+| Debug    | USB-C for flashing (UF2); SWD header for a debug probe and `defmt` logs                        |
 
-**Storage policy.** Root filesystem mounted with journaling. Frame logs and
-session logs go to a separate partition with bounded rotation. The spare card
-is imaged at commissioning and re-imaged after any configuration change, so a
-card failure is a swap, not a rebuild.
+Board data: [The Pi Hut](https://thepihut.com/products/wiznet-w5500-evb-pico2).
+A Pico 2 with a W5500 module wired to GPIO16–21 is the same circuit **[I]**,
+and an original Pico (RP2040, 264 kB SRAM) is the same with less memory —
+[SHOPPING-LIST.md](SHOPPING-LIST.md).
+RP2350 data: [Adafruit](https://learn.adafruit.com/adafruit-feather-rp2350/overview).
+
+**Logs.** Frame and session logs live in a RAM ring buffer and are read over
+the LAN API; in the reference configuration the house's automation server
+drains them every 5 minutes. A reset loses whatever had not been drained
+**[I]**. The reset reason and the last fault survive a watchdog reset in the
+watchdog's scratch registers **[I]**.
 
 **No UPS.** Deliberate. A house power loss removes valve power, which closes
 the valves — the correct outcome. Keeping the master alive through that event
 adds a failure mode and buys nothing, because the master cannot act on valves
-that have no power. Loss of Pi power is one of the fault paths Phase 3 measures.
+that have no power. Loss of controller power is one of the fault paths Phase 3
+measures.
 
 ---
 
 ## 5. Subsystem B — valve serial links
 
-One converter per valve. Never shared.
-
 ### Selected part
 
-Waveshare `USB TO RS485/422`, SKU `23949`. All rows **[V]**, from the
-[manufacturer's product page](https://www.waveshare.com/usb-to-rs485-422.htm).
+TI **THVD1410**, one per port, five on the board. All rows **[V]**, from the
+[datasheet](https://www.ti.com/lit/gpn/THVD1410).
 
-| Parameter         | Value                                                        |
-| ----------------- | ------------------------------------------------------------ |
-| USB bridge        | FTDI FT232R family                                           |
-| Transceiver       | SP485EEN                                                     |
-| Isolation         | Unibody power-supply isolation + unibody digital isolation   |
-| Protection        | 15 kV ESD, 600 W surge/lightning, TVS, self-recovering fuse  |
-| Host connector    | USB-B, 5 V, 200 mA self-recovering fuse                      |
-| Field terminals   | Screw: `PE`, `TA`, `TB`, `RA`, `RB`                          |
-| RS-485 assignment | `TA` = A+, `TB` = B−, `PE` = signal ground, `RA`/`RB` unused |
-| Direction control | Hardware automatic                                           |
-| Termination       | On-board 120 Ω, **disabled by default**, jumper-selectable   |
-| Environment       | −15 – 70 °C, 5–95 % RH                                       |
-| Mechanical        | ABS case for 35 mm DIN rail; 81.9 × 54.0 × 32.0 mm           |
-| Included          | USB-A to USB-B cable, ≈1.2 m                                 |
+| Parameter       | Value                                                                     |
+| --------------- | ------------------------------------------------------------------------- |
+| Function        | Half-duplex RS-485, one driver and one receiver, not isolated             |
+| Supply          | 3 V – 5.5 V; run at the board's 3.3 V                                     |
+| Data rate       | Up to 500 kbps, slew-limited                                              |
+| Receiver        | Fail-safe high on an open, shorted or idle bus; thresholds −20 to −200 mV |
+| Common mode     | ±15 V operating; bus pins protected to ±18 V                              |
+| ESD             | Bus pins ±30 kV HBM, ±18 kV IEC 61000-4-2 contact                         |
+| Driver enable   | `DE`, active high, internal 2 MΩ pull-down                                |
+| Receiver enable | `RE`, active low, internal 2 MΩ pull-up                                   |
+| Driver input    | `D`, internal pull-up                                                     |
+| Package         | 8-pin SOIC (`D`) or VSSOP (`DGK`)                                         |
 
-### Why not a dual-channel part
+Why a driver-enable part and not an auto-direction one, and why not isolated:
+[DECISIONS.md D15](DECISIONS.md#d15--one-board-for-both-valves-and-the-panel-plain-transceivers).
+In short, the K-99695 drives both levels of every bit **[A]**, and an
+auto-direction part drives a mark for 4–14 µs and then leaves it to the bus
+bias **[V]**.
 
-Both dual-channel candidates — Waveshare SKU `27646` and the `2-CH RS485 HAT`
-SKU `17221` — put both zones behind a single isolation barrier, which is the
-one property this design refuses. The evidence and the full comparison are
-[DECISIONS.md D3](DECISIONS.md#d3--three-single-channel-converters-not-a-dual-channel-part).
+### Wiring per port
 
-### The three USB failure modes and their mitigations
+| Transceiver pin | Connection                                                                 |
+| --------------- | -------------------------------------------------------------------------- |
+| `A`             | Pin 4 of the six-position connector, the positive conductor **[A]**        |
+| `B`             | Pin 3, the negative conductor **[A]**                                      |
+| `GND`           | Board ground, which is pin 2 of that zone's cable (§9)                     |
+| `VCC`           | Board 3.3 V, 100 nF at the pin                                             |
+| `D`             | The port's TX GPIO                                                         |
+| `R`             | The port's RX GPIO                                                         |
+| `DE`            | The port's DE GPIO, **with an external 4.7 kΩ pull-down**                  |
+| `RE`            | Ground: the receiver is always on, so each port hears its own transmission |
 
-| Failure mode                          | Mitigation                                                                                                                          |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| FTDI 16 ms latency-timer quantum      | Set `latency_timer` to 1 ms and `ASYNC_LOW_LATENCY` at service start. Refuse to start if the value does not read back               |
-| Duplicate or blank USB serial numbers | Bind zones by physical USB port path, not `/dev/ttyUSB*` order. Refuse to start unless both interfaces are present and **distinct** |
-| Enumeration loss mid-session          | Treated as a link fault: `all-off` on that zone, close the port, latch the zone unavailable. Rule 5 of the design                   |
+Wire by pin number. RS-485 vendors disagree on whether the positive line is A
+or B; on the THVD1410, A is the non-inverting line **[V]**, so A goes to pin 4.
 
-`latency_timer` is FTDI-specific. If either unit arrives with a non-FTDI
-bridge, the equivalent low-latency setting for that driver must be established
-and the start-up read-back adjusted before the unit is used.
+**The DE pull-down is what keeps a resetting board off the bus.** The
+transceiver's own 2 MΩ pull-down is too weak to rely on against the RP2350's
+pads: Raspberry Pi's erratum E9 can hold a pad with its internal pull-down
+enabled high, and the documented workaround is an external pull-down of
+8.2 kΩ or less ([Adafruit](https://learn.adafruit.com/key-pad-matrix-scanning-in-circuitpython/raspberry-pi-rp2350-erratum-workarounds)).
+With 4.7 kΩ on every `DE`, no port drives its pair while the RP2350 is held in
+reset, booting, being flashed, or restarting from its watchdog — bench check 1
+proves it.
 
-### Configuration at assembly
+**Echo.** With `RE` tied low each port receives its own bytes. The firmware
+compares them with what it sent and treats a mismatch as a link fault on that
+segment, and it never forwards its own echo **[I]**.
 
-1. Two-wire RS-485: `TA` → A+, `TB` → B−, `RA`/`RB` unused.
-2. **Termination jumper OFF on both units** until the factory bus is captured
-   and measured. Add termination only if it is present in the proven Kohler
-   topology.
-3. `PE` connected only if the captured wiring and the electrical review show a
-   reference conductor is required. **The two field-side `PE` terminals are
-   never joined to each other** — joining them defeats the per-valve barrier.
-4. Verify the bridge chip on arrival. The manufacturer's page names `FT232RL`
-   in its title and `FT232RNL` in its description **[?]**; record which is
-   fitted.
-5. Read both USB serial numbers before installing either unit. On collision,
-   bind by port path and label the physical ports.
+### Termination and bias
+
+| Port       | Termination at the controller | Bias at the controller                                                                       |
+| ---------- | ----------------------------- | -------------------------------------------------------------------------------------------- |
+| `K1`, `K2` | 120 Ω across 3–4              | None. The K-99695 end biases its segment **[I]**                                             |
+| `V1`, `V2` | 120 Ω across 3–4              | Footprints for a pull-up on pin 4 and a pull-down on pin 3; values set in Phase 3, see below |
+| `P`        | 120 Ω                         | Ours to choose, §16                                                                          |
+
+The factory pair is terminated at both ends: 141.2 Ω across the valve side
+alone, 55.6 Ω with the K-99695 connected **[A]**
+([2026-10-24 bus capture](../../research/diagnostics/2026-10-24-saturn-valve-bus/README.md#meter-readings-a)).
+Each segment keeps that shape: the far device's termination at one end, the
+controller's 120 Ω at the other.
+
+The valve segment's idle level is the one thing the K-99695 supplied that the
+controller has to reproduce. On the factory bus it idles at +0.36 V (valve 2)
+and +0.40 V (valve 1) differential **[A]**; the valve on its own read about
++0.2 to +0.3 V, a short reading through a slipping probe **[A]**. The bias
+resistors are fitted, and their values chosen, in Phase 3 with the valve
+connected, to bring the idle level to the factory figure. The controller's own
+receivers need no bias: the THVD1410 is fail-safe **[V]**.
+
+### Pin 5
+
+The controller never takes power from pin 5 and never feeds it. The valve
+supplies it **[A]**; how much spare current it has is not measured, and nothing
+here depends on it.
 
 ---
 
 ## 6. Protocol parameters the hardware must satisfy
 
-Restated here because they set the timing budget. All **[C]**, unverified
-against this hardware, to be confirmed from the Phase 1 capture.
+Restated here because they set the timing budget. **[C]** unless marked.
 
-| Parameter        | Saturn (valves) | DTV+ (steam, §12) |
-| ---------------- | --------------- | ----------------- |
-| Line             | 9600 8N1        | 9600 8N1          |
-| Tick             | 525 ms          | 150 ms            |
-| Response timeout | 400 ms          | 300 ms            |
-| Message timeout  | 320 ms          | —                 |
-| Echo timeout     | 20 ms — n/a     | 150 ms — n/a      |
-| Retries          | 3               | 4 or 5 **[?]**    |
-| Max frame        | 20 bytes        | variable          |
+| Parameter                 | Saturn (valves)                     | DTV+ (steam, §12) |
+| ------------------------- | ----------------------------------- | ----------------- |
+| Line                      | 9600 8N1 **[A]**                    | 9600 8N1          |
+| Tick                      | 525 ms average **[A]**              | 150 ms            |
+| Request to reply, factory | 8.6–14.2 ms **[A]**                 | —                 |
+| Response timeout          | 400 ms                              | 300 ms            |
+| Message timeout           | 320 ms                              | —                 |
+| Echo timeout              | 20 ms                               | 150 ms            |
+| Retries                   | 3                                   | 4 or 5 **[?]**    |
+| Frame length              | 6–17 bytes seen **[A]**; 20 maximum | variable          |
 
-Byte time at 9600 8N1 is ~1.04 ms; a 20-byte frame occupies the wire ~21 ms.
+Byte time at 9600 8N1 is ~1.04 ms; the K-99695 sends at a 1146 µs byte pitch
+**[A]**. Forwarding byte by byte adds about one byte time per frame per hop
+**[I]**: ~1 ms to the request, ~1 ms to the reply.
 
 ---
 
@@ -214,34 +237,35 @@ Byte time at 9600 8N1 is ~1.04 ms; a 20-byte frame occupies the wire ~21 ms.
 A PT1000/MAX31865 outlet temperature subsystem occupied this section through
 revision A and was **removed from the plan on 2026-08-30**, operator decision —
 [DECISIONS.md W3](DECISIONS.md#w3--the-independent-temperature-sensor-removed).
-The section number is kept so every §8–§15 citation stays stable.
+The section number is kept so every §8–§16 citation stays stable.
 
 ---
 
 ## 8. Subsystem D — timekeeping, and the GPIO map
 
-The Pi 4 has no RTC. Timestamps before the first NTP sync are wrong, which
-makes an unsynced boot's frame log unusable for correlating a fault.
+The board has no battery-backed clock. Log entries carry the boot ID and a
+monotonic microsecond timestamp from the RP2350's timer; wall-clock time comes
+from SNTP over the LAN, and every wall-clock stamp records whether it has
+synced. Water control never depends on the time of day.
 
-| Item    | Part                                                   |
-| ------- | ------------------------------------------------------ |
-| RTC     | Adafruit DS3231 Precision RTC — STEMMA QT, PID `5188`  |
-| Battery | CR1220 coin cell — **not included with the board [V]** |
-| Bus     | I2C1                                                   |
+### GPIO assignments
 
-Logs still record NTP sync state with every wall-clock stamp. The RTC narrows
-the pre-sync window; it does not remove the requirement.
+Proposed **[I]**: confirm against the board's schematic at the bench. GPIO16–21
+belong to the W5500 and cannot be used for anything else **[V]**.
 
-### Pi 40-pin header assignments
+| Port | Faces                 | TX             | RX     | DE     | UART             |
+| ---- | --------------------- | -------------- | ------ | ------ | ---------------- |
+| `V1` | Valve 1               | GPIO0          | GPIO1  | GPIO2  | UART0            |
+| `V2` | Valve 2               | GPIO4          | GPIO5  | GPIO6  | UART1            |
+| `K1` | K-99695, valve 1 jack | GPIO7          | GPIO8  | GPIO9  | PIO              |
+| `K2` | K-99695, valve 2 jack | GPIO10         | GPIO11 | GPIO12 | PIO              |
+| `P`  | Wall panel            | GPIO13         | GPIO14 | GPIO15 | PIO              |
+| —    | W5500                 | GPIO16–21      |        |        | SPI0, reset, IRQ |
+| —    | Status LED            | GPIO25 **[V]** |        |        |                  |
 
-| Header pin | GPIO  | Function | Destination  |
-| ---------: | ----- | -------- | ------------ |
-|          3 | GPIO2 | I2C1 SDA | DS3231 `SDA` |
-|          5 | GPIO3 | I2C1 SCL | DS3231 `SCL` |
-|          6 | —     | GND      | DS3231 `GND` |
-|         17 | —     | 3V3      | DS3231 `VIN` |
-
-No GPIO drives a relay, a contactor, or anything in a mains path.
+The permanent ports, `V1` and `V2`, get the hardware UARTs; `K1` and `K2` are
+used only until cut-over. Spare: GPIO3, 22, 26–28. No GPIO drives a relay, a
+contactor, or anything in a mains path.
 
 ---
 
@@ -249,65 +273,62 @@ No GPIO drives a relay, a contactor, or anything in a mains path.
 
 ### Budget
 
-| Load                | Worst case  | Note                                     |
-| ------------------- | ----------- | ---------------------------------------- |
-| Raspberry Pi 4 2 GB | ~3.5 W      | This workload; idle ~2.7 W               |
-| Converter × 3       | 3 × 1.0 W   | 200 mA fused each; actual draw is lower  |
-| DS3231              | < 0.1 W     | On 3V3                                   |
-| **Total**           | **≈ 6.6 W** | Supply is 15.3 W — better than 2× margin |
+| Load                  | Worst case            | Note                                                                     |
+| --------------------- | --------------------- | ------------------------------------------------------------------------ |
+| W5500-EVB-Pico2       | Measured at the bench | RP2350, W5500 and the board's regulator                                  |
+| One THVD1410 driving  | ~30 mA **[I]**        | ~2 V across the two terminations in parallel, ~65 Ω                      |
+| Ports driving at once | 3 **[I]**             | Each zone is half duplex, so one segment per zone drives, plus the panel |
 
-Worst-case downstream USB draw is 400 mA across two converters, inside the
-Pi 4's documented total USB budget **[V]**.
+The board's 3.3 V regulator is the limit, not the 5 V supply: bench check 9
+runs three ports driving continuously and checks 3.3 V stays in regulation.
 
-### Isolation policy
+### Grounding
 
-1. One complete galvanic barrier per valve bus. **Field-side grounds are never
-   joined.**
-2. The Pi's USB ground is the common host-side reference. That is on the
-   non-isolated side of every barrier and never reaches a valve.
-3. Field-side `PE` is connected per-zone only, and only if measurement shows
-   it is required.
-4. Termination is added only where the factory topology has it.
+1. **Pins 2 and 5 pass straight through** each zone, from the `K` connector to
+   the `V` connector, on copper that touches nothing else, except that pin 2 is
+   also the ground reference for that zone's two transceivers.
+2. **One board ground** therefore joins both zones' pin 2 and the panel
+   port's ground. Whether the K-99695 already joins its two valve jacks' pin 2
+   is not measured (§15 item 8). If it does not, one zone's two ports take an
+   isolated transceiver with its own isolated supply instead of the THVD1410
+   — [DECISIONS.md D15](DECISIONS.md#d15--one-board-for-both-valves-and-the-panel-plain-transceivers).
+3. The Ethernet port is transformer-coupled and the USB-C adapter's output
+   floats from mains **[I]**, so the board's only ground reference is the
+   valves' pin 2. A laptop on USB for flashing ties its own ground in; run it
+   on battery.
 
 ### Mains policy
 
-**No mains conductor enters this enclosure.** The Pi's USB-C supply plugs into
-an existing receptacle outside the box; only its low-voltage output cable
-passes through a gland. The build is entirely low-voltage, and this project
-does no mains work anywhere: the valves stay in their existing receptacles and
-circuits, untouched.
+**No mains conductor enters the controller's box.** The USB-C adapter, and the
+panel's DC adapter (§16), plug into an existing receptacle outside it; only
+their low-voltage cables come in. This project does no mains work anywhere:
+the valves stay in their existing receptacles and circuits, untouched.
 
 ---
 
 ## 10. Enclosure, mechanical and environment
 
-| Requirement       | Specification                                                                 |
-| ----------------- | ----------------------------------------------------------------------------- |
-| Location          | Dry, serviceable, ventilated. **Not inside the bathroom wet zone**            |
-| Rating            | IP65 / NEMA 4X wall-mount, hinged or screw lid, non-metallic                  |
-| Internal size     | ≥ 300 × 200 × 150 mm, with a mounting plate                                   |
-| Rail              | 35 mm × 7.5 mm DIN, ≥ 200 mm usable length                                    |
-| Rail budget       | 2 × converter at 81.9 × 54.0 × 32.0 mm, plus terminal blocks                  |
-| Pi mounting       | DIN-rail carrier or plate standoffs, GPIO header accessible with the lid open |
-| Breakout mounting | DS3231 on plate standoffs, not loose                                          |
-| Glands            | 1 × Pi USB-C power, 1 × Ethernet, 2 × valve field cable                       |
-| Interior ambient  | ≤ 40 °C, logged from the Pi's own thermal sensor through the seven-day soak   |
-| Strain relief     | Every cable, at the gland. No conductor takes tension at a screw terminal     |
-
-Size for one spare gland and ~55 mm of spare rail beyond this. Re-drilling a
-sealed enclosure in service is worse than buying a larger one now.
+| Requirement   | Specification                                                                                 |
+| ------------- | --------------------------------------------------------------------------------------------- |
+| Location      | Beside the K-99695: dry, serviceable. **Not inside the bathroom wet zone**                    |
+| Box           | Small, non-metallic, with a mounting plate; the board sockets into a carrier, not soldered in |
+| Carrier       | Protoboard for the bench build. Whether the installed unit gets a carrier PCB is §15 item 12  |
+| Cable entries | USB-C power, Ethernet, `K1`, `V1`, `K2`, `V2`, panel cable, panel DC                          |
+| Strain relief | Every cable. No conductor takes tension at a solder joint or a jack                           |
 
 ### Labelling and test points
 
-| Label                    | Applied to                                                  |
-| ------------------------ | ----------------------------------------------------------- |
-| `ZONE 1 · 6-PORT`        | Converter 1, its USB port, its field cable, both cable ends |
-| `ZONE 2 · 3-PORT PROMPT` | Converter 2, its USB port, its field cable, both cable ends |
-| `A+` / `B−` / `PE`       | Each field terminal                                         |
-| `OEM — DO NOT CUT`       | Both original Kohler valve cables, at both ends             |
+| Label                                | Applied to                                      |
+| ------------------------------------ | ----------------------------------------------- |
+| `K1 · TO KOHLER VALVE 1`             | The `K1` connector and its lead                 |
+| `V1 · VALVE 1 · 6-PORT`              | The `V1` connector                              |
+| `K2 · TO KOHLER VALVE 2`             | The `K2` connector and its lead                 |
+| `V2 · VALVE 2 · 3-PORT PROMPT`       | The `V2` connector                              |
+| `PANEL · NOT ETHERNET · DC ON PAIRS` | The panel jack, both ends of the in-wall cable  |
+| `OEM — DO NOT CUT`                   | Both original Kohler valve cables, at both ends |
 
-Bring A/B test points out per zone as labelled, insulated posts so the bus can
-be metered without unlanding a conductor.
+Bring pins 2, 3 and 4 of every segment out to labelled test points, so each
+segment can be scoped without unplugging anything.
 
 ---
 
@@ -317,16 +338,18 @@ These items cannot be finalised from documents. Each row names the measurement
 that closes it. Ordering by assumption is prohibited by
 [DESIGN.md § Hardware, "Not orderable from documents"](DESIGN.md).
 
-| Item                                  | What is unknown                               | Measurement that closes it                                                                  |
-| ------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Valve mating connector / pigtail      | Housing, keying, pin count                    | Photograph both ends; record keying; verify A/B/ground continuity with everything unpowered |
-| Adapter lead conductor gauge, length  | Run length, gauge                             | Measure the installed run at Phase 0                                                        |
-| RS-485 termination and bias           | Whether the factory bus terminates, and where | Meter the unpowered bus; capture the original waveform in Phase 1                           |
-| Cable polarity                        | Which conductor is A+                         | Phase 1 capture. The `TA`/`TB` labels are the converter's convention, not Kohler's          |
-| Ferrules, glands, blocks, rail length | Final conductor gauges and layout             | Bench layout, after the above                                                               |
+| Item                               | Known                                                            | Closed by                                                                   |
+| ---------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Valve-side connectors (`V1`, `V2`) | Six positions, pins 2–5 wired **[A]**                            | A photograph of the plug on the valve cable: housing and part number        |
+| Leads to the K-99695 (`K1`, `K2`)  | The K-99695's valve jacks take the same plug **[A]**             | The same photograph; lead length measured at the controller                 |
+| Cable polarity                     | **Closed:** pin 4 positive, pin 3 negative, pin 2 ground **[A]** | —                                                                           |
+| Factory termination                | **Closed:** both ends terminated **[A]**                         | —                                                                           |
+| Valve-segment bias values          | Factory idle +0.36 / +0.40 V **[A]**                             | Phase 3, with the valve on the controller (§5)                              |
+| In-wall panel cable conductors     | RJ45-terminated, up to 25 ft, a coupler **[K]**                  | A look at the plug at the controller end: how many contacts are wired (§16) |
 
 **Adapter leads, not modified OEM cables.** The original Kohler cables are the
-rollback path and are never cut.
+rollback path and are never cut. The valve cable's plug goes into `V1` or `V2`;
+a new short lead goes from `K1` or `K2` to the K-99695's jack.
 
 ---
 
@@ -408,16 +431,16 @@ control **[K]**.
 
 ### Losing the DTV+ link
 
-Three links exist and only two are ours: Pi ↔ valve (Saturn), Pi ↔ adapter
+Three links exist and only two are ours: controller ↔ valve (Saturn), controller ↔ adapter
 (DTV+), and adapter ↔ generator (Kohler's crossover cable). This is about the
 second.
 
 Two cases, and they behave differently:
 
-| Case                                                                        | What the service does                                                                           |
-| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| **Degraded but alive** — timeouts, NAKs, checksum failures, port still open | Transmit still works: command `steam_stop`, require acknowledgement, latch the link unavailable |
-| **Hard loss** — USB gone, cable pulled, service dead, Pi unpowered          | Nothing can be sent. Steam is entirely on the generator's own behaviour                         |
+| Case                                                                         | What the service does                                                                           |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Degraded but alive** — timeouts, NAKs, checksum failures, port still open  | Transmit still works: command `steam_stop`, require acknowledgement, latch the link unavailable |
+| **Hard loss** — port gone, cable pulled, firmware dead, controller unpowered | Nothing can be sent. Steam is entirely on the generator's own behaviour                         |
 
 The service enforces its own session limit for the degraded case.
 
@@ -428,27 +451,29 @@ what a generator does when this link goes silent has never been measured.
 
 ## 13. Bench acceptance — before anything is connected
 
-Run with both converters on the Pi and **nothing attached to the field
-side**. This is Phase 2 of
-[DESIGN.md](DESIGN.md); these are the hardware checks
-inside it.
+Phase 2 of [DESIGN.md](DESIGN.md). The bench rig is the two Waveshare
+`USB TO RS485/422` converters left from revision A on a computer: one on a `K`
+port plays the K-99695, the other on that zone's `V` port plays the valve, both
+driven by the emulator. **Nothing installed is connected.**
 
-| #   | Check                                                          | Pass criterion                                                              |
-| --- | -------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| 1   | Both converters enumerate with **distinct** USB serial numbers | Two distinct IDs, or documented port-path binding in use                    |
-| 2   | `latency_timer` reads back 1 ms on both                        | Service refuses to start otherwise                                          |
-| 3   | Bridge chip identified and recorded                            | Matches an FTDI part, or the driver's low-latency equivalent is established |
-| 4   | Termination jumpers OFF, verified visually and by resistance   | No 120 Ω across A/B                                                         |
-| 5   | Field-side `PE` terminals not joined                           | Open circuit between the two zones' `PE`                                    |
-| 6   | Loopback A↔B per converter, both directions                    | Frames decode without checksum error                                        |
-| 7   | Zone-to-zone isolation                                         | No continuity between zone 1 and zone 2 field terminals                     |
-| 8   | RTC holds time across a full power removal                     | Time correct on the next boot before NTP                                    |
-| 9   | Hardware watchdog fires on a forced service hang               | Pi resets; boots to `READY_OFF`, no state restored                          |
-| 10  | Enclosure interior ≤ 40 °C after 7 days sealed                 | Logged from the Pi's thermal sensor                                         |
-| 11  | Every label present and correct                                | Visual                                                                      |
+| #   | Check                                  | Pass criterion                                                                                                                  |
+| --- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | No port drives while the board is down | Scope on every port's pins 3–4 through power-up, `RUN` held low, flashing, and a watchdog reset: no driven level on any port    |
+| 2   | Termination                            | Power off, nothing plugged in: 120 Ω across pins 3–4 at each port                                                               |
+| 3   | Pass-through copper                    | Pin 2 and pin 5 continuous `K1`↔`V1` and `K2`↔`V2`; pin 5 open to 3.3 V, 5 V and board ground                                   |
+| 4   | Panel DC stays off the valve ports     | Panel adapter on: 0 V against board ground on every contact of `K1`, `V1`, `K2`, `V2`                                           |
+| 5   | Pass-through copies                    | 24 h of captured traffic replayed both ways: every byte arrives unchanged; the added delay per byte is recorded                 |
+| 6   | Segment faults are found               | `V` segment opened, then shorted, on each zone: that zone latches a link fault; the other zone carries on                       |
+| 7   | A dead controller is silent            | Forced firmware hang, then power pulled: the valve-side rig sees an undriven line within one byte time, never a held level      |
+| 8   | The bus does not need the network      | Ethernet unplugged during pass-through and during emulated take-over: bus traffic unchanged; the API answers again on reconnect |
+| 9   | 3.3 V budget                           | Three ports driving continuously into 60 Ω: 3.3 V stays in regulation                                                           |
+| 10  | Watchdog                               | Forced hang: the board resets and boots into its configured stage with water off, no state restored                             |
+| 11  | Seven-day soak against the emulator    | No unexplained reset, no unallowlisted write, every injected failure ends in `OFF`                                              |
+| 12  | Zone-to-zone ground                    | Pin 2 `K1` to pin 2 `K2` matches §15 item 8: 0 Ω on plain transceivers, open if one zone is isolated                            |
+| 13  | Every label present and correct        | Visual                                                                                                                          |
 
-Checks 6 and 7 catch a wiring error capable of bridging two buses. Neither may
-be skipped.
+Checks 1 and 4 catch the two ways this board could put something onto a valve
+bus that the K-99695 never did. Neither may be skipped.
 
 Steam adds two more, run against the DTV+ emulator: a Cx2 value must be
 rejected by the steam encoder, and an Fx2 value must be rejected by the valve
@@ -459,28 +484,89 @@ it.
 
 ## 14. Deliberately excluded
 
-| Excluded                                                       | Reason                                                                     |
-| -------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Any relay, contactor, smart plug or cord switch in valve mains | Design rule. A failing stop latency is not solved with an unreviewed relay |
-| Mains wiring inside the enclosure                              | Keeps the build low-voltage; §9                                            |
-| UPS on the Pi                                                  | Power loss must reach the valves; §4                                       |
-| Dual-channel RS-485 converter or HAT                           | One isolation barrier shared by both zones; §5                             |
-| Bidirectional USB-RS-485 adapter used as a capture tap         | Hardware automatic direction control is not physically receive-only        |
-| Generic `MAX485` / `MAX3485` / TTL-to-RS485 modules            | Mostly unisolated; some assert the transmitter during boot                 |
-| Wi-Fi in the control path                                      | Wired Ethernet only; radios disabled                                       |
-| A custom PCB                                                   | Nothing in this build requires one                                         |
-| An industrial PLC (~$500)                                      | Poor value for two links                                                   |
+| Excluded                                                       | Reason                                                                                                         |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Any relay, contactor, smart plug or cord switch in valve mains | Design rule. A failing stop latency is not solved with an unreviewed relay                                     |
+| A bypass relay around the controller                           | The valve fails off on silence **[A]**; a bypass can fail into two masters on one segment. [D13](DECISIONS.md) |
+| Mains wiring inside the box                                    | Keeps the build low-voltage; §9                                                                                |
+| UPS on the controller                                          | Power loss must reach the valves; §4                                                                           |
+| Auto-direction RS-485 transceivers                             | Drive a mark for microseconds and leave it to the bias; §5, [D15](DECISIONS.md)                                |
+| Generic `MAX485` / TTL-to-RS485 modules                        | No controlled driver enable; some assert the transmitter during boot                                           |
+| Taking power from pin 5, or feeding it                         | The valve's supply, spare current unmeasured; §5                                                               |
+| Standard PoE on the panel cable                                | Power-sourcing and powered-device hardware for one cable; §16, [D16](DECISIONS.md)                             |
+| Wi-Fi in the control path                                      | Wired Ethernet only; the board has no radio                                                                    |
+| A Linux computer, or an ESP32                                  | [D14](DECISIONS.md)                                                                                            |
+| A bidirectional adapter as a parallel capture tap              | Not physically receive-only. Captures come from the scope, or from inside the path in pass-through             |
+| An industrial PLC (~$500)                                      | Poor value for two links                                                                                       |
 
 ---
 
 ## 15. Open items
 
-| #   | Item                                                        | Closed by                                                                                    | Blocks                  |
-| --- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------- |
-| 1   | Valve model numbers and nameplate data                      | Phase 0 photograph                                                                           | Connectors, mains work  |
-| 2   | Valve connector housing, keying, pin count                  | Phase 0 photograph and continuity check                                                      | Adapter leads           |
-| 3   | Cable polarity — which conductor is A+                      | Phase 1 capture                                                                              | First transmission      |
-| 4   | Factory termination and idle bias                           | Phase 1 capture and unpowered measurement                                                    | Termination jumpers     |
-| 5   | Which FTDI part is fitted — `FT232RL` or `FT232RNL` **[?]** | Inspection on arrival                                                                        | Nothing; record only    |
-| 6   | Saturn response timeout: 320 ms or 400 ms                   | Phase 1 capture — [I5](../../INVESTIGATIONS.md#i5--the-saturn-register-map-is-contradictory) | Decoder deadlines       |
-| 7   | Whether automatic purge is on                               | [I4](../../INVESTIGATIONS.md#i4--is-automatic-purge-on) — one read-only call                 | Stop-latency definition |
+Items 1–7 keep their revision A numbers, which other documents cite.
+
+| #   | Item                                                                                                                               | Closed by                                                                                         | Blocks                                     |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| 1   | Valve model numbers and nameplate data                                                                                             | Phase 0 photograph                                                                                | Connector order                            |
+| 2   | Valve connector housing and part number. Pin count closed: six positions, 2–5 wired **[A]**                                        | Phase 0 photograph of the plug                                                                    | `K` leads, `V` connectors                  |
+| 3   | ~~Cable polarity~~ **Closed 2026-10-24:** pin 4 positive **[A]**                                                                   | —                                                                                                 | —                                          |
+| 4   | ~~Factory termination and idle bias~~ Termination **closed 2026-10-24**, both ends **[A]**. Valve-segment bias values remain       | Phase 3, §5                                                                                       | Bias resistors                             |
+| 5   | ~~Which FTDI part is fitted~~ Moot: the converters are the bench rig                                                               | —                                                                                                 | —                                          |
+| 6   | Saturn response timeout, 320 ms or 400 ms, and the K-99695's own reply timeout                                                     | Phase 3 pass-through — [I5](../../INVESTIGATIONS.md#i5--the-saturn-register-map-is-contradictory) | Take-over deadlines                        |
+| 7   | Whether automatic purge is on                                                                                                      | [I4](../../INVESTIGATIONS.md#i4--is-automatic-purge-on) — one read-only call                      | Stop-latency definition                    |
+| 8   | Whether the K-99695 joins pin 2 of its two valve jacks                                                                             | Phase 0: continuity between the two jacks' pin 2, K-99695 unpowered and unplugged                 | Isolation for one zone (§9)                |
+| 9   | Whether the K-99695 accepts the controller's answers for a valve it no longer drives                                               | Phase 3 take-over                                                                                 | Take-over; otherwise D1's swap at cut-over |
+| 10  | Whether the ported logic fits 520 kB of SRAM and 2 MB of flash                                                                     | The port (BUILD-ORDER.md step 2)                                                                  | The platform, [D14](DECISIONS.md)          |
+| 11  | Panel hardware, and how it is sealed in the shower wall ([I2](../../INVESTIGATIONS.md#i2--the-k-99693-interface-was-disconnected)) | The panel build                                                                                   | Phase 7                                    |
+| 12  | Protoboard or a carrier PCB for the installed unit                                                                                 | After the bench build                                                                             | Installation                               |
+| 13  | How many conductors the in-wall panel cable has                                                                                    | Phase 0: a look at the plug at the controller end                                                 | The panel pin plan, §16                    |
+
+---
+
+## 16. The wall panel link
+
+The new panel replaces the K-99693 —
+[DECISIONS.md D16](DECISIONS.md#d16--a-new-wall-panel-on-its-own-board-wired).
+Its own hardware is chosen when it is built (§15 item 11). This section
+specifies what the controller gives it.
+
+| Item      | Specification                                                                                                              |
+| --------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Cable     | The K-99693's in-wall cable: up to 25 ft, RJ45-terminated, with a coupler **[K]**; it carried a UART, not Ethernet **[C]** |
+| Signal    | RS-485, half duplex: a THVD1410 at each end, 120 Ω at each end, bias at the controller end                                 |
+| Line rate | 115200 8N1 **[I]**, what the cable carried for the K-99693                                                                 |
+| Power     | Passive DC from the panel's own adapter, put onto the cable at the controller end. Voltage set by the panel hardware       |
+| Protocol  | Ours, specified with the panel firmware                                                                                    |
+
+Pin plan for an eight-conductor cable:
+
+| RJ45 pins | Use                            |
+| --------- | ------------------------------ |
+| 1, 2      | RS-485: 1 positive, 2 negative |
+| 3, 6      | Spare                          |
+| 4, 5      | DC +                           |
+| 7, 8      | DC − and signal ground         |
+
+With four conductors, RS-485 takes one pair and DC the other.
+
+**The DC does not pass through the board.** The panel adapter plugs into a DC
+jack on the carrier that is wired only to the panel jack's DC pins. DC − joins
+board ground at that one point, because the RS-485 link needs a common
+reference; DC + touches no board net. Bench check 4 proves it never reaches a
+valve contact.
+
+**What the panel may do.** It sends the same constrained operations as the LAN
+API, checked against the same clamps, and the controller pushes it state as it
+changes ([DESIGN.md § Software design](DESIGN.md)). It cannot send a raw valve
+frame. Losing the panel changes nothing about a running session: the
+20-minute limit and the API still stop it, as they would with the K-99693 gone
+**[A]** ([I2](../../INVESTIGATIONS.md#i2--the-k-99693-interface-was-disconnected)).
+
+### Panel acceptance — Phase 7
+
+| #   | Check                  | Pass criterion                                                                                                                |
+| --- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| P1  | Power at the panel     | Through the installed cable, at the panel's full load: within its input range                                                 |
+| P2  | The link               | A day of traffic over the installed cable without a framing or checksum error                                                 |
+| P3  | Panel lost mid-session | Cable pulled during a run: the session carries on to its limit or an API stop; the panel shows current state when reconnected |
+| P4  | Panel reset            | A panel power cycle sends no command                                                                                          |
