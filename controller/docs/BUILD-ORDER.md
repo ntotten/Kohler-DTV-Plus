@@ -75,8 +75,10 @@ the two short leads to the K-99695. Add the isolated transceivers for one zone
 only if item 8 found the two jacks' grounds separate.
 
 The carrier PCB goes in with it: `carrier-gerbers.zip` from
-[`controller/hardware/fab/`](../hardware/fab/README.md) to any board house, and
-the four RJ12 jacks its footprints take (SHOPPING-LIST.md, The carrier PCB).
+[`controller/hardware/fab/`](../hardware/fab/README.md) to any board house
+~~, and the four RJ12 jacks its footprints take (SHOPPING-LIST.md, The carrier
+PCB)~~. Its valve jacks are the Würth 615006138421s already ordered, and it
+waits until its footprints are theirs (SHOPPING-LIST.md, The carrier PCB).
 
 ### 5. Boxes arrive — bench build, then Phase 2
 
