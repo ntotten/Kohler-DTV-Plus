@@ -1,0 +1,192 @@
+(footprint
+  "WIZ850io_J1"
+  (version 20221018)
+  (generator pcbnew)
+  (layer "F.Cu")
+  (descr "WIZnet WIZ850io, row J1 on a 1x6 2.54 mm socket, with the module outline; J2 is footprint WIZ850io_J2, 20.32 mm to the right. https://docs.wiznet.io/Product/ioModule/wiz850io")
+  (tags "WIZnet WIZ850io W5500 Ethernet module socket")
+  (attr through_hole)
+  (fp_text
+    reference
+    "REF**"
+    (at 10.16 17)
+    (layer "F.SilkS")
+    (effects (font (size 1 1) (thickness 0.15)))
+    (tstamp "662b3623-7000-5526-b0ce-aac1fc949390"))
+  (fp_text
+    value
+    "WIZ850io"
+    (at 10.16 19)
+    (layer "F.Fab")
+    (effects (font (size 1 1) (thickness 0.15)))
+    (tstamp "c9022725-1f2d-5801-a877-a5e5986ca0ec"))
+  (fp_text
+    user
+    "${REFERENCE}"
+    (at 10.16 8)
+    (layer "F.Fab")
+    (effects (font (size 1 1) (thickness 0.15)))
+    (tstamp "13b31df5-aecf-526a-a260-bfd06a14eedb"))
+  (pad
+    "1"
+    thru_hole
+    rect
+    (at 0 0)
+    (size 1.7 1.7)
+    (drill 1)
+    (layers "*.Cu" "*.Mask")
+    (tstamp "3e0c84ae-79c7-5a8f-a3f0-ba26b18fcf4b"))
+  (pad
+    "2"
+    thru_hole
+    circle
+    (at 0 2.54)
+    (size 1.7 1.7)
+    (drill 1)
+    (layers "*.Cu" "*.Mask")
+    (tstamp "c3d88ed8-09f2-514c-a778-38161e53b501"))
+  (pad
+    "3"
+    thru_hole
+    circle
+    (at 0 5.08)
+    (size 1.7 1.7)
+    (drill 1)
+    (layers "*.Cu" "*.Mask")
+    (tstamp "a217f6c1-d11f-5030-affa-4e77c84b9ce3"))
+  (pad
+    "4"
+    thru_hole
+    circle
+    (at 0 7.62)
+    (size 1.7 1.7)
+    (drill 1)
+    (layers "*.Cu" "*.Mask")
+    (tstamp "8512425d-be92-5315-ad5f-da194e56a4d0"))
+  (pad
+    "5"
+    thru_hole
+    circle
+    (at 0 10.16)
+    (size 1.7 1.7)
+    (drill 1)
+    (layers "*.Cu" "*.Mask")
+    (tstamp "24b0c3d2-6a67-58b7-a5d6-9b5497c2eab5"))
+  (pad
+    "6"
+    thru_hole
+    circle
+    (at 0 12.7)
+    (size 1.7 1.7)
+    (drill 1)
+    (layers "*.Cu" "*.Mask")
+    (tstamp "ea415948-4202-58fc-8dc4-c6928b2ab4b0"))
+  (fp_line
+    (start -1.34 -6.4)
+    (end 21.66 -6.4)
+    (stroke (width 0.1) (type solid))
+    (layer "F.Fab")
+    (tstamp "e0052ba3-bd1a-5dbe-9475-5d11268e5847"))
+  (fp_line
+    (start 21.66 -6.4)
+    (end 21.66 18.6)
+    (stroke (width 0.1) (type solid))
+    (layer "F.Fab")
+    (tstamp "77f295ba-7377-5e7e-82e0-d468d90dc67f"))
+  (fp_line
+    (start 21.66 18.6)
+    (end -1.34 18.6)
+    (stroke (width 0.1) (type solid))
+    (layer "F.Fab")
+    (tstamp "ecec154c-f3ee-59ec-a083-d23b4bedb21a"))
+  (fp_line
+    (start -1.34 18.6)
+    (end -1.34 -6.4)
+    (stroke (width 0.1) (type solid))
+    (layer "F.Fab")
+    (tstamp "bbf0df96-a5ce-593b-b7dd-a4aae9ccc58d"))
+  (fp_line
+    (start 2.11 -9.1)
+    (end 18.21 -9.1)
+    (stroke (width 0.1) (type solid))
+    (layer "F.Fab")
+    (tstamp "a1a643e3-9117-5ba0-ad29-9a2727421df0"))
+  (fp_line
+    (start 18.21 -9.1)
+    (end 18.21 -2.4)
+    (stroke (width 0.1) (type solid))
+    (layer "F.Fab")
+    (tstamp "f7deadeb-b35b-53aa-81b4-3b7cded136ae"))
+  (fp_line
+    (start 18.21 -2.4)
+    (end 2.11 -2.4)
+    (stroke (width 0.1) (type solid))
+    (layer "F.Fab")
+    (tstamp "ea83144d-69f4-55d8-acaf-5a4ee7a03fb5"))
+  (fp_line
+    (start 2.11 -2.4)
+    (end 2.11 -9.1)
+    (stroke (width 0.1) (type solid))
+    (layer "F.Fab")
+    (tstamp "102a9081-4f0c-51ca-bd05-b428d474a5d6"))
+  (fp_line
+    (start -1.33 -1.33)
+    (end 1.33 -1.33)
+    (stroke (width 0.12) (type solid))
+    (layer "F.SilkS")
+    (tstamp "64e2d7a9-79cf-5440-9e99-fd5467a1b130"))
+  (fp_line
+    (start 1.33 -1.33)
+    (end 1.33 14.03)
+    (stroke (width 0.12) (type solid))
+    (layer "F.SilkS")
+    (tstamp "b074876a-06b9-5250-a37d-6f8095bbcde8"))
+  (fp_line
+    (start 1.33 14.03)
+    (end -1.33 14.03)
+    (stroke (width 0.12) (type solid))
+    (layer "F.SilkS")
+    (tstamp "cf3862a9-9ff9-554f-ae89-cee0bc3d1663"))
+  (fp_line
+    (start -1.33 14.03)
+    (end -1.33 -1.33)
+    (stroke (width 0.12) (type solid))
+    (layer "F.SilkS")
+    (tstamp "f5715a3c-ab73-54b2-9b46-3763e1cc1516"))
+  (fp_line
+    (start -1.73 -1.73)
+    (end -1.73 0)
+    (stroke (width 0.12) (type solid))
+    (layer "F.SilkS")
+    (tstamp "db801a20-2d33-56a4-868b-5c5c734db871"))
+  (fp_text
+    user
+    "RJ45"
+    (at 10.16 -4.4)
+    (layer "F.SilkS")
+    (effects (font (size 0.8 0.8) (thickness 0.12)))
+    (tstamp "f87d4423-a4c1-503d-a5bd-d3659e2b610a"))
+  (fp_line
+    (start -1.59 -9.35)
+    (end 21.91 -9.35)
+    (stroke (width 0.05) (type solid))
+    (layer "F.CrtYd")
+    (tstamp "c8c8efeb-2407-5dd6-8380-5a80dcb9dccf"))
+  (fp_line
+    (start 21.91 -9.35)
+    (end 21.91 18.85)
+    (stroke (width 0.05) (type solid))
+    (layer "F.CrtYd")
+    (tstamp "84e3b512-edc4-5be8-8185-403cf2bf9651"))
+  (fp_line
+    (start 21.91 18.85)
+    (end -1.59 18.85)
+    (stroke (width 0.05) (type solid))
+    (layer "F.CrtYd")
+    (tstamp "899c51fa-1312-5444-b5ea-468753caaf18"))
+  (fp_line
+    (start -1.59 18.85)
+    (end -1.59 -9.35)
+    (stroke (width 0.05) (type solid))
+    (layer "F.CrtYd")
+    (tstamp "a1400408-ac61-51b1-9181-e528b2cef8d4")))

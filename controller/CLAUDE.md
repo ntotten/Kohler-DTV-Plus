@@ -15,6 +15,7 @@ evidence stays in [research/](../research/) and is cited, never copied.
 | [docs/SHOPPING-LIST.md](docs/SHOPPING-LIST.md) | Parts, prices, purchase links, what cannot be ordered yet                                                                     |
 | [docs/DECISIONS.md](docs/DECISIONS.md)         | Settled decisions, rejected alternatives, superseded wrong turns                                                              |
 | [docs/STEAM-ADAPTER.md](docs/STEAM-ADAPTER.md) | Reference material on the K-1737-K1 and the DTV+ protocol                                                                     |
+| [hardware/](hardware/README.md)                | The carrier's KiCad schematic and the cabling drawing, generated and net-checked from tables                                  |
 | [requirements.toml](requirements.toml)         | The requirement register; [commissioning/CHECKLIST.md](commissioning/CHECKLIST.md) is generated from it by `cargo xtask reqs` |
 
 Measured hardware facts about the steam adapter live in

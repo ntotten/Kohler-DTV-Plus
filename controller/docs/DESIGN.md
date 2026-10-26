@@ -52,18 +52,21 @@ at the controller; ground (pin 2) and the valve's +12.7 V (pin 5) pass straight
 through. Operator decision 2026-10-24 —
 [DECISIONS.md D13](DECISIONS.md#d13--in-line-through-the-k-99695-staged-no-bypass).
 
-```text
-                               wired Ethernet: LAN API
-                                         |
-  K-99695            +-------------------v--------------------+        valves
-  valve 1 jack <---->| K1 ── W5500-EVB-Pico2 (RP2350) ── V1    |<----> six-port
-  valve 2 jack <---->| K2 ── Rust firmware on Embassy ── V2    |<----> three-port Prompt
-                     |                     P                   |
-                     +---------------------+-------------------+
-                                           |
-                             in-wall cable to the new wall panel
+```mermaid
+flowchart LR
+  k["K-99695"]
+  c["Controller<br/>Pico 2 + W5500, Rust on Embassy"]
+  v1["Valve 1 · six-port"]
+  v2["Valve 2 · three-port Prompt"]
+  p["New wall panel"]
+  lan(["House LAN"])
 
-  pins 2 and 5: straight through, K1 to V1 and K2 to V2
+  k -- "K1" --- c
+  k -- "K2" --- c
+  c -- "V1" --- v1
+  c -- "V2" --- v2
+  c -- "P · in-wall cable" --- p
+  c -- "wired Ethernet · LAN API" --- lan
 ```
 
 Each valve moves through three stages, set per valve in the controller's
@@ -74,6 +77,44 @@ configuration:
 | Pass-through | The controller retransmits the K-99695's bytes unchanged | The K-99695 is master; the controller retransmits the valve's replies | K-99693, through the K-99695                                                     |
 | Take-over    | The controller is master, from its own state machine     | The K-99695 is master; the controller answers it for the valve        | K-99693; its commands become API operations under the controller's rails **[I]** |
 | Cut-over     | The controller is master                                 | Unplugged; the K-99695 is powered down                                | The new panel                                                                    |
+
+One valve's traffic in each stage:
+
+```mermaid
+sequenceDiagram
+  participant W as K-99693<br/>or new panel
+  participant K as K-99695
+  participant C as Controller
+  participant V as Valve
+
+  rect rgba(128, 128, 128, 0.12)
+  Note over K,V: Pass-through · the K-99695 masters the K segment, the controller the V segment
+  W->>K: user command
+  K->>C: request, K segment
+  C->>V: the same bytes, about 1 ms later
+  V->>C: reply, V segment
+  C->>K: the same bytes
+  Note over C: logs every byte, originates none
+  end
+
+  rect rgba(128, 128, 128, 0.12)
+  Note over K,V: Take-over · the controller masters the valve and answers the K-99695 for it
+  C->>V: request from its own state machine, under its rails
+  V->>C: reply
+  W->>K: user command
+  K->>C: request for the valve
+  C->>K: answer from the controller's state
+  Note over C: a K-99693 command becomes an API operation [I]
+  end
+
+  rect rgba(128, 128, 128, 0.12)
+  Note over K,V: Cut-over · K leads unplugged, K-99695 and K-99693 powered down
+  W->>C: panel operation, same clamps as the LAN API
+  C->>V: request
+  V->>C: reply
+  C->>W: state as it changes
+  end
+```
 
 The selected hardware is one WIZnet W5500-EVB-Pico2 — an RP2350 and a W5500
 Ethernet controller — with one TI THVD1410 transceiver per port: two per valve
