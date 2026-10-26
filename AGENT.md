@@ -96,6 +96,11 @@ see — those get collated when we contact them.
   with the date in the filename.
 - **Third-party material is vendored with provenance**, never silently copied —
   see [research/xagon0/PROVENANCE.md](research/xagon0/PROVENANCE.md).
+- **Binary files go in Git LFS**: photos, captures, datasheets, CAD and
+  fabrication outputs, by extension in [.gitattributes](.gitattributes). Run
+  `git lfs install` once on a machine before cloning or committing there; CI
+  fails a commit that put one in plain Git. The two apps' `public/` folders
+  are the exception, so they build from a clone without LFS.
 - **Personal media** (video, transcripts, photos) stays out of the repo unless
   the operator asks. Reference the path and extract the technical content.
 - **Tests:** `npm test` for anything without hardware, `npm run selftest` for
