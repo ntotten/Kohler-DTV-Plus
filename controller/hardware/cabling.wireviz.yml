@@ -61,10 +61,15 @@ connectors:
     type: Valve 2, three-port Prompt
   J6:
     type: Panel DC in
-    subtype: 2.1 mm jack, Switchcraft 721A
+    subtype: 2.1 mm jack, Switchcraft 721A, in the box wall
     pins: [1, 2]
     pinlabels: ["DC + (centre) [I]", "DC −"]
     notes: from the panel's own adapter
+  J6P:
+    type: "J6 · PANEL DC IN"
+    subtype: two solder pads on the carrier
+    pins: [1, 2]
+    pinlabels: ["+", "−"]
   J5:
     type: "PANEL · NOT ETHERNET · DC ON PAIRS"
     subtype: 8P8C jack, Amphenol 54602-908LF
@@ -86,8 +91,13 @@ cables:
   W5: *through
   W6: *oem
   W7:
-    type: carrier wiring
-    notes: DC reaches the panel jack only
+    type: hook-up wire, 0.5 mm²
+    notes: soldered to the jack and to the carrier's J6 pads
+    wirecount: 2
+    colors: [RD, BK]
+  W9:
+    type: carrier copper
+    notes: DC reaches the panel jack only; DC − joins ground at NT1
     wirecount: 4
   W8:
     type: in-wall cable, RJ45, coupler
@@ -95,8 +105,11 @@ cables:
     wirecount: 6
 
 connections:
-  - - J6: [1, 1, 2, 2]
-    - W7: [1-4]
+  - - J6: [1, 2]
+    - W7: [1, 2]
+    - J6P: [1, 2]
+  - - J6P: [1, 1, 2, 2]
+    - W9: [1-4]
     - J5: [4, 5, 7, 8]
   - - J5: [1, 2, 4, 5, 7, 8]
     - W8: [1-6]
