@@ -1,7 +1,9 @@
 # Repository-wide formatting. oxfmt owns the Markdown, TypeScript, CSS, YAML,
 # HTML and JSON; cargo fmt owns the Rust and is checked in the controller
 # workflow. See AGENT.md — formatting is mechanical, so it is checked rather
-# than discussed.
+# than discussed. The same goes for where binary files are stored: the `lfs`
+# job fails when a file .gitattributes sends to Git LFS was committed as a
+# plain Git blob, which is what a clone without `git lfs install` does.
 
 name: format
 
@@ -25,3 +27,12 @@ jobs:
           node-version: "22"
       - run: npm install
       - run: npm run format:check
+
+  lfs:
+    name: binary files are in Git LFS
+    runs-on: ubuntu-latest
+    steps:
+      # The pointers are what is checked, so the LFS objects themselves are
+      # not downloaded and the job costs no LFS bandwidth.
+      - uses: actions/checkout@v5
+      - run: git lfs fsck --pointers HEAD
