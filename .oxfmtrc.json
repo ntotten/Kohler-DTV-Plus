@@ -32,6 +32,10 @@
     // Evidence. These are raw captures off the controller and off the wire;
     // they are cited as what the hardware actually returned, so they stay
     // exactly as captured. See AGENT.md, "Evidence lives in research/".
+    // The pull requests' descriptions from before the repository left its fork
+    // network, kept as they were written. See docs/pull-requests/README.md.
+    "docs/pull-requests/0*.md",
+
     "research/diagnostics/",
     "research/controller-mirror/",
     "app/test/fixtures/"
