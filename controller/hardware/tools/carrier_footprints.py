@@ -13,6 +13,16 @@ drawings. Every other footprint on the board is KiCad's own library.
                   drawing) [V].
   WIZ850io_J2     The J2 row, 20.32 mm to the right of J1. It has no
                   courtyard of its own: it sits under the module, inside J1's.
+  RJ12_Wurth_615006138421_Horizontal
+                  The valve jacks: Würth WR-MJ 615006138421, 6P6C, horizontal,
+                  tab up. Recommended hole pattern (data sheet rev 001.001,
+                  p. 1) [V]: contacts 1.02 mm apart, odd pins in the rear row
+                  and even pins 2.54 mm in front of it, 0.9 mm holes; two
+                  2.36 mm locating pegs 12 mm apart, centred on the contacts,
+                  2.3 mm in front of the even row. Body 12.2 mm wide, 13.0 mm
+                  deep, its mouth 6.0 mm in front of the pegs [V]. That the
+                  mouth is the face on the pegs' side, not the contacts', is
+                  read from the drawing's bottom and 3D views [I].
 
 Pin 1 of each is its origin. Run by render.sh; nobody edits carrier.pretty by
 hand.
@@ -78,6 +88,13 @@ class Fp:
             Sym("pad"), str(number), Sym("thru_hole"), Sym("rect" if square else "circle"),
             [Sym("at"), round(x, 3), round(y, 3)], [Sym("size"), size, size], [Sym("drill"), drill],
             [Sym("layers"), "*.Cu", "*.Mask"], [Sym("tstamp"), uid(self.name, "pad", number)],
+        ])
+
+    def npth(self, x, y, drill):
+        self.items.append([
+            Sym("pad"), "", Sym("np_thru_hole"), Sym("circle"),
+            [Sym("at"), round(x, 3), round(y, 3)], [Sym("size"), drill, drill], [Sym("drill"), drill],
+            [Sym("layers"), "*.Cu", "*.Mask"], [Sym("tstamp"), uid(self.name, "npth", x, y)],
         ])
 
     def write(self) -> None:
@@ -174,8 +191,55 @@ def wiz_j2() -> Fp:
     return fp
 
 
+# Würth 615006138421, relative to pin 1, y towards the mouth (data sheet p. 1).
+WE_PITCH, WE_ROW = 1.02, 2.54
+WE_PEG_GAP, WE_PEG_BACK, WE_PEG_D = 12.0, 2.3, 2.36
+WE_BODY_W, WE_BODY_D, WE_MOUTH_FROM_PEGS = 12.2, 13.0, 6.0
+WE_HOLE = 0.9
+
+
+def wurth_6p6c() -> Fp:
+    fp = Fp(
+        "RJ12_Wurth_615006138421_Horizontal",
+        "Würth WR-MJ 615006138421 6P6C modular jack, horizontal, tab up, from the data sheet's "
+        "recommended hole pattern: https://www.we-online.com/catalog/datasheet/615006138421.pdf",
+        "RJ12 RJ25 6P6C modular jack Wurth WR-MJ",
+    )
+    cx = -2.5 * WE_PITCH
+    peg_y = WE_ROW + WE_PEG_BACK
+    front = peg_y + WE_MOUTH_FROM_PEGS
+    back = front - WE_BODY_D
+    left, right = round(cx - WE_BODY_W / 2, 2), round(cx + WE_BODY_W / 2, 2)
+    fp.text("reference", "REF**", cx, back - 1.2, "F.SilkS")
+    fp.text("value", "615006138421", cx, front + 1.2, "F.Fab")
+    fp.text("user", "${REFERENCE}", cx, round(front - 2.5, 2), "F.Fab")
+    for n in range(1, 7):
+        fp.pad(n, round(-WE_PITCH * (n - 1), 3), 0.0 if n % 2 else WE_ROW, square=(n == 1),
+               size=1.5, drill=WE_HOLE)
+    for x in (cx - WE_PEG_GAP / 2, cx + WE_PEG_GAP / 2):
+        fp.npth(round(x, 3), peg_y, WE_PEG_D)
+    fp.rect(left, round(back, 2), right, round(front, 2), "F.Fab", 0.1)
+    # Silkscreen: the back and the sides, broken around the pegs and stopped
+    # short of the mouth, which sits on the board edge.
+    o = 0.11
+    sl, sr, sb = round(left - o, 2), round(right + o, 2), round(back - o, 2)
+    peg_clear = WE_PEG_D / 2 + 0.3
+    fp.line(sl, sb, sr, sb, "F.SilkS", 0.12)
+    for x in (sl, sr):
+        fp.line(x, sb, x, round(peg_y - peg_clear, 2), "F.SilkS", 0.12)
+        fp.line(x, round(peg_y + peg_clear, 2), x, round(front - 1.0, 2), "F.SilkS", 0.12)
+    fp.line(round(sr + 0.5, 2), -0.5, round(sr + 0.5, 2), 0.5, "F.SilkS", 0.12)
+    fp.line(round(sr + 0.5, 2), -0.5, round(sr, 2), 0.0, "F.SilkS", 0.12)
+    fp.line(round(sr, 2), 0.0, round(sr + 0.5, 2), 0.5, "F.SilkS", 0.12)
+    pad = 0.25
+    peg_out = WE_PEG_GAP / 2 + WE_PEG_D / 2
+    fp.rect(round(min(left, cx - peg_out) - pad, 2), round(back - pad, 2),
+            round(max(right, cx + peg_out) + pad, 2), round(front + pad, 2), "F.CrtYd", 0.05)
+    return fp
+
+
 def main() -> None:
-    for fp in (pico2(), wiz_j1(), wiz_j2()):
+    for fp in (pico2(), wiz_j1(), wiz_j2(), wurth_6p6c()):
         fp.write()
 
 
