@@ -3282,7 +3282,7 @@
       (effects (font (size 1.27 1.27)) (justify left)))
     (property
       "Footprint"
-      "Connector_RJ:RJ12_Amphenol_54601-x06_Horizontal"
+      "carrier:RJ12_Wurth_615006138421_Horizontal"
       (at 246.38 43.18 0)
       (effects (font (size 1.27 1.27)) hide))
     (property
@@ -3292,17 +3292,17 @@
       (effects (font (size 1.27 1.27)) hide))
     (property
       "MPN"
-      "54601-906LF"
+      "615006138421"
       (at 246.38 43.18 0)
       (effects (font (size 1.27 1.27)) hide))
     (property
       "Manufacturer"
-      "Amphenol ICC"
+      "Würth Elektronik"
       (at 246.38 43.18 0)
       (effects (font (size 1.27 1.27)) hide))
     (property
       "Supplier"
-      "DigiKey, product 7589414"
+      "DigiKey 732-2113-ND"
       (at 246.38 43.18 0)
       (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "d06228fb-693c-5a60-a247-4ba74468c8e7"))
@@ -4302,7 +4302,7 @@
       (effects (font (size 1.27 1.27)) (justify left)))
     (property
       "Footprint"
-      "Connector_RJ:RJ12_Amphenol_54601-x06_Horizontal"
+      "carrier:RJ12_Wurth_615006138421_Horizontal"
       (at 391.16 43.18 0)
       (effects (font (size 1.27 1.27)) hide))
     (property
@@ -4312,17 +4312,17 @@
       (effects (font (size 1.27 1.27)) hide))
     (property
       "MPN"
-      "54601-906LF"
+      "615006138421"
       (at 391.16 43.18 0)
       (effects (font (size 1.27 1.27)) hide))
     (property
       "Manufacturer"
-      "Amphenol ICC"
+      "Würth Elektronik"
       (at 391.16 43.18 0)
       (effects (font (size 1.27 1.27)) hide))
     (property
       "Supplier"
-      "DigiKey, product 7589414"
+      "DigiKey 732-2113-ND"
       (at 391.16 43.18 0)
       (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "7a546b99-a2d0-5814-b216-55e4cf1d974c"))
@@ -5150,7 +5150,7 @@
       (effects (font (size 1.27 1.27)) (justify left)))
     (property
       "Footprint"
-      "Connector_RJ:RJ12_Amphenol_54601-x06_Horizontal"
+      "carrier:RJ12_Wurth_615006138421_Horizontal"
       (at 246.38 114.3 0)
       (effects (font (size 1.27 1.27)) hide))
     (property
@@ -5160,17 +5160,17 @@
       (effects (font (size 1.27 1.27)) hide))
     (property
       "MPN"
-      "54601-906LF"
+      "615006138421"
       (at 246.38 114.3 0)
       (effects (font (size 1.27 1.27)) hide))
     (property
       "Manufacturer"
-      "Amphenol ICC"
+      "Würth Elektronik"
       (at 246.38 114.3 0)
       (effects (font (size 1.27 1.27)) hide))
     (property
       "Supplier"
-      "DigiKey, product 7589414"
+      "DigiKey 732-2113-ND"
       (at 246.38 114.3 0)
       (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "5f271454-35c6-50fb-b5cc-bda699f740b4"))
@@ -6170,7 +6170,7 @@
       (effects (font (size 1.27 1.27)) (justify left)))
     (property
       "Footprint"
-      "Connector_RJ:RJ12_Amphenol_54601-x06_Horizontal"
+      "carrier:RJ12_Wurth_615006138421_Horizontal"
       (at 391.16 114.3 0)
       (effects (font (size 1.27 1.27)) hide))
     (property
@@ -6180,17 +6180,17 @@
       (effects (font (size 1.27 1.27)) hide))
     (property
       "MPN"
-      "54601-906LF"
+      "615006138421"
       (at 391.16 114.3 0)
       (effects (font (size 1.27 1.27)) hide))
     (property
       "Manufacturer"
-      "Amphenol ICC"
+      "Würth Elektronik"
       (at 391.16 114.3 0)
       (effects (font (size 1.27 1.27)) hide))
     (property
       "Supplier"
-      "DigiKey, product 7589414"
+      "DigiKey 732-2113-ND"
       (at 391.16 114.3 0)
       (effects (font (size 1.27 1.27)) hide))
     (pin "1" (uuid "383ce17a-81eb-59eb-a744-9b6227fcbc2a"))

@@ -1,7 +1,7 @@
 Item,Qty,References,Value,Footprint,Manufacturer,MPN,Supplier,Fitted,Notes
 1,1,A1,Raspberry Pi Pico 2,Pico2_Socketed,Raspberry Pi,SC1631,DigiKey 2648-SC1631CT-ND,yes,"2 x 1x20 female header, Sullins PPPC201LFBN-RC (DigiKey S7053-ND)"
 2,5,C1 C2 C3 C4 C5,100n,C_Rect_L4.0mm_W2.5mm_P2.50mm,Vishay,K104K15X7RF5TL2,DigiKey BC1084CT-ND,yes,
-3,4,J1 J2 J3 J4,6P6C,RJ12_Amphenol_54601-x06_Horizontal,Amphenol ICC,54601-906LF,"DigiKey, product 7589414",yes,
+3,4,J1 J2 J3 J4,6P6C,RJ12_Wurth_615006138421_Horizontal,Würth Elektronik,615006138421,DigiKey 732-2113-ND,yes,
 4,1,J5,8P8C,RJ45_Amphenol_54602-x08_Horizontal,Amphenol ICC,54602-908LF,DigiKey 609-1046-ND,yes,
 5,1,J6,"Panel DC in, 2.1 mm",SolderWire-0.5sqmm_1x02_P4.8mm_D0.9mm_OD2.3mm,Switchcraft,721A,DigiKey SC3508-ND,yes,Box wall; two wires to the board's J6 pads
 6,1,J10 J11,WIZ850io J1 (SPI),WIZ850io_J1,WIZnet,WIZ850IO,DigiKey 1278-1043-ND,yes,"1x6 female header, 2.54 mm, cut from a PPPC201LFBN-RC"
