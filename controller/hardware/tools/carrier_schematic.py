@@ -152,10 +152,10 @@ PANEL_JACK_PINS = {
 }
 
 # Footprints, by reference prefix or reference. KiCad's own library except
-# the three in carrier.pretty (carrier_footprints.py). The RJ12 jacks are
-# Amphenol 54601-906LF, whose footprint KiCad draws from Amphenol drawing
-# C-BMJ-0082; the Würth 615006138421 bought for the bench has no KiCad
-# footprint and its drawing could not be downloaded.
+# the four in carrier.pretty (carrier_footprints.py). The RJ12 jacks are the
+# Würth 615006138421, drawn from its data sheet. They were Amphenol
+# 54601-906LF, for KiCad's footprint, until that turned out to be
+# discontinued (Mouser, notice of 2024-01-15).
 FP = {
     "A1": "carrier:Pico2_Socketed",
     "J10": "carrier:WIZ850io_J1",
@@ -164,7 +164,7 @@ FP = {
     "C": "Capacitor_THT:C_Rect_L4.0mm_W2.5mm_P2.50mm",
     "R": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
     "TP": "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical",
-    "RJ12": "Connector_RJ:RJ12_Amphenol_54601-x06_Horizontal",
+    "RJ12": "carrier:RJ12_Wurth_615006138421_Horizontal",
     "J5": "Connector_RJ:RJ45_Amphenol_54602-x08_Horizontal",
     "J6": "Connector_Wire:SolderWire-0.5sqmm_1x02_P4.8mm_D0.9mm_OD2.3mm",
     "NT1": "NetTie:NetTie-2_SMD_Pad0.5mm",
@@ -646,9 +646,9 @@ def build() -> tuple[list, list]:
             j = {"K1": "J1", "V1": "J2", "K2": "J3", "V2": "J4"}[port]
             sh.place("Connector:6P6C", j, "6P6C", bx + 124.46, uy, mirror="y",
                      ref_at=(bx + 116.84, uy - 12.7), value_at=(bx + 116.84, uy + 10.16),
-                     fields={"Footprint": FP["RJ12"], "MPN": "54601-906LF",
-                             "Manufacturer": "Amphenol ICC",
-                             "Supplier": "DigiKey, product 7589414"})
+                     fields={"Footprint": FP["RJ12"], "MPN": "615006138421",
+                             "Manufacturer": "Würth Elektronik",
+                             "Supplier": "DigiKey 732-2113-ND"})
             for pin_no, net in valve_jack_pins(port, zone).items():
                 sh.connect(j, pin_no, net)
         else:

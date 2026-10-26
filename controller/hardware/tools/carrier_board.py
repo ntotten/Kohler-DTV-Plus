@@ -67,15 +67,15 @@ NOTCH = (72.0, 80.0, 10.5)  # x from, x to, depth
 # Mounting holes for the M2.5 nylon standoffs (SHOPPING-LIST.md).
 HOLES = {"H1": (3.5, 56.5), "H2": (76.0, 15.0), "H3": (156.5, 4.5), "H4": (156.5, 56.5)}
 
-# The jacks, turned 180° so their mouths face the wall. In KiCad's footprints
-# the mouth is 16.77 mm (54601, RJ12) and 13.97 mm (54602, RJ45) from pin 1,
-# so these rows put each mouth on the board edge (the RJ45's 0.43 mm back from
-# it, so its silkscreen stays on the board).
-RJ12_Y, RJ45_Y = 16.77, 14.4
-JACK = {"K1": ("J1", 12.0), "V1": ("J2", 28.0), "K2": ("J3", 47.0), "V2": ("J4", 63.0),
+# The jacks, turned 180° so their mouths face the wall. The mouth is 10.84 mm
+# from pin 1 in the Würth RJ12 footprint (carrier_footprints.py) and 13.97 mm
+# in KiCad's Amphenol 54602 RJ45, so these rows put each mouth on the board
+# edge (the RJ45's 0.43 mm back from it, so its silkscreen stays on the board).
+RJ12_Y, RJ45_Y = 10.84, 14.4
+JACK = {"K1": ("J1", 6.27), "V1": ("J2", 22.27), "K2": ("J3", 41.27), "V2": ("J4", 57.27),
         "P": ("J5", 96.0)}
-# Where each footprint's body is centred left to right, from pin 1.
-BODY_CENTRE = {"RJ12": -3.18, "RJ45": -4.445}
+# Where each footprint's body is centred left to right, from pin 1, turned.
+BODY_CENTRE = {"RJ12": 2.55, "RJ45": -4.445}
 
 # The two modules, by their pin 1: the Pico 2's USB socket and the WIZ850io's
 # RJ45 both reach the top edge (carrier_footprints.py has the offsets).

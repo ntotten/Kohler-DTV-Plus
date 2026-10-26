@@ -12,6 +12,22 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ## 2026-10-26
 
+### 11:25 — The board takes the Würth jacks, and is ready to order
+
+The valve jacks' footprint is now drawn from Würth's own data sheet for the 615006138421 (revision
+001.001, fetched by a GitHub Action because this environment can't reach the vendor's site): six pins
+at 1.02 mm in two rows 2.54 mm apart, two 2.36 mm locating pegs 12 mm apart. Rerouted, the board
+passes KiCad's design-rule check with nothing found and nothing unconnected, and rebuilding it from the
+scripts gives the same files byte for byte. Every other part on it was looked up for a discontinuance
+notice, and none has one.
+
+One thing on the footprint is read rather than measured: which face of the jack is the mouth. The data
+sheet's drawings put it on the peg side, 6 mm in front of the pegs **[I]**, which puts each mouth on the
+board edge. A 1:1 print of the top copper with a real jack laid on it settles it before the board is
+made.
+
+**Why it matters:** the board can be ordered with the parts, instead of after them.
+
 ### 09:55 — The board's valve jacks were a discontinued part
 
 Checking the board against the parts already ordered turned up a mistake made this morning. The

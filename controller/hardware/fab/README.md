@@ -18,7 +18,7 @@ file, which states the stack-up below for houses that read it.
 | Copper | 1 oz (35 µm) |
 | Smallest track | 0.25 mm (design rule 0.15 mm) |
 | Smallest clearance | 0.2 mm |
-| Holes | 161 plated, 14 unplated; drills 0.4, 0.76, 0.8, 1, 1.1, 2.7, 3.2, 3.25 mm |
+| Holes | 161 plated, 14 unplated; drills 0.4, 0.76, 0.8, 0.9, 1, 1.1, 2.36, 2.7, 3.2 mm |
 | Surface finish, mask, silkscreen | Any: lead-free HASL, any mask colour, silkscreen on top |
 
 Those limits are well inside the cheapest standard 2-layer service at the
