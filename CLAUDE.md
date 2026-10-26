@@ -37,6 +37,9 @@ once where it belongs, and move on.
   reverse-engineered, `[?]` unresolved, `[I]` inference.
 - **Wrong turns stay in**, struck through or marked superseded rather than
   deleted — [AGENT.md](AGENT.md) rule 5.
+- **Plans carry drawings**: block diagram, schematic, cabling, data and
+  control flow — Mermaid, KiCad and WireViz, sources in the repository.
+  [docs/diagrams.md](docs/diagrams.md) has the convention.
 - **`oxfmt` formats Markdown too**, including table alignment. Run
   `npm run format` from the repo root after editing any document.
 

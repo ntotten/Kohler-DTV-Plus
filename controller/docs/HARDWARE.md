@@ -64,32 +64,66 @@ is [DECISIONS.md D14](DECISIONS.md#d14--rp2350-firmware-in-rust-not-a-linux-comp
 
 ---
 
-## 3. Block diagram
+## 3. Block diagram, schematic and cabling
 
-```text
-                       LAN: API and log drain (wired Ethernet)
-                                        |
-  5 V micro-USB ──>  +------------------v---------------------+
-  (adapter outside   | W5500-EVB-Pico2: RP2350 + W5500         |
-   the box)          | Rust firmware on Embassy, watchdog      |
-                     +--+-------+-------+-------+-------+------+
-                        |       |       |       |       |
-                      [K1]    [V1]    [K2]    [V2]     [P]     one THVD1410 per port
-                        |       |       |       |       |
-  K-99695, valve 1 jack-+       |       |       |       |
-  valve 1, six-port ------------+       |       |       |
-  K-99695, valve 2 jack ----------------+       |       |
-  valve 2, three-port Prompt -------------------+       |
-  new wall panel, over the in-wall RJ45 cable ----------+
+```mermaid
+flowchart TB
+  lan(["House LAN"])
+  usb(["5 V micro-USB adapter"])
+  dc(["Panel DC adapter"])
 
-  Pin 2 (ground) and pin 5 (+12.7 V, supplied by the valve) run straight
-  through K1 to V1 and K2 to V2. Only pins 3 and 4 reach a transceiver.
-  The panel's DC comes from its own adapter onto the panel jack, not
-  through the board (§16).
+  subgraph box["Controller box · low voltage only"]
+    wiz["WIZ850io · W5500<br/>10/100 Ethernet"]
+    pico["Raspberry Pi Pico 2 · RP2350<br/>Rust on Embassy, hardware watchdog"]
+    K1["K1 · THVD1410<br/>UART over PIO"]
+    K2["K2 · THVD1410<br/>UART over PIO"]
+    V1["V1 · THVD1410<br/>UART0"]
+    V2["V2 · THVD1410<br/>UART1"]
+    P["P · THVD1410<br/>UART over PIO"]
+    J6["DC jack J6"]
+  end
+
+  k99695["K-99695<br/>valve 1 and valve 2 jacks"]
+  v1["Valve 1 · six-port"]
+  v2["Valve 2 · three-port Prompt"]
+  panel["New wall panel"]
+
+  lan -- "API, log drain" --- wiz
+  wiz -- "SPI0 · GPIO16–21" --- pico
+  usb -- "5 V" --> pico
+  pico --- K1 & K2 & V1 & V2 & P
+  K1 -- "RS-485, 6P cord" --- k99695
+  K2 -- "RS-485, 6P cord" --- k99695
+  V1 -- "RS-485, original cable" --- v1
+  V2 -- "RS-485, original cable" --- v2
+  P -- "RS-485, in-wall RJ45 cable" --- panel
+  dc --> J6
+  J6 -- "DC on the same cable's spare pairs" --> panel
 ```
+
+Pin 2 (ground) and pin 5 (+12.7 V, supplied by the valve) run straight
+through K1 to V1 and K2 to V2. Only pins 3 and 4 reach a transceiver. The
+panel's DC comes from its own adapter onto the panel jack, not through the
+board (§16).
 
 Line power to both valves stays in the original listed receptacles and wiring.
 No mains conductor enters the controller's box (§9).
+
+### Carrier schematic
+
+[![Carrier schematic](../hardware/carrier.svg)](../hardware/carrier.svg)
+
+The KiCad project is [`controller/hardware/`](../hardware/README.md): every
+connection in this document on one sheet, net-checked against the GPIO map
+(§8), the wiring per port (§5), the panel pin plan (§16) and the test points
+(§10).
+
+### Cabling
+
+[![Cabling](../hardware/cabling.svg)](../hardware/cabling.svg)
+
+From [`cabling.wireviz.yml`](../hardware/cabling.wireviz.yml). Conductor
+colours aren't recorded, so none are drawn.
 
 ---
 
@@ -271,13 +305,31 @@ contactor, or anything in a mains path.
 
 ## 9. Power, isolation and grounding
 
+### Power tree
+
+```text
+5 V micro-USB adapter, outside the box
+└── Pico 2 (A1), its own regulator → 3V3, pin 36
+    ├── RP2350, on the Pico 2
+    ├── WIZ850io (J10, J11), 141 mA typical
+    └── THVD1410 ×5 (U1–U5), 100 nF each (C1–C5)
+
+Panel DC adapter, outside the box
+└── DC jack J6 → panel jack J5: + on pins 4, 5; − on pins 7, 8
+    └── − joins board ground at NT1 only; + touches no board net
+
+Each valve's +12.7 V, from the valve
+└── pin 5, straight through K1→V1 and K2→V2; no board net
+```
+
 ### Budget
 
-| Load                  | Worst case            | Note                                                                     |
-| --------------------- | --------------------- | ------------------------------------------------------------------------ |
-| W5500-EVB-Pico2       | Measured at the bench | RP2350, W5500 and the board's regulator                                  |
-| One THVD1410 driving  | ~30 mA **[I]**        | ~2 V across the two terminations in parallel, ~65 Ω                      |
-| Ports driving at once | 3 **[I]**             | Each zone is half duplex, so one segment per zone drives, plus the panel |
+| Load                  | Worst case             | Note                                                                               |
+| --------------------- | ---------------------- | ---------------------------------------------------------------------------------- |
+| Pico 2                | Measured at the bench  | RP2350 and the board's regulator                                                   |
+| WIZ850io              | 141 mA typical **[V]** | From the Pico 2's 3V3 ([WIZnet](https://docs.wiznet.io/Product/ioModule/wiz850io)) |
+| One THVD1410 driving  | ~30 mA **[I]**         | ~2 V across the two terminations in parallel, ~65 Ω                                |
+| Ports driving at once | 3 **[I]**              | Each zone is half duplex, so one segment per zone drives, plus the panel           |
 
 The board's 3.3 V regulator is the limit, not the 5 V supply: bench check 9
 runs three ports driving continuously and checks 3.3 V stays in regulation.
