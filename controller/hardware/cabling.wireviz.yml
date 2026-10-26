@@ -1,0 +1,134 @@
+# Cabling between the carrier, the K-99695, the valves and the wall panel
+# (HARDWARE.md §5, §11, §16). Rendered to cabling.svg by tools/render.sh.
+# Valve-segment pins: 2 ground, 3 negative, 4 positive, 5 the valve's
+# +12.7 V; 1 and 6 not wired. Conductor colours aren't recorded, so none are
+# drawn.
+
+metadata:
+  title: Replacement controller cabling, revision B
+
+templates:
+  - &jack6
+    subtype: 6P modular jack
+    pins: [1, 2, 3, 4, 5, 6]
+    pinlabels: [not wired, GND, "B −", "A +", "+12.7 V (valve)", not wired]
+  - &valve
+    subtype: the cable's valve end, unchanged
+    pins: [2, 3, 4, 5]
+    pinlabels: [GND, "B −", "A +", "+12.7 V supply"]
+    notes: conductors named by the 6P plug end
+  - &cord
+    type: straight-through 6P cord
+    notes: already owned; positions 1 and 6 unused
+    wirecount: 4
+  - &oem
+    type: original Kohler valve cable
+    notes: "OEM — DO NOT CUT. Its 6P plug moves from the K-99695 to the V jack"
+    wirecount: 4
+  - &through
+    type: carrier copper, pass-through
+    notes: pins 2 and 5 only; pin 5 touches no board net
+    wirecount: 2
+
+connectors:
+  X1:
+    <<: *jack6
+    type: K-99695 valve 1 jack
+  J1:
+    <<: *jack6
+    type: "K1 · TO KOHLER VALVE 1"
+    notes: "carrier; pins 3, 4 to U1 B, A"
+  J2:
+    <<: *jack6
+    type: "V1 · VALVE 1 · 6-PORT"
+    notes: "carrier; pins 3, 4 to U2 B, A"
+  VALVE1:
+    <<: *valve
+    type: Valve 1, six-port
+  X2:
+    <<: *jack6
+    type: K-99695 valve 2 jack
+  J3:
+    <<: *jack6
+    type: "K2 · TO KOHLER VALVE 2"
+    notes: "carrier; pins 3, 4 to U3 B, A"
+  J4:
+    <<: *jack6
+    type: "V2 · VALVE 2 · 3-PORT PROMPT"
+    notes: "carrier; pins 3, 4 to U4 B, A"
+  VALVE2:
+    <<: *valve
+    type: Valve 2, three-port Prompt
+  J6:
+    type: Panel DC in
+    subtype: 2.1 mm jack, Switchcraft 721A, in the box wall
+    pins: [1, 2]
+    pinlabels: ["DC + (centre) [I]", "DC −"]
+    notes: from the panel's own adapter
+  J6P:
+    type: "J6 · PANEL DC IN"
+    subtype: two solder pads on the carrier
+    pins: [1, 2]
+    pinlabels: ["+", "−"]
+  J5:
+    type: "PANEL · NOT ETHERNET · DC ON PAIRS"
+    subtype: 8P8C jack, Amphenol 54602-908LF
+    pins: [1, 2, 3, 4, 5, 6, 7, 8]
+    pinlabels: ["A +", "B −", spare, "DC +", "DC +", spare, "DC −, GND", "DC −, GND"]
+    notes: "carrier; pins 1, 2 to U5 A, B. DC − joins board ground at NT1 only"
+  PANEL:
+    type: New wall panel
+    subtype: its own board, THVD1410 and 120 Ω
+    pins: [1, 2, 4, 5, 7, 8]
+    pinlabels: ["A +", "B −", "DC +", "DC +", "DC −", "DC −"]
+    notes: pin plan for an eight-conductor cable (§16); conductor count unchecked (§15 item 13)
+
+cables:
+  W1: *cord
+  W2: *through
+  W3: *oem
+  W4: *cord
+  W5: *through
+  W6: *oem
+  W7:
+    type: hook-up wire, 0.5 mm²
+    notes: soldered to the jack and to the carrier's J6 pads
+    wirecount: 2
+    colors: [RD, BK]
+  W9:
+    type: carrier copper
+    notes: DC reaches the panel jack only; DC − joins ground at NT1
+    wirecount: 4
+  W8:
+    type: in-wall cable, RJ45, coupler
+    notes: the K-99693's cable, up to 25 ft
+    wirecount: 6
+
+connections:
+  - - J6: [1, 2]
+    - W7: [1, 2]
+    - J6P: [1, 2]
+  - - J6P: [1, 1, 2, 2]
+    - W9: [1-4]
+    - J5: [4, 5, 7, 8]
+  - - J5: [1, 2, 4, 5, 7, 8]
+    - W8: [1-6]
+    - PANEL: [1, 2, 4, 5, 7, 8]
+  - - X2: [2-5]
+    - W4: [1-4]
+    - J3: [2-5]
+  - - J3: [2, 5]
+    - W5: [1, 2]
+    - J4: [2, 5]
+  - - J4: [2-5]
+    - W6: [1-4]
+    - VALVE2: [2-5]
+  - - X1: [2-5]
+    - W1: [1-4]
+    - J1: [2-5]
+  - - J1: [2, 5]
+    - W2: [1, 2]
+    - J2: [2, 5]
+  - - J2: [2-5]
+    - W3: [1-4]
+    - VALVE1: [2-5]

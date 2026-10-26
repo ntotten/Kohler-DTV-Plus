@@ -64,32 +64,82 @@ is [DECISIONS.md D14](DECISIONS.md#d14--rp2350-firmware-in-rust-not-a-linux-comp
 
 ---
 
-## 3. Block diagram
+## 3. Block diagram, schematic and cabling
 
-```text
-                       LAN: API and log drain (wired Ethernet)
-                                        |
-  5 V micro-USB ──>  +------------------v---------------------+
-  (adapter outside   | W5500-EVB-Pico2: RP2350 + W5500         |
-   the box)          | Rust firmware on Embassy, watchdog      |
-                     +--+-------+-------+-------+-------+------+
-                        |       |       |       |       |
-                      [K1]    [V1]    [K2]    [V2]     [P]     one THVD1410 per port
-                        |       |       |       |       |
-  K-99695, valve 1 jack-+       |       |       |       |
-  valve 1, six-port ------------+       |       |       |
-  K-99695, valve 2 jack ----------------+       |       |
-  valve 2, three-port Prompt -------------------+       |
-  new wall panel, over the in-wall RJ45 cable ----------+
+```mermaid
+flowchart TB
+  lan(["House LAN"])
+  usb(["5 V micro-USB adapter"])
+  dc(["Panel DC adapter"])
 
-  Pin 2 (ground) and pin 5 (+12.7 V, supplied by the valve) run straight
-  through K1 to V1 and K2 to V2. Only pins 3 and 4 reach a transceiver.
-  The panel's DC comes from its own adapter onto the panel jack, not
-  through the board (§16).
+  subgraph box["Controller box · low voltage only"]
+    wiz["WIZ850io · W5500<br/>10/100 Ethernet"]
+    pico["Raspberry Pi Pico 2 · RP2350<br/>Rust on Embassy, hardware watchdog"]
+    K1["K1 · THVD1410<br/>UART over PIO"]
+    K2["K2 · THVD1410<br/>UART over PIO"]
+    V1["V1 · THVD1410<br/>UART0"]
+    V2["V2 · THVD1410<br/>UART1"]
+    P["P · THVD1410<br/>UART over PIO"]
+    J6["DC jack J6"]
+  end
+
+  k99695["K-99695<br/>valve 1 and valve 2 jacks"]
+  v1["Valve 1 · six-port"]
+  v2["Valve 2 · three-port Prompt"]
+  panel["New wall panel"]
+
+  lan -- "API, log drain" --- wiz
+  wiz -- "SPI0 · GPIO16–21" --- pico
+  usb -- "5 V" --> pico
+  pico --- K1 & K2 & V1 & V2 & P
+  K1 -- "RS-485, 6P cord" --- k99695
+  K2 -- "RS-485, 6P cord" --- k99695
+  V1 -- "RS-485, original cable" --- v1
+  V2 -- "RS-485, original cable" --- v2
+  P -- "RS-485, in-wall RJ45 cable" --- panel
+  dc --> J6
+  J6 -- "DC on the same cable's spare pairs" --> panel
 ```
+
+Pin 2 (ground) and pin 5 (+12.7 V, supplied by the valve) run straight
+through K1 to V1 and K2 to V2. Only pins 3 and 4 reach a transceiver. The
+panel's DC comes from its own adapter, over the carrier's copper to the panel
+jack and nowhere else; it powers nothing on the board (§16).
 
 Line power to both valves stays in the original listed receptacles and wiring.
 No mains conductor enters the controller's box (§9).
+
+### Carrier schematic
+
+[![Carrier schematic](../hardware/carrier.svg)](../hardware/carrier.svg)
+
+The KiCad project is [`controller/hardware/`](../hardware/README.md): every
+connection in this document on one sheet, net-checked against the GPIO map
+(§8), the wiring per port (§5), the panel pin plan (§16) and the test points
+(§10).
+
+### Carrier PCB
+
+[![Carrier PCB, top](../hardware/fab/carrier-top.svg)](../hardware/fab/carrier-routing.svg)
+
+Two layers, 160 × 60 mm, generated from the same tables as the schematic and
+routed, poured and checked by KiCad's DRC with nothing found. Every jack mouth
+and the Pico 2's USB socket sit on the edge against the box wall the cables
+come through, and the board is notched around that wall's middle lid boss.
+[`controller/hardware/fab/`](../hardware/fab/README.md) has what a board house
+needs (Gerber and drill files in one zip), the BOM, the pick-and-place file,
+the assembly drawing, the routing on its own, and the board drawn inside the
+box.
+
+### Cabling
+
+[![Cabling](../hardware/cabling.svg)](../hardware/cabling.svg)
+
+From [`cabling.wireviz.yml`](../hardware/cabling.wireviz.yml);
+[`cabling-wires.csv`](../hardware/cabling-wires.csv) lists every conductor
+from end to end, and is checked against the board's nets each time it is
+generated. The factory cables' conductor colours aren't recorded, so only the
+two wires added here, the panel DC jack's, have colours.
 
 ---
 
@@ -99,7 +149,7 @@ No mains conductor enters the controller's box (§9).
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Board    | Raspberry Pi Pico 2 with a WIZnet WIZ850io (W5500) on GPIO16–21, as ordered 2026-10-25; the W5500-EVB-Pico2 is the same circuit on one board **[V]** |
 | MCU      | RP2350: two Cortex-M33 cores at 150 MHz, 520 kB SRAM, 2 UARTs, 12 PIO state machines **[V]**                                                         |
-| Flash    | 2 MB on the board **[V]**: firmware and configuration only. Nothing is logged to flash                                                               |
+| Flash    | ~~2 MB~~ 4 MB on the Pico 2 **[V]** (Pico 2 datasheet, §1): firmware and configuration only. Nothing is logged to flash                              |
 | Network  | W5500, 10/100 wired Ethernet, on GPIO16–21 **[V]**. No radio on the board                                                                            |
 | Power in | 5 V over the Pico 2's micro-USB, from an external adapter (Raspberry Pi SC0623, 5.1 V 2.5 A) **[V]**                                                 |
 | Watchdog | RP2350 hardware watchdog, fed by the bus tasks; a reset boots to `OFF` (DESIGN.md rule 4)                                                            |
@@ -271,13 +321,31 @@ contactor, or anything in a mains path.
 
 ## 9. Power, isolation and grounding
 
+### Power tree
+
+```text
+5 V micro-USB adapter, outside the box
+└── Pico 2 (A1), its own regulator → 3V3, pin 36
+    ├── RP2350, on the Pico 2
+    ├── WIZ850io (J10, J11), 141 mA typical
+    └── THVD1410 ×5 (U1–U5), 100 nF each (C1–C5)
+
+Panel DC adapter, outside the box
+└── DC jack J6 → panel jack J5: + on pins 4, 5; − on pins 7, 8
+    └── − joins board ground at NT1 only; + touches no board net
+
+Each valve's +12.7 V, from the valve
+└── pin 5, straight through K1→V1 and K2→V2; no board net
+```
+
 ### Budget
 
-| Load                  | Worst case            | Note                                                                     |
-| --------------------- | --------------------- | ------------------------------------------------------------------------ |
-| W5500-EVB-Pico2       | Measured at the bench | RP2350, W5500 and the board's regulator                                  |
-| One THVD1410 driving  | ~30 mA **[I]**        | ~2 V across the two terminations in parallel, ~65 Ω                      |
-| Ports driving at once | 3 **[I]**             | Each zone is half duplex, so one segment per zone drives, plus the panel |
+| Load                  | Worst case             | Note                                                                               |
+| --------------------- | ---------------------- | ---------------------------------------------------------------------------------- |
+| Pico 2                | Measured at the bench  | RP2350 and the board's regulator                                                   |
+| WIZ850io              | 141 mA typical **[V]** | From the Pico 2's 3V3 ([WIZnet](https://docs.wiznet.io/Product/ioModule/wiz850io)) |
+| One THVD1410 driving  | ~30 mA **[I]**         | ~2 V across the two terminations in parallel, ~65 Ω                                |
+| Ports driving at once | 3 **[I]**              | Each zone is half duplex, so one segment per zone drives, plus the panel           |
 
 The board's 3.3 V regulator is the limit, not the 5 V supply: bench check 9
 runs three ports driving continuously and checks 3.3 V stays in regulation.
@@ -308,13 +376,13 @@ the valves stay in their existing receptacles and circuits, untouched.
 
 ## 10. Enclosure, mechanical and environment
 
-| Requirement   | Specification                                                                                 |
-| ------------- | --------------------------------------------------------------------------------------------- |
-| Location      | Beside the K-99695: dry, serviceable. **Not inside the bathroom wet zone**                    |
-| Box           | Small, non-metallic, with a mounting plate; the board sockets into a carrier, not soldered in |
-| Carrier       | Protoboard for the bench build. Whether the installed unit gets a carrier PCB is §15 item 12  |
-| Cable entries | Micro-USB power, Ethernet, `K1`, `V1`, `K2`, `V2`, panel cable, panel DC                      |
-| Strain relief | Every cable. No conductor takes tension at a solder joint or a jack                           |
+| Requirement   | Specification                                                                                                                                                      |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Location      | Beside the K-99695: dry, serviceable. **Not inside the bathroom wet zone**                                                                                         |
+| Box           | Small, non-metallic, with a mounting plate; the board sockets into a carrier, not soldered in                                                                      |
+| Carrier       | A two-layer PCB, [`controller/hardware/fab/`](../hardware/fab/README.md); the Pico 2 and the WIZ850io plug into sockets on it. Four M2.5 holes for nylon standoffs |
+| Cable entries | Micro-USB power, Ethernet, `K1`, `V1`, `K2`, `V2`, panel cable, panel DC                                                                                           |
+| Strain relief | Every cable. No conductor takes tension at a solder joint or a jack                                                                                                |
 
 ### Labelling and test points
 
@@ -328,7 +396,9 @@ the valves stay in their existing receptacles and circuits, untouched.
 | `OEM — DO NOT CUT`                   | Both original Kohler valve cables, at both ends |
 
 Bring pins 2, 3 and 4 of every segment out to labelled test points, so each
-segment can be scoped without unplugging anything.
+segment can be scoped without unplugging anything. The carrier PCB prints the
+connector labels beside each jack and names every test point (`K1-2` … `V2-4`);
+the labels on the leads and cables are still applied by hand.
 
 ---
 
@@ -516,9 +586,9 @@ Items 1–7 keep their revision A numbers, which other documents cite.
 | 7   | Whether automatic purge is on                                                                                                                                                                                                                                                                    | [I4](../../INVESTIGATIONS.md#i4--is-automatic-purge-on) — one read-only call                      | Stop-latency definition                    |
 | 8   | Whether the K-99695 joins pin 2 of its two valve jacks                                                                                                                                                                                                                                           | Phase 0: continuity between the two jacks' pin 2, K-99695 unpowered and unplugged                 | Isolation for one zone (§9)                |
 | 9   | Whether the K-99695 accepts the controller's answers for a valve it no longer drives                                                                                                                                                                                                             | Phase 3 take-over                                                                                 | Take-over; otherwise D1's swap at cut-over |
-| 10  | Whether the ported logic fits 520 kB of SRAM and 2 MB of flash                                                                                                                                                                                                                                   | The port (BUILD-ORDER.md step 2)                                                                  | The platform, [D14](DECISIONS.md)          |
+| 10  | Whether the ported logic fits 520 kB of SRAM and ~~2 MB~~ 4 MB of flash                                                                                                                                                                                                                          | The port (BUILD-ORDER.md step 2)                                                                  | The platform, [D14](DECISIONS.md)          |
 | 11  | Panel hardware, and how it is sealed in the shower wall ([I2](../../INVESTIGATIONS.md#i2--the-k-99693-interface-was-disconnected))                                                                                                                                                               | The panel build                                                                                   | Phase 7                                    |
-| 12  | Protoboard or a carrier PCB for the installed unit                                                                                                                                                                                                                                               | After the bench build                                                                             | Installation                               |
+| 12  | ~~Protoboard or a carrier PCB for the installed unit~~ **Closed 2026-10-26:** a carrier PCB, generated from the schematic's script ([`fab/`](../hardware/fab/README.md))                                                                                                                         | —                                                                                                 | Installation                               |
 | 13  | How many conductors the in-wall panel cable has                                                                                                                                                                                                                                                  | Phase 0: a look at the plug at the controller end                                                 | The panel pin plan, §16                    |
 
 ---
@@ -549,8 +619,9 @@ Pin plan for an eight-conductor cable:
 
 With four conductors, RS-485 takes one pair and DC the other.
 
-**The DC does not pass through the board.** The panel adapter plugs into a DC
-jack on the carrier that is wired only to the panel jack's DC pins. DC − joins
+**The DC powers nothing on the board.** The panel adapter plugs into a DC
+jack in the box wall, wired to the carrier's J6 pads, whose copper reaches only
+the panel jack's DC pins. DC − joins
 board ground at that one point, because the RS-485 link needs a common
 reference; DC + touches no board net. Bench check 4 proves it never reaches a
 valve contact.

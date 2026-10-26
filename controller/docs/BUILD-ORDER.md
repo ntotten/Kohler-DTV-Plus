@@ -74,9 +74,15 @@ The one follow-up order, from the photograph: jacks for the valve cables, and
 the two short leads to the K-99695. Add the isolated transceivers for one zone
 only if item 8 found the two jacks' grounds separate.
 
+The carrier PCB goes in with it: `carrier-gerbers.zip` from
+[`controller/hardware/fab/`](../hardware/fab/README.md) to any board house
+~~, and the four RJ12 jacks its footprints take (SHOPPING-LIST.md, The carrier
+PCB)~~. Its valve jacks are the Würth 615006138421s already ordered, and it
+waits until its footprints are theirs (SHOPPING-LIST.md, The carrier PCB).
+
 ### 5. Boxes arrive — bench build, then Phase 2
 
-The board on its protoboard with the Waveshare bench rig: bench checks 1–13 of
+The board on its carrier with the Waveshare bench rig: bench checks 1–13 of
 [HARDWARE.md § 13](HARDWARE.md), ending in the seven-day soak against the
 emulator. Gate: every injected failure ends in `OFF` without an unallowlisted
 write, and checks 1 and 4 pass.

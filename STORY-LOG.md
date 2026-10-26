@@ -10,6 +10,37 @@ See the Story log section of [AGENT.md](AGENT.md) for what to append and how.
 
 ---
 
+## 2026-10-26
+
+### 09:55 — The board's valve jacks were a discontinued part
+
+Checking the board against the parts already ordered turned up a mistake made this morning. The
+Amphenol 54601-906LF, chosen for the valve jacks because KiCad has a footprint for it, has been
+discontinued since 2024: Mouser lists it obsolete with Amphenol's discontinuance notice of
+2024-01-15, and its 54601-906WPLF variant the same way. The Würth 615006138421 jacks already in the
+order are current and in stock, so the board goes back to them. Their footprint is drawn from Würth's
+own drawing first, and the board isn't ordered until it is.
+
+**Why it matters:** a footprint in a library says nothing about whether the part can still be bought.
+Every part on the board is now checked for stock before the board is ordered.
+
+### 09:40 — The carrier becomes a printed circuit board, drawn by a script
+
+The protoboard carrier gave way to a two-layer PCB, 160 × 60 mm, shaped to fit the Hammond box with
+every cable entering through one wall. Nobody draws it by hand: the same Python that writes the
+schematic places the parts, Freerouting routes it, and KiCad's design-rule check runs on every build
+and must find nothing. What comes out is the standard set a board house takes: Gerber and drill files,
+a bill of materials with part numbers, a pick-and-place file and an assembly drawing.
+
+Laying it out caught two errors in the parts list. The 2×6 socket ordered for the WIZ850io can't take
+it: the module's two rows of pins are 20.32 mm apart, not 2.54, so it sits on two single rows cut from
+a 20-pin socket. And the Pico 2 has 4 MB of flash, not the 2 MB written down. ~~The valve jacks change
+too, to Amphenol's 54601-906LF, because KiCad's footprint for it is drawn from Amphenol's drawing and
+no drawing for the Würth jack already ordered could be fetched.~~ Superseded at 09:55: that jack is
+discontinued.
+
+**Why it matters:** anyone can rebuild the board, or change it, from the repository alone.
+
 ## 2026-10-24
 
 ### 17:28 — The controller moves in line, onto one microcontroller

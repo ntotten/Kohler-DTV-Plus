@@ -22,3 +22,6 @@ controller/.e2e/
 # environment material, specific to one machine and one session, and belongs in
 # no repository. The committed Dockerfile does not reference it.
 .ccr-ca.crt
+
+# Python bytecode from controller/hardware/tools.
+__pycache__/
