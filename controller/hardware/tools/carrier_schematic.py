@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Generate the carrier schematic, carrier.kicad_sch, and its symbol library.
 
-The carrier is the protoboard the Pico 2, the WIZ850io and the five THVD1410
-ports sit on (HARDWARE.md §3-§10). While it is a protoboard build this script
-is the source: change the tables below, run it, and commit the schematic and
-the rendered SVG together (`render.sh` does both). Once a carrier PCB starts
-(HARDWARE.md §15 item 12) the schematic is edited in KiCad instead and this
-script is deleted.
+The carrier is the board the Pico 2, the WIZ850io and the five THVD1410 ports
+sit on (HARDWARE.md §3-§10). This script is the schematic's source, and the
+board's: carrier_board.py lays the PCB out from the netlist KiCad reads back
+from what this writes. Change the tables below and run `render.sh`, which
+regenerates the schematic, the board, the fabrication files and every
+drawing; nobody edits the KiCad files by hand.
 
 Connections are made with net labels at short wire stubs, so every pin's net
 is written next to it. `render.sh` checks the netlist KiCad reads back against
@@ -151,6 +151,33 @@ PANEL_JACK_PINS = {
     8: "PANEL_DC-",
 }
 
+# Footprints, by reference prefix or reference. KiCad's own library except
+# the three in carrier.pretty (carrier_footprints.py). The RJ12 jacks are
+# Amphenol 54601-906LF, whose footprint KiCad draws from Amphenol drawing
+# C-BMJ-0082; the Würth 615006138421 bought for the bench has no KiCad
+# footprint and its drawing could not be downloaded.
+FP = {
+    "A1": "carrier:Pico2_Socketed",
+    "J10": "carrier:WIZ850io_J1",
+    "J11": "carrier:WIZ850io_J2",
+    "U": "Package_SO:VSSOP-8_3.0x3.0mm_P0.65mm",
+    "C": "Capacitor_THT:C_Rect_L4.0mm_W2.5mm_P2.50mm",
+    "R": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal",
+    "TP": "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical",
+    "RJ12": "Connector_RJ:RJ12_Amphenol_54601-x06_Horizontal",
+    "J5": "Connector_RJ:RJ45_Amphenol_54602-x08_Horizontal",
+    "J6": "Connector_Wire:SolderWire-0.5sqmm_1x02_P4.8mm_D0.9mm_OD2.3mm",
+    "NT1": "NetTie:NetTie-2_SMD_Pad0.5mm",
+}
+
+# What the bill of materials says about each part, by value.
+PARTS = {
+    "120": {"MPN": "CFR-25JB-52-120R", "Manufacturer": "Yageo", "Supplier": "DigiKey 120QBK-ND"},
+    "4k7": {"MPN": "CFR-25JB-52-4K7", "Manufacturer": "Yageo",
+            "Supplier": "DigiKey 13-CFR-25JB-52-4K7-ND"},
+    "100n": {"MPN": "K104K15X7RF5TL2", "Manufacturer": "Vishay", "Supplier": "DigiKey BC1084CT-ND"},
+}
+
 # ---------------------------------------------------------------------------
 # Library symbols
 # ---------------------------------------------------------------------------
@@ -236,7 +263,7 @@ def thvd1410() -> list:
             elif key == "Datasheet":
                 item[2] = "https://www.ti.com/lit/gpn/THVD1410"
             elif key == "Footprint":
-                item[2] = "Package_SO:VSSOP-8_3x3mm_P0.65mm"
+                item[2] = FP["U"]
             elif key == "ki_description":
                 item[2] = (
                     "Half-duplex RS-485, 500 kbps, 3-5.5 V, fail-safe receiver, "
@@ -509,7 +536,9 @@ def build() -> tuple[list, list]:
     sh.box(12.7, 12.7, 114.3, 177.8, "Compute · Pico 2 + WIZ850io (W5500)")
     sh.place("carrier:Pico2", "A1", "Raspberry Pi Pico 2", 63.5, 66.04,
              ref_at=(55.88, 38.1), value_at=(55.88, 95.25),
-             fields={"MPN": "SC1631", "Supplier": "DigiKey 2648-SC1631CT-ND"})
+             fields={"Footprint": FP["A1"], "MPN": "SC1631", "Manufacturer": "Raspberry Pi",
+                     "Supplier": "DigiKey 2648-SC1631CT-ND",
+                     "Socket": "2 x 1x20 female header, Sullins PPPC201LFBN-RC (DigiKey S7053-ND)"})
     for n, (_name, net) in PICO_PINS.items():
         sh.connect("A1", n, net)
     sh.text("Pin numbers: Raspberry Pi Pico pinout (top view).", 22.86, 101.6)
@@ -518,11 +547,15 @@ def build() -> tuple[list, list]:
 
     sh.place("carrier:WIZ850io_J1", "J10", "WIZ850io J1 (SPI)", 45.72, 132.08,
              ref_at=(38.1, 121.92), value_at=(38.1, 142.24),
-             fields={"MPN": "WIZ850IO", "Supplier": "DigiKey 1278-1043-ND"})
+             fields={"Footprint": FP["J10"], "MPN": "WIZ850IO", "Manufacturer": "WIZnet",
+                     "Supplier": "DigiKey 1278-1043-ND",
+                     "Socket": "1x6 female header, 2.54 mm, cut from a PPPC201LFBN-RC"})
     for i, (_n, net) in enumerate(WIZ_J1, start=1):
         sh.connect("J10", i, net)
     sh.place("carrier:WIZ850io_J2", "J11", "WIZ850io J2 (power, reset)", 90.17, 132.08,
-             ref_at=(82.55, 121.92), value_at=(82.55, 142.24))
+             ref_at=(82.55, 121.92), value_at=(82.55, 142.24),
+             fields={"Footprint": FP["J11"],
+                     "Socket": "1x6 female header, 2.54 mm, cut from a PPPC201LFBN-RC"})
     for i, (_n, net) in enumerate(WIZ_J2, start=1):
         sh.connect("J11", i, net)
     sh.text("W5500 on GPIO16-21, the pins the W5500-EVB-Pico2 uses.", 22.86, 152.4)
@@ -556,7 +589,8 @@ def build() -> tuple[list, list]:
         u = nxt("U")
         sh.place("carrier:THVD1410", u, "THVD1410", ux, uy,
                  ref_at=(ux - 6.35, uy - 13.97), value_at=(ux + 1.27, uy - 13.97),
-                 fields={"MPN": "THVD1410DGK", "Supplier": "Mouser 595-THVD1410DGK"})
+                 fields={"Footprint": FP["U"], "MPN": "THVD1410DGK",
+                         "Manufacturer": "Texas Instruments", "Supplier": "Mouser 595-THVD1410DGK"})
         sh.connect(u, 1, f"{port}_RX")
         sh.connect(u, 2, "GND")
         sh.connect(u, 3, f"{port}_DE")
@@ -567,29 +601,34 @@ def build() -> tuple[list, list]:
         sh.connect(u, 8, "+3V3")
 
         c = nxt("C")
-        sh.place("Device:C", c, "100n", ux + 22.86, uy - 10.16)
+        sh.place("Device:C", c, "100n", ux + 22.86, uy - 10.16,
+                 fields={"Footprint": FP["C"], **PARTS["100n"]})
         sh.connect(c, 1, "+3V3")
         sh.connect(c, 2, "GND")
 
         rde = nxt("R")
         de_refs[port] = rde
-        sh.place("Device:R", rde, "4k7", bx + 10.16, by + 55.88)
+        sh.place("Device:R", rde, "4k7", bx + 10.16, by + 55.88,
+                 fields={"Footprint": FP["R"], **PARTS["4k7"]})
         sh.connect(rde, 1, f"{port}_DE")
         sh.connect(rde, 2, "GND")
 
         rt = nxt("R")
         term_refs[port] = rt
-        sh.place("Device:R", rt, "120", bx + 68.58, uy)
+        sh.place("Device:R", rt, "120", bx + 68.58, uy,
+                 fields={"Footprint": FP["R"], **PARTS["120"]})
         sh.connect(rt, 1, f"{port}_A")
         sh.connect(rt, 2, f"{port}_B")
 
         if kind in ("V", "P"):
             up, dn = nxt("R"), nxt("R")
             bias_refs[port] = (up, dn)
-            sh.place("Device:R", up, "TBD", bx + 83.82, uy - 15.24, dnp=True)
+            sh.place("Device:R", up, "TBD", bx + 83.82, uy - 15.24, dnp=True,
+                     fields={"Footprint": FP["R"]})
             sh.connect(up, 1, "+3V3")
             sh.connect(up, 2, f"{port}_A")
-            sh.place("Device:R", dn, "TBD", bx + 83.82, uy + 15.24, dnp=True)
+            sh.place("Device:R", dn, "TBD", bx + 83.82, uy + 15.24, dnp=True,
+                     fields={"Footprint": FP["R"]})
             sh.connect(dn, 1, f"{port}_B")
             sh.connect(dn, 2, "GND")
 
@@ -600,38 +639,44 @@ def build() -> tuple[list, list]:
                 tp = nxt("TP")
                 tx = bx + 99.06 + 7.62 * i
                 sh.place("Connector:TestPoint", tp, f"{port}-{pin_no}", tx, by + 53.34,
-                         ref_at=(tx + 1.27, by + 45.72), value_at=(tx + 1.27, by + 48.26))
+                         ref_at=(tx + 1.27, by + 45.72), value_at=(tx + 1.27, by + 48.26),
+                         fields={"Footprint": FP["TP"], "MPN": "1x1 male header, 2.54 mm",
+                                 "Supplier": "Already owned"})
                 sh.connect(tp, 1, net)
             j = {"K1": "J1", "V1": "J2", "K2": "J3", "V2": "J4"}[port]
             sh.place("Connector:6P6C", j, "6P6C", bx + 124.46, uy, mirror="y",
                      ref_at=(bx + 116.84, uy - 12.7), value_at=(bx + 116.84, uy + 10.16),
-                     fields={"MPN": "615006138421", "Manufacturer": "Würth Elektronik",
-                             "Supplier": "DigiKey 732-2113-ND"})
+                     fields={"Footprint": FP["RJ12"], "MPN": "54601-906LF",
+                             "Manufacturer": "Amphenol ICC",
+                             "Supplier": "DigiKey, product 7589414"})
             for pin_no, net in valve_jack_pins(port, zone).items():
                 sh.connect(j, pin_no, net)
         else:
             sh.place("Connector:8P8C", "J5", "8P8C",
                      bx + 124.46, uy, mirror="y",
                      ref_at=(bx + 116.84, uy - 15.24), value_at=(bx + 116.84, uy + 12.7),
-                     fields={"MPN": "54602-908LF", "Manufacturer": "Amphenol",
-                             "Supplier": "DigiKey 609-1046-ND"})
+                     fields={"Footprint": FP["J5"], "MPN": "54602-908LF",
+                             "Manufacturer": "Amphenol ICC", "Supplier": "DigiKey 609-1046-ND"})
             for pin_no, net in PANEL_JACK_PINS.items():
                 sh.connect("J5", pin_no, net)
             # Panel DC: its own jack, wired only to the panel jack's DC pins.
             jx, jy = bx + 175.26, uy
             sh.place("Connector:Barrel_Jack_Switch", "J6", "Panel DC in, 2.1 mm",
                      jx, jy, ref_at=(jx - 5.08, jy - 6.35), value_at=(jx - 7.62, jy + 7.62),
-                     fields={"MPN": "721A", "Manufacturer": "Switchcraft",
-                             "Supplier": "DigiKey SC3508-ND"})
+                     fields={"Footprint": FP["J6"], "MPN": "721A", "Manufacturer": "Switchcraft",
+                             "Supplier": "DigiKey SC3508-ND",
+                             "Mounting": "Box wall; two wires to the board's J6 pads"})
             sh.connect("J6", 1, "PANEL_DC+")
             sh.connect("J6", 2, "PANEL_DC-")
             sh.connect("J6", 3, None)
             sh.place("Device:NetTie_2", "NT1", "DC- to GND, here only", jx + 33.02, jy,
-                     ref_at=(jx + 30.48, jy - 3.81), value_at=(jx + 25.4, jy + 5.08))
+                     ref_at=(jx + 30.48, jy - 3.81), value_at=(jx + 25.4, jy + 5.08),
+                     fields={"Footprint": FP["NT1"]})
             sh.connect("NT1", 1, "PANEL_DC-")
             sh.connect("NT1", 2, "GND")
             notes = [
-                "J6 connects only to J5's DC pins: 4, 5 (+) and 7, 8 (-).",
+                "J6 is on the box wall, wired to two pads on the board.",
+                "It connects only to J5's DC pins: 4, 5 (+) and 7, 8 (-).",
                 "DC- joins board ground at NT1 and nowhere else;",
                 "DC+ touches no board net (HARDWARE.md §16, bench check 4).",
                 "J6 pin 1 is taken as the centre contact, centre positive [I];",
@@ -655,9 +700,7 @@ def build() -> tuple[list, list]:
         "   valve segments in Phase 3, the panel with the panel (§5, §16).",
         "6. 120R terminates every port at the controller end (§5).",
         "7. GPIO map is HARDWARE.md §8, proposed [I].",
-        "8. THVD1410 pin numbers: the 8-pin half-duplex pinout TI's THVD14x0",
-        "   parts share (KiCad's THVD1400D) [I]. Check the THVD1410 datasheet's",
-        "   pin table before wiring the adapters.",
+        "8. THVD1410 pin numbers: TI's datasheet, Pin Functions, DGK [V].",
         "9. Connector pin 1 and 6 of each valve jack are not wired (§11).",
     ]
     for i, line in enumerate(notes):
@@ -676,7 +719,7 @@ def build() -> tuple[list, list]:
             [Sym("date"), "2026-10-26"],
             [Sym("rev"), "B"],
             [Sym("company"), "kohler-dtv-plus"],
-            [Sym("comment"), 1, "Pico 2 + WIZ850io + 5 x THVD1410 on protoboard"],
+            [Sym("comment"), 1, "Pico 2 + WIZ850io + 5 x THVD1410, carrier PCB (carrier.kicad_pcb)"],
             [Sym("comment"), 2, "Generated by controller/hardware/tools/carrier_schematic.py"],
             [Sym("comment"), 3, "Specification: controller/docs/HARDWARE.md"],
         ],

@@ -1,0 +1,4 @@
+(version 1)
+(rule "through-hole pads connect on both layers"
+  (constraint min_resolved_spokes 1)
+  (condition "A.Type == 'Pad' && A.Pad_Type == 'Through-hole'"))

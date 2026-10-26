@@ -17,7 +17,7 @@
       (effects (font (size 1.27 1.27)) (justify left)))
     (property
       "Footprint"
-      "Package_SO:VSSOP-8_3x3mm_P0.65mm"
+      "Package_SO:VSSOP-8_3.0x3.0mm_P0.65mm"
       (at 0 -17.78 0)
       (effects (font (size 1.27 1.27)) hide))
     (property
