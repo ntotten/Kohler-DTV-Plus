@@ -40,6 +40,10 @@ once where it belongs, and move on.
 - **Plans carry drawings**: block diagram, schematic, cabling, data and
   control flow — Mermaid, KiCad and WireViz, sources in the repository.
   [docs/diagrams.md](docs/diagrams.md) has the convention.
+- **New code defaults to Rust**, as the controller already is. Use another
+  language only for a good reason, such as extending the TypeScript app in its
+  own language, and say the reason in the PR. Existing code isn't rewritten
+  for this.
 - **`oxfmt` formats Markdown too**, including table alignment. Run
   `npm run format` from the repo root after editing any document.
 
